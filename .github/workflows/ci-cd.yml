@@ -39,15 +39,55 @@ jobs:
         cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
         platforms: linux/amd64,linux/arm64
     
-    - name: Update Docker Compose Environment
+    - name: Auto Deploy to Production
       if: success() && github.ref == 'refs/heads/master'
       run: |
-        # Create .env file with secrets for deployment
+        echo "🚀 Starting auto-deployment process..."
+        
+        # Create deployment environment file
         cat > .env.deploy << EOF
+        REGISTRY=${{ env.REGISTRY }}
+        IMAGE_NAME=${{ env.IMAGE_NAME }}
+        APP_PORT=${{ vars.APP_PORT }}
+        LOG_LEVEL=${{ vars.LOG_LEVEL }}
+        TZ=${{ vars.TZ }}
+        FORTIGATE_HOST=${{ vars.FORTIGATE_HOST }}
         FORTIGATE_TOKEN=${{ secrets.FORTIGATE_TOKEN }}
+        FORTIMANAGER_HOST=${{ vars.FORTIMANAGER_HOST }}
+        FORTIMANAGER_USERNAME=${{ vars.FORTIMANAGER_USERNAME }}
         FORTIMANAGER_PASSWORD=${{ secrets.FORTIMANAGER_PASSWORD }}
+        REGISTRY_USERNAME=${{ secrets.REGISTRY_USERNAME }}
+        REGISTRY_PASSWORD=${{ secrets.REGISTRY_PASSWORD }}
         EOF
         
-        echo "✅ Image pushed to ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-        echo "🚢 Watchtower will automatically deploy the new version"
-        echo "📦 Private Registry Only - No Docker Hub"
+        # Deploy using Docker Compose
+        echo "📦 Deploying with Docker Compose..."
+        
+        # Login to registry
+        echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+        
+        # Pull latest image
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        
+        # Deploy with zero downtime
+        docker-compose --env-file .env.deploy up -d --force-recreate --remove-orphans
+        
+        # Wait for health check
+        echo "⏳ Waiting for services to be healthy..."
+        sleep 30
+        
+        # Verify deployment
+        if docker-compose ps | grep -q "Up"; then
+          echo "✅ Deployment successful!"
+          echo "🌐 Service available at: http://localhost:${{ vars.APP_PORT }}"
+          echo "📊 Health check: http://localhost:${{ vars.APP_PORT }}/api/health"
+        else
+          echo "❌ Deployment failed!"
+          docker-compose logs --tail=50
+          exit 1
+        fi
+        
+        # Cleanup
+        rm -f .env.deploy
+        
+        echo "🎉 Auto-deployment completed successfully!"
