@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   app:
-    image: ${DOCKER_REGISTRY_URL:-localhost:5000}/fortigate-nextrade:development-latest
-    container_name: fortigate-nextrade-dev
+    build: .
+    image: fortinet:dev-latest
+    container_name: fortinet-dev
     restart: unless-stopped
     
     ports:

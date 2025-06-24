@@ -7,8 +7,8 @@ on:
     branches: [ main, master ]
 
 env:
-  REGISTRY: registry.jclee.me
-  IMAGE_NAME: fortinet
+  REGISTRY: ${{ vars.REGISTRY }}
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}
 
 jobs:
   build:
