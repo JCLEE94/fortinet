@@ -1,0 +1,46 @@
+{
+  "fortigate": {
+    "hostname": "192.168.1.100",
+    "api_token": "your-fortigate-api-token-here",
+    "username": "admin",
+    "password": "",
+    "verify_ssl": false,
+    "timeout": 30,
+    "description": "FortiGate 방화벽 API 설정"
+  },
+  "fortimanager": {
+    "hostname": "192.168.1.200",
+    "api_token": "",
+    "username": "admin", 
+    "password": "your-password-here",
+    "verify_ssl": false,
+    "timeout": 30,
+    "adom": "root",
+    "description": "FortiManager 중앙 관리 API 설정"
+  },
+  "settings": {
+    "cache_ttl": 300,
+    "max_retries": 3,
+    "retry_delay": 5,
+    "enable_ssl": false,
+    "ssl_cert_path": "/app/ssl/certificate.crt",
+    "ssl_key_path": "/app/ssl/private.key",
+    "redis": {
+      "enabled": true,
+      "host": "localhost",
+      "port": 6379,
+      "password": "",
+      "db": 0,
+      "ttl": 300
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "interval": 30,
+    "alert_threshold": {
+      "cpu": 80,
+      "memory": 90,
+      "sessions": 10000
+    }
+  }
+}

@@ -1,0 +1,91 @@
+# FortiGate Nextrade - Production Environment (NAS DEPLOYMENT)
+# CLAUDE.md v8.7.0 compliant production configuration
+
+version: '3.8'
+
+services:
+  app:
+    image: ${DOCKER_REGISTRY:-192.168.50.215:1234}/${DOCKER_IMAGE_NAME:-fortinet}:latest
+    container_name: fortinet-app-1
+    restart: unless-stopped
+    ports:
+      - "${PRD_PORT:-7777}:${PRD_PORT:-7777}"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./ssl/certs:/app/ssl/certs:ro
+    environment:
+      - NODE_ENV=production
+      - APP_MODE=production
+      - FLASK_ENV=production
+      - FLASK_DEBUG=false
+      - PRD_PORT=${PRD_PORT:-7777}
+      - PORT=${PRD_PORT:-7777}
+      - PROJECT_NAME=${PROJECT_NAME:-fortinet}
+      - TZ=Asia/Seoul
+      - PYTHONUNBUFFERED=1
+      - HOST_IP=0.0.0.0
+      - OFFLINE_MODE=${OFFLINE_MODE:-false}
+      - TEST_MODE_ENABLED=false
+      - MOCK_FORTIGATE_ENABLED=false
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # FortiGate/FortiManager Configuration
+      - FORTIGATE_HOST=${FORTIGATE_HOST:-192.168.1.99}
+      - FORTIGATE_TOKEN=${FORTIGATE_TOKEN:-}
+      - FORTIMANAGER_HOST=${FORTIMANAGER_HOST:-192.168.1.100}
+      - FORTIMANAGER_USERNAME=${FORTIMANAGER_USERNAME:-admin}
+      - FORTIMANAGER_PASSWORD=${FORTIMANAGER_PASSWORD:-}
+      - FORTIMANAGER_PORT=${FORTIMANAGER_PORT:-443}
+      - FORTIMANAGER_VERIFY_SSL=false
+      # Security Configuration
+      - JWT_SECRET=${JWT_SECRET}
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
+      # Database Configuration
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/fortinet.db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+    env_file:
+      - .env
+    networks:
+      - fortinet-network
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:${PRD_PORT:-7777}/api/health\", timeout=5).read()'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    stop_grace_period: 1s
+    labels:
+      - "com.docker.compose.project=fortinet"
+      - "com.docker.compose.service=app"
+      - "traefik.enable=true"
+      - "traefik.http.routers.fortinet.rule=Host(`fortinet.jclee.me`)"
+
+  redis:
+    image: redis:7-alpine
+    container_name: fortinet-redis-1
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - fortinet-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  fortinet-network:
+    driver: bridge
+    name: fortinet-network
+
+volumes:
+  redis-data:
+    name: fortinet-redis-data
+
+# PRODUCTION DEPLOYMENT ONLY - FOR NAS (192.168.50.215)
+# This configuration is optimized for production deployment via GitLab CI/CD

@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  app:
+    image: ${DOCKER_REGISTRY_URL}/fortigate-nextrade:production-latest
+    container_name: fortigate-nextrade
+    restart: unless-stopped
+    
+    ports:
+      - "7777:7777"
+    
+    environment:
+      - APP_MODE=production
+      - FLASK_ENV=production
+      - TZ=Asia/Seoul
+      - BUILD_TIME=${BUILD_TIME}
+      - OFFLINE_MODE=true
+      - NO_INTERNET=true
+      - DISABLE_EXTERNAL_CALLS=true
+      - LOG_LEVEL=INFO
+      - DEBUG=false
+      - REDIS_ENABLED=false
+    
+    env_file:
+      - ./environments/production.env
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+      - ./ssl:/app/ssl:ro
+    
+    networks:
+      - fortigate-network
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7777/api/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    
+    security_opt:
+      - no-new-privileges:true
+    
+    read_only: false
+    
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    
+    ulimits:
+      nofile:
+        soft: 1024
+        hard: 2048
+    
+    labels:
+      - "com.fortigate.environment=production"
+      - "com.fortigate.service=nextrade"
+      - "com.fortigate.version=${BUILD_TIME}"
+
+  # 운영 환경용 로그 수집기 (선택사항)
+  log-collector:
+    image: fluent/fluent-bit:latest
+    container_name: fortigate-log-collector
+    restart: unless-stopped
+    
+    volumes:
+      - ./logs:/var/log/app:ro
+      - ./config/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    
+    networks:
+      - fortigate-network
+    
+    depends_on:
+      - app
+    
+    profiles:
+      - logging
+
+  # 운영 환경용 메트릭 수집기 (선택사항)
+  metrics:
+    image: prom/node-exporter:latest
+    container_name: fortigate-metrics
+    restart: unless-stopped
+    
+    ports:
+      - "9100:9100"
+    
+    networks:
+      - fortigate-network
+    
+    profiles:
+      - monitoring
+
+networks:
+  fortigate-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  app-data:
+    driver: local
+  app-logs:
+    driver: local
+  app-backups:
+    driver: local

@@ -1,0 +1,33 @@
+[[runners]]
+  name = "fortinet-local-runner"
+  url = "http://192.168.50.215:22080/"
+  token = "YOUR_RUNNER_TOKEN"
+  executor = "docker"
+  
+  [runners.custom_build_dir]
+  
+  [runners.cache]
+    [runners.cache.s3]
+    [runners.cache.gcs]
+    [runners.cache.azure]
+    
+  [runners.docker]
+    tls_verify = false
+    image = "python:3.9-slim"
+    privileged = true
+    disable_entrypoint_overwrite = false
+    oom_kill_disable = false
+    disable_cache = false
+    volumes = ["/cache", "/var/run/docker.sock:/var/run/docker.sock"]
+    shm_size = 0
+    network_mode = "host"
+    
+  # 오프라인 환경을 위한 설정
+  [runners.custom]
+    run_exec_timeout = 1800
+    
+  # 리소스 제한
+  [runners.machine]
+    IdleCount = 0
+    IdleTime = 1800
+    MaxBuilds = 10

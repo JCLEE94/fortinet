@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  app:
+    image: ${DOCKER_REGISTRY_URL:-localhost:5000}/fortigate-nextrade:development-latest
+    container_name: fortigate-nextrade-dev
+    restart: unless-stopped
+    
+    ports:
+      - "7777:7777"
+      - "5678:5678"  # 디버깅 포트
+    
+    environment:
+      - APP_MODE=development
+      - FLASK_ENV=development
+      - TZ=Asia/Seoul
+      - BUILD_TIME=${BUILD_TIME}
+      - OFFLINE_MODE=false
+      - LOG_LEVEL=DEBUG
+      - DEBUG=true
+      - FLASK_DEBUG=true
+      - RELOAD_ON_CHANGE=true
+      - REDIS_ENABLED=true
+    
+    env_file:
+      - ./environments/development.env
+    
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./src:/app/src  # 개발용 소스 마운트
+      - ./tests:/app/tests  # 테스트 파일 마운트
+    
+    networks:
+      - fortigate-dev-network
+    
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7777/api/health', timeout=5).read()"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    
+    labels:
+      - "com.fortigate.environment=development"
+      - "com.fortigate.service=nextrade"
+      - "com.fortigate.version=${BUILD_TIME}"
+
+  # 개발용 Redis
+  redis:
+    image: redis:7-alpine
+    container_name: fortigate-redis-dev
+    restart: unless-stopped
+    
+    ports:
+      - "6379:6379"
+    
+    volumes:
+      - redis-data:/data
+    
+    networks:
+      - fortigate-dev-network
+    
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # 개발용 데이터베이스 (선택사항)
+  postgres:
+    image: postgres:15-alpine
+    container_name: fortigate-postgres-dev
+    restart: unless-stopped
+    
+    ports:
+      - "5432:5432"
+    
+    environment:
+      - POSTGRES_DB=fortigate_dev
+      - POSTGRES_USER=fortigate
+      - POSTGRES_PASSWORD=fortigate_dev_password
+    
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    
+    networks:
+      - fortigate-dev-network
+    
+    profiles:
+      - database
+
+  # 개발용 메일캐처 (선택사항)
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    container_name: fortigate-mailcatcher-dev
+    restart: unless-stopped
+    
+    ports:
+      - "1080:1080"  # Web UI
+      - "1025:1025"  # SMTP
+    
+    networks:
+      - fortigate-dev-network
+    
+    profiles:
+      - mail
+
+networks:
+  fortigate-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
