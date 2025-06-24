@@ -1,5 +1,7 @@
 # FortiGate Nextrade
 
+[![CI/CD Pipeline](https://github.com/qws941/fortinet/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/qws941/fortinet/actions/workflows/ci-cd.yml)
+
 FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니터링 및 분석 플랫폼입니다. 폐쇄망(오프라인) 환경에서 완전히 동작하도록 설계되었습니다.
 
 ## 🚀 주요 기능
