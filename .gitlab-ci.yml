@@ -13,7 +13,7 @@ variables:
   DEPLOY_HOST: "192.168.50.215"
   DEPLOY_PORT: "1111"
   DEPLOY_USER: "docker"
-  DEPLOY_PATH: "~/app/fortinet-nextrade"
+  DEPLOY_PATH: "~/app/fortinet"
 
 stages:
   - build
@@ -123,8 +123,8 @@ deploy:
         echo "🔄 Force cleaning existing containers on configured port..."
         docker ps --filter 'publish=$PRD_PORT' -q | xargs -r docker kill || true
         docker ps -a --filter 'publish=$PRD_PORT' -q | xargs -r docker rm -f || true
-        docker ps --filter 'name=fortinet-nextrade-app' -q | xargs -r docker kill || true
-        docker ps -a --filter 'name=fortinet-nextrade-app' -q | xargs -r docker rm -f || true
+        docker ps --filter 'name=fortinet-app' -q | xargs -r docker kill || true
+        docker ps -a --filter 'name=fortinet-app' -q | xargs -r docker rm -f || true
         docker network prune -f || true
         
         # Stop existing compose services
@@ -208,7 +208,7 @@ cleanup_on_failure:
     - echo "🧹 파이프라인 실패 - 자동 정리 작업 실행..."
     - |
       ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
-        cd $DEPLOY_PATH/fortinet-nextrade || true
+        cd $DEPLOY_PATH/fortinet || true
         echo "실패한 배포 아티팩트 정리 중..."
         docker system prune -f || true
         echo "정리 작업 완료"
