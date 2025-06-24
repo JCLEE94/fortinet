@@ -13,11 +13,18 @@ fi
 
 # Login to private registry
 echo "🔑 Logging into private registry..."
-echo "bingogo1l7!" | docker login registry.jclee.me -u qws941 --password-stdin
+if [ -z "$REGISTRY_USERNAME" ] || [ -z "$REGISTRY_PASSWORD" ]; then
+    echo "❌ REGISTRY_USERNAME and REGISTRY_PASSWORD environment variables must be set"
+    echo "   Export them or add to .env file:"
+    echo "   export REGISTRY_USERNAME=your_username"
+    echo "   export REGISTRY_PASSWORD=your_password"
+    exit 1
+fi
+echo "$REGISTRY_PASSWORD" | docker login ${REGISTRY:-registry.jclee.me} -u "$REGISTRY_USERNAME" --password-stdin
 
 # Pull latest image
 echo "📥 Pulling latest image..."
-docker pull registry.jclee.me/fortinet:latest
+docker pull ${REGISTRY:-registry.jclee.me}/${IMAGE_NAME:-fortinet}:latest
 
 # Start services
 echo "🐳 Starting services..."
