@@ -39,9 +39,15 @@ jobs:
         cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
         platforms: linux/amd64,linux/arm64
     
-    - name: Deploy Notification
+    - name: Update Docker Compose Environment
       if: success() && github.ref == 'refs/heads/master'
       run: |
+        # Create .env file with secrets for deployment
+        cat > .env.deploy << EOF
+        FORTIGATE_TOKEN=${{ secrets.FORTIGATE_TOKEN }}
+        FORTIMANAGER_PASSWORD=${{ secrets.FORTIMANAGER_PASSWORD }}
+        EOF
+        
         echo "✅ Image pushed to ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
         echo "🚢 Watchtower will automatically deploy the new version"
         echo "📦 Private Registry Only - No Docker Hub"
