@@ -13,17 +13,25 @@ import asyncio
 fortimanager_bp = Blueprint('fortimanager', __name__, url_prefix='/api/fortimanager')
 
 @fortimanager_bp.route('/status', methods=['GET'])
-@cached(ttl=60)  # Increased TTL for status checks
+@cached(ttl=30)  # Reduced TTL for more frequent updates
 def get_fortimanager_status():
-    """FortiManager 연결 상태 조회"""
+    """FortiManager 연결 상태 및 통계 조회"""
     try:
         if is_test_mode():
+            dummy_gen = get_dummy_generator()
             return jsonify({
-                'status': 'connected',
-                'mode': 'test',
-                'message': 'Test mode - Mock FortiManager',
-                'version': '7.0.5',
-                'hostname': 'FortiManager-Test'
+                'success': True,
+                'data': {
+                    'status': 'connected',
+                    'mode': 'test',
+                    'message': 'Test mode - Mock FortiManager',
+                    'version': '7.2.4',
+                    'hostname': 'FortiManager-Demo',
+                    'managed_devices': dummy_gen.random_int(5, 15),
+                    'policy_packages': dummy_gen.random_int(3, 8),
+                    'adom_count': dummy_gen.random_int(1, 5),
+                    'last_update': time.time()
+                }
             })
         
         api_manager = get_api_manager()
@@ -31,34 +39,210 @@ def get_fortimanager_status():
         
         if not fm_client:
             return jsonify({
-                'status': 'not_configured',
-                'mode': 'production',
-                'message': 'FortiManager not configured'
+                'success': False,
+                'message': 'FortiManager not configured',
+                'data': {
+                    'status': 'not_configured',
+                    'mode': 'production'
+                }
             })
             
         try:
-            if fm_client.login():
+            # Test token authentication first
+            if fm_client.test_token_auth():
+                status = 'limited'  # Token auth but may have limited permissions
+                
+                # Try to get additional data
+                try:
+                    adom_list = fm_client.get_adom_list()
+                    adom_count = len(adom_list) if adom_list else 0
+                    
+                    devices = fm_client.get_managed_devices()
+                    device_count = len(devices) if devices else 0
+                    
+                    address_objects = fm_client.get_address_objects()
+                    address_count = len(address_objects) if address_objects else 0
+                    
+                    return jsonify({
+                        'success': True,
+                        'data': {
+                            'status': 'connected',
+                            'mode': 'production',
+                            'version': 'API Access',
+                            'hostname': 'FortiManager',
+                            'managed_devices': device_count,
+                            'policy_packages': 1,  # Default assumption
+                            'adom_count': adom_count,
+                            'address_objects': address_count,
+                            'last_update': time.time()
+                        }
+                    })
+                    
+                except Exception as api_error:
+                    # Limited access but connected
+                    return jsonify({
+                        'success': True,
+                        'data': {
+                            'status': 'limited',
+                            'mode': 'production',
+                            'message': 'Limited API access',
+                            'version': 'Unknown',
+                            'hostname': 'FortiManager',
+                            'managed_devices': 0,
+                            'policy_packages': 0,
+                            'adom_count': 0,
+                            'last_update': time.time(),
+                            'api_error': str(api_error)
+                        }
+                    })
+                    
+            elif fm_client.login():
+                # Session-based login successful
                 status = fm_client.get_system_status()
+                adom_list = fm_client.get_adom_list()
+                devices = fm_client.get_managed_devices()
+                
                 return jsonify({
-                    'status': 'connected',
-                    'mode': 'production',
-                    'version': status.get('version', 'Unknown'),
-                    'hostname': status.get('hostname', 'Unknown')
+                    'success': True,
+                    'data': {
+                        'status': 'connected',
+                        'mode': 'production',
+                        'version': status.get('version', 'Unknown'),
+                        'hostname': status.get('hostname', 'FortiManager'),
+                        'managed_devices': len(devices) if devices else 0,
+                        'policy_packages': 1,
+                        'adom_count': len(adom_list) if adom_list else 0,
+                        'last_update': time.time()
+                    }
                 })
             else:
                 return jsonify({
-                    'status': 'disconnected',
-                    'mode': 'production',
-                    'message': 'Authentication failed'
+                    'success': False,
+                    'message': 'Authentication failed',
+                    'data': {
+                        'status': 'disconnected',
+                        'mode': 'production'
+                    }
                 })
         except Exception as e:
             return jsonify({
-                'status': 'error',
-                'mode': 'production',
-                'message': str(e)
+                'success': False,
+                'message': str(e),
+                'data': {
+                    'status': 'error',
+                    'mode': 'production'
+                }
             })
     except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({
+            'success': False, 
+            'message': str(e),
+            'data': {
+                'status': 'error'
+            }
+        }), 500
+
+# Additional API endpoints for dashboard
+@fortimanager_bp.route('/address-objects', methods=['GET'])
+@cached(ttl=120)
+def get_address_objects():
+    """주소 객체 목록 조회"""
+    try:
+        if is_test_mode():
+            dummy_gen = get_dummy_generator()
+            objects = []
+            for i in range(dummy_gen.random_int(10, 50)):
+                objects.append({
+                    'name': f'ADDR_HOST_{i+1:03d}',
+                    'type': 'ipmask',
+                    'subnet': f'192.168.{dummy_gen.random_int(1, 254)}.{dummy_gen.random_int(1, 254)}/32',
+                    'interface': 'any'
+                })
+            return jsonify({'success': True, 'data': objects})
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if fm_client and fm_client.test_token_auth():
+            objects = fm_client.get_address_objects()
+            return jsonify({'success': True, 'data': objects or []})
+        
+        return jsonify({'success': False, 'message': 'FortiManager not available'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@fortimanager_bp.route('/service-objects', methods=['GET'])
+@cached(ttl=120)
+def get_service_objects():
+    """서비스 객체 목록 조회"""
+    try:
+        if is_test_mode():
+            dummy_gen = get_dummy_generator()
+            objects = []
+            services = ['HTTP', 'HTTPS', 'SSH', 'FTP', 'SMTP', 'DNS', 'DHCP', 'SNMP']
+            for i, service in enumerate(services):
+                objects.append({
+                    'name': f'{service}_CUSTOM',
+                    'protocol': 'tcp' if service != 'DNS' else 'udp',
+                    'port_range': f'{443+i}-{443+i}',
+                    'category': 'Web Access' if 'HTTP' in service else 'General'
+                })
+            return jsonify({'success': True, 'data': objects})
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if fm_client and fm_client.test_token_auth():
+            objects = fm_client.get_service_objects()
+            return jsonify({'success': True, 'data': objects or []})
+        
+        return jsonify({'success': False, 'message': 'FortiManager not available'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@fortimanager_bp.route('/policies', methods=['GET'])
+@cached(ttl=60)
+def get_firewall_policies():
+    """방화벽 정책 목록 조회"""
+    try:
+        if is_test_mode():
+            dummy_gen = get_dummy_generator()
+            policies = []
+            for i in range(dummy_gen.random_int(15, 30)):
+                policies.append({
+                    'policyid': i + 1,
+                    'name': f'Policy_{i+1:03d}',
+                    'srcintf': ['port1'],
+                    'dstintf': ['port2'],
+                    'srcaddr': ['all'],
+                    'dstaddr': ['all'],
+                    'service': ['ALL'],
+                    'action': 'accept' if i % 10 != 0 else 'deny',
+                    'status': 'enable',
+                    'logtraffic': 'all'
+                })
+            return jsonify({'success': True, 'data': policies})
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if fm_client and fm_client.test_token_auth():
+            # Try to get policies from first available device
+            devices = fm_client.get_managed_devices()
+            if devices:
+                first_device = devices[0].get('name')
+                if first_device:
+                    policies = fm_client.get_firewall_policies(first_device)
+                    return jsonify({'success': True, 'data': policies or []})
+            
+            return jsonify({'success': True, 'data': []})
+        
+        return jsonify({'success': False, 'message': 'FortiManager not available'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @fortimanager_bp.route('/dashboard', methods=['GET'])
 @cached(ttl=60)
@@ -354,11 +538,12 @@ def get_device_interfaces(device_id):
 
 @fortimanager_bp.route('/analyze-packet-path', methods=['POST'])
 def analyze_packet_path():
-    """패킷 경로 분석"""
+    """패킷 경로 분석 (FortiManager API 기반)"""
     try:
         data = request.get_json()
         
         if is_test_mode():
+            # Test mode - Mock 데이터 사용
             result = mock_fortigate.analyze_packet_path(
                 src_ip=data.get('src_ip'),
                 dst_ip=data.get('dst_ip'),
@@ -366,14 +551,43 @@ def analyze_packet_path():
                 protocol=data.get('protocol', 'tcp')
             )
         else:
-            from src.analysis.fixed_path_analyzer import FixedPathAnalyzer
-            analyzer = FixedPathAnalyzer()
-            result = analyzer.analyze_path(
+            # Production mode - 실제 FortiManager API 사용
+            from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+            from src.config.services import get_fortimanager_config
+            
+            # FortiManager 설정 로드
+            config = get_fortimanager_config()
+            if not config or not config.get('enabled', False):
+                return jsonify({'error': 'FortiManager not configured'}), 503
+            
+            # API 클라이언트 초기화
+            client = FortiManagerAPIClient(
+                host=config.get('host'),
+                api_token=config.get('api_token'),
+                username=config.get('username'),
+                password=config.get('password'),
+                port=config.get('port'),
+                verify_ssl=config.get('verify_ssl', False)
+            )
+            
+            # 인증
+            if not client.api_token:
+                if not client.login():
+                    return jsonify({'error': 'FortiManager authentication failed'}), 401
+            
+            # 패킷 경로 분석 수행
+            result = client.analyze_packet_path(
                 src_ip=data.get('src_ip'),
                 dst_ip=data.get('dst_ip'),
+                port=data.get('port', 80),
                 protocol=data.get('protocol', 'tcp'),
-                port=data.get('port', 80)
+                device_name=data.get('device_name'),  # 디바이스 이름 지원
+                vdom=data.get('vdom', 'root')
             )
+            
+            # 로그아웃 (세션 기반 인증인 경우)
+            if not client.api_token:
+                client.logout()
             
         return jsonify(result)
     except Exception as e:

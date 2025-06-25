@@ -1,0 +1,36 @@
+{
+  "network": {
+    "allowed_hosts": [],
+    "internal_subnets": [
+      "192.168.0.0/16",
+      "172.16.0.0/12",
+      "10.0.0.0/8"
+    ],
+    "default_ports": {
+      "web_app": 7777,
+      "mock_server": 6666,
+      "websocket": 8765
+    }
+  },
+  "services": {
+    "fortimanager": {
+      "host": "${FORTIMANAGER_HOST}",
+      "port": "${FORTIMANAGER_PORT:541}",
+      "username": "${FORTIMANAGER_USERNAME}",
+      "password": "${FORTIMANAGER_PASSWORD}",
+      "verify_ssl": "${FORTIMANAGER_VERIFY_SSL:false}"
+    },
+    "fortigate": {
+      "host": "${FORTIGATE_HOST}",
+      "port": "${FORTIGATE_PORT:443}",
+      "api_token": "${FORTIGATE_API_TOKEN}",
+      "verify_ssl": "${FORTIGATE_VERIFY_SSL:false}"
+    }
+  },
+  "paths": {
+    "base_dir": "${BASE_DIR:.}",
+    "data_dir": "${DATA_DIR:./data}",
+    "log_dir": "${LOG_DIR:./logs}",
+    "temp_dir": "${TEMP_DIR:/tmp}"
+  }
+}

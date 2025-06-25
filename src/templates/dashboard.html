@@ -87,6 +87,87 @@
     </div>
 </div>
 
+<!-- FortiManager Management Section -->
+<div class="content-grid-3 mt-6">
+    <!-- FortiManager Status -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-server" style="color: #FF6B35;"></i>
+                FortiManager 상태
+            </h3>
+            <span class="badge-success" id="fortimanager-status">연결됨</span>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="managed-devices-count">-</div>
+                <div class="stat-label">관리 장치</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="policy-packages-count">-</div>
+                <div class="stat-label">정책 패키지</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="adom-count">-</div>
+                <div class="stat-label">ADOM</div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn-primary btn-sm" onclick="refreshFortiManagerStatus()">
+                <i class="fas fa-sync-alt"></i> 상태 새로고침
+            </button>
+        </div>
+    </div>
+    
+    <!-- Policy Management -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-shield-alt" style="color: #4ECDC4;"></i>
+                정책 관리
+            </h3>
+        </div>
+        <div class="policy-summary" id="policy-summary">
+            <div class="policy-item">
+                <div class="policy-name">방화벽 정책</div>
+                <div class="policy-count" id="firewall-policies-count">로딩중...</div>
+            </div>
+            <div class="policy-item">
+                <div class="policy-name">주소 객체</div>
+                <div class="policy-count" id="address-objects-count">로딩중...</div>
+            </div>
+            <div class="policy-item">
+                <div class="policy-name">서비스 객체</div>
+                <div class="policy-count" id="service-objects-count">로딩중...</div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn-secondary btn-sm" onclick="openPolicyAnalysis()">
+                <i class="fas fa-route"></i> 경로 분석
+            </button>
+        </div>
+    </div>
+    
+    <!-- Recent Security Events -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="fas fa-exclamation-triangle" style="color: #FF6B6B;"></i>
+                보안 이벤트
+            </h3>
+            <span class="badge-warning" id="security-events-count">0 건</span>
+        </div>
+        <div class="security-events-list" id="security-events-list">
+            <!-- 동적으로 로드됨 -->
+        </div>
+        <div class="mt-3">
+            <button class="btn-outline btn-sm" onclick="viewAllSecurityEvents()">
+                <i class="fas fa-list"></i> 전체 보기
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Bottom Row -->
 <div class="content-grid-2 mt-6">
     <!-- Recent Alerts -->
@@ -106,22 +187,22 @@
             <h3 class="card-title">빠른 작업</h3>
         </div>
         <div class="quick-actions-grid">
-            <button class="quick-action-btn">
+            <button class="quick-action-btn" onclick="openTrafficAnalysis()">
                 <i class="fas fa-brain quick-action-icon" style="color: #7C3AED;"></i>
                 <span>트래픽 분석</span>
             </button>
             
-            <button class="quick-action-btn">
+            <button class="quick-action-btn" onclick="openPolicyOptimization()">
                 <i class="fas fa-magic quick-action-icon" style="color: var(--accent);"></i>
                 <span>정책 최적화</span>
             </button>
             
-            <button class="quick-action-btn">
+            <button class="quick-action-btn" onclick="generateReport()">
                 <i class="fas fa-file-alt quick-action-icon" style="color: var(--success);"></i>
                 <span>리포트 생성</span>
             </button>
             
-            <button class="quick-action-btn">
+            <button class="quick-action-btn" onclick="openSecurityDiagnostics()">
                 <i class="fas fa-shield-alt quick-action-icon" style="color: var(--warning);"></i>
                 <span>보안 진단</span>
             </button>

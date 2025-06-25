@@ -76,28 +76,32 @@ class JsonRpcMixin:
         return current_id
     
     def build_json_rpc_request(self, method: str, url: str, data: Optional[Dict] = None, 
-                              session: Optional[str] = None, verbose: int = 0) -> Dict[str, Any]:
-        """JSON-RPC 요청 페이로드 생성"""
+                          session: Optional[str] = None, verbose: int = 0) -> Dict[str, Any]:
+        """JSON-RPC 요청 페이로드 생성 (FortiManager 공식 표준 준수)"""
+        # FortiManager 공식 JSON-RPC 형식
+        params_obj = {
+            "url": url
+        }
+        
+        if data:
+            params_obj["data"] = data
+            
+        if verbose > 0:
+            params_obj["verbose"] = verbose
+        
         payload = {
             "id": self.get_next_request_id(),
-            "jsonrpc": "2.0",
             "method": method,
-            "params": {
-                "url": url,
-                "verbose": verbose
-            }
+            "params": [params_obj]  # 배열 형태로 수정 (공식 표준)
         }
         
         if session:
             payload["session"] = session
-        
-        if data:
-            payload["params"]["data"] = data
             
         return payload
     
     def parse_json_rpc_response(self, response: Dict[str, Any]) -> Tuple[bool, Any]:
-        """JSON-RPC 응답 파싱"""
+        """JSON-RPC 응답 파싱 (FortiManager 공식 응답 형식 준수)"""
         if not isinstance(response, dict):
             return False, "Invalid response format"
         
@@ -111,14 +115,20 @@ class JsonRpcMixin:
         if not result:
             return False, "No result in response"
         
-        # 배열 결과인 경우 첫 번째 요소의 상태 확인
+        # FortiManager는 result가 배열 형태로 반환됨
         if isinstance(result, list) and len(result) > 0:
-            status = result[0].get("status", {})
+            first_result = result[0]
+            status = first_result.get("status", {})
+            
+            # 상태 코드 0은 성공
             if status.get("code") == 0:
-                return True, result[0].get("data", result)
+                # data 필드가 있으면 data 반환, 없으면 전체 결과 반환
+                return True, first_result.get("data", first_result)
             else:
-                return False, status.get("message", "Unknown error")
+                error_msg = status.get("message", "Unknown error")
+                return False, f"FortiManager Error (Code {status.get('code')}): {error_msg}"
         
+        # 배열이 아닌 경우 직접 반환
         return True, result
     
     def make_json_rpc_request(self, method: str, url: str, data: Optional[Dict] = None,

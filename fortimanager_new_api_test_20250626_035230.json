@@ -1,0 +1,30 @@
+{
+  "test_time": "2025-06-26T03:52:11.941437",
+  "api_key": "pxx7odxgnjcxtzujbtu3nz39ahoegmx1",
+  "host": "hjsim-1034-451984.fortidemo.fortinet.com:14005",
+  "tests": [
+    {
+      "name": "bearer_auth_system_status",
+      "status": "error",
+      "method": "Bearer Token",
+      "error": "('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+    },
+    {
+      "name": "custom_header_auth",
+      "status": "success",
+      "method": "Custom Header",
+      "response": {
+        "result": [
+          {
+            "status": {
+              "code": -11,
+              "message": "No permission for the resource"
+            },
+            "url": "/sys/status"
+          }
+        ],
+        "id": 1750877532
+      }
+    }
+  ]
+}

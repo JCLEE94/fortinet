@@ -87,7 +87,7 @@
                         <div class="mb-3">
                             <label for="fortigate_host" class="form-label">FortiGate 호스트 주소:</label>
                             <input type="text" class="form-control" id="fortigate_hostname" name="fortigate_hostname" 
-                                   placeholder="예: 192.168.1.1 또는 fortigate.example.com" 
+                                   placeholder="예: your-fortigate-host.com 또는 IP 주소" 
                                    value="{{ config.get('fortigate', {}).get('hostname', '') }}">
                         </div>
                         
@@ -114,38 +114,101 @@
                                    placeholder="기본값: 443" value="{{ config.get('fortimanager', {}).get('port', 443) }}">
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="fortimanager_api_token" class="form-label">FortiManager API 토큰:</label>
-                            <input type="password" class="form-control" id="fortimanager_api_token" name="fortimanager_api_token" 
-                                   placeholder="API 토큰 (권장)" value="{{ config.get('fortimanager', {}).get('api_token', '') }}">
+                        <!-- 인증 방식 선택 -->
+                        <div class="mb-4">
+                            <label class="form-label">인증 방식 선택:</label>
+                            <div class="auth-method-selector">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="auth_method" id="auth-token" value="token" 
+                                           {% if not config.get('fortimanager', {}).get('username') or config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
+                                    <label class="form-check-label" for="auth-token">
+                                        <i class="fas fa-key text-primary me-2"></i>API 토큰 인증 (권장)
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="radio" name="auth_method" id="auth-session" value="session"
+                                           {% if config.get('fortimanager', {}).get('username') and not config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
+                                    <label class="form-check-label" for="auth-session">
+                                        <i class="fas fa-user text-success me-2"></i>세션 기반 인증 (사용자/비밀번호)
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="alert alert-secondary">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="show-credentials-toggle">
-                                <label class="form-check-label" for="show-credentials-toggle">
-                                    토큰이 없는 경우 사용자/비밀번호 표시
+                        <!-- API 토큰 인증 섹션 -->
+                        <div id="token-auth-section" class="auth-section {% if config.get('fortimanager', {}).get('username') and not config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>API 토큰은 FortiManager에서 다음 명령으로 생성할 수 있습니다:
+                                <code class="d-block mt-2">execute api-user generate-key [username]</code>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fortimanager_api_token" class="form-label">
+                                    <i class="fas fa-key me-2"></i>FortiManager API 토큰:
                                 </label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="fortimanager_api_token" name="fortimanager_api_token" 
+                                           placeholder="API 토큰 입력" value="{{ config.get('fortimanager', {}).get('api_token', '') }}">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggle-token-visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">토큰 권한 필요: rpc-permit=read-write</small>
+                            </div>
+                        </div>
+                        
+                        <!-- 세션 인증 섹션 -->
+                        <div id="session-auth-section" class="auth-section {% if not config.get('fortimanager', {}).get('username') or config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
+                            <div class="alert alert-warning mb-3">
+                                <i class="fas fa-exclamation-triangle me-2"></i>세션 인증은 주기적인 재로그인이 필요할 수 있습니다.
+                            </div>
+                            <div class="mb-3">
+                                <label for="fortimanager_username" class="form-label">
+                                    <i class="fas fa-user me-2"></i>FortiManager 사용자 이름:
+                                </label>
+                                <input type="text" class="form-control" id="fortimanager_username" name="fortimanager_username" 
+                                       placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', '') }}">
                             </div>
                             
-                            <div id="credentials-fields" class="d-none">
-                                <div class="mb-3">
-                                    <label for="fortimanager_username" class="form-label">FortiManager 사용자 이름:</label>
-                                    <input type="text" class="form-control" id="fortimanager_username" name="fortimanager_username" 
-                                           placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', '') }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="fortimanager_password" class="form-label">FortiManager 비밀번호:</label>
+                            <div class="mb-3">
+                                <label for="fortimanager_password" class="form-label">
+                                    <i class="fas fa-lock me-2"></i>FortiManager 비밀번호:
+                                </label>
+                                <div class="input-group">
                                     <input type="password" class="form-control" id="fortimanager_password" name="fortimanager_password" 
                                            placeholder="관리자 비밀번호" value="{{ config.get('fortimanager', {}).get('password', '') }}">
+                                    <button class="btn btn-outline-secondary" type="button" id="toggle-password-visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
-                                
-                                <button type="button" id="generate-token-btn" class="btn btn-secondary btn-sm mb-2">
-                                    <i class="fas fa-key me-2"></i>사용자/비밀번호로 토큰 생성
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" id="convert-to-token-btn" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-exchange-alt me-2"></i>세션 인증으로 API 토큰 생성
                                 </button>
-                                <div id="token-generation-result" class="alert alert-info d-none" role="alert">
-                                    <span id="token-generation-message"></span>
+                            </div>
+                            <div id="token-generation-result" class="alert alert-info mt-3 d-none" role="alert">
+                                <span id="token-generation-message"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- 고급 설정 -->
+                        <div class="mt-4">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advanced-settings">
+                                <i class="fas fa-cog me-2"></i>고급 설정
+                            </button>
+                            <div class="collapse mt-3" id="advanced-settings">
+                                <div class="card card-body">
+                                    <div class="mb-3">
+                                        <label for="fortimanager_adom" class="form-label">기본 ADOM:</label>
+                                        <input type="text" class="form-control" id="fortimanager_adom" name="fortimanager_adom" 
+                                               placeholder="root" value="{{ config.get('fortimanager', {}).get('adom', 'root') }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="fortimanager_timeout" class="form-label">연결 타임아웃 (초):</label>
+                                        <input type="number" class="form-control" id="fortimanager_timeout" name="fortimanager_timeout" 
+                                               placeholder="30" value="{{ config.get('fortimanager', {}).get('timeout', 30) }}">
+                                    </div>
                                 </div>
                             </div>
                         </div>

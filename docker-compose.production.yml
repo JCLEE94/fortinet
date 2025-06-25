@@ -2,107 +2,210 @@ version: '3.8'
 
 services:
   app:
-    image: ${DOCKER_REGISTRY_URL}/fortigate-nextrade:production-latest
-    container_name: fortigate-nextrade
+    image: ${DOCKER_REGISTRY:-registry.jclee.me}/${DOCKER_IMAGE_NAME:-fortinet}:${DOCKER_TAG:-latest}
+    container_name: ${CONTAINER_NAME:-fortinet-app}
+    hostname: ${HOSTNAME:-fortinet-nextrade}
     restart: unless-stopped
     
     ports:
-      - "7777:7777"
+      - "${WEB_APP_PORT:-7777}:${WEB_APP_PORT:-7777}"
+      - "${WEBSOCKET_PORT:-8765}:${WEBSOCKET_PORT:-8765}"
+      - "${METRICS_PORT:-9090}:${METRICS_PORT:-9090}"
     
     environment:
-      - APP_MODE=production
-      - FLASK_ENV=production
-      - TZ=Asia/Seoul
-      - BUILD_TIME=${BUILD_TIME}
-      - OFFLINE_MODE=true
-      - NO_INTERNET=true
-      - DISABLE_EXTERNAL_CALLS=true
-      - LOG_LEVEL=INFO
-      - DEBUG=false
-      - REDIS_ENABLED=false
+      # Application Settings
+      - APP_MODE=${APP_MODE:-production}
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - WEB_APP_HOST=${WEB_APP_HOST:-0.0.0.0}
+      - WEB_APP_PORT=${WEB_APP_PORT:-7777}
+      
+      # FortiGate Configuration
+      - FORTIGATE_HOST=${FORTIGATE_HOST}
+      - FORTIGATE_PORT=${FORTIGATE_PORT:-443}
+      - FORTIGATE_API_TOKEN=${FORTIGATE_API_TOKEN}
+      - FORTIGATE_VERIFY_SSL=${FORTIGATE_VERIFY_SSL:-false}
+      
+      # FortiManager Configuration
+      - FORTIMANAGER_HOST=${FORTIMANAGER_HOST}
+      - FORTIMANAGER_PORT=${FORTIMANAGER_PORT:-541}
+      - FORTIMANAGER_USERNAME=${FORTIMANAGER_USERNAME}
+      - FORTIMANAGER_PASSWORD=${FORTIMANAGER_PASSWORD}
+      - FORTIMANAGER_VERIFY_SSL=${FORTIMANAGER_VERIFY_SSL:-false}
+      - FORTIMANAGER_DEFAULT_ADOM=${FORTIMANAGER_DEFAULT_ADOM:-root}
+      
+      # Performance Settings
+      - WORKERS=${WORKERS:-4}
+      - WORKER_CLASS=${WORKER_CLASS:-gevent}
+      - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-1000}
+      - MAX_REQUESTS=${MAX_REQUESTS:-1000}
+      - TIMEOUT=${TIMEOUT:-120}
+      
+      # Security Settings
+      - SECRET_KEY=${SECRET_KEY:-change-this-secure-key}
+      - INTERNAL_NETWORKS=${INTERNAL_NETWORKS:-192.168.0.0/16,172.16.0.0/12,10.0.0.0/8}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
     
-    env_file:
-      - ./environments/production.env
-    
+    # Use Docker volumes instead of bind mounts
     volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./backups:/app/backups
-      - ./ssl:/app/ssl:ro
+      - fortinet-data:/app/data
+      - fortinet-logs:/app/logs
+      - fortinet-temp:/app/temp
+      - fortinet-config:/app/config
     
     networks:
       - fortigate-network
     
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7777/api/health', timeout=5).read()"]
-      interval: 30s
-      timeout: 10s
-      start_period: 60s
-      retries: 3
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${WEB_APP_PORT:-7777}/api/health', timeout=5).read()"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: ${HEALTH_CHECK_TIMEOUT:-10s}
+      start_period: ${HEALTH_CHECK_START_PERIOD:-60s}
+      retries: ${HEALTH_CHECK_RETRIES:-3}
     
     security_opt:
       - no-new-privileges:true
     
     read_only: false
     
+    # Resource limits (no performance restrictions)
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-4G}
+          cpus: '${CPU_LIMIT:-4.0}'
+        reservations:
+          memory: ${MEMORY_RESERVATION:-1G}
+          cpus: '${CPU_RESERVATION:-1.0}'
+    
+    # Alternative for non-swarm mode
+    mem_limit: ${MEMORY_LIMIT:-4g}
+    cpus: ${CPU_LIMIT:-4.0}
+    mem_reservation: ${MEMORY_RESERVATION:-1g}
+    
     tmpfs:
-      - /tmp:noexec,nosuid,size=100m
+      - /tmp:noexec,nosuid,size=${TMPFS_SIZE:-512m}
     
     ulimits:
       nofile:
-        soft: 1024
-        hard: 2048
+        soft: ${ULIMIT_NOFILE_SOFT:-65536}
+        hard: ${ULIMIT_NOFILE_HARD:-65536}
     
     labels:
-      - "com.fortigate.environment=production"
-      - "com.fortigate.service=nextrade"
-      - "com.fortigate.version=${BUILD_TIME}"
+      - "com.fortinet.nextrade.service=app"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+      - "com.fortinet.nextrade.version=${VERSION:-latest}"
+      - "traefik.enable=${TRAEFIK_ENABLE:-false}"
 
-  # 운영 환경용 로그 수집기 (선택사항)
-  log-collector:
-    image: fluent/fluent-bit:latest
-    container_name: fortigate-log-collector
+  # Optional Redis Service
+  redis:
+    image: redis:${REDIS_VERSION:-7-alpine}
+    container_name: ${REDIS_CONTAINER_NAME:-fortinet-redis}
     restart: unless-stopped
+    profiles:
+      - cache
+      - full
+    
+    command: >
+      redis-server 
+      --appendonly yes 
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
     
     volumes:
-      - ./logs:/var/log/app:ro
-      - ./config/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      - fortinet-redis-data:/data
     
     networks:
-      - fortigate-network
+      - fortinet-network
     
-    depends_on:
-      - app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     
-    profiles:
-      - logging
+    mem_limit: ${REDIS_MEMORY_LIMIT:-512m}
+    cpus: ${REDIS_CPU_LIMIT:-1.0}
 
-  # 운영 환경용 메트릭 수집기 (선택사항)
-  metrics:
-    image: prom/node-exporter:latest
-    container_name: fortigate-metrics
+  # Optional Monitoring (Node Exporter)
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_VERSION:-latest}
+    container_name: ${NODE_EXPORTER_CONTAINER_NAME:-fortinet-node-exporter}
     restart: unless-stopped
-    
-    ports:
-      - "9100:9100"
-    
-    networks:
-      - fortigate-network
-    
     profiles:
       - monitoring
+      - full
+    
+    ports:
+      - "${NODE_EXPORTER_PORT:-9100}:9100"
+    
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    
+    networks:
+      - fortinet-network
 
 networks:
-  fortigate-network:
+  fortinet-network:
+    name: ${NETWORK_NAME:-fortinet-network}
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: ${NETWORK_SUBNET:-172.20.0.0/16}
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
 
 volumes:
-  app-data:
+  # Application data volumes with named volumes
+  fortinet-data:
+    name: ${DATA_VOLUME_NAME:-fortinet-data}
     driver: local
-  app-logs:
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_VOLUME_PATH:-/opt/fortinet/data}
+    labels:
+      - "com.fortinet.nextrade.volume=data"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+
+  fortinet-logs:
+    name: ${LOGS_VOLUME_NAME:-fortinet-logs}
     driver: local
-  app-backups:
+    driver_opts:
+      type: none
+      o: bind
+      device: ${LOGS_VOLUME_PATH:-/opt/fortinet/logs}
+    labels:
+      - "com.fortinet.nextrade.volume=logs"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+
+  fortinet-temp:
+    name: ${TEMP_VOLUME_NAME:-fortinet-temp}
     driver: local
+    labels:
+      - "com.fortinet.nextrade.volume=temp"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+
+  fortinet-config:
+    name: ${CONFIG_VOLUME_NAME:-fortinet-config}
+    driver: local
+    labels:
+      - "com.fortinet.nextrade.volume=config"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+
+  fortinet-redis-data:
+    name: ${REDIS_VOLUME_NAME:-fortinet-redis-data}
+    driver: local
+    labels:
+      - "com.fortinet.nextrade.volume=redis"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"

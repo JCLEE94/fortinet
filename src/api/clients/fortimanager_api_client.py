@@ -16,6 +16,8 @@ from src.utils.api_common import (
     JsonRpcMixin, ConnectionTestMixin, MonitoringMixin, 
     ErrorHandlingMixin, RequestRetryMixin, CacheMixin, sanitize_sensitive_data
 )
+from src.utils.unified_logger import get_logger
+import requests
 
 class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin, 
                             ConnectionTestMixin, MonitoringMixin, ErrorHandlingMixin, 
@@ -53,7 +55,8 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         self.verify_ssl = verify_ssl
         self.session_id = None
         self.transaction_id = None
-        self.adom = 'root'  # Default administrative domain
+        self.adom = os.getenv('FORTIMANAGER_DEFAULT_ADOM', 'root')  # Default administrative domain
+        self.auth_headers = {}  # Store successful auth headers
         
         # Configuration for API endpoints
         self.protocol = 'https' if verify_ssl else 'https'
@@ -123,7 +126,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
     
     def test_token_auth(self):
         """
-        Test API token authentication
+        Test API token authentication with multiple methods
         
         Returns:
             bool: Success or failure
@@ -131,29 +134,55 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         if not self.api_token:
             return False
         
-        # Simple request to test token using common mixin
+        # Try multiple authentication methods
+        auth_methods = [
+            {'Authorization': f'Bearer {self.api_token}'},
+            {'Authorization': f'Token {self.api_token}', 'X-API-Key': self.api_token},
+            {'X-API-Key': self.api_token},
+            {'X-Auth-Token': self.api_token}
+        ]
+        
         payload = self.build_json_rpc_request(
             method="get",
             url="/sys/status"
         )
         
-        # Add token to headers
-        headers = self.headers.copy()
-        headers['Authorization'] = f'Bearer {self.api_token}'
+        for i, auth_headers in enumerate(auth_methods):
+            headers = self.headers.copy()
+            headers.update(auth_headers)
+            
+            try:
+                success, result, status_code = self._make_request(
+                    'POST',
+                    self.base_url,
+                    payload,
+                    None,
+                    headers
+                )
+                
+                if success and result:
+                    parsed_success, parsed_data = self.parse_json_rpc_response(result)
+                    
+                    # Check if we got actual data or just permission error
+                    if parsed_success or (isinstance(parsed_data, dict) and 
+                                        parsed_data.get('status', {}).get('code') != -11):
+                        self.auth_method = 'token'
+                        self.auth_headers = auth_headers
+                        self.logger.info(f"Token authentication successful with method {i+1}")
+                        return True
+                    elif parsed_data.get('status', {}).get('code') == -11:
+                        self.logger.warning(f"Token method {i+1}: No permission error. API user may need rpc-permit=read-write")
+                        # 권한 문제 시 세션 인증으로 자동 전환 시도
+                        if self.username and self.password:
+                            self.logger.info("Attempting session authentication due to API permission error")
+                            return False  # login() 메서드가 호출되도록 함
+                        continue
+                        
+            except Exception as e:
+                self.logger.debug(f"Token auth method {i+1} failed: {e}")
+                continue
         
-        success, result, status_code = self._make_request(
-            'POST',
-            self.base_url,
-            payload,
-            None,
-            headers
-        )
-        
-        if success:
-            parsed_success, _ = self.parse_json_rpc_response(result)
-            return parsed_success
-        else:
-            return False
+        return False
     
     # Override test_connection for FortiManager-specific JSON-RPC flow
     def test_connection(self):
@@ -203,7 +232,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         
         # Add token to headers if using token auth
         headers = self.headers.copy()
-        if self.auth_method == 'token' and self.api_token:
+        if self.auth_method == 'token' and self.api_token and hasattr(self, 'auth_headers'):
+            headers.update(self.auth_headers)
+        elif self.auth_method == 'token' and self.api_token:
             headers['Authorization'] = f'Bearer {self.api_token}'
         
         # Make request
@@ -323,7 +354,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
     
     def get_firewall_policies(self, device_name, vdom="root", adom="root"):
         """
-        Get firewall policies for a device
+        Get firewall policies for a device (공식 API 구조 준수)
         
         Args:
             device_name (str): Device name
@@ -333,9 +364,332 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         Returns:
             list: Firewall policies or empty list on failure
         """
+        # 공식 FortiManager API 구조 사용: /pm/config/device/{device}/vdom/{vdom}/firewall/policy
         success, result = self._make_api_request(
             method="get",
-            url=f"/pm/config/adom/{adom}/pkg/default/{device_name}/firewall/policy"
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy"
+        )
+        
+        if success:
+            return result if isinstance(result, list) else []
+        else:
+            self.logger.error(f"Failed to get firewall policies: {result}")
+            return []
+
+    def get_package_policies(self, package_name="default", adom="root"):
+        """
+        Get policies from a policy package (Policy Package 관리)
+        
+        Args:
+            package_name (str): Policy package name (default: default)
+            adom (str): ADOM name (default: root)
+            
+        Returns:
+            list: Package policies or empty list on failure
+        """
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/adom/{adom}/pkg/{package_name}/firewall/policy"
+        )
+        
+        if success:
+            return result if isinstance(result, list) else []
+        else:
+            self.logger.error(f"Failed to get package policies: {result}")
+            return []
+    
+    def analyze_packet_path(self, src_ip: str, dst_ip: str, port: int, protocol: str = "tcp", 
+                           device_name: str = None, vdom: str = "root") -> Dict[str, Any]:
+        """
+        Analyze packet path through FortiGate using FortiManager APIs
+        
+        Args:
+            src_ip (str): Source IP address
+            dst_ip (str): Destination IP address  
+            port (int): Destination port
+            protocol (str): Protocol (tcp/udp/icmp)
+            device_name (str): Target device name
+            vdom (str): VDOM name (default: root)
+            
+        Returns:
+            dict: Path analysis result
+        """
+        try:
+            # 1. Get routing information
+            routes = self.get_routes(device_name, vdom)
+            
+            # 2. Get interfaces
+            interfaces = self.get_interfaces(device_name, vdom)
+            
+            # 3. Get firewall policies
+            policies = self.get_firewall_policies(device_name, vdom)
+            
+            # 4. Perform path analysis
+            path_analysis = {
+                'source_ip': src_ip,
+                'destination_ip': dst_ip,
+                'port': port,
+                'protocol': protocol,
+                'device': device_name,
+                'vdom': vdom,
+                'analysis_result': {
+                    'ingress_interface': None,
+                    'egress_interface': None,
+                    'matching_route': None,
+                    'applied_policies': [],
+                    'final_action': 'unknown',
+                    'path_status': 'analyzing'
+                }
+            }
+            
+            # Find ingress interface
+            for interface in interfaces:
+                if self._ip_in_subnet(src_ip, interface.get('ip', ''), interface.get('netmask', '')):
+                    path_analysis['analysis_result']['ingress_interface'] = interface.get('name')
+                    break
+            
+            # Find matching route for destination
+            for route in routes:
+                if self._ip_in_subnet(dst_ip, route.get('dst', ''), route.get('netmask', '')):
+                    path_analysis['analysis_result']['matching_route'] = route
+                    path_analysis['analysis_result']['egress_interface'] = route.get('device', route.get('interface'))
+                    break
+            
+            # Find applicable policies
+            matching_policies = []
+            for policy in policies:
+                if self._policy_matches_traffic(policy, src_ip, dst_ip, port, protocol):
+                    matching_policies.append(policy)
+                    
+            path_analysis['analysis_result']['applied_policies'] = matching_policies
+            
+            # Determine final action
+            if matching_policies:
+                # Use first matching policy's action
+                first_policy = matching_policies[0]
+                path_analysis['analysis_result']['final_action'] = first_policy.get('action', 'unknown')
+            else:
+                # No matching policy - likely denied
+                path_analysis['analysis_result']['final_action'] = 'deny'
+            
+            path_analysis['analysis_result']['path_status'] = 'completed'
+            
+            return path_analysis
+            
+        except Exception as e:
+            self.logger.error(f"Failed to analyze packet path: {e}")
+            return {
+                'source_ip': src_ip,
+                'destination_ip': dst_ip,
+                'port': port,
+                'protocol': protocol,
+                'error': str(e),
+                'analysis_result': {
+                    'path_status': 'error'
+                }
+            }
+
+    # Device Settings vs Security Settings Management
+    def get_device_global_settings(self, device_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+        """
+        Get device global settings (Device Settings 관리)
+        URL 형식: /pm/config/device/<device>/global/<cli>
+        
+        Args:
+            device_name (str): Device name
+            cli_path (str): CLI path (e.g., 'system/interface', 'system/dns')
+            adom (str): ADOM name
+            
+        Returns:
+            dict: Global settings result
+        """
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/device/{device_name}/global/{cli_path}"
+        )
+        
+        if success:
+            return result if isinstance(result, (dict, list)) else {}
+        else:
+            self.logger.error(f"Failed to get device global settings: {result}")
+            return {}
+    
+    def set_device_global_settings(self, device_name: str, cli_path: str, data: Dict[str, Any], adom: str = "root") -> bool:
+        """
+        Set device global settings (Device Settings 관리)
+        URL 형식: /pm/config/device/<device>/global/<cli>
+        
+        Args:
+            device_name (str): Device name
+            cli_path (str): CLI path
+            data (dict): Configuration data
+            adom (str): ADOM name
+            
+        Returns:
+            bool: Success status
+        """
+        success, result = self._make_api_request(
+            method="set",
+            url=f"/pm/config/device/{device_name}/global/{cli_path}",
+            data=data
+        )
+        
+        if success:
+            return True
+        else:
+            self.logger.error(f"Failed to set device global settings: {result}")
+            return False
+    
+    def get_device_vdom_settings(self, device_name: str, vdom: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+        """
+        Get device VDOM settings (Security Settings 관리)
+        URL 형식: /pm/config/device/<device>/vdom/<vdom>/<cli>
+        
+        Args:
+            device_name (str): Device name
+            vdom (str): VDOM name
+            cli_path (str): CLI path (e.g., 'firewall/policy', 'router/static')
+            adom (str): ADOM name
+            
+        Returns:
+            dict: VDOM settings result
+        """
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}"
+        )
+        
+        if success:
+            return result if isinstance(result, (dict, list)) else {}
+        else:
+            self.logger.error(f"Failed to get device VDOM settings: {result}")
+            return {}
+    
+    def set_device_vdom_settings(self, device_name: str, vdom: str, cli_path: str, data: Dict[str, Any], adom: str = "root") -> bool:
+        """
+        Set device VDOM settings (Security Settings 관리)
+        URL 형식: /pm/config/device/<device>/vdom/<vdom>/<cli>
+        
+        Args:
+            device_name (str): Device name
+            vdom (str): VDOM name
+            cli_path (str): CLI path
+            data (dict): Configuration data
+            adom (str): ADOM name
+            
+        Returns:
+            bool: Success status
+        """
+        success, result = self._make_api_request(
+            method="set",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}",
+            data=data
+        )
+        
+        if success:
+            return True
+        else:
+            self.logger.error(f"Failed to set device VDOM settings: {result}")
+            return False
+    
+    # Policy Package Management (ADOM 레벨)
+    def get_policy_package_settings(self, package_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+        """
+        Get policy package settings (ADOM 레벨 정책 관리)
+        URL 형식: /pm/config/adom/<adom>/pkg/<package>/<cli>
+        
+        Args:
+            package_name (str): Policy package name
+            cli_path (str): CLI path (e.g., 'firewall/policy', 'firewall/address')
+            adom (str): ADOM name
+            
+        Returns:
+            dict: Package settings result
+        """
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/adom/{adom}/pkg/{package_name}/{cli_path}"
+        )
+        
+        if success:
+            return result if isinstance(result, (dict, list)) else {}
+        else:
+            self.logger.error(f"Failed to get policy package settings: {result}")
+            return {}
+    
+    def _ip_in_subnet(self, ip: str, network: str, netmask: str) -> bool:
+        """
+        Check if IP is in subnet (간단한 구현)
+        """
+        try:
+            import ipaddress
+            network_obj = ipaddress.IPv4Network(f"{network}/{netmask}", strict=False)
+            ip_obj = ipaddress.IPv4Address(ip)
+            return ip_obj in network_obj
+        except:
+            return False
+    
+    def _policy_matches_traffic(self, policy: Dict, src_ip: str, dst_ip: str, 
+                               port: int, protocol: str) -> bool:
+        """
+        Check if policy matches the given traffic
+        """
+        try:
+            # 단순화된 매칭 로직 - 실제 구현에서는 더 복잡한 로직 필요
+            src_addrs = policy.get('srcaddr', [])
+            dst_addrs = policy.get('dstaddr', [])
+            services = policy.get('service', [])
+            
+            # Source address check
+            src_match = False
+            if not src_addrs or 'all' in [addr.get('name', '') for addr in src_addrs]:
+                src_match = True
+            # 추가 로직 필요
+            
+            # Destination address check  
+            dst_match = False
+            if not dst_addrs or 'all' in [addr.get('name', '') for addr in dst_addrs]:
+                dst_match = True
+            # 추가 로직 필요
+            
+            # Service check
+            service_match = False
+            if not services or 'ALL' in [svc.get('name', '') for svc in services]:
+                service_match = True
+            # 추가 로직 필요
+            
+            return src_match and dst_match and service_match
+            
+        except Exception:
+            return False
+            
+    def get_firewall_policies(self, device_name, vdom="root", adom="root"):
+        """
+        Get firewall policies for a device (공식 API 구조 준수)
+        
+        Args:
+            device_name (str): Device name
+            vdom (str): VDOM name (default: root)
+            adom (str): ADOM name (default: root)
+            
+        Returns:
+            list: Firewall policies or empty list on failure
+        """
+        # 공식 FortiManager API 구조 사용: /pm/config/device/{device}/vdom/{vdom}/firewall/policy
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy"
+        )
+        
+        if success:
+            return result if isinstance(result, list) else []
+        else:
+            self.logger.error(f"Failed to get firewall policies: {result}")
+            return []
+    # 공식 FortiManager API 구조 사용: /pm/config/device/{device}/vdom/{vdom}/firewall/policy
+        success, result = self._make_api_request(
+            method="get",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy"
         )
         
         if success:
@@ -668,7 +1022,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         """
         success, result = self._make_api_request(
             method="add",
-            url=f"/pm/config/adom/{adom}/pkg/default/{device_name}/firewall/policy",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy",
             data=policy_data
         )
         
@@ -694,7 +1048,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         """
         success, result = self._make_api_request(
             method="set",
-            url=f"/pm/config/adom/{adom}/pkg/default/{device_name}/firewall/policy/{policy_id}",
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}",
             data=policy_data
         )
         
@@ -719,7 +1073,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         """
         success, result = self._make_api_request(
             method="delete",
-            url=f"/pm/config/adom/{adom}/pkg/default/{device_name}/firewall/policy/{policy_id}"
+            url=f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}"
         )
         
         if success:

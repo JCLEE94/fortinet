@@ -231,30 +231,39 @@ class RealtimeMonitoringHandler:
                 'status': 'connected'
             },
             'performance': {
-                'cpu_usage': secrets.randbelow(20, 80[1] - 20, 80[0] + 1) + 20, 80[0],
-                'memory_usage': secrets.randbelow(30, 70[1] - 30, 70[0] + 1) + 30, 70[0],
-                'disk_usage': secrets.randbelow(20, 50[1] - 20, 50[0] + 1) + 20, 50[0],
-                'temperature': secrets.randbelow(30, 60[1] - 30, 60[0] + 1) + 30, 60[0]
+                'cpu_usage': random.randint(20, 80),
+                'memory_usage': random.randint(30, 70),
+                'disk_usage': random.randint(20, 50),
+                'temperature': random.randint(30, 60)
             },
             'sessions': {
-                'total': secrets.randbelow(1000, 5000[1] - 1000, 5000[0] + 1) + 1000, 5000[0],
-                'active': secrets.randbelow(500, 2000[1] - 500, 2000[0] + 1) + 500, 2000[0]
+                'total': random.randint(1000, 5000),
+                'active': random.randint(500, 2000)
             },
             'interfaces': [
                 {
                     'name': 'port1',
                     'status': 'up',
-                    'rx_bytes': secrets.randbelow(1000000, 10000000[1] - 1000000, 10000000[0] + 1) + 1000000, 10000000[0],
-                    'tx_bytes': secrets.randbelow(1000000, 10000000[1] - 1000000, 10000000[0] + 1) + 1000000, 10000000[0]
+                    'rx_bytes': random.randint(1000000, 10000000),
+                    'tx_bytes': random.randint(1000000, 10000000)
                 },
                 {
                     'name': 'port2',
                     'status': 'up',
-                    'rx_bytes': secrets.randbelow(1000000, 10000000[1] - 1000000, 10000000[0] + 1) + 1000000, 10000000[0],
-                    'tx_bytes': secrets.randbelow(1000000, 10000000[1] - 1000000, 10000000[0] + 1) + 1000000, 10000000[0]
+                    'rx_bytes': random.randint(1000000, 10000000),
+                    'tx_bytes': random.randint(1000000, 10000000)
                 }
             ],
-            'threats': []
+            'threats': [
+                {
+                    'id': random.randint(1000, 9999),
+                    'type': random.choice(['malware', 'intrusion', 'botnet', 'spam']),
+                    'severity': random.choice(['low', 'medium', 'high', 'critical']),
+                    'timestamp': time.time() - random.randint(0, 3600),
+                    'source_ip': f"192.168.{random.randint(1,254)}.{random.randint(1,254)}",
+                    'status': random.choice(['blocked', 'monitored', 'quarantined'])
+                } for _ in range(random.randint(0, 5))
+            ]
         }
     
     def add_device_monitor(self, device_id, api_client):
