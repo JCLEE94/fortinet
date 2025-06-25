@@ -39,18 +39,19 @@ jobs:
         cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
         platforms: linux/amd64,linux/arm64
     
-    - name: Notify Deployment Ready
+    - name: Notify Watchtower Ready
       if: success() && github.ref == 'refs/heads/master'
       run: |
         echo "🚀 Docker image built and pushed successfully!"
         echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
         echo "📦 SHA: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
         echo ""
-        echo "🎯 Ready for deployment!"
-        echo "Image is available at registry.jclee.me"
+        echo "🔄 Watchtower will auto-deploy within 30 seconds..."
+        echo "Image is ready at registry.jclee.me"
         echo ""
-        echo "To deploy manually, run:"
-        echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-        echo "docker run -d --name fortinet-app -p 7777:7777 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        echo "🎯 Deployment methods:"
+        echo "1. Watchtower (Auto): Detects new image and updates container"
+        echo "2. Manual: ./deploy.sh"
+        echo "3. Watchtower Setup: ./watchtower-deploy.sh"
         echo ""
         echo "✅ CI/CD Pipeline completed successfully!"
