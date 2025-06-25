@@ -10,12 +10,39 @@ from typing import Callable, Any, Dict, Optional
 import traceback
 
 from src.utils.common_imports import (
-    jsonify, os, 
-    FortiGateAPIException, FortiManagerAPIException, 
-    ValidationException, ConfigurationException, NetworkException,
-    requests, format_error_response, get_current_timestamp,
-    setup_module_logger
+    jsonify, os, requests, get_current_timestamp
 )
+from src.utils.unified_logger import setup_logger as setup_module_logger
+
+# 유틸리티 함수 직접 정의
+def format_error_response(error_message: str, status_code: int = 500):
+    """표준화된 오류 응답 생성"""
+    return jsonify({
+        'error': error_message,
+        'timestamp': get_current_timestamp(),
+        'status_code': status_code
+    }), status_code
+
+# 예외 클래스들 직접 정의
+class FortiGateAPIException(Exception):
+    """FortiGate API 관련 예외"""
+    pass
+
+class FortiManagerAPIException(Exception):
+    """FortiManager API 관련 예외"""
+    pass
+
+class ValidationException(Exception):
+    """데이터 검증 관련 예외"""
+    pass
+
+class ConfigurationException(Exception):
+    """설정 관련 예외"""
+    pass
+
+class NetworkException(Exception):
+    """네트워크 관련 예외"""
+    pass
 
 # 예외 매핑 테이블
 EXCEPTION_MAPPING = {

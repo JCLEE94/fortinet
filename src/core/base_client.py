@@ -10,10 +10,11 @@ Date: 2025-05-30
 
 # 공통 임포트 사용
 from src.utils.common_imports import (
-    requests, time, json, datetime, timedelta,
-    Dict, Any, Optional, Union, List, Tuple, dataclass, Enum,
-    setup_module_logger
+    requests, time, json, datetime,
+    Dict, Any, Optional, Union, List, Tuple, dataclass, Enum
 )
+from src.utils.unified_logger import setup_logger as setup_module_logger
+from datetime import timedelta
 from src.utils.exception_handlers import (
     comprehensive_exception_handler, safe_execute,
     FortiGateAPIException, FortiManagerAPIException, NetworkException
