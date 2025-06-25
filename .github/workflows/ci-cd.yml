@@ -60,30 +60,45 @@ jobs:
         REGISTRY_PASSWORD=${{ secrets.REGISTRY_PASSWORD }}
         EOF
         
-        # Deploy using Docker Compose
-        echo "📦 Deploying with Docker Compose..."
+        # Deploy using single container
+        echo "📦 Deploying single container..."
         
-        # Login to registry
-        echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin
+        # Stop and remove existing container
+        docker stop fortinet-app 2>/dev/null || true
+        docker rm fortinet-app 2>/dev/null || true
         
-        # Pull latest image
-        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        # Run new container
+        docker run -d \
+          --name fortinet-app \
+          --restart unless-stopped \
+          -p ${{ vars.APP_PORT }}:7777 \
+          -e APP_MODE=production \
+          -e FLASK_ENV=production \
+          -e LOG_LEVEL=${{ vars.LOG_LEVEL }} \
+          -e TZ="${{ vars.TZ }}" \
+          -e FORTIGATE_HOST="${{ vars.FORTIGATE_HOST }}" \
+          -e FORTIGATE_TOKEN="${{ secrets.FORTIGATE_TOKEN }}" \
+          -e FORTIMANAGER_HOST="${{ vars.FORTIMANAGER_HOST }}" \
+          -e FORTIMANAGER_USERNAME="${{ vars.FORTIMANAGER_USERNAME }}" \
+          -e FORTIMANAGER_PASSWORD="${{ secrets.FORTIMANAGER_PASSWORD }}" \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         
-        # Deploy with zero downtime
-        docker-compose --env-file .env.deploy up -d --force-recreate --remove-orphans
+        # Wait for container to be ready
+        echo "⏳ Waiting for container to be ready..."
+        sleep 10
         
-        # Wait for health check
-        echo "⏳ Waiting for services to be healthy..."
-        sleep 30
-        
-        # Verify deployment
-        if docker-compose ps | grep -q "Up"; then
+        # Verify container is running
+        if docker ps --filter "name=fortinet-app" --filter "status=running" | grep -q fortinet-app; then
           echo "✅ Deployment successful!"
           echo "🌐 Service available at: http://localhost:${{ vars.APP_PORT }}"
           echo "📊 Health check: http://localhost:${{ vars.APP_PORT }}/api/health"
+          
+          # Show container status
+          docker ps --filter "name=fortinet-app"
         else
           echo "❌ Deployment failed!"
-          docker-compose logs --tail=50
+          echo "Container logs:"
+          docker logs fortinet-app --tail=50 2>/dev/null || echo "No logs available"
           exit 1
         fi
         
