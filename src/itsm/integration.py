@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class ITSMIntegration:
     """ITSM 시스템과의 연동을 위한 클래스"""
     
-    def __init__(self, itsm_base_url="https://itsm2.nxtd.co.kr", api_key=None):
+    def __init__(self, itsm_base_url=None, api_key=None):
         """
         ITSM 연동 초기화
         
@@ -27,6 +27,12 @@ class ITSMIntegration:
             itsm_base_url (str): ITSM 시스템 URL
             api_key (str): ITSM API 키 (옵션)
         """
+        from src.config.services import EXTERNAL_SERVICES
+        
+        # Use default URL from config if not provided
+        if itsm_base_url is None:
+            itsm_base_url = EXTERNAL_SERVICES['itsm']
+            
         self.itsm_base_url = itsm_base_url
         self.api_key = api_key
         self.session = requests.Session()
@@ -38,6 +44,12 @@ class ITSMIntegration:
             'firewall_open_allow': '방화벽 오픈 허용',
             'web_firewall_apply': '웹방화벽 적용'
         }
+
+        from src.config.services import EXTERNAL_SERVICES
+        
+        # Use default URL from config if not provided
+        if itsm_base_url is None:
+            itsm_base_url = EXTERNAL_SERVICES['itsm']
         
     def analyze_firewall_requirement(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """

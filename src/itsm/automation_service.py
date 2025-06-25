@@ -67,12 +67,20 @@ class ITSMAutomationService:
             logger.error(f"Error loading configuration: {e}")
             self._create_default_config()
     
+    def _get_default_itsm_url(self):
+        """Get default ITSM URL from config"""
+        try:
+            from src.config.services import EXTERNAL_SERVICES
+            return EXTERNAL_SERVICES['itsm']
+        except ImportError:
+            return "https://itsm2.nxtd.co.kr"  # fallback
+
     def _create_default_config(self):
         """기본 설정 생성"""
         default_config = {
             "itsm": {
                 "platform": "nextrade",
-                "base_url": "https://itsm2.nxtd.co.kr",
+                "base_url": self._get_default_itsm_url(),
                 "username": "",
                 "password": "",
                 "api_token": "",

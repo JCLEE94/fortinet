@@ -263,8 +263,11 @@ def main():
             socketio = None
     
     # 서버 설정
-    host = os.environ.get('HOST_IP', '0.0.0.0')
-    port = int(os.environ.get('FLASK_PORT', 7777))
+    from src.config.services import APP_CONFIG
+    from src.config.unified_settings import unified_settings
+    
+    host = os.environ.get('HOST_IP', unified_settings.webapp.host)
+    port = int(os.environ.get('FLASK_PORT', APP_CONFIG['web_port']))
     debug = os.environ.get('FLASK_ENV') == 'development'
     
     print(f"🌐 서버 시작: http://{host}:{port}")

@@ -121,20 +121,22 @@ class UnifiedAPIClient:
     
     def _setup_client_config(self):
         """Setup client-specific configuration."""
+        from src.config.services import API_VERSIONS
+        
         if self.client_type == ClientType.FORTIGATE:
-            self.base_url = f"https://{self.host}:{self.port}/api/v2"
+            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortigate']}"
             self.auth_endpoint = "/logincheck"
             self.logout_endpoint = "/logout"
         elif self.client_type == ClientType.FORTIMANAGER:
-            self.base_url = f"https://{self.host}:{self.port}/jsonrpc"
+            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortimanager']}"
             self.auth_endpoint = None  # Uses JSON-RPC for auth
             self.logout_endpoint = None
         elif self.client_type == ClientType.FORTIANALYZER:
-            self.base_url = f"https://{self.host}:{self.port}/jsonrpc"
+            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortianalyzer']}"
             self.auth_endpoint = None
             self.logout_endpoint = None
         elif self.client_type == ClientType.FORTIWEB:
-            self.base_url = f"https://{self.host}:{self.port}/api/v2.0"
+            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortiweb']}"
             self.auth_endpoint = "/login"
             self.logout_endpoint = "/logout"
     

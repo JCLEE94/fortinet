@@ -43,10 +43,12 @@ def determine_target_environment() -> str:
 
 def get_env_port(environment: str) -> int:
     """CLAUDE.md v8.7.0: Get port based on environment"""
+    from src.config.services import APP_CONFIG
+    
     if environment == 'dev':
-        return int(os.getenv('DEV_PORT', os.getenv('PORT', '7777')))
+        return int(os.getenv('DEV_PORT', os.getenv('PORT', str(APP_CONFIG['web_port']))))
     else:
-        return int(os.getenv('PRD_PORT', os.getenv('PORT', '7777')))
+        return int(os.getenv('PRD_PORT', os.getenv('PORT', str(APP_CONFIG['web_port']))))
 
 def is_docker_environment() -> bool:
     """Check if running in Docker container"""

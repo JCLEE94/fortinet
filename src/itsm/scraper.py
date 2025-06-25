@@ -20,7 +20,7 @@ logger = get_logger(__name__)
 class ITSMScraper:
     """ITSM 사이트 스크래핑 클래스"""
     
-    def __init__(self, base_url="https://itsm2.nxtd.co.kr", username=None, password=None):
+    def __init__(self, base_url=None, username=None, password=None):
         """
         ITSM 스크래퍼 초기화
         
@@ -29,6 +29,12 @@ class ITSMScraper:
             username (str): 로그인 사용자명
             password (str): 로그인 패스워드
         """
+        from src.config.services import EXTERNAL_SERVICES
+        
+        # Use default URL from config if not provided
+        if base_url is None:
+            base_url = EXTERNAL_SERVICES['itsm']
+            
         self.base_url = base_url
         self.username = username
         self.password = password

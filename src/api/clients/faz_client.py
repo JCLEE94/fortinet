@@ -23,7 +23,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin,
     Inherits common functionality from BaseApiClient and uses JSON-RPC mixin
     """
     
-    def __init__(self, host=None, api_token=None, username=None, password=None):
+    def __init__(self, host=None, api_token=None, username=None, password=None, port=None):
         """
         Initialize the FortiAnalyzer API client
         
@@ -32,12 +32,19 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin,
             api_token (str, optional): API token for access (used as priority)
             username (str, optional): Username (used if token is not available)
             password (str, optional): Password (used if token is not available)
+            port (int, optional): Port number (defaults to config value)
         """
+        from src.config.services import FORTINET_PRODUCTS
+        
         # Get values from environment if not provided
         host = host or os.environ.get('FORTIANALYZER_HOST')
         api_token = api_token or os.environ.get('FORTIANALYZER_API_TOKEN')
         username = username or os.environ.get('FORTIANALYZER_USERNAME')
         password = password or os.environ.get('FORTIANALYZER_PASSWORD')
+        
+        # Use default port from config if not specified
+        if port is None:
+            port = FORTINET_PRODUCTS['fortianalyzer']['default_port']
         
         # Initialize base class with environment prefix
         super().__init__(
@@ -45,7 +52,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin,
             api_token=api_token,
             username=username,
             password=password,
-            port=443,
+            port=port,
             verify_ssl=False,  # FortiAnalyzer typically uses self-signed certs
             logger_name='faz_client',
             env_prefix='FORTIANALYZER'
@@ -61,7 +68,8 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin,
         CacheMixin.__init__(self)
         
         # FortiAnalyzer specific setup
-        self.base_url = f"https://{self.host}/jsonrpc" if self.host else ""
+        from src.config.services import API_VERSIONS
+        self.base_url = f"https://{self.host}{API_VERSIONS['fortianalyzer']}" if self.host else ""
         
         # Define test endpoint for FortiAnalyzer (not used since it's JSON-RPC)
         self.test_endpoint = "/sys/status"

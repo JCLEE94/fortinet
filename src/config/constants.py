@@ -83,17 +83,17 @@ SECURITY_HEADERS = {
 
 # File Paths
 DEFAULT_PATHS = {
-    'CONFIG': os.getenv('CONFIG_PATH', '/app/data/config.json'),
-    'DEFAULT_CONFIG': os.getenv('DEFAULT_CONFIG_PATH', '/app/data/default_config.json'),
-    'LOG_DIR': os.getenv('LOG_DIR', '/app/logs'),
-    'DATA_DIR': os.getenv('DATA_DIR', '/app/data'),
+    'CONFIG': os.getenv('CONFIG_PATH', os.path.join(os.getcwd(), 'data', 'config.json')),
+    'DEFAULT_CONFIG': os.getenv('DEFAULT_CONFIG_PATH', os.path.join(os.getcwd(), 'data', 'default_config.json')),
+    'LOG_DIR': os.getenv('LOG_DIR', os.path.join(os.getcwd(), 'logs')),
+    'DATA_DIR': os.getenv('DATA_DIR', os.path.join(os.getcwd(), 'data')),
     'TEMP_DIR': os.getenv('TEMP_DIR', '/tmp')
 }
 
 # Service URLs
 SERVICE_URLS = {
     'HEALTH_CHECK': os.getenv('HEALTH_CHECK_URL', 'http://localhost:{port}/health'),
-    'MOCK_SERVER': os.getenv('MOCK_SERVER_URL', 'http://localhost:{port}/api/v2/monitor/system/status'),
+    'MOCK_SERVER': os.getenv('MOCK_SERVER_URL', 'http://localhost:{port}{api_version}/monitor/system/status'),
     'REDIS': os.getenv('REDIS_URL', 'redis://redis:6379/0')
 }
 

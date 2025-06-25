@@ -25,7 +25,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
     Inherits common functionality from BaseApiClient and uses common mixins
     """
     
-    def __init__(self, host=None, api_token=None, username=None, password=None, port=443, verify_ssl=False):
+    def __init__(self, host=None, api_token=None, username=None, password=None, port=None, verify_ssl=False):
         """
         Initialize the FortiManager API client
         
@@ -34,36 +34,41 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
             api_token (str, optional): API token for access (used as priority)
             username (str, optional): Username (used if token is not available)
             password (str, optional): Password (used if token is not available)
-            port (int, optional): FortiManager API port (default: 443)
-            verify_ssl (bool, optional): Verify SSL certificates (default: False)
+            port (int, optional): Port number (defaults to config value)
+            verify_ssl (bool): Whether to verify SSL certificates
         """
-        # Initialize base class with environment prefix
-        super().__init__(
-            host=host,
-            api_token=api_token,
-            username=username,
-            password=password,
-            port=port,
-            verify_ssl=verify_ssl,
-            logger_name='fortimanager_api',
-            env_prefix='FORTIMANAGER'
-        )
+        from src.config.services import FORTINET_PRODUCTS
         
-        # Initialize all mixins
-        RealtimeMonitoringMixin.__init__(self)
-        JsonRpcMixin.__init__(self)
-        ConnectionTestMixin.__init__(self)
-        MonitoringMixin.__init__(self)
-        ErrorHandlingMixin.__init__(self)
-        RequestRetryMixin.__init__(self)
-        CacheMixin.__init__(self)
+        # Use default port from config if not specified
+        if port is None:
+            port = FORTINET_PRODUCTS['fortimanager']['default_port']
+            
+        super().__init__()
+        self.logger = get_logger(__name__)
+        self.host = host
+        self.port = port
+        self.api_token = api_token
+        self.username = username
+        self.password = password
+        self.verify_ssl = verify_ssl
+        self.session_id = None
+        self.transaction_id = None
+        self.adom = 'root'  # Default administrative domain
         
-        # FortiManager specific setup
-        self.protocol = 'https' if self.port in [443, 3791] else 'http'
+        # Configuration for API endpoints
+        self.protocol = 'https' if verify_ssl else 'https'
         self.base_url = f"{self.protocol}://{self.host}:{self.port}/jsonrpc"
         
-        # Define test endpoint for FortiManager (not used since it's JSON-RPC)
-        self.test_endpoint = "/sys/status"
+        # Request session for connection pooling
+        self.session = requests.Session()
+        self.session.verify = self.verify_ssl
+        if not self.verify_ssl:
+            # Suppress SSL warnings when verification is disabled
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        
+        # API client extensions
+        self._extensions = {}
     
     def login(self):
         """

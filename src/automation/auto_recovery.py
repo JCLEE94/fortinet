@@ -458,7 +458,8 @@ class AutoRecoveryEngine:
             
         try:
             # 로컬 서비스 테스트
-            response = requests.get('http://localhost:7777/api/settings', timeout=5)
+            from src.config.services import APP_CONFIG
+            response = requests.get(f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=5)
             local_service_ok = response.status_code == 200
         except:
             local_service_ok = False
@@ -471,7 +472,8 @@ class AutoRecoveryEngine:
     def _check_application_health(self) -> Dict:
         """애플리케이션 헬스 체크"""
         try:
-            response = requests.get('http://localhost:7777/api/settings', timeout=10)
+            from src.config.services import APP_CONFIG
+            response = requests.get(f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=10)
             
             if response.status_code == 200:
                 data = response.json()

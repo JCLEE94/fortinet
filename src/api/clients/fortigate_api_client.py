@@ -64,10 +64,12 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         CacheMixin.__init__(self)
         
         # FortiGate specific setup
+        from src.config.services import API_VERSIONS
+        
         self.base_url = f"{self.protocol}://{self.host}"
         if self.port and self.port != (443 if use_https else 80):
             self.base_url += f":{self.port}"
-        self.base_url += "/api/v2"
+        self.base_url += API_VERSIONS['fortigate']
         
         # Define test endpoint for FortiGate
         self.test_endpoint = "/cmdb/system/status"
