@@ -150,7 +150,8 @@ APP_CONFIG = {
     'csp_sources': CSP_SOURCES,
     'api_versions': API_VERSIONS,
     'mock_endpoints': MOCK_ENDPOINTS,
-    'auth_endpoints': AUTH_ENDPOINTS
+    'auth_endpoints': AUTH_ENDPOINTS,
+    'web_port': int(os.getenv('WEB_APP_PORT', '7777'))
 }
 
 # 모든 설정값 내보내기
