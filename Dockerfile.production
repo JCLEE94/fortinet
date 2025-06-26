@@ -168,7 +168,7 @@ exec gunicorn \
     --capture-output \
     --enable-stdio-inheritance \
     --preload \
-    src.web_app:create_app()
+    "src.web_app:create_app()"
 EOF
 
 RUN chmod +x /app/start.sh
