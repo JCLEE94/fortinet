@@ -16,6 +16,9 @@ from functools import wraps
 # 보안 및 유틸리티 임포트
 from src.utils.unified_logger import get_logger
 from src.utils.security import rate_limit, validate_request, csrf_protect
+import threading
+import time
+import select
 
 # Blueprint 생성
 logs_bp = Blueprint('logs', __name__, url_prefix='/api/logs')
@@ -432,6 +435,124 @@ def format_bytes(bytes_size):
             return f"{bytes_size:.1f} {unit}"
         bytes_size /= 1024.0
     return f"{bytes_size:.1f} TB"
+
+@logs_bp.route('/stream', methods=['GET'])
+@rate_limit(max_requests=5, window=60)
+@csrf_protect
+@admin_required
+def stream_logs():
+    """실시간 로그 스트리밍 (Server-Sent Events)"""
+    try:
+        container_name = request.args.get('container', 'fortinet')
+        log_type = request.args.get('type', 'container')
+        
+        def generate_log_stream():
+            """로그 스트림 생성기"""
+            try:
+                if log_type == 'container':
+                    # Docker logs --follow 사용
+                    cmd = ['docker', 'logs', '--follow', '--tail', '10', container_name]
+                else:
+                    # tail -f 사용
+                    log_files = {
+                        'main': '/app/logs/main.log',
+                        'error': '/app/logs/error.log',
+                        'cache': '/app/logs/src.utils.unified_cache_manager.log',
+                        'web': '/app/logs/src.web_app.log',
+                        'api': '/app/logs/src.routes.api_routes.log'
+                    }
+                    log_file = log_files.get(log_type, '/app/logs/main.log')
+                    cmd = ['docker', 'exec', container_name, 'tail', '-f', log_file]
+                
+                # 프로세스 시작
+                import subprocess
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                    bufsize=1
+                )
+                
+                # SSE 헤더 전송
+                yield "data: {\"type\": \"connected\", \"message\": \"로그 스트림 연결됨\"}\n\n"
+                
+                # 타임아웃 설정
+                start_time = time.time()
+                timeout = 300  # 5분
+                
+                while True:
+                    # 타임아웃 체크
+                    if time.time() - start_time > timeout:
+                        yield "data: {\"type\": \"timeout\", \"message\": \"스트림 타임아웃\"}\n\n"
+                        break
+                    
+                    # 프로세스 상태 체크
+                    if process.poll() is not None:
+                        yield "data: {\"type\": \"disconnected\", \"message\": \"프로세스 종료됨\"}\n\n"
+                        break
+                    
+                    # 출력 읽기 (논블로킹)
+                    try:
+                        # select를 사용한 논블로킹 읽기 (Unix/Linux만)
+                        if hasattr(select, 'select'):
+                            ready, _, _ = select.select([process.stdout], [], [], 1.0)
+                            if ready:
+                                line = process.stdout.readline()
+                                if line:
+                                    log_data = {
+                                        "type": "log",
+                                        "timestamp": datetime.now().isoformat(),
+                                        "content": line.strip(),
+                                        "level": detect_log_level(line),
+                                        "source": log_type
+                                    }
+                                    yield f"data: {json.dumps(log_data)}\n\n"
+                        else:
+                            # Windows 호환성을 위한 폴백
+                            time.sleep(1)
+                            continue
+                            
+                    except Exception as e:
+                        logger.error(f"스트림 읽기 오류: {e}")
+                        yield f"data: {{\"type\": \"error\", \"message\": \"{str(e)}\"}}\n\n"
+                        break
+                    
+                    # 하트비트
+                    if int(time.time()) % 30 == 0:
+                        yield "data: {\"type\": \"heartbeat\"}\n\n"
+                
+                # 정리
+                process.terminate()
+                process.wait()
+                
+            except Exception as e:
+                logger.error(f"로그 스트림 오류: {e}")
+                yield f"data: {{\"type\": \"error\", \"message\": \"{str(e)}\"}}\n\n"
+        
+        from flask import current_app as app
+        return app.response_class(
+            generate_log_stream(),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Cache-Control'
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"로그 스트리밍 시작 실패: {str(e)}")
+        return jsonify({
+            'error': f'Failed to start log streaming: {str(e)}'
+        }), 500
+
+@logs_bp.route('/live', methods=['GET'])
+@admin_required
+def live_logs_page():
+    """실시간 로그 페이지"""
+    return render_template('live_logs.html')
 
 # Blueprint 등록 시 사용할 모든 라우트 목록
 __all__ = ['logs_bp']
