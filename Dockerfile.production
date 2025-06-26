@@ -152,8 +152,23 @@ fi
 export PYTHONPATH=/app:/app/src:$PYTHONPATH
 cd /app
 
-# Direct Python execution for compatibility 
-exec python src/main.py --web
+# Production WSGI server with gunicorn
+exec gunicorn \
+    --bind ${WEB_APP_HOST:-0.0.0.0}:${WEB_APP_PORT:-7777} \
+    --workers ${WORKERS:-4} \
+    --worker-class ${WORKER_CLASS:-gevent} \
+    --worker-connections ${WORKER_CONNECTIONS:-1000} \
+    --max-requests ${MAX_REQUESTS:-1000} \
+    --max-requests-jitter ${MAX_REQUESTS_JITTER:-100} \
+    --timeout ${TIMEOUT:-120} \
+    --keep-alive ${KEEPALIVE:-2} \
+    --access-logfile /app/logs/access.log \
+    --error-logfile /app/logs/error.log \
+    --log-level info \
+    --capture-output \
+    --enable-stdio-inheritance \
+    --preload \
+    src.web_app:create_app()
 EOF
 
 RUN chmod +x /app/start.sh
