@@ -15,7 +15,7 @@ EXTERNAL_SERVICES: Dict[str, str] = {
     'gitlab_api_version': os.getenv('GITLAB_API_VERSION', 'v4'),
     'docker_registry': os.getenv('DOCKER_REGISTRY', 'registry.jclee.me'),
     'dns_check': os.getenv('INTERNET_CHECK_URL', 'http://8.8.8.8'),
-    'health_check': os.getenv('HEALTH_CHECK_URL', f'http://localhost:{APP_CONFIG["web_port"]}/health')
+    'health_check': os.getenv('HEALTH_CHECK_URL', f'http://localhost:{os.getenv("WEB_APP_PORT", "7777")}/health')
 }
 
 # CDN URL

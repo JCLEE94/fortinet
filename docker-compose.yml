@@ -82,15 +82,7 @@ services:
     tmpfs:
       - /tmp:noexec,nosuid,size=${TMPFS_SIZE:-512m}
     
-    # 파일 디스크립터 제한
-    ulimits:
-      nofile:
-        soft: ${ULIMIT_NOFILE_SOFT:-65536}
-        hard: ${ULIMIT_NOFILE_HARD:-65536}
-      nproc:
-        soft: 2048
-        hard: 4096
-    
+
     # 라벨 (메타데이터)
     labels:
       - "com.fortinet.nextrade.service=app"
