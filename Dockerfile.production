@@ -160,7 +160,7 @@ exec gunicorn \
     --max-requests ${MAX_REQUESTS} \
     --max-requests-jitter ${MAX_REQUESTS_JITTER} \
     --timeout ${TIMEOUT} \
-    --keepalive ${KEEPALIVE} \
+    --keep-alive ${KEEPALIVE} \
     --user fortinet \
     --group fortinet \
     --access-logfile /app/logs/access.log \
