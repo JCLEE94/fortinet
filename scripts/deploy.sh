@@ -11,7 +11,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_REGISTRY="${DOCKER_REGISTRY:-registry.jclee.me}"
 DOCKER_IMAGE_NAME="${DOCKER_IMAGE_NAME:-fortinet}"
 DOCKER_TAG="${DOCKER_TAG:-latest}"
-CONTAINER_NAME="${CONTAINER_NAME:-fortinet-app}"
+CONTAINER_NAME="${CONTAINER_NAME:-fortinet}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -60,7 +60,7 @@ Commands:
 Options:
     -h, --help      Show this help message
     -t, --tag TAG   Docker image tag (default: latest)
-    -n, --name NAME Container name (default: fortinet-app)
+    -n, --name NAME Container name (default: fortinet)
     -e, --env ENV   Environment file (default: .env)
     -f, --force     Force rebuild/redeploy
     -v, --verbose   Verbose output

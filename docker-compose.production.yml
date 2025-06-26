@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     image: ${DOCKER_REGISTRY:-registry.jclee.me}/${DOCKER_IMAGE_NAME:-fortinet}:${DOCKER_TAG:-latest}
-    container_name: ${CONTAINER_NAME:-fortinet-app}
-    hostname: ${HOSTNAME:-fortinet-nextrade}
+    container_name: ${CONTAINER_NAME:-fortinet}
+    hostname: ${HOSTNAME:-fortinet}
     restart: unless-stopped
     
     ports:

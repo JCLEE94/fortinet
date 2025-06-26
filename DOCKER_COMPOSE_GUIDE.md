@@ -114,7 +114,7 @@ docker-compose up -d
 ./scripts/docker-manage.sh logs --follow
 
 # 특정 서비스 로그
-docker-compose logs fortinet-app
+docker-compose logs fortinet
 
 # 로그 파일 직접 확인
 docker run --rm -v fortinet-logs:/logs alpine cat /logs/app.log

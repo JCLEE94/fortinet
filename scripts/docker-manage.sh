@@ -82,7 +82,7 @@ ${YELLOW}옵션:${NC}
 ${YELLOW}예제:${NC}
   $0 up                    # 컨테이너 시작
   $0 logs --follow         # 실시간 로그 보기
-  $0 exec python manage.py # 컨테이너에서 명령 실행
+  $0 exec python main.py   # 컨테이너에서 명령 실행
   $0 volume-backup data    # 데이터 볼륨 백업
   $0 update                # 최신 이미지로 업데이트
 

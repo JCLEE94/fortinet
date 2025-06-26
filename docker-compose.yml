@@ -7,10 +7,10 @@ version: '3.8'
 
 services:
   # 메인 애플리케이션 컨테이너
-  fortinet-app:
+  fortinet:
     image: ${DOCKER_REGISTRY:-registry.jclee.me}/${DOCKER_IMAGE_NAME:-fortinet}:${DOCKER_TAG:-latest}
-    container_name: ${CONTAINER_NAME:-fortinet-app}
-    hostname: ${HOSTNAME:-fortinet-nextrade}
+    container_name: ${CONTAINER_NAME:-fortinet}
+    hostname: ${HOSTNAME:-fortinet}
     restart: unless-stopped
     
     ports:
