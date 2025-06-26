@@ -306,7 +306,7 @@ class MockDataGenerator:
         if app_protocol and app_protocol in payload_samples:
             payload = payload_samples[app_protocol]
         else:
-            payload = bytes([secrets.randbelow(0, 255[1] - 0, 255[0] + 1) + 0, 255[0] for _ in range(secrets.randbelow(10, 100[1] - 10, 100[0] + 1) + 10, 100[0])])
+            payload = bytes([secrets.randbelow(256) for _ in range(secrets.randbelow(90) + 10)])
         
         return PacketInfo(
             timestamp=time.time(),

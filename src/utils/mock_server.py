@@ -69,8 +69,8 @@ def initialize_mock_data():
             'status': device['status'],
             'ip': device['ip'],
             'location': device['location'],
-            'x': secrets.randbelow(100, 700[1] - 100, 700[0] + 1) + 100, 700[0],
-            'y': secrets.randbelow(100, 500[1] - 100, 500[0] + 1) + 100, 500[0]
+            'x': secrets.randbelow(600) + 100,
+            'y': secrets.randbelow(400) + 100
         })
     
     # 추가 네트워크 요소
