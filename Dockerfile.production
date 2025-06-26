@@ -148,29 +148,11 @@ if [ -z "$WEB_APP_PORT" ]; then
     export WEB_APP_PORT=7777
 fi
 
-# Start application with gunicorn for production
+# Start application - fallback to direct Python execution  
 cd /app/src
 
-# Production server with gunicorn
-exec gunicorn \
-    --bind ${WEB_APP_HOST}:${WEB_APP_PORT} \
-    --workers ${WORKERS} \
-    --worker-class ${WORKER_CLASS} \
-    --worker-connections ${WORKER_CONNECTIONS} \
-    --max-requests ${MAX_REQUESTS} \
-    --max-requests-jitter ${MAX_REQUESTS_JITTER} \
-    --timeout ${TIMEOUT} \
-    --keep-alive ${KEEPALIVE} \
-    --user fortinet \
-    --group fortinet \
-    --access-logfile /app/logs/access.log \
-    --error-logfile /app/logs/error.log \
-    --log-level info \
-    --capture-output \
-    --enable-stdio-inheritance \
-    --preload \
-    --pythonpath /app/src \
-    web_app:app
+# Direct Python execution for compatibility
+exec python main.py --web
 EOF
 
 RUN chmod +x /app/start.sh
