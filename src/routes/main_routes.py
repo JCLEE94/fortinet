@@ -23,6 +23,16 @@ def topology():
 def compliance():
     return render_template('compliance.html')
 
+@main_bp.route('/logs')
+def logs_management():
+    """로그 관리 페이지"""
+    return render_template('logs.html')
+
+@main_bp.route('/logs/live')
+def live_logs():
+    """실시간 로그 스트리밍 페이지"""
+    return render_template('live_logs.html')
+
 @main_bp.route('/batch/results')
 def batch_results():
     # 더미 결과 데이터 생성
