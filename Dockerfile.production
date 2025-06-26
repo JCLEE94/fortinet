@@ -84,8 +84,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     gunicorn \
     gevent \
     psutil \
-    prometheus-client \
-    # No cache cleanup needed (using --no-cache-dir)
+    prometheus-client
 
 # =============================================================================
 # Application Stage
