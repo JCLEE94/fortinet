@@ -138,6 +138,14 @@ def create_app():
     except ImportError as e:
         logger.warning(f"ITSM automation routes not available: {e}")
     
+    # 로그 관리 라우트 등록
+    try:
+        from src.routes.logs_routes import logs_bp
+        app.register_blueprint(logs_bp)
+        logger.info("Docker logs management routes registered")
+    except ImportError as e:
+        logger.warning(f"Logs routes not available: {e}")
+    
     # Legacy routes for backward compatibility
     @rate_limit(max_requests=30, window=60)
     @csrf_protect
