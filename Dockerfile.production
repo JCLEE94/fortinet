@@ -148,11 +148,12 @@ if [ -z "$WEB_APP_PORT" ]; then
     export WEB_APP_PORT=7777
 fi
 
-# Start application - fallback to direct Python execution  
-cd /app/src
+# Start application - set PYTHONPATH and run from /app
+export PYTHONPATH=/app:/app/src:$PYTHONPATH
+cd /app
 
-# Direct Python execution for compatibility
-exec python main.py --web
+# Direct Python execution for compatibility 
+exec python src/main.py --web
 EOF
 
 RUN chmod +x /app/start.sh
