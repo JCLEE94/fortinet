@@ -143,6 +143,16 @@ def get_csp_header() -> str:
         csp_parts.append(f"{directive} {' '.join(sources)}")
     return '; '.join(csp_parts)
 
+# 애플리케이션 설정
+APP_CONFIG = {
+    'external_services': EXTERNAL_SERVICES,
+    'cdn_urls': CDN_URLS,
+    'csp_sources': CSP_SOURCES,
+    'api_versions': API_VERSIONS,
+    'mock_endpoints': MOCK_ENDPOINTS,
+    'auth_endpoints': AUTH_ENDPOINTS
+}
+
 # 모든 설정값 내보내기
 __all__ = [
     'EXTERNAL_SERVICES',
@@ -151,6 +161,7 @@ __all__ = [
     'API_VERSIONS',
     'MOCK_ENDPOINTS',
     'AUTH_ENDPOINTS',
+    'APP_CONFIG',
     'get_service_url',
     'get_api_endpoint',
     'get_csp_header'
