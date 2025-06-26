@@ -108,15 +108,6 @@ networks:
   fortinet-network:
     name: ${NETWORK_NAME:-fortinet-network}
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: ${NETWORK_SUBNET:-172.20.0.0/16}
-          gateway: ${NETWORK_GATEWAY:-172.20.0.1}
-    driver_opts:
-      com.docker.network.bridge.enable_icc: "true"
-      com.docker.network.bridge.enable_ip_masquerade: "true"
-      com.docker.network.bridge.name: "br-fortinet"
 
 # 명명된 볼륨 정의 (바인드 마운트 없음)
 volumes:
