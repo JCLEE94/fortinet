@@ -56,7 +56,7 @@ def health_check():
             'docker': os.path.exists('/.dockerenv'),
             'uptime': time.time() - getattr(current_app, 'start_time', time.time()),
             'uptime_human': format_uptime(time.time() - getattr(current_app, 'start_time', time.time())),
-            'version': '1.0.0',
+            'version': '1.0.1',
             'git_commit': os.getenv('GIT_COMMIT', 'unknown'),
             'build_date': os.getenv('BUILD_DATE', 'unknown')
         }
