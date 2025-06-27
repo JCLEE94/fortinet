@@ -15,7 +15,7 @@ env:
 jobs:
   test:
     name: 🧪 Tests & Code Quality
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: 📥 Checkout code
@@ -59,7 +59,7 @@ jobs:
 
   security:
     name: 🔒 Security Scan
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
     - name: 📥 Checkout code
@@ -88,7 +88,7 @@ jobs:
 
   build:
     name: 🐳 Build & Push Docker Image
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [test, security]
     if: github.event_name == 'push'
     
@@ -158,7 +158,7 @@ jobs:
 
   deploy:
     name: 🚀 Deploy to Production
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: build
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
