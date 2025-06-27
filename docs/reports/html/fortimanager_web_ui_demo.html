@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortiManager 웹 UI 패킷 경로 분석 화면</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1f2e;
+            color: #333;
+        }
+        
+        .presentation-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .slide {
+            background: white;
+            margin-bottom: 60px;
+            padding: 80px;
+            border-radius: 30px;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+            min-height: 900px;
+            position: relative;
+        }
+        
+        h1 {
+            color: #0066cc;
+            font-size: 3.5em;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #0066cc;
+            font-size: 2.8em;
+            margin-bottom: 40px;
+            border-bottom: 5px solid #0066cc;
+            padding-bottom: 20px;
+        }
+        
+        h3 {
+            color: #333;
+            font-size: 2em;
+            margin: 40px 0 20px 0;
+        }
+        
+        /* 웹 UI 시뮬레이션 스타일 */
+        .web-ui-mockup {
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            margin: 40px 0;
+        }
+        
+        .browser-bar {
+            background: #e0e0e0;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .browser-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff5f57;
+        }
+        
+        .browser-dot:nth-child(2) {
+            background: #ffbd2e;
+        }
+        
+        .browser-dot:nth-child(3) {
+            background: #28ca42;
+        }
+        
+        .url-bar {
+            flex: 1;
+            background: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            margin-left: 20px;
+            font-family: monospace;
+            color: #666;
+        }
+        
+        /* FortiGate UI 스타일 */
+        .fortigate-ui {
+            background: #1e2832;
+            color: white;
+            min-height: 800px;
+            position: relative;
+        }
+        
+        .ui-header {
+            background: #0066cc;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ui-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .ui-nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .ui-nav-item {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ui-nav-item:hover,
+        .ui-nav-item.active {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .ui-sidebar {
+            position: absolute;
+            left: 0;
+            top: 80px;
+            width: 280px;
+            background: #252d38;
+            height: calc(100% - 80px);
+            padding: 20px;
+        }
+        
+        .ui-menu-item {
+            padding: 15px 20px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .ui-menu-item:hover {
+            background: #2e3844;
+        }
+        
+        .ui-menu-item.active {
+            background: #0066cc;
+        }
+        
+        .ui-content {
+            margin-left: 300px;
+            padding: 40px;
+            min-height: 720px;
+        }
+        
+        /* 패킷 경로 분석 UI */
+        .packet-analysis-form {
+            background: #2a3441;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            color: #aaa;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .form-input {
+            background: #1e2832;
+            border: 2px solid #3a4454;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1em;
+        }
+        
+        .form-input:focus {
+            border-color: #0066cc;
+            outline: none;
+        }
+        
+        .analyze-button {
+            background: linear-gradient(135deg, #0066cc, #0052a3);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,102,204,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .analyze-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,102,204,0.5);
+        }
+        
+        /* 분석 결과 UI */
+        .analysis-result {
+            background: #2a3441;
+            padding: 40px;
+            border-radius: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .result-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .status-allowed {
+            color: #28a745;
+        }
+        
+        .status-denied {
+            color: #dc3545;
+        }
+        
+        /* 경로 시각화 */
+        .path-visualization-ui {
+            background: #1e2832;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            overflow-x: auto;
+        }
+        
+        .path-flow {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: fit-content;
+            padding: 20px;
+        }
+        
+        .path-node-ui {
+            background: #2a3441;
+            border: 2px solid #3a4454;
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 150px;
+            transition: all 0.3s ease;
+        }
+        
+        .path-node-ui:hover {
+            border-color: #0066cc;
+            transform: scale(1.05);
+        }
+        
+        .node-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .node-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #0066cc;
+        }
+        
+        .node-detail {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        
+        .path-arrow-ui {
+            font-size: 2em;
+            color: #0066cc;
+        }
+        
+        .policy-node {
+            background: linear-gradient(135deg, #0066cc, #0052a3);
+            border: none;
+        }
+        
+        .policy-node .node-title {
+            color: white;
+        }
+        
+        /* 상세 정보 테이블 */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .detail-card {
+            background: #1e2832;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #3a4454;
+        }
+        
+        .detail-title {
+            color: #0066cc;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .detail-list {
+            list-style: none;
+        }
+        
+        .detail-list li {
+            padding: 8px 0;
+            color: #ccc;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #3a4454;
+        }
+        
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #888;
+        }
+        
+        .detail-value {
+            color: white;
+            font-weight: 500;
+        }
+        
+        /* 실시간 로그 */
+        .log-viewer {
+            background: #0d1117;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 30px;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            opacity: 0;
+            animation: logFadeIn 0.3s ease forwards;
+        }
+        
+        @keyframes logFadeIn {
+            to { opacity: 1; }
+        }
+        
+        .log-time {
+            color: #58a6ff;
+        }
+        
+        .log-level-info {
+            color: #3fb950;
+        }
+        
+        .log-level-warning {
+            color: #d29922;
+        }
+        
+        .log-message {
+            color: #c9d1d9;
+        }
+        
+        /* 통계 대시보드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #2a3441, #3a4454);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #4a5564;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #aaa;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        
+        .slide-number {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            background: #0066cc;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Slide 1: 웹 UI 개요 -->
+        <div class="slide">
+            <h1>FortiManager 웹 UI - 패킷 경로 분석 화면</h1>
+            
+            <div class="web-ui-mockup">
+                <div class="browser-bar">
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="url-bar">https://fortigate-nextrade.local:7777/packet-analysis</div>
+                </div>
+                
+                <div class="fortigate-ui">
+                    <div class="ui-header">
+                        <div class="ui-logo">🛡️ FortiGate Nextrade</div>
+                        <div class="ui-nav">
+                            <div class="ui-nav-item">대시보드</div>
+                            <div class="ui-nav-item">장치 관리</div>
+                            <div class="ui-nav-item active">패킷 분석</div>
+                            <div class="ui-nav-item">정책 관리</div>
+                            <div class="ui-nav-item">모니터링</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-sidebar">
+                        <div class="ui-menu-item">
+                            <span>📊</span>
+                            <span>실시간 트래픽</span>
+                        </div>
+                        <div class="ui-menu-item active">
+                            <span>🔍</span>
+                            <span>패킷 경로 분석</span>
+                        </div>
+                        <div class="ui-menu-item">
+                            <span>📈</span>
+                            <span>트래픽 통계</span>
+                        </div>
+                        <div class="ui-menu-item">
+                            <span>🔐</span>
+                            <span>보안 정책</span>
+                        </div>
+                        <div class="ui-menu-item">
+                            <span>⚡</span>
+                            <span>성능 분석</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-content">
+                        <h3 style="color: white; margin-bottom: 30px;">패킷 경로 분석</h3>
+                        
+                        <!-- 입력 폼 -->
+                        <div class="packet-analysis-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">소스 IP 주소</label>
+                                    <input type="text" class="form-input" value="192.168.1.100">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">목적지 IP 주소</label>
+                                    <input type="text" class="form-input" value="8.8.8.8">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">목적지 포트</label>
+                                    <input type="text" class="form-input" value="443">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">프로토콜</label>
+                                    <select class="form-input">
+                                        <option>TCP</option>
+                                        <option>UDP</option>
+                                        <option>ICMP</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="analyze-button">🔍 경로 분석 시작</button>
+                        </div>
+                        
+                        <!-- 통계 대시보드 -->
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">324</div>
+                                <div class="stat-label">오늘 분석 횟수</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">98.5%</div>
+                                <div class="stat-label">허용된 트래픽</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">0.2초</div>
+                                <div class="stat-label">평균 분석 시간</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">15</div>
+                                <div class="stat-label">활성 정책</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-number">1</div>
+        </div>
+
+        <!-- Slide 2: 분석 결과 화면 -->
+        <div class="slide">
+            <h2>📊 패킷 경로 분석 결과 화면</h2>
+            
+            <div class="web-ui-mockup">
+                <div class="browser-bar">
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="url-bar">https://fortigate-nextrade.local:7777/packet-analysis/result</div>
+                </div>
+                
+                <div class="fortigate-ui">
+                    <div class="ui-header">
+                        <div class="ui-logo">🛡️ FortiGate Nextrade</div>
+                        <div class="ui-nav">
+                            <div class="ui-nav-item">대시보드</div>
+                            <div class="ui-nav-item">장치 관리</div>
+                            <div class="ui-nav-item active">패킷 분석</div>
+                            <div class="ui-nav-item">정책 관리</div>
+                            <div class="ui-nav-item">모니터링</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ui-content" style="margin-left: 40px;">
+                        <div class="analysis-result">
+                            <div class="result-header">
+                                <div class="result-status status-allowed">
+                                    <span style="font-size: 2em;">✅</span>
+                                    <span>트래픽 허용됨</span>
+                                </div>
+                                <div style="margin-left: auto; color: #aaa;">
+                                    분석 시간: 0.234초 | 2025-06-26 14:37:45
+                                </div>
+                            </div>
+                            
+                            <!-- 경로 시각화 -->
+                            <div class="path-visualization-ui">
+                                <div class="path-flow">
+                                    <div class="path-node-ui">
+                                        <div class="node-icon">💻</div>
+                                        <div class="node-title">내부 PC</div>
+                                        <div class="node-detail">192.168.1.100</div>
+                                    </div>
+                                    
+                                    <div class="path-arrow-ui">→</div>
+                                    
+                                    <div class="path-node-ui">
+                                        <div class="node-icon">🔌</div>
+                                        <div class="node-title">LAN Interface</div>
+                                        <div class="node-detail">Internal Zone</div>
+                                    </div>
+                                    
+                                    <div class="path-arrow-ui">→</div>
+                                    
+                                    <div class="path-node-ui policy-node">
+                                        <div class="node-icon">📋</div>
+                                        <div class="node-title">정책 적용</div>
+                                        <div class="node-detail" style="color: #ccc;">Internet_Access_Policy</div>
+                                    </div>
+                                    
+                                    <div class="path-arrow-ui">→</div>
+                                    
+                                    <div class="path-node-ui">
+                                        <div class="node-icon">🔄</div>
+                                        <div class="node-title">NAT 변환</div>
+                                        <div class="node-detail">203.0.113.1</div>
+                                    </div>
+                                    
+                                    <div class="path-arrow-ui">→</div>
+                                    
+                                    <div class="path-node-ui">
+                                        <div class="node-icon">🌐</div>
+                                        <div class="node-title">인터넷</div>
+                                        <div class="node-detail">8.8.8.8:443</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 상세 정보 -->
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">🛡️ 적용된 보안 프로파일</div>
+                                    <ul class="detail-list">
+                                        <li>
+                                            <span class="detail-label">Antivirus</span>
+                                            <span class="detail-value" style="color: #28a745;">✓ 활성화</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">IPS</span>
+                                            <span class="detail-value" style="color: #28a745;">✓ 활성화</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">Web Filter</span>
+                                            <span class="detail-value" style="color: #28a745;">✓ 활성화</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">Application Control</span>
+                                            <span class="detail-value" style="color: #28a745;">✓ 활성화</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <div class="detail-title">🔄 NAT 정보</div>
+                                    <ul class="detail-list">
+                                        <li>
+                                            <span class="detail-label">NAT 유형</span>
+                                            <span class="detail-value">Source NAT</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">원본 IP</span>
+                                            <span class="detail-value">192.168.1.100</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">변환 IP</span>
+                                            <span class="detail-value">203.0.113.1</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">포트 범위</span>
+                                            <span class="detail-value">Dynamic</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <div class="detail-title">📋 정책 정보</div>
+                                    <ul class="detail-list">
+                                        <li>
+                                            <span class="detail-label">정책 ID</span>
+                                            <span class="detail-value">#142</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">정책 이름</span>
+                                            <span class="detail-value">Internet_Access_Policy</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">액션</span>
+                                            <span class="detail-value" style="color: #28a745;">ACCEPT</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">로깅</span>
+                                            <span class="detail-value">활성화</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="detail-card">
+                                    <div class="detail-title">🚦 라우팅 정보</div>
+                                    <ul class="detail-list">
+                                        <li>
+                                            <span class="detail-label">라우팅 테이블</span>
+                                            <span class="detail-value">Main</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">게이트웨이</span>
+                                            <span class="detail-value">203.0.113.254</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">인터페이스</span>
+                                            <span class="detail-value">wan1</span>
+                                        </li>
+                                        <li>
+                                            <span class="detail-label">메트릭</span>
+                                            <span class="detail-value">10</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- 실시간 로그 -->
+                            <div class="log-viewer">
+                                <div class="log-entry" style="animation-delay: 0.1s;">
+                                    <span class="log-time">[14:37:45.234]</span>
+                                    <span class="log-level-info">[INFO]</span>
+                                    <span class="log-message">패킷 경로 분석 시작: 192.168.1.100 → 8.8.8.8:443</span>
+                                </div>
+                                <div class="log-entry" style="animation-delay: 0.2s;">
+                                    <span class="log-time">[14:37:45.256]</span>
+                                    <span class="log-level-info">[INFO]</span>
+                                    <span class="log-message">입력 인터페이스 확인: lan (Internal Zone)</span>
+                                </div>
+                                <div class="log-entry" style="animation-delay: 0.3s;">
+                                    <span class="log-time">[14:37:45.278]</span>
+                                    <span class="log-level-info">[INFO]</span>
+                                    <span class="log-message">정책 매칭: Internet_Access_Policy (#142) - ACCEPT</span>
+                                </div>
+                                <div class="log-entry" style="animation-delay: 0.4s;">
+                                    <span class="log-time">[14:37:45.301]</span>
+                                    <span class="log-level-info">[INFO]</span>
+                                    <span class="log-message">NAT 적용: Source NAT - 192.168.1.100 → 203.0.113.1</span>
+                                </div>
+                                <div class="log-entry" style="animation-delay: 0.5s;">
+                                    <span class="log-time">[14:37:45.324]</span>
+                                    <span class="log-level-info">[INFO]</span>
+                                    <span class="log-message">라우팅 결정: 0.0.0.0/0 via 203.0.113.254 dev wan1</span>
+                                </div>
+                                <div class="log-entry" style="animation-delay: 0.6s;">
+                                    <span class="log-time">[14:37:45.468]</span>
+                                    <span class="log-level-info">[SUCCESS]</span>
+                                    <span class="log-message">✅ 패킷 경로 분석 완료 - 트래픽 허용됨</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="slide-number">2</div>
+        </div>
+
+        <!-- Slide 3: 실시간 모니터링 대시보드 -->
+        <div class="slide">
+            <h2>📈 실시간 패킷 분석 대시보드</h2>
+            
+            <div class="web-ui-mockup">
+                <div class="browser-bar">
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="url-bar">https://fortigate-nextrade.local:7777/dashboard/packet-analysis</div>
+                </div>
+                
+                <div class="fortigate-ui">
+                    <div class="ui-content" style="margin-left: 0; padding: 40px;">
+                        <h3 style="color: white; margin-bottom: 30px;">실시간 패킷 분석 모니터링</h3>
+                        
+                        <!-- 실시간 통계 -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px;">
+                            <!-- 트래픽 플로우 차트 -->
+                            <div style="background: #2a3441; padding: 30px; border-radius: 15px;">
+                                <h4 style="color: #0066cc; margin-bottom: 20px;">최근 1시간 트래픽 플로우</h4>
+                                <div style="height: 300px; background: #1e2832; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 4em; color: #0066cc;">📊</div>
+                                        <div style="color: #aaa; margin-top: 20px;">
+                                            <div>허용: 2,847 (98.2%)</div>
+                                            <div>차단: 52 (1.8%)</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Top 정책 -->
+                            <div style="background: #2a3441; padding: 30px; border-radius: 15px;">
+                                <h4 style="color: #0066cc; margin-bottom: 20px;">가장 많이 사용된 정책</h4>
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <div style="background: #1e2832; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between;">
+                                        <span style="color: white;">Internet_Access_Policy</span>
+                                        <span style="color: #0066cc; font-weight: bold;">1,245 hits</span>
+                                    </div>
+                                    <div style="background: #1e2832; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between;">
+                                        <span style="color: white;">DMZ_Web_Server_Policy</span>
+                                        <span style="color: #0066cc; font-weight: bold;">892 hits</span>
+                                    </div>
+                                    <div style="background: #1e2832; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between;">
+                                        <span style="color: white;">Internal_Server_Communication</span>
+                                        <span style="color: #0066cc; font-weight: bold;">456 hits</span>
+                                    </div>
+                                    <div style="background: #1e2832; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between;">
+                                        <span style="color: white;">VPN_to_Internal</span>
+                                        <span style="color: #0066cc; font-weight: bold;">254 hits</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 실시간 분석 로그 -->
+                            <div style="background: #2a3441; padding: 30px; border-radius: 15px; grid-column: span 2;">
+                                <h4 style="color: #0066cc; margin-bottom: 20px;">실시간 패킷 분석 로그</h4>
+                                <div style="background: #0d1117; padding: 20px; border-radius: 10px; font-family: monospace; font-size: 0.9em; line-height: 1.8;">
+                                    <div style="color: #c9d1d9;">
+                                        <span style="color: #58a6ff;">[14:38:12]</span>
+                                        <span style="color: #3fb950;">✓</span>
+                                        192.168.1.105 → 172.217.14.94:443 
+                                        <span style="color: #d29922;">[Internet_Access_Policy]</span>
+                                        <span style="color: #3fb950;">ALLOWED</span>
+                                    </div>
+                                    <div style="color: #c9d1d9;">
+                                        <span style="color: #58a6ff;">[14:38:14]</span>
+                                        <span style="color: #3fb950;">✓</span>
+                                        203.0.113.88 → 10.10.10.100:80 
+                                        <span style="color: #d29922;">[DMZ_Web_Server_Policy]</span>
+                                        <span style="color: #3fb950;">ALLOWED</span>
+                                    </div>
+                                    <div style="color: #c9d1d9;">
+                                        <span style="color: #58a6ff;">[14:38:15]</span>
+                                        <span style="color: #f85149;">✗</span>
+                                        185.156.73.54 → 10.10.10.100:22 
+                                        <span style="color: #d29922;">[No matching policy]</span>
+                                        <span style="color: #f85149;">DENIED</span>
+                                    </div>
+                                    <div style="color: #c9d1d9;">
+                                        <span style="color: #58a6ff;">[14:38:17]</span>
+                                        <span style="color: #3fb950;">✓</span>
+                                        172.16.1.10 → 172.16.2.20:3306 
+                                        <span style="color: #d29922;">[Internal_Server_Communication]</span>
+                                        <span style="color: #3fb950;">ALLOWED</span>
+                                    </div>
+                                    <div style="color: #c9d1d9;">
+                                        <span style="color: #58a6ff;">[14:38:19]</span>
+                                        <span style="color: #3fb950;">✓</span>
+                                        10.0.0.100 → 192.168.100.50:445 
+                                        <span style="color: #d29922;">[VPN_to_Internal]</span>
+                                        <span style="color: #3fb950;">ALLOWED</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h3>주요 특징</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 30px;">
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">⚡</div>
+                    <h4 style="color: #0066cc;">실시간 분석</h4>
+                    <p>0.3초 이내 즉시 결과 표시</p>
+                </div>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">🎯</div>
+                    <h4 style="color: #0066cc;">직관적 UI</h4>
+                    <p>시각적 경로 표시 및 상세 정보</p>
+                </div>
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 15px; text-align: center;">
+                    <div style="font-size: 3em; margin-bottom: 15px;">📊</div>
+                    <h4 style="color: #0066cc;">통합 대시보드</h4>
+                    <p>실시간 모니터링 및 통계</p>
+                </div>
+            </div>
+            
+            <div class="slide-number">3</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -128,33 +128,25 @@ ENV PYTHONOPTIMIZE=2 \
     TIMEOUT=120 \
     KEEPALIVE=5
 
-# Create startup script
-RUN cat > /app/start.sh << 'EOF'
-#!/bin/bash
-set -e
-
-echo "🚀 Starting FortiGate Nextrade Production Server..."
-echo "📍 Mode: ${APP_MODE}"
-echo "🌐 Host: ${WEB_APP_HOST}:${WEB_APP_PORT}"
-echo "💾 Data Dir: /app/data"
-echo "📄 Logs Dir: /app/logs"
-
-# Ensure directories exist and have correct permissions
-mkdir -p /app/data /app/logs /app/temp
-chown -R fortinet:fortinet /app/data /app/logs /app/temp
-
-# Environment validation
-if [ -z "$WEB_APP_PORT" ]; then
-    export WEB_APP_PORT=7777
-fi
-
-# Start application - set PYTHONPATH and run from /app
-export PYTHONPATH=/app:/app/src:\$PYTHONPATH
-cd /app
-
-# Temporary fallback to Flask development server for service recovery
-exec python src/main.py --web
-EOF
+# Create startup script directly
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'echo "🚀 Starting FortiGate Nextrade Production Server..."' >> /app/start.sh && \
+    echo 'echo "📍 Mode: ${APP_MODE}"' >> /app/start.sh && \
+    echo 'echo "🌐 Host: ${WEB_APP_HOST}:${WEB_APP_PORT}"' >> /app/start.sh && \
+    echo 'echo "💾 Data Dir: /app/data"' >> /app/start.sh && \
+    echo 'echo "📁 Logs Dir: /app/logs"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Environment variable validation' >> /app/start.sh && \
+    echo 'if [ -z "$APP_MODE" ]; then' >> /app/start.sh && \
+    echo '    echo "⚠️ APP_MODE not set, using default: production"' >> /app/start.sh && \
+    echo '    export APP_MODE="production"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo '# Start the server' >> /app/start.sh && \
+    echo 'echo "🔧 Starting Flask Development Server (temporary)..."' >> /app/start.sh && \
+    echo 'echo "⚠️ Note: Production deployment pending Gunicorn fix"' >> /app/start.sh && \
+    echo '' >> /app/start.sh && \
+    echo 'exec python src/main.py --web' >> /app/start.sh
 
 RUN chmod +x /app/start.sh
 

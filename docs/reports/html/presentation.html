@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FortiGate Nextrade - 프레젠테이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #FFE066;
+        }
+
+        h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #4ECDC4;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+            max-width: 1000px;
+        }
+
+        .tech-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .tech-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 40px 0;
+            max-width: 1200px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: left;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            float: left;
+            margin-right: 15px;
+        }
+
+        .architecture-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            margin: 40px 0;
+        }
+
+        .arch-box {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 30px;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .arch-arrow {
+            font-size: 3rem;
+            color: #FFE066;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50px;
+            padding: 10px 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 6rem;
+            margin-bottom: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #4ECDC4;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            margin: 20px 0;
+            border-left: 5px solid #4ECDC4;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide.active * {
+            animation: slideIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation">
+        <!-- 슬라이드 1: 타이틀 -->
+        <div class="slide active">
+            <div class="slide-number">1 / 8</div>
+            <div class="logo">🛡️</div>
+            <h1>FortiGate Nextrade</h1>
+            <div class="subtitle">네트워크 모니터링 & 보안 관리 플랫폼</div>
+            <div class="subtitle">🚀 실시간 · 🤖 AI기반 · 🔒 보안강화</div>
+        </div>
+
+        <!-- 슬라이드 2: 기술 스택 -->
+        <div class="slide">
+            <div class="slide-number">2 / 8</div>
+            <h2>🛠️ 기술 스택</h2>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <div class="tech-icon">🐍</div>
+                    <h3>Python 3.11</h3>
+                    <p>Flask 웹 프레임워크</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🌐</div>
+                    <h3>Frontend</h3>
+                    <p>HTML5 + Bootstrap</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🐳</div>
+                    <h3>Docker</h3>
+                    <p>컨테이너 배포</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🗄️</div>
+                    <h3>SQLite</h3>
+                    <p>로컬 데이터베이스</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">⚡</div>
+                    <h3>Redis</h3>
+                    <p>캐싱 시스템</p>
+                </div>
+                <div class="tech-item">
+                    <div class="tech-icon">🔄</div>
+                    <h3>GitHub Actions</h3>
+                    <p>CI/CD 파이프라인</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슬라이드 3: 시스템 아키텍처 -->
+        <div class="slide">
+            <div class="slide-number">3 / 8</div>
+            <h2>🏗️ 시스템 아키텍처</h2>
+            <div class="architecture-diagram">
+                <div class="arch-box">
+                    <div class="tech-icon">🛡️</div>
+                    <h3>FortiGate</h3>
+                    <p>방화벽</p>
+                </div>
+                <div class="arch-arrow">➡️</div>
+                <div class="arch-box">
+                    <div class="tech-icon">⚙️</div>
+                    <h3>FortiManager</h3>
+                    <p>중앙 관리</p>
+                </div>
+                <div class="arch-arrow">➡️</div>
+                <div class="arch-box">
+                    <div class="tech-icon">🖥️</div>
+                    <h3>Nextrade</h3>
+                    <p>분석 플랫폼</p>
+                </div>
+            </div>
+            <div style="margin-top: 50px;">
+                <div class="arch-box" style="max-width: 600px;">
+                    <div class="tech-icon">📊</div>
+                    <h3>웹 대시보드</h3>
+                    <p>실시간 모니터링 · 정책 관리 · 분석 도구</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슬라이드 4: 주요 기능 -->
+        <div class="slide">
+            <div class="slide-number">4 / 8</div>
+            <h2>🚀 주요 기능</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>실시간 모니터링</h3>
+                    <p>• 네트워크 트래픽 분석<br>
+                       • 방화벽 정책 상태<br>
+                       • 시스템 리소스 감시</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>정책 자동화</h3>
+                    <p>• 중앙화된 정책 관리<br>
+                       • 자동 배포 시스템<br>
+                       • 컴플라이언스 체크</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔬</div>
+                    <h3>Mock 시스템</h3>
+                    <p>• 하드웨어 없는 테스트<br>
+                       • 시뮬레이션 환경<br>
+                       • 교육용 도구</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>보안 강화</h3>
+                    <p>• 오프라인 지원<br>
+                       • 암호화 통신<br>
+                       • 접근 제어</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슬라이드 5: 성능 지표 -->
+        <div class="slide">
+            <div class="slide-number">5 / 8</div>
+            <h2>📊 성능 지표</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">4</div>
+                    <div>CPU 코어</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">4GB</div>
+                    <div>메모리</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1000+</div>
+                    <div>동시 연결</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">&lt; 2초</div>
+                    <div>응답 시간</div>
+                </div>
+            </div>
+            <div style="margin-top: 50px;">
+                <h3>🎯 최적화된 배포</h3>
+                <p>Docker 기반 컨테이너화 • 자동 스케일링 • 무중단 배포</p>
+            </div>
+        </div>
+
+        <!-- 슬라이드 6: 배포 방법 -->
+        <div class="slide">
+            <div class="slide-number">6 / 8</div>
+            <h2>🚀 간편한 배포</h2>
+            <div class="code-block">
+# 원클릭 배포
+./scripts/deploy.sh
+
+# 상태 확인
+./scripts/deploy.sh status
+
+# 문제 해결
+./scripts/troubleshoot.sh
+            </div>
+            <div style="margin-top: 40px;">
+                <h3>🔄 CI/CD 파이프라인</h3>
+                <div class="architecture-diagram">
+                    <div class="arch-box">
+                        <div class="tech-icon">📝</div>
+                        <h3>Code Push</h3>
+                    </div>
+                    <div class="arch-arrow">➡️</div>
+                    <div class="arch-box">
+                        <div class="tech-icon">🧪</div>
+                        <h3>자동 테스트</h3>
+                    </div>
+                    <div class="arch-arrow">➡️</div>
+                    <div class="arch-box">
+                        <div class="tech-icon">🚀</div>
+                        <h3>자동 배포</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슬라이드 7: 사용 시나리오 -->
+        <div class="slide">
+            <div class="slide-number">7 / 8</div>
+            <h2>🎯 활용 분야</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏢</div>
+                    <h3>기업 네트워크</h3>
+                    <p>• 중소기업 방화벽 관리<br>
+                       • 정책 자동화<br>
+                       • 컴플라이언스 모니터링</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3>교육 & 훈련</h3>
+                    <p>• 네트워크 보안 교육<br>
+                       • 실습 환경 제공<br>
+                       • 시뮬레이션 도구</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>개발 & 테스트</h3>
+                    <p>• API 개발 환경<br>
+                       • 자동화 테스트<br>
+                       • 통합 검증</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>분석 & 모니터링</h3>
+                    <p>• 트래픽 분석<br>
+                       • 성능 모니터링<br>
+                       • 보안 이벤트 추적</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 슬라이드 8: 마무리 -->
+        <div class="slide">
+            <div class="slide-number">8 / 8</div>
+            <div class="logo">🎉</div>
+            <h1>감사합니다!</h1>
+            <div class="subtitle">더 스마트한 네트워크 관리를 경험하세요</div>
+            <div style="margin-top: 50px;">
+                <div class="arch-box" style="max-width: 600px;">
+                    <h3>📞 연락처</h3>
+                    <p>🔗 GitHub: github.com/JCLEE94/fortinet<br>
+                       🌐 Demo: http://localhost:7777<br>
+                       🐳 Docker Registry: registry.jclee.me/fortinet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn" onclick="prevSlide()">◀ 이전</button>
+        <button class="nav-btn" onclick="nextSlide()">다음 ▶</button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+
+        function showSlide(n) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (n + totalSlides) % totalSlides;
+            slides[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // 키보드 네비게이션
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+            }
+        });
+
+        // 자동 슬라이드 (선택사항)
+        // setInterval(nextSlide, 10000); // 10초마다 자동 넘김
+    </script>
+</body>
+</html>
