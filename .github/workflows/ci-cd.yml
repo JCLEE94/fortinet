@@ -145,8 +145,7 @@ jobs:
         
         # Trigger Watchtower webhook
         RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-          -H "Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}" \
-          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer MySuperSecretToken12345" \
           https://watchtower.jclee.me/v1/update)
         
         HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
