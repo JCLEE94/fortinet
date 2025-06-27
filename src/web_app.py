@@ -63,6 +63,9 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
     
+    # 애플리케이션 시작 시간 설정 (uptime 계산용)
+    app.start_time = time.time()
+    
     # 로거 설정
     logger = get_logger(__name__)
     

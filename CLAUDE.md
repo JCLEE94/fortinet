@@ -19,7 +19,7 @@ Key differentiators:
 - **Frontend**: Bootstrap 5 + Vanilla JS (no React/Vue dependencies)
 - **Database**: Redis (cache) + JSON file storage (persistence)
 - **Container**: Docker/Podman with multi-stage builds
-- **Deployment**: GitHub Actions → Docker Registry → Production Server
+- **Deployment**: GitHub Actions → registry.jclee.me → Watchtower → Production
 - **Monitoring**: Real-time SSE (Server-Sent Events) for log streaming
 
 ### Key Architecture Patterns
@@ -34,7 +34,7 @@ def create_app():
     app.register_blueprint(api_bp)         # REST APIs
     app.register_blueprint(fortimanager_bp) # FortiManager integration
     app.register_blueprint(itsm_bp)        # ITSM integration
-    app.register_blueprint(logs_bp)        # Log management (NEW)
+    app.register_blueprint(logs_bp)        # Log management
     return app
 ```
 
@@ -116,12 +116,11 @@ git commit -m "feat: your feature description"
 git push origin master
 
 # Monitor deployment
-gh run list --limit 5
-gh run view <run-id>
+gh run list --limit 5 --repo JCLEE94/fortinet
+gh run view <run-id> --repo JCLEE94/fortinet
 
-# Required GitHub Secrets
-DOCKER_USERNAME     # Docker Hub username
-DOCKER_PASSWORD     # Docker Hub password
+# Check deployment status
+curl https://fortinet.jclee.me/api/health
 ```
 
 ## Critical Implementation Details
@@ -207,6 +206,25 @@ trends = await hub.analytics_engine.analyze_trends_async()
 anomalies = await hub.analytics_engine.detect_anomalies()
 ```
 
+## CI/CD Pipeline
+
+### GitHub Actions Workflow
+The pipeline runs on push to main/master/develop branches:
+
+1. **Test Stage**: Runs pytest with coverage
+2. **Security Scan**: Checks for vulnerabilities
+3. **Build Stage**: Creates Docker image
+4. **Push Stage**: Pushes to registry.jclee.me
+5. **Deploy Stage**: Watchtower auto-deploys
+
+### Required GitHub Secrets
+```
+DOCKER_USERNAME     # Docker Hub username
+DOCKER_PASSWORD     # Docker Hub password
+REGISTRY_USERNAME   # Private registry username  
+REGISTRY_PASSWORD   # Private registry password
+```
+
 ## Testing Guidelines
 
 ### Mock FortiGate Testing
@@ -233,6 +251,9 @@ pytest tests/integration/ -v
 
 # All tests with coverage
 pytest --cov=src --cov-report=html --cov-report=term-missing
+
+# Manual tests (specific FortiManager scenarios)
+python tests/manual/test_fortimanager_demo.py
 ```
 
 ## Common Issues & Solutions
@@ -256,6 +277,13 @@ The application currently uses Flask development server in production due to a G
 ### Redis Connection Failed
 This is a warning, not an error. The system falls back to memory cache when Redis is unavailable.
 
+### Docker Build Failures
+If BuildKit errors occur:
+```bash
+export DOCKER_BUILDKIT=0
+docker build -f Dockerfile.production -t fortigate-nextrade:latest .
+```
+
 ## Project Structure
 
 ```
@@ -266,20 +294,29 @@ fortinet/
 │   ├── routes/                # Blueprint routes
 │   │   ├── main_routes.py    # Page routes
 │   │   ├── api_routes.py     # REST API routes
-│   │   ├── fortimanager.py   # FortiManager routes
+│   │   ├── fortimanager_routes.py   # FortiManager routes
 │   │   ├── itsm_routes.py    # ITSM routes
 │   │   └── logs_routes.py    # Log management routes
 │   ├── api/clients/          # External API clients
 │   ├── modules/              # Core business logic
+│   ├── fortimanager/         # Advanced FortiManager features
 │   ├── utils/                # Utilities (logging, caching, security)
 │   ├── config/               # Configuration management
 │   ├── templates/            # Jinja2 HTML templates
 │   └── static/               # CSS, JS, images
-├── data/                     # Runtime data and configs
-├── logs/                     # Application logs
 ├── tests/                    # Test suite
-├── .github/workflows/        # GitHub Actions CI/CD
-└── Dockerfile.production     # Production Docker image
+│   ├── unit/                # Unit tests
+│   ├── integration/         # Integration tests
+│   └── manual/              # Manual test scripts
+├── docs/                    # Documentation
+│   ├── guides/             # User guides
+│   ├── deployment/         # Deployment guides
+│   └── reports/            # Analysis reports
+├── scripts/                # Utility scripts
+├── data/                   # Runtime data and configs
+├── logs/                   # Application logs
+├── .github/workflows/      # GitHub Actions CI/CD
+└── Dockerfile.production   # Production Docker image
 ```
 
 ## Environment Variables
@@ -312,80 +349,15 @@ fortinet/
 - `POST /api/fortimanager/analyze-packet-path` - Analyze firewall path
 - `GET /api/fortimanager/devices` - List managed devices
 - `POST /api/fortimanager/policies` - Get firewall policies
+- `GET /api/fortimanager/adom/list` - List ADOMs
+- `POST /api/fortimanager/policy-packages` - Get policy packages
 
-### Log Management APIs (NEW)
+### Log Management APIs
 - `GET /api/logs/container` - Get Docker container logs
 - `GET /api/logs/application` - Get application logs
 - `GET /api/logs/stream` - Real-time log streaming (SSE)
 - `POST /api/logs/search` - Search logs
 - `GET /api/logs/stats` - Log statistics
-
-## Security Considerations
-
-1. **CSRF Protection**: All POST endpoints require CSRF tokens
-2. **Rate Limiting**: API endpoints have request limits
-3. **Admin Authentication**: Sensitive endpoints require admin access
-4. **Input Validation**: All user inputs are validated
-5. **XSS Protection**: Security headers prevent XSS attacks
-6. **No Hardcoded Secrets**: All secrets use environment variables
-
-## Performance Optimization
-
-1. **Caching**: Redis/memory cache for API responses
-2. **Lazy Loading**: Blueprints loaded on demand
-3. **Connection Pooling**: Reused HTTP sessions
-4. **Async Operations**: FortiManager advanced features use async
-5. **Log Rotation**: Automatic log file management
-
-## Troubleshooting Guide
-
-### Mock FortiGate Not Working
-If test mode isn't activating the mock system:
-```bash
-# Verify environment variable
-echo $APP_MODE
-# Should output: test
-
-# Force mock mode
-export FORTIGATE_HOST="mock://fortigate"
-export FORTIMANAGER_HOST="mock://fortimanager"
-```
-
-### WebSocket Connection Issues
-If real-time monitoring isn't working:
-```bash
-# Check if Socket.IO is disabled
-echo $DISABLE_SOCKETIO
-
-# Enable Socket.IO
-unset DISABLE_SOCKETIO
-```
-
-### API Authentication Failures
-For FortiManager API authentication issues:
-```python
-# The client tries multiple auth methods in order:
-# 1. Bearer token
-# 2. X-API-Key (usually works for demos)
-# 3. Session-based
-# Check logs/web_app.log for which method succeeded
-```
-
-## Dependencies
-
-### Core Requirements (requirements.txt)
-- Flask==2.3.2
-- requests==2.31.0
-- redis==4.5.5
-- pytest==7.3.1
-- gunicorn==20.1.0
-
-### Development Tools
-- black - Code formatter
-- flake8 - Linter
-- mypy - Type checker
-- isort - Import sorter
-- pytest-cov - Test coverage
 
 ## Important Notes
 
@@ -409,3 +381,19 @@ The mock system activates automatically when `APP_MODE=test`. This allows full t
 - Network topology
 - Security events
 - Performance metrics
+
+### FortiManager Authentication
+The client tries multiple auth methods in order:
+1. Bearer token
+2. X-API-Key (usually works for demos)
+3. Session-based
+
+Check `logs/web_app.log` for which method succeeded.
+
+### Production Deployment Flow
+1. Code pushed to GitHub
+2. GitHub Actions builds and tests
+3. Docker image pushed to registry.jclee.me
+4. Watchtower detects new image
+5. Automatic rolling update in production
+6. Available at https://fortinet.jclee.me

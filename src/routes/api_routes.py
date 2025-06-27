@@ -25,6 +25,22 @@ logger = get_logger(__name__)
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 
+def format_uptime(seconds):
+    """Convert seconds to human-readable format"""
+    if seconds < 60:
+        return f"{int(seconds)} seconds"
+    elif seconds < 3600:
+        minutes = int(seconds / 60)
+        return f"{minutes} minute{'s' if minutes != 1 else ''}"
+    elif seconds < 86400:
+        hours = int(seconds / 3600)
+        minutes = int((seconds % 3600) / 60)
+        return f"{hours} hour{'s' if hours != 1 else ''} {minutes} minute{'s' if minutes != 1 else ''}"
+    else:
+        days = int(seconds / 86400)
+        hours = int((seconds % 86400) / 3600)
+        return f"{days} day{'s' if days != 1 else ''} {hours} hour{'s' if hours != 1 else ''}"
+
 @api_bp.route('/health', methods=['GET'])
 def health_check():
     """CLAUDE.md v8.7.0: Health check endpoint for Docker"""
@@ -39,7 +55,10 @@ def health_check():
             'project': os.getenv('PROJECT_NAME', 'fortinet'),
             'docker': os.path.exists('/.dockerenv'),
             'uptime': time.time() - getattr(current_app, 'start_time', time.time()),
-            'version': '1.0.0'
+            'uptime_human': format_uptime(time.time() - getattr(current_app, 'start_time', time.time())),
+            'version': '1.0.0',
+            'git_commit': os.getenv('GIT_COMMIT', 'unknown'),
+            'build_date': os.getenv('BUILD_DATE', 'unknown')
         }
         
         # Check cache availability
