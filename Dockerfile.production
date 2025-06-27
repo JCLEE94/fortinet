@@ -19,7 +19,11 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     APP_MODE=${APP_MODE:-production} \
     WEB_APP_HOST=${WEB_APP_HOST:-0.0.0.0} \
-    WEB_APP_PORT=${WEB_APP_PORT:-7777}
+    WEB_APP_PORT=${WEB_APP_PORT:-7777} \
+    GIT_COMMIT=${GIT_COMMIT} \
+    GIT_BRANCH=${GIT_BRANCH} \
+    BUILD_DATE=${BUILD_DATE} \
+    VERSION=${VERSION}
 
 # Labels for image metadata
 LABEL maintainer="FortiGate Nextrade Team" \
