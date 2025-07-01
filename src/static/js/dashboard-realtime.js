@@ -793,7 +793,7 @@ function openPolicyOptimization() {
 }
 
 function openPolicyAnalysis() {
-    window.location.href = '/result';
+    window.location.href = '/policy-scenarios';
 }
 
 function generateReport() {

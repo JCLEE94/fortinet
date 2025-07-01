@@ -983,3 +983,123 @@ def get_dashboard():
             'data_source': 'none',
             'error': str(e)
         }
+
+@api_bp.route('/topology/data', methods=['GET'])
+@cached(ttl=120)
+def get_topology_data():
+    """네트워크 토폴로지 데이터 조회"""
+    try:
+        from src.mock.data_generator import DummyDataGenerator
+        
+        # API 매니저 가져오기
+        api_manager, dummy_generator, test_mode = get_data_source()
+        
+        # 실제 연결 시도
+        if not test_mode and api_manager:
+            try:
+                devices = api_manager.get_all_devices()
+                if devices and len(devices) > 0:
+                    # 실제 장치 데이터로 토폴로지 생성
+                    nodes = []
+                    links = []
+                    
+                    for i, device in enumerate(devices):
+                        nodes.append({
+                            'id': device.get('id', f'device_{i}'),
+                            'name': device.get('name', f'Device-{i}'),
+                            'type': 'firewall',
+                            'status': device.get('status', 'online'),
+                            'ip': device.get('ip_address', '192.168.1.1'),
+                            'location': device.get('location', 'Unknown'),
+                            'x': 100 + (i * 200),
+                            'y': 200 + (i % 2) * 150
+                        })
+                    
+                    # 링크 생성 (간단한 스타 토폴로지)
+                    if len(nodes) > 1:
+                        center_node = nodes[0]['id']
+                        for node in nodes[1:]:
+                            links.append({
+                                'source': center_node,
+                                'target': node['id'],
+                                'bandwidth': 1000,
+                                'utilization': random.randint(20, 80)
+                            })
+                    
+                    return jsonify({
+                        'status': 'success',
+                        'data': {
+                            'nodes': nodes,
+                            'links': links,
+                            'summary': {
+                                'total_devices': len(nodes),
+                                'online_devices': len([n for n in nodes if n['status'] == 'online']),
+                                'total_links': len(links),
+                                'avg_utilization': sum(l['utilization'] for l in links) / len(links) if links else 0
+                            }
+                        },
+                        'data_source': 'real'
+                    })
+            except Exception as e:
+                logger.warning(f"실제 토폴로지 데이터 수집 실패: {e}")
+        
+        # Mock 데이터 사용
+        dummy_generator = DummyDataGenerator()
+        topology_data = dummy_generator.generate_topology_data()
+        
+        return jsonify({
+            'status': 'success',
+            'data': topology_data,
+            'data_source': 'mock'
+        })
+        
+    except Exception as e:
+        logger.error(f"토폴로지 데이터 조회 실패: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'data': {
+                'nodes': [],
+                'links': [],
+                'summary': {
+                    'total_devices': 0,
+                    'online_devices': 0,
+                    'total_links': 0,
+                    'avg_utilization': 0
+                }
+            }
+        }), 500
+
+@api_bp.route('/topology/update', methods=['POST'])
+@rate_limit(max_requests=30, window=60)
+def update_topology():
+    """토폴로지 노드 위치 업데이트"""
+    try:
+        data = request.get_json()
+        node_id = data.get('node_id')
+        
+        if not node_id:
+            return jsonify({'status': 'error', 'message': 'node_id is required'}), 400
+        
+        # 캐시에서 토폴로지 데이터 가져오기
+        cache_manager = get_cache_manager()
+        cache_key = 'topology_positions'
+        positions = cache_manager.get(cache_key) or {}
+        
+        # 위치 업데이트
+        positions[node_id] = {
+            'x': data.get('x', 0),
+            'y': data.get('y', 0)
+        }
+        
+        # 캐시에 저장
+        cache_manager.set(cache_key, positions, ttl=3600)  # 1시간 캐시
+        
+        return jsonify({'status': 'success'})
+        
+    except Exception as e:
+        logger.error(f"토폴로지 업데이트 실패: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+        }), 500

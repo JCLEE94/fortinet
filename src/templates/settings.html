@@ -12,42 +12,51 @@
     </h1>
 </div>
 
-    <!-- 운영 모드 선택 카드 -->
+    <!-- 연결 상태 카드 -->
     <div class="card mb-4">
         <div class="card-header">
             <h3 class="card-title">
-                <i class="fas fa-toggle-on"></i>
-                운영 모드 선택
+                <i class="fas fa-wifi"></i>
+                연결 상태
             </h3>
         </div>
         <div class="card-body">
-            <div class="mode-selector">
-                <div class="mode-option" data-mode="production">
-                    <div class="mode-icon">
+            <div class="connection-status-grid">
+                <div class="status-item">
+                    <div class="status-icon">
                         <i class="fas fa-server"></i>
                     </div>
-                    <h4 class="mode-title">운영 모드</h4>
-                    <p class="mode-description">실제 장비 연결</p>
-                    <button class="button {% if not test_mode %}button-primary{% else %}button-outline{% endif %} mode-btn" id="production-mode-btn">
-                        <i class="fas {% if not test_mode %}fa-check{% else %}fa-server{% endif %}"></i> 운영 모드
-                    </button>
-                </div>
-                <div class="mode-option" data-mode="test">
-                    <div class="mode-icon">
-                        <i class="fas fa-flask"></i>
+                    <div class="status-info">
+                        <h5>FortiGate/FortiManager</h5>
+                        <div class="status-indicator" id="fortigate-status">
+                            <i class="fas fa-circle text-warning"></i>
+                            <span>연결 확인 중...</span>
+                        </div>
                     </div>
-                    <h4 class="mode-title">테스트 모드</h4>
-                    <p class="mode-description">데모 데이터 사용</p>
-                    <button class="button {% if test_mode %}button-primary{% else %}button-outline{% endif %} mode-btn" id="test-mode-btn">
-                        <i class="fas {% if test_mode %}fa-check{% else %}fa-vial{% endif %}"></i> 테스트 모드
-                    </button>
                 </div>
-            </div>
-            <div class="alert alert-info mt-3" id="mode-status">
-                <i class="fas fa-info-circle"></i>
-                <div class="mode-indicator {% if test_mode %}test-mode{% else %}production-mode{% endif %}">
-                    <i class="fas {% if test_mode %}fa-flask{% else %}fa-server{% endif %}"></i>
-                    현재 모드: <strong id="current-mode">{{ '테스트 모드' if test_mode else '운영 모드' }}</strong>
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="status-info">
+                        <h5>Redis 캐시</h5>
+                        <div class="status-indicator" id="redis-connection-status">
+                            <i class="fas fa-circle text-warning"></i>
+                            <span>연결 확인 중...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <div class="status-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="status-info">
+                        <h5>SSL 인증서</h5>
+                        <div class="status-indicator" id="ssl-connection-status">
+                            <i class="fas fa-circle text-warning"></i>
+                            <span>상태 확인 중...</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

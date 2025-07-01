@@ -1356,3 +1356,616 @@ def get_adom_list():
 def get_adoms():
     """ADOM 목록 조회 (별칭)"""
     return get_adom_list()
+
+@fortimanager_bp.route('/policy-scenarios', methods=['GET'])
+@cached(ttl=180)
+def get_policy_scenarios():
+    """정책 분석 시나리오 목록 조회"""
+    try:
+        # 실제 FortiManager API 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        scenarios = [
+            {
+                'id': 'scenario_1',
+                'name': '직원 인터넷 접속',
+                'description': '본사 직원이 외부 웹사이트에 접속하는 일반적인 시나리오',
+                'source': '192.168.10.100',
+                'destination': '8.8.8.8',
+                'port': 443,
+                'protocol': 'https',
+                'expected_result': 'allow',
+                'business_context': '직원의 일반적인 인터넷 업무 활동',
+                'risk_level': 'low'
+            },
+            {
+                'id': 'scenario_2', 
+                'name': '외부에서 DMZ 웹서버 접속',
+                'description': '인터넷 사용자가 공개 웹서버에 접속하는 시나리오',
+                'source': '203.250.32.15',
+                'destination': '172.16.10.80',
+                'port': 443,
+                'protocol': 'https',
+                'expected_result': 'allow',
+                'business_context': '공개 웹사이트 서비스 제공',
+                'risk_level': 'medium'
+            },
+            {
+                'id': 'scenario_3',
+                'name': '내부망에서 DB 서버 접속',
+                'description': '업무 시스템에서 데이터베이스 서버에 접속하는 시나리오',
+                'source': '192.168.10.50',
+                'destination': '192.168.30.100',
+                'port': 3306,
+                'protocol': 'mysql',
+                'expected_result': 'allow',
+                'business_context': '업무 애플리케이션 데이터베이스 연결',
+                'risk_level': 'high'
+            },
+            {
+                'id': 'scenario_4',
+                'name': 'DMZ에서 내부망 접속 시도',
+                'description': 'DMZ 서버가 내부망에 접속을 시도하는 보안 위험 시나리오',
+                'source': '172.16.10.80',
+                'destination': '192.168.10.100',
+                'port': 22,
+                'protocol': 'ssh',
+                'expected_result': 'deny',
+                'business_context': '보안 정책 위반 - DMZ에서 내부망 접근 차단',
+                'risk_level': 'critical'
+            },
+            {
+                'id': 'scenario_5',
+                'name': '지사에서 본사 시스템 접속',
+                'description': '지사 직원이 VPN을 통해 본사 시스템에 접속하는 시나리오',
+                'source': '10.10.20.100',
+                'destination': '192.168.10.50',
+                'port': 3389,
+                'protocol': 'rdp',
+                'expected_result': 'allow',
+                'business_context': '지사 원격 근무 지원',
+                'risk_level': 'medium'
+            }
+        ]
+        
+        return jsonify({
+            'success': True,
+            'scenarios': scenarios,
+            'count': len(scenarios)
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'scenarios': []
+        }), 500
+
+@fortimanager_bp.route('/policy-scenarios/<scenario_id>/analyze', methods=['POST'])
+def analyze_policy_scenario(scenario_id):
+    """특정 시나리오에 대한 정책 분석 실행"""
+    try:
+        # 실제 FortiManager API 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        # 시나리오 정보 가져오기
+        scenarios = {
+            'scenario_1': {
+                'source': '192.168.10.100',
+                'destination': '8.8.8.8', 
+                'port': 443,
+                'protocol': 'https'
+            },
+            'scenario_2': {
+                'source': '203.250.32.15',
+                'destination': '172.16.10.80',
+                'port': 443,
+                'protocol': 'https'
+            },
+            'scenario_3': {
+                'source': '192.168.10.50',
+                'destination': '192.168.30.100',
+                'port': 3306,
+                'protocol': 'mysql'
+            },
+            'scenario_4': {
+                'source': '172.16.10.80',
+                'destination': '192.168.10.100',
+                'port': 22,
+                'protocol': 'ssh'
+            },
+            'scenario_5': {
+                'source': '10.10.20.100',
+                'destination': '192.168.10.50',
+                'port': 3389,
+                'protocol': 'rdp'
+            }
+        }
+        
+        if scenario_id not in scenarios:
+            return jsonify({
+                'success': False,
+                'error': f'Scenario {scenario_id} not found'
+            }), 404
+        
+        scenario = scenarios[scenario_id]
+        
+        # 정책 분석 수행 - 실제 FortiManager API 사용 (다중 장치)
+        if fm_client and (fm_client.test_token_auth() or fm_client.login()):
+            # 관리되는 장치 목록 가져오기
+            devices = fm_client.get_managed_devices() or []
+            
+            device_analyses = []
+            overall_allowed = True
+            policy_paths = []
+            reasons = []
+            
+            for device in devices:
+                try:
+                    device_name = device.get('name', device.get('hostname', 'Unknown'))
+                    
+                    # 각 장치에서 정책 분석 수행
+                    device_analysis = fm_client.analyze_packet_path(
+                        src_ip=scenario['source'],
+                        dst_ip=scenario['destination'],
+                        port=scenario['port'],
+                        protocol=scenario['protocol'],
+                        device_name=device_name
+                    )
+                    
+                    if device_analysis:
+                        device_allowed = device_analysis.get('allowed', True)
+                        device_reason = device_analysis.get('reason', 'N/A')
+                        device_policy = device_analysis.get('policy_path', 'N/A')
+                        
+                        # 전체 허용 여부는 모든 장치에서 허용되어야 함
+                        if not device_allowed:
+                            overall_allowed = False
+                        
+                        # 각 장치별 정책 경로와 이유 수집
+                        policy_paths.append(f"[{device_name}] {device_policy}")
+                        reasons.append(f"[{device_name}] {device_reason}")
+                        
+                        device_analyses.append({
+                            'device_name': device_name,
+                            'allowed': device_allowed,
+                            'reason': device_reason,
+                            'policy_path': device_policy
+                        })
+                    
+                except Exception as device_error:
+                    # 개별 장치 분석 실패
+                    device_analyses.append({
+                        'device_name': device_name,
+                        'allowed': False,
+                        'reason': f'분석 오류: {str(device_error)}',
+                        'policy_path': 'N/A'
+                    })
+                    overall_allowed = False
+                    reasons.append(f"[{device_name}] 분석 오류: {str(device_error)}")
+            
+            # 결과 포맷 조정
+            if device_analyses:
+                formatted_result = {
+                    'src_ip': scenario['source'],
+                    'dst_ip': scenario['destination'], 
+                    'port': scenario['port'],
+                    'protocol': scenario['protocol'],
+                    'allowed': overall_allowed,
+                    'reason': "; ".join(reasons) if reasons else 'FortiManager 분석 완료',
+                    'policy_paths': policy_paths,  # 다중 정책 경로
+                    'policy_path': "; ".join(policy_paths) if policy_paths else 'N/A',  # 기존 호환성
+                    'device_analyses': device_analyses,  # 장치별 상세 분석
+                    'devices_count': len(device_analyses),
+                    'timestamp': time.time()
+                }
+                analysis_result = [formatted_result]
+            else:
+                # FortiManager에 장치가 없는 경우
+                analysis_result = [{
+                    'src_ip': scenario['source'],
+                    'dst_ip': scenario['destination'],
+                    'port': scenario['port'], 
+                    'protocol': scenario['protocol'],
+                    'allowed': False,
+                    'reason': 'FortiManager에서 관리되는 장치가 없습니다',
+                    'policy_paths': [],
+                    'policy_path': 'N/A',
+                    'device_analyses': [],
+                    'devices_count': 0,
+                    'timestamp': time.time()
+                }]
+        else:
+            # FortiManager 연결 실패 시
+            analysis_result = [{
+                'src_ip': scenario['source'],
+                'dst_ip': scenario['destination'],
+                'port': scenario['port'],
+                'protocol': scenario['protocol'],
+                'allowed': False,
+                'reason': 'FortiManager 연결 실패',
+                'policy_paths': [],
+                'policy_path': 'N/A',
+                'device_analyses': [],
+                'devices_count': 0,
+                'timestamp': time.time()
+            }]
+        
+        if analysis_result and len(analysis_result) > 0:
+            result = analysis_result[0]
+            result['scenario_id'] = scenario_id
+            result['analysis_timestamp'] = time.time()
+            
+            return jsonify({
+                'success': True,
+                'scenario_id': scenario_id,
+                'analysis': result
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Analysis failed to produce results'
+            }), 500
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@fortimanager_bp.route('/policy-scenarios/batch-analyze', methods=['POST'])
+def batch_analyze_scenarios():
+    """여러 시나리오에 대한 일괄 정책 분석"""
+    try:
+        data = request.get_json()
+        scenario_ids = data.get('scenario_ids', [])
+        
+        if not scenario_ids:
+            return jsonify({
+                'success': False,
+                'error': 'No scenario IDs provided'
+            }), 400
+        
+        # 실제 FortiManager API 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        # 모든 시나리오 정의
+        all_scenarios = {
+            'scenario_1': {
+                'source': '192.168.10.100',
+                'destination': '8.8.8.8',
+                'port': 443,
+                'protocol': 'https'
+            },
+            'scenario_2': {
+                'source': '203.250.32.15', 
+                'destination': '172.16.10.80',
+                'port': 443,
+                'protocol': 'https'
+            },
+            'scenario_3': {
+                'source': '192.168.10.50',
+                'destination': '192.168.30.100',
+                'port': 3306,
+                'protocol': 'mysql'
+            },
+            'scenario_4': {
+                'source': '172.16.10.80',
+                'destination': '192.168.10.100',
+                'port': 22,
+                'protocol': 'ssh'
+            },
+            'scenario_5': {
+                'source': '10.10.20.100',
+                'destination': '192.168.10.50',
+                'port': 3389,
+                'protocol': 'rdp'
+            }
+        }
+        
+        # 선택된 시나리오들만 분석
+        selected_scenarios = []
+        for scenario_id in scenario_ids:
+            if scenario_id in all_scenarios:
+                scenario = all_scenarios[scenario_id].copy()
+                scenario['id'] = scenario_id
+                selected_scenarios.append(scenario)
+        
+        if not selected_scenarios:
+            return jsonify({
+                'success': False,
+                'error': 'No valid scenarios found'
+            }), 404
+        
+        # 일괄 분석 수행 - 실제 FortiManager API 사용
+        results = []
+        
+        if fm_client and (fm_client.test_token_auth() or fm_client.login()):
+            # 관리되는 장치 목록 가져오기
+            devices = fm_client.get_managed_devices() or []
+            
+            for scenario in selected_scenarios:
+                try:
+                    # 다중 장치에서의 정책 분석
+                    device_analyses = []
+                    overall_allowed = True
+                    policy_paths = []
+                    reasons = []
+                    
+                    for device in devices:
+                        try:
+                            device_name = device.get('name', device.get('hostname', 'Unknown'))
+                            
+                            # 각 장치에서 정책 분석 수행
+                            device_analysis = fm_client.analyze_packet_path(
+                                src_ip=scenario['source'],
+                                dst_ip=scenario['destination'],
+                                port=scenario['port'],
+                                protocol=scenario['protocol'],
+                                device_name=device_name
+                            )
+                            
+                            if device_analysis:
+                                device_allowed = device_analysis.get('allowed', True)
+                                device_reason = device_analysis.get('reason', 'N/A')
+                                device_policy = device_analysis.get('policy_path', 'N/A')
+                                
+                                # 전체 허용 여부는 모든 장치에서 허용되어야 함
+                                if not device_allowed:
+                                    overall_allowed = False
+                                
+                                # 각 장치별 정책 경로와 이유 수집
+                                policy_paths.append(f"[{device_name}] {device_policy}")
+                                reasons.append(f"[{device_name}] {device_reason}")
+                                
+                                device_analyses.append({
+                                    'device_name': device_name,
+                                    'allowed': device_allowed,
+                                    'reason': device_reason,
+                                    'policy_path': device_policy
+                                })
+                            
+                        except Exception as device_error:
+                            # 개별 장치 분석 실패
+                            device_analyses.append({
+                                'device_name': device_name,
+                                'allowed': False,
+                                'reason': f'분석 오류: {str(device_error)}',
+                                'policy_path': 'N/A'
+                            })
+                            overall_allowed = False
+                            reasons.append(f"[{device_name}] 분석 오류: {str(device_error)}")
+                    
+                    # 시나리오 결과 정리
+                    if device_analyses:
+                        result = {
+                            'src_ip': scenario['source'],
+                            'dst_ip': scenario['destination'],
+                            'port': scenario['port'],
+                            'protocol': scenario['protocol'],
+                            'allowed': overall_allowed,
+                            'reason': "; ".join(reasons) if reasons else 'FortiManager 분석 완료',
+                            'policy_paths': policy_paths,  # 다중 정책 경로
+                            'policy_path': "; ".join(policy_paths) if policy_paths else 'N/A',  # 기존 호환성
+                            'device_analyses': device_analyses,  # 장치별 상세 분석
+                            'devices_count': len(device_analyses),
+                            'scenario_id': scenario['id'],
+                            'analysis_timestamp': time.time()
+                        }
+                    else:
+                        result = {
+                            'src_ip': scenario['source'],
+                            'dst_ip': scenario['destination'],
+                            'port': scenario['port'],
+                            'protocol': scenario['protocol'],
+                            'allowed': False,
+                            'reason': 'FortiManager에서 관리되는 장치가 없습니다',
+                            'policy_paths': [],
+                            'policy_path': 'N/A',
+                            'device_analyses': [],
+                            'devices_count': 0,
+                            'scenario_id': scenario['id'],
+                            'analysis_timestamp': time.time()
+                        }
+                    
+                    results.append(result)
+                    
+                except Exception as scenario_error:
+                    # 개별 시나리오 분석 실패 시
+                    result = {
+                        'src_ip': scenario['source'],
+                        'dst_ip': scenario['destination'],
+                        'port': scenario['port'],
+                        'protocol': scenario['protocol'],
+                        'allowed': False,
+                        'reason': f'시나리오 분석 오류: {str(scenario_error)}',
+                        'policy_paths': [],
+                        'policy_path': 'N/A',
+                        'device_analyses': [],
+                        'devices_count': 0,
+                        'scenario_id': scenario['id'],
+                        'analysis_timestamp': time.time()
+                    }
+                    results.append(result)
+        else:
+            # FortiManager 연결 실패 시 모든 시나리오를 실패로 처리
+            for scenario in selected_scenarios:
+                result = {
+                    'src_ip': scenario['source'],
+                    'dst_ip': scenario['destination'],
+                    'port': scenario['port'],
+                    'protocol': scenario['protocol'],
+                    'allowed': False,
+                    'reason': 'FortiManager 연결 실패',
+                    'policy_path': 'N/A',
+                    'scenario_id': scenario['id'],
+                    'analysis_timestamp': time.time()
+                }
+                results.append(result)
+        
+        return jsonify({
+            'success': True,
+            'total_scenarios': len(selected_scenarios),
+            'results': results,
+            'batch_timestamp': time.time()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@fortimanager_bp.route('/policy-scenarios/custom', methods=['POST'])
+def analyze_custom_scenario():
+    """사용자 정의 시나리오 분석"""
+    try:
+        data = request.get_json()
+        
+        # 필수 필드 검증
+        required_fields = ['src_ip', 'dst_ip', 'port', 'protocol']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'error': f'Missing required field: {field}'
+                }), 400
+        
+        # 실제 FortiManager API 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        # 사용자 정의 시나리오 생성
+        custom_scenario = {
+            'id': 'custom',
+            'source': data['src_ip'],
+            'destination': data['dst_ip'],
+            'port': int(data['port']),
+            'protocol': data['protocol']
+        }
+        
+        # 분석 수행 - 실제 FortiManager API 사용
+        if fm_client and (fm_client.test_token_auth() or fm_client.login()):
+            # 다중 장치에서의 정책 분석
+            devices = fm_client.get_managed_devices() or []
+            
+            analysis_results = []
+            overall_allowed = True
+            policy_paths = []
+            reasons = []
+            
+            for device in devices:
+                try:
+                    device_name = device.get('name', device.get('hostname', 'Unknown'))
+                    
+                    # 각 장치에서 정책 분석 수행
+                    device_analysis = fm_client.analyze_packet_path(
+                        src_ip=data['src_ip'],
+                        dst_ip=data['dst_ip'],
+                        port=int(data['port']),
+                        protocol=data['protocol'],
+                        device_name=device_name
+                    )
+                    
+                    if device_analysis:
+                        device_allowed = device_analysis.get('allowed', True)
+                        device_reason = device_analysis.get('reason', 'N/A')
+                        device_policy = device_analysis.get('policy_path', 'N/A')
+                        
+                        # 전체 허용 여부는 모든 장치에서 허용되어야 함
+                        if not device_allowed:
+                            overall_allowed = False
+                        
+                        # 각 장치별 정책 경로와 이유 수집
+                        policy_paths.append(f"[{device_name}] {device_policy}")
+                        reasons.append(f"[{device_name}] {device_reason}")
+                        
+                        analysis_results.append({
+                            'device_name': device_name,
+                            'allowed': device_allowed,
+                            'reason': device_reason,
+                            'policy_path': device_policy
+                        })
+                    
+                except Exception as device_error:
+                    # 개별 장치 분석 실패
+                    analysis_results.append({
+                        'device_name': device_name,
+                        'allowed': False,
+                        'reason': f'분석 오류: {str(device_error)}',
+                        'policy_path': 'N/A'
+                    })
+                    overall_allowed = False
+                    reasons.append(f"[{device_name}] 분석 오류: {str(device_error)}")
+            
+            # 결과 정리
+            if analysis_results:
+                result = {
+                    'src_ip': data['src_ip'],
+                    'dst_ip': data['dst_ip'],
+                    'port': int(data['port']),
+                    'protocol': data['protocol'],
+                    'allowed': overall_allowed,
+                    'reason': "; ".join(reasons) if reasons else 'FortiManager 분석 완료',
+                    'policy_paths': policy_paths,  # 다중 정책 경로
+                    'policy_path': "; ".join(policy_paths) if policy_paths else 'N/A',  # 기존 호환성
+                    'device_analyses': analysis_results,  # 장치별 상세 분석
+                    'devices_count': len(analysis_results),
+                    'scenario_id': 'custom',
+                    'analysis_timestamp': time.time()
+                }
+            else:
+                result = {
+                    'src_ip': data['src_ip'],
+                    'dst_ip': data['dst_ip'],
+                    'port': int(data['port']),
+                    'protocol': data['protocol'],
+                    'allowed': False,
+                    'reason': 'FortiManager에서 관리되는 장치가 없습니다',
+                    'policy_paths': [],
+                    'policy_path': 'N/A',
+                    'device_analyses': [],
+                    'devices_count': 0,
+                    'scenario_id': 'custom',
+                    'analysis_timestamp': time.time()
+                }
+            
+            return jsonify({
+                'success': True,
+                'scenario_id': 'custom',
+                'custom_scenario': custom_scenario,
+                'analysis': result
+            })
+            
+        else:
+            # FortiManager 연결 실패
+            result = {
+                'src_ip': data['src_ip'],
+                'dst_ip': data['dst_ip'],
+                'port': int(data['port']),
+                'protocol': data['protocol'],
+                'allowed': False,
+                'reason': 'FortiManager 연결 실패',
+                'policy_paths': [],
+                'policy_path': 'N/A',
+                'device_analyses': [],
+                'devices_count': 0,
+                'scenario_id': 'custom',
+                'analysis_timestamp': time.time()
+            }
+            
+            return jsonify({
+                'success': True,
+                'scenario_id': 'custom',
+                'custom_scenario': custom_scenario,
+                'analysis': result
+            })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

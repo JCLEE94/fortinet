@@ -1027,6 +1027,211 @@ class DummyDataGenerator:
             },
             'history': [secrets.randbelow(800) + 100 for _ in range(24)]  # 100-900
         }
+    
+    def generate_topology_data(self):
+        """토폴로지 데이터 생성 - API 엔드포인트용"""
+        # 노드 생성
+        nodes = []
+        
+        # 고정된 핵심 장치들
+        core_devices = [
+            {
+                'id': 'FGT001',
+                'name': 'FortiGate-Seoul-HQ',
+                'type': 'firewall',
+                'status': 'online',
+                'ip': '192.168.1.100',
+                'location': 'Seoul HQ',
+                'x': 400,
+                'y': 200
+            },
+            {
+                'id': 'FGT002',
+                'name': 'FortiGate-Busan-Branch',
+                'type': 'firewall',
+                'status': 'online',
+                'ip': '192.168.2.100',
+                'location': 'Busan Branch',
+                'x': 200,
+                'y': 350
+            },
+            {
+                'id': 'SW001',
+                'name': 'Core-Switch-1',
+                'type': 'switch',
+                'status': 'online',
+                'ip': '192.168.1.1',
+                'location': 'Seoul HQ',
+                'x': 400,
+                'y': 350
+            },
+            {
+                'id': 'RT001',
+                'name': 'Edge-Router-1',
+                'type': 'router',
+                'status': 'online',
+                'ip': '10.0.0.1',
+                'location': 'Seoul HQ',
+                'x': 400,
+                'y': 100
+            }
+        ]
+        
+        nodes.extend(core_devices)
+        
+        # 추가 랜덤 장치들
+        additional_count = secrets.randbelow(4) + 2  # 2-6개 추가
+        for i in range(additional_count):
+            node = {
+                'id': f'DEV{i+10:03d}',
+                'name': f'{secrets.choice(self.device_types).upper()}-{i+10}',
+                'type': secrets.choice(self.device_types),
+                'status': secrets.choice(['online', 'online', 'online', 'offline']),
+                'ip': self.generate_ip(),
+                'location': secrets.choice(['Seoul HQ', 'Busan Branch', 'Remote']),
+                'x': secrets.randbelow(600) + 100,
+                'y': secrets.randbelow(400) + 100
+            }
+            nodes.append(node)
+        
+        # 링크 생성
+        links = []
+        
+        # 핵심 연결
+        core_links = [
+            {
+                'source': 'FGT001',
+                'target': 'SW001',
+                'bandwidth': 1000,
+                'utilization': secrets.randbelow(30) + 40  # 40-70%
+            },
+            {
+                'source': 'FGT002',
+                'target': 'SW001',
+                'bandwidth': 100,
+                'utilization': secrets.randbelow(25) + 25  # 25-50%
+            },
+            {
+                'source': 'SW001',
+                'target': 'RT001',
+                'bandwidth': 10000,
+                'utilization': secrets.randbelow(40) + 60  # 60-100%
+            }
+        ]
+        
+        links.extend(core_links)
+        
+        # 추가 연결 (랜덤)
+        for node in nodes[4:]:  # 추가 장치들만
+            # 랜덤하게 기존 노드와 연결
+            target = secrets.choice(nodes[:4])  # 핵심 장치 중 하나와 연결
+            if node['id'] != target['id']:
+                links.append({
+                    'source': node['id'],
+                    'target': target['id'],
+                    'bandwidth': secrets.choice([100, 1000]),
+                    'utilization': secrets.randbelow(60) + 20  # 20-80%
+                })
+        
+        # 통계 계산
+        online_devices = len([n for n in nodes if n['status'] == 'online'])
+        total_devices = len(nodes)
+        total_links = len(links)
+        avg_utilization = sum(l['utilization'] for l in links) / total_links if links else 0
+        
+        return {
+            'nodes': nodes,
+            'links': links,
+            'summary': {
+                'total_devices': total_devices,
+                'online_devices': online_devices,
+                'total_links': total_links,
+                'avg_utilization': round(avg_utilization, 1)
+            }
+        }
+    
+    def analyze_packet_path_scenarios(self, scenarios):
+        """시나리오 기반 패킷 경로 분석"""
+        results = []
+        
+        for scenario in scenarios:
+            # 기본 패킷 정보
+            src_ip = scenario.get('source', scenario.get('src_ip', '192.168.1.100'))
+            dst_ip = scenario.get('destination', scenario.get('dst_ip', '10.0.0.50'))
+            port = scenario.get('port', 443)
+            protocol = scenario.get('protocol', 'tcp')
+            
+            # 분석 결과 생성 (시나리오별 로직)
+            scenario_id = scenario.get('id', 'unknown')
+            
+            # 시나리오별 결과 패턴
+            if scenario_id == 'scenario_1':
+                # 직원 인터넷 접속 - 일반적으로 허용
+                allowed = True
+                reason = "직원 인터넷 접속 정책에 의해 허용됨"
+                policy_path = "Policy-001: Internal -> External (Allow) → 허용"
+                
+            elif scenario_id == 'scenario_2':
+                # 외부에서 DMZ 웹서버 접속 - 허용
+                allowed = True
+                reason = "DMZ 웹서버 접속 정책에 의해 허용됨"
+                policy_path = "Policy-005: External -> DMZ (Allow) → 허용"
+                
+            elif scenario_id == 'scenario_3':
+                # 내부 DB 접속 - 허용
+                allowed = True
+                reason = "내부 데이터베이스 접속 정책에 의해 허용됨"
+                policy_path = "Policy-010: Internal -> Database (Allow) → 허용"
+                
+            elif scenario_id == 'scenario_4':
+                # 보안 위반 시도 - 차단
+                allowed = False
+                reason = "보안 정책 위반: 외부에서 내부 SSH 접속 시도"
+                policy_path = "Policy-999: External -> Internal (Deny) → 차단"
+                
+            elif scenario_id == 'scenario_5':
+                # 지사-본사 VPN 연결 - 허용
+                allowed = True
+                reason = "지사-본사 VPN 연결 정책에 의해 허용됨"
+                policy_path = "Policy-020: Branch -> HQ (VPN Allow) → 허용"
+                
+            else:
+                # 사용자 정의 시나리오 - 랜덤 결과
+                allowed = secrets.randbelow(10) > 2  # 70% 확률로 허용
+                if allowed:
+                    reason = "정책 분석 결과 허용됨"
+                    policy_path = f"Policy-{secrets.randbelow(99) + 1}: {src_ip.split('.')[0]}.x.x.x -> {dst_ip.split('.')[0]}.x.x.x (Allow) → 허용"
+                else:
+                    reason = "정책 분석 결과 차단됨"
+                    policy_path = f"Policy-{secrets.randbelow(99) + 1}: {src_ip.split('.')[0]}.x.x.x -> {dst_ip.split('.')[0]}.x.x.x (Deny) → 차단"
+            
+            # 추가 분석 정보
+            analysis_time = secrets.randbelow(5) + 1  # 1-5초
+            hop_count = secrets.randbelow(5) + 3  # 3-8홉
+            
+            result = {
+                'src_ip': src_ip,
+                'dst_ip': dst_ip,
+                'port': port,
+                'protocol': protocol,
+                'allowed': allowed,
+                'reason': reason,
+                'policy_path': policy_path,
+                'analysis_time_ms': analysis_time * 1000,
+                'hop_count': hop_count,
+                'devices_analyzed': [
+                    {
+                        'device_name': 'FortiGate-Seoul-HQ',
+                        'device_ip': '192.168.1.100',
+                        'analysis_result': 'pass' if allowed else 'block'
+                    }
+                ],
+                'timestamp': time.time()
+            }
+            
+            results.append(result)
+        
+        return results
 
 # 싱글톤 인스턴스 생성
 dummy_generator = DummyDataGenerator()
