@@ -17,7 +17,7 @@ def check_internet_old():
 
 def check_local_service_old():
     try:
-        response = requests.get('http://localhost:7777/api/settings', timeout=5)
+        response = requests.get('f"http://localhost:{os.getenv('WEB_APP_PORT', '7777')}"/api/settings', timeout=5)
         return response.status_code == 200
     except:
         return False

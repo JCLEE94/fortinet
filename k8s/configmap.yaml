@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fortinet-config
+  namespace: fortinet
+data:
+  # Application settings
+  APP_MODE: "production"
+  WEB_APP_HOST: "0.0.0.0"
+  WEB_APP_PORT: "7777"
+  FLASK_ENV: "production"
+  PYTHONPATH: "/app/src"
+  
+  # Timezone
+  TZ: "Asia/Seoul"
+  
+  # FortiGate API settings
+  FORTIGATE_PORT: "443"
+  FORTIGATE_VERIFY_SSL: "false"
+  
+  # FortiManager API settings  
+  FORTIMANAGER_HOST: "hjsim-1034-453947.fortidemo.fortinet.com"
+  FORTIMANAGER_PORT: "14005"
+  FORTIMANAGER_VERIFY_SSL: "false"
+  FORTIMANAGER_ENABLED: "true"
+  
+  # FortiAnalyzer API settings
+  FORTIANALYZER_PORT: "443"
+  FORTIANALYZER_VERIFY_SSL: "false"
+  
+  # Redis settings
+  REDIS_URL: "redis://fortinet-redis:6379/0"
+  REDIS_ENABLED: "true"
+  
+  # Performance settings
+  WEB_CONCURRENCY: "4"
+  WORKERS: "4"
+  WORKER_CLASS: "gevent"
+  WORKER_CONNECTIONS: "1000"
+  MAX_REQUESTS: "1000"
+  MAX_REQUESTS_JITTER: "100"
+  TIMEOUT: "120"
+  KEEPALIVE: "5"
+  
+  # Feature flags
+  DISABLE_SOCKETIO: "false"
+  DISABLE_EXTERNAL_CALLS: "false"
+  OFFLINE_MODE: "false"

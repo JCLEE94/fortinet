@@ -36,12 +36,23 @@ class APIOptimizer:
             'response_times': []
         }
     
+    def _json_serializer(self, obj):
+        """JSON 직렬화를 위한 커스텀 시리얼라이저"""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, timedelta):
+            return str(obj)
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        else:
+            return str(obj)
+    
     def compress_response(self, data: Union[str, Dict, List]) -> Tuple[bytes, bool]:
         """응답 데이터 압축"""
         try:
-            # JSON 직렬화
+            # JSON 직렬화 (datetime 객체 처리 포함)
             if isinstance(data, (dict, list)):
-                json_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+                json_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'), default=self._json_serializer)
             else:
                 json_data = str(data)
             
@@ -68,7 +79,7 @@ class APIOptimizer:
             logger.error(f"응답 압축 실패: {e}")
             # 압축 실패 시 원본 반환
             if isinstance(data, (dict, list)):
-                return json.dumps(data).encode('utf-8'), False
+                return json.dumps(data, default=self._json_serializer).encode('utf-8'), False
             return str(data).encode('utf-8'), False
     
     def paginate_data(self, data: List[Any], page: int = 1, page_size: Optional[int] = None) -> Dict[str, Any]:
@@ -155,7 +166,7 @@ class APIOptimizer:
             else:
                 # 모든 경우에 Response 객체 직접 생성
                 if isinstance(data, (dict, list)):
-                    json_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+                    json_data = json.dumps(data, ensure_ascii=False, separators=(',', ':'), default=self._json_serializer)
                     response = Response(
                         json_data,
                         status=status_code,
@@ -174,7 +185,7 @@ class APIOptimizer:
                             )
                         except (json.JSONDecodeError, TypeError):
                             # 일반 문자열인 경우 JSON 객체로 감싸기
-                            wrapped_data = json.dumps({'data': data, 'message': data}, ensure_ascii=False)
+                            wrapped_data = json.dumps({'data': data, 'message': data}, ensure_ascii=False, default=self._json_serializer)
                             response = Response(
                                 wrapped_data,
                                 status=status_code,
@@ -182,7 +193,7 @@ class APIOptimizer:
                             )
                     else:
                         response = Response(
-                            json.dumps({'data': str(data)}, ensure_ascii=False),
+                            json.dumps({'data': str(data)}, ensure_ascii=False, default=self._json_serializer),
                             status=status_code,
                             content_type='application/json; charset=utf-8'
                         )
@@ -204,7 +215,7 @@ class APIOptimizer:
         except Exception as e:
             logger.error(f"최적화된 응답 생성 실패: {e}")
             # 폴백: 기본 응답 (jsonify 사용하지 않음)
-            error_data = json.dumps({'error': 'Response optimization failed', 'details': str(e)}, ensure_ascii=False)
+            error_data = json.dumps({'error': 'Response optimization failed', 'details': str(e)}, ensure_ascii=False, default=self._json_serializer)
             response = Response(
                 error_data,
                 status=500,

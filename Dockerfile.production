@@ -132,26 +132,8 @@ ENV PYTHONOPTIMIZE=2 \
     TIMEOUT=120 \
     KEEPALIVE=5
 
-# Create startup script directly
-RUN echo '#!/bin/bash' > /app/start.sh && \
-    echo 'echo "🚀 Starting FortiGate Nextrade Production Server..."' >> /app/start.sh && \
-    echo 'echo "📍 Mode: ${APP_MODE}"' >> /app/start.sh && \
-    echo 'echo "🌐 Host: ${WEB_APP_HOST}:${WEB_APP_PORT}"' >> /app/start.sh && \
-    echo 'echo "💾 Data Dir: /app/data"' >> /app/start.sh && \
-    echo 'echo "📁 Logs Dir: /app/logs"' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo '# Environment variable validation' >> /app/start.sh && \
-    echo 'if [ -z "$APP_MODE" ]; then' >> /app/start.sh && \
-    echo '    echo "⚠️ APP_MODE not set, using default: production"' >> /app/start.sh && \
-    echo '    export APP_MODE="production"' >> /app/start.sh && \
-    echo 'fi' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo '# Start the server' >> /app/start.sh && \
-    echo 'echo "🔧 Starting Flask Development Server (temporary)..."' >> /app/start.sh && \
-    echo 'echo "⚠️ Note: Production deployment pending Gunicorn fix"' >> /app/start.sh && \
-    echo '' >> /app/start.sh && \
-    echo 'exec python src/main.py --web' >> /app/start.sh
-
+# Copy startup script
+COPY --chown=fortinet:fortinet start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # =============================================================================

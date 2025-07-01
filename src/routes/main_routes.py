@@ -90,7 +90,13 @@ def batch_results():
 
 @main_bp.route('/devices')
 def devices():
-    return render_template('devices.html')
+    """장치 목록 페이지"""
+    from src.config.device_defaults import get_device_config
+    
+    # 장치 관리 설정 로드
+    device_config = get_device_config()
+    
+    return render_template('devices.html', config=device_config)
 
 @main_bp.route('/packet_sniffer')
 def packet_sniffer():
@@ -127,44 +133,57 @@ def dashboard():
     import time
     from src.api.integration.api_integration import APIIntegrationManager
     from src.mock.data_generator import DummyDataGenerator
-    from src.config.settings import Settings
+    from src.config.unified_settings import unified_settings
+    from src.config.dashboard_defaults import get_dashboard_config, generate_mock_alerts
     
-    settings = Settings()
-    fortimanager_config = settings.get_fortimanager_config()
+    # 대시보드 설정 로드
+    dashboard_config = get_dashboard_config()
     
     try:
         # 테스트 모드인지 확인
-        if os.getenv('APP_MODE', '').lower() == 'test':
+        if unified_settings.is_test_mode():
             # 더미 데이터 사용
             dummy_generator = DummyDataGenerator()
             data = {
                 'stats': dummy_generator.generate_dashboard_stats(),
-                'devices': dummy_generator.generate_devices(10),
-                'events': dummy_generator.generate_security_events(10)
+                'devices': dummy_generator.generate_devices(
+                    dashboard_config['device_list']['top_devices_limit'] * 2
+                ),
+                'events': dummy_generator.generate_security_events(
+                    dashboard_config['security_events']['max_events_display']
+                ),
+                'alerts': generate_mock_alerts(dashboard_config['stats']['active_alerts'])
             }
         else:
             # 실제 FortiManager 연결 시도
-            config_data = {
-                'fortimanager': settings.fortimanager,
-                'fortigate': settings.fortigate,
-                'fortianalyzer': settings.fortianalyzer
-            }
-            api_manager = APIIntegrationManager(config_data)
+            api_manager = APIIntegrationManager(unified_settings.get_api_config())
             api_manager.initialize_connections()
             
             fm_client = api_manager.get_fortimanager_client()
             if fm_client and fm_client.login():
                 data = {
                     'devices': api_manager.get_all_devices(),
-                    'connection_status': api_manager.get_connection_status()
+                    'connection_status': api_manager.get_connection_status(),
+                    'stats': {
+                        'total_devices': len(api_manager.get_all_devices()),
+                        'uptime_percentage': dashboard_config['stats']['uptime_percentage'],
+                        'network_traffic': dashboard_config['stats']['network_traffic'],
+                        'active_alerts': dashboard_config['stats']['active_alerts']
+                    },
+                    'alerts': generate_mock_alerts(dashboard_config['stats']['active_alerts'])
                 }
             else:
                 # 연결 실패 시 더미 데이터 사용
                 dummy_generator = DummyDataGenerator()
                 data = {
                     'stats': dummy_generator.generate_dashboard_stats(),
-                    'devices': dummy_generator.generate_devices(10),
-                    'events': dummy_generator.generate_security_events(10)
+                    'devices': dummy_generator.generate_devices(
+                        dashboard_config['device_list']['top_devices_limit'] * 2
+                    ),
+                    'events': dummy_generator.generate_security_events(
+                        dashboard_config['security_events']['max_events_display']
+                    ),
+                    'alerts': generate_mock_alerts(dashboard_config['stats']['active_alerts'])
                 }
                 
     except Exception as e:
@@ -173,9 +192,17 @@ def dashboard():
         dummy_generator = DummyDataGenerator()
         data = {
             'stats': dummy_generator.generate_dashboard_stats(),
-            'devices': dummy_generator.generate_devices(10),
-            'events': dummy_generator.generate_security_events(10)
+            'devices': dummy_generator.generate_devices(
+                dashboard_config['device_list']['top_devices_limit'] * 2
+            ),
+            'events': dummy_generator.generate_security_events(
+                dashboard_config['security_events']['max_events_display']
+            ),
+            'alerts': generate_mock_alerts(dashboard_config['stats']['active_alerts'])
         }
+    
+    # 대시보드 설정도 템플릿에 전달
+    data['config'] = dashboard_config
     
     return render_template('dashboard.html', data=data)
 

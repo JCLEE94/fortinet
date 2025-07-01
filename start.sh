@@ -1,5 +1,4 @@
 #!/bin/bash
-
 echo "🚀 Starting FortiGate Nextrade Production Server..."
 echo "📍 Mode: ${APP_MODE}"
 echo "🌐 Host: ${WEB_APP_HOST}:${WEB_APP_PORT}"
@@ -12,20 +11,12 @@ if [ -z "$APP_MODE" ]; then
     export APP_MODE="production"
 fi
 
-# Ensure directories exist with proper permissions
-echo "📦 Checking directory permissions..."
-if [ ! -d "/app/data" ]; then
-    echo "❌ Error: /app/data directory not found"
-    exit 1
-fi
-
-if [ ! -d "/app/logs" ]; then
-    echo "❌ Error: /app/logs directory not found"
-    exit 1
-fi
+# Set PYTHONPATH to include src directory
+export PYTHONPATH=/app:$PYTHONPATH
 
 # Start the server
 echo "🔧 Starting Flask Development Server (temporary)..."
 echo "⚠️ Note: Production deployment pending Gunicorn fix"
 
-exec python src/main.py --web
+# Change to /app directory and run main.py with proper module resolution
+cd /app && exec python -m src.main --web

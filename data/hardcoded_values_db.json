@@ -1,0 +1,298 @@
+{
+  "metadata": {
+    "created_at": "2025-07-01",
+    "version": "1.0",
+    "description": "하드코딩 제거를 위한 중앙 설정 데이터베이스"
+  },
+  "ports": {
+    "application": {
+      "web_app": {
+        "env_var": "WEB_APP_PORT",
+        "default": 7777,
+        "description": "메인 웹 애플리케이션 포트"
+      },
+      "test_app": {
+        "env_var": "TEST_APP_PORT", 
+        "default": 7778,
+        "description": "테스트/개발 모드 포트"
+      },
+      "mock_server": {
+        "env_var": "MOCK_SERVER_PORT",
+        "default": 6666,
+        "description": "목 서버 포트"
+      },
+      "flask": {
+        "env_var": "FLASK_PORT",
+        "default": 5000,
+        "description": "Flask 개발 서버 포트"
+      }
+    },
+    "infrastructure": {
+      "redis": {
+        "env_var": "REDIS_PORT",
+        "default": 6379,
+        "description": "Redis 캐시 서버 포트"
+      },
+      "metrics": {
+        "env_var": "METRICS_PORT", 
+        "default": 9090,
+        "description": "Prometheus 메트릭 포트"
+      },
+      "health_check": {
+        "env_var": "HEALTH_CHECK_PORT",
+        "default": 8080,
+        "description": "헬스체크 포트"
+      }
+    },
+    "common_service_ports": [22, 80, 443, 3389, 8080, 8443],
+    "http_ports": [80, 8080, 8000, 8888, 3000, 5000],
+    "https_ports": [443, 8443, 9443]
+  },
+  "hosts": {
+    "application": {
+      "web_app_host": {
+        "env_var": "WEB_APP_HOST",
+        "default": "0.0.0.0",
+        "description": "웹 애플리케이션 바인드 호스트"
+      },
+      "flask_host": {
+        "env_var": "FLASK_HOST",
+        "default": "0.0.0.0", 
+        "description": "Flask 서버 바인드 호스트"
+      }
+    },
+    "infrastructure": {
+      "redis_host": {
+        "env_var": "REDIS_HOST",
+        "default": "localhost",
+        "description": "Redis 서버 호스트"
+      },
+      "database_host": {
+        "env_var": "DATABASE_HOST",
+        "default": "localhost",
+        "description": "데이터베이스 서버 호스트"
+      }
+    }
+  },
+  "fortimanager": {
+    "demo_environment": {
+      "host": {
+        "env_var": "FORTIMANAGER_DEMO_HOST",
+        "default": "",
+        "description": "FortiManager 데모 호스트 (보안상 환경변수 필수)",
+        "sensitive": true
+      },
+      "port": {
+        "env_var": "FORTIMANAGER_PORT",
+        "default": 14005,
+        "description": "FortiManager API 포트"
+      },
+      "username": {
+        "env_var": "FORTIMANAGER_DEMO_USER",
+        "default": "",
+        "description": "FortiManager 데모 사용자명 (보안상 환경변수 필수)",
+        "sensitive": true
+      },
+      "password": {
+        "env_var": "FORTIMANAGER_DEMO_PASS",
+        "default": "",
+        "description": "FortiManager 데모 패스워드 (보안상 환경변수 필수)",
+        "sensitive": true
+      }
+    },
+    "api_settings": {
+      "timeout": {
+        "env_var": "FORTIMANAGER_TIMEOUT",
+        "default": 30,
+        "description": "API 요청 타임아웃 (초)"
+      },
+      "verify_ssl": {
+        "env_var": "FORTIMANAGER_VERIFY_SSL",
+        "default": false,
+        "description": "SSL 인증서 검증 여부"
+      },
+      "default_adom": {
+        "env_var": "FORTIMANAGER_DEFAULT_ADOM", 
+        "default": "root",
+        "description": "기본 ADOM"
+      }
+    }
+  },
+  "thresholds": {
+    "traffic": {
+      "high": {
+        "env_var": "TRAFFIC_HIGH_THRESHOLD",
+        "default": 5000,
+        "description": "높은 트래픽 임계값 (패킷/초)"
+      },
+      "medium": {
+        "env_var": "TRAFFIC_MEDIUM_THRESHOLD", 
+        "default": 1000,
+        "description": "중간 트래픽 임계값 (패킷/초)"
+      }
+    },
+    "performance": {
+      "response_time_warning": {
+        "env_var": "RESPONSE_TIME_WARNING",
+        "default": 1000,
+        "description": "응답시간 경고 임계값 (밀리초)"
+      },
+      "response_time_critical": {
+        "env_var": "RESPONSE_TIME_CRITICAL",
+        "default": 3000,
+        "description": "응답시간 위험 임계값 (밀리초)"
+      }
+    },
+    "security": {
+      "max_events": {
+        "env_var": "MAX_SECURITY_EVENTS",
+        "default": 5000,
+        "description": "최대 보안 이벤트 수"
+      },
+      "allowed_ports": {
+        "env_var": "SECURITY_ALLOWED_PORTS",
+        "default": "22,80,443,7777",
+        "description": "허용된 포트 목록"
+      }
+    }
+  },
+  "external_services": {
+    "itsm": {
+      "base_url": {
+        "env_var": "ITSM_BASE_URL",
+        "default": "",
+        "description": "ITSM 시스템 기본 URL",
+        "sensitive": true
+      }
+    },
+    "network": {
+      "internet_check": {
+        "env_var": "INTERNET_CHECK_URL",
+        "default": "http://8.8.8.8",
+        "description": "인터넷 연결 확인 URL"
+      },
+      "dns_server": {
+        "env_var": "DNS_SERVER",
+        "default": "8.8.8.8",
+        "description": "기본 DNS 서버"
+      }
+    }
+  },
+  "application": {
+    "mode": {
+      "env_var": "APP_MODE",
+      "default": "production",
+      "values": ["production", "test", "development"],
+      "description": "애플리케이션 실행 모드"
+    },
+    "debug": {
+      "env_var": "DEBUG",
+      "default": false,
+      "description": "디버그 모드 활성화"
+    },
+    "project_name": {
+      "env_var": "PROJECT_NAME",
+      "default": "fortinet",
+      "description": "프로젝트 이름"
+    },
+    "offline_mode": {
+      "env_var": "OFFLINE_MODE",
+      "default": false,
+      "description": "오프라인 모드 (외부 API 호출 차단)"
+    }
+  },
+  "replacement_patterns": {
+    "port_hardcoding": {
+      "pattern": "port\\s*=\\s*\\d+",
+      "replacement": "port=int(os.getenv('{env_var}', '{default}'))",
+      "description": "포트 하드코딩 패턴"
+    },
+    "host_hardcoding": {
+      "pattern": "host\\s*=\\s*['\"][^'\"]+['\"]",
+      "replacement": "host=os.getenv('{env_var}', '{default}')",
+      "description": "호스트 하드코딩 패턴"
+    },
+    "url_hardcoding": {
+      "pattern": "https?://[^'\"\\s]+",
+      "replacement": "os.getenv('{env_var}', '{default}')",
+      "description": "URL 하드코딩 패턴"
+    }
+  },
+  "dashboard": {
+    "stats": {
+      "total_devices": {
+        "env_var": "DEFAULT_TOTAL_DEVICES",
+        "default": 48,
+        "description": "기본 활성 장치 수"
+      },
+      "uptime_percentage": {
+        "env_var": "DEFAULT_UPTIME_PERCENTAGE",
+        "default": 99.8,
+        "description": "기본 가동률 (%)"
+      },
+      "network_traffic": {
+        "env_var": "DEFAULT_NETWORK_TRAFFIC",
+        "default": "2.4 Gbps",
+        "description": "기본 네트워크 트래픽 표시"
+      },
+      "active_alerts": {
+        "env_var": "DEFAULT_ACTIVE_ALERTS",
+        "default": 3,
+        "description": "기본 활성 알림 수"
+      }
+    },
+    "charts": {
+      "hours_display": {
+        "env_var": "CHART_HOURS_DISPLAY",
+        "default": 24,
+        "description": "차트에 표시할 시간 범위"
+      },
+      "colors": {
+        "inbound": {
+          "env_var": "CHART_INBOUND_COLOR",
+          "default": "#22c55e",
+          "description": "인바운드 트래픽 차트 색상"
+        },
+        "outbound": {
+          "env_var": "CHART_OUTBOUND_COLOR", 
+          "default": "#3b82f6",
+          "description": "아웃바운드 트래픽 차트 색상"
+        }
+      }
+    },
+    "external_resources": {
+      "chartjs_cdn": {
+        "env_var": "CHARTJS_CDN_URL",
+        "default": "https://cdn.jsdelivr.net/npm/chart.js",
+        "description": "Chart.js CDN URL"
+      },
+      "socketio_cdn": {
+        "env_var": "SOCKETIO_CDN_URL",
+        "default": "https://cdn.socket.io/4.5.4/socket.io.min.js",
+        "description": "Socket.IO CDN URL"
+      }
+    },
+    "device_list": {
+      "top_devices_limit": {
+        "env_var": "TOP_DEVICES_LIMIT",
+        "default": 5,
+        "description": "상위 장치 표시 개수"
+      },
+      "bandwidth_unit": {
+        "env_var": "BANDWIDTH_DISPLAY_UNIT",
+        "default": "Mbps",
+        "description": "대역폭 표시 단위"
+      }
+    }
+  },
+  "migration_status": {
+    "completed_files": [
+      "src/routes/main_routes.py",
+      "src/templates/dashboard.html",
+      "src/config/dashboard_defaults.py",
+      ".env.test"
+    ],
+    "pending_files": [],
+    "last_updated": "2025-07-01T12:00:00Z"
+  }
+}

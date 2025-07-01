@@ -61,6 +61,7 @@ deploy/
 scripts/
 *.sh
 !create-offline-package.sh
+!start.sh
 
 # Build artifacts
 build/

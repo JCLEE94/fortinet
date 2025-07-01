@@ -5,7 +5,7 @@ External services configuration module
 """
 
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # 외부 서비스 URL
 EXTERNAL_SERVICES: Dict[str, str] = {
@@ -143,6 +143,50 @@ def get_csp_header() -> str:
         csp_parts.append(f"{directive} {' '.join(sources)}")
     return '; '.join(csp_parts)
 
+def get_fortimanager_config() -> Optional[Dict[str, any]]:
+    """
+    FortiManager 설정을 반환합니다.
+    
+    Returns:
+        FortiManager 설정 딕셔너리
+    """
+    # 환경변수에서 FortiManager 설정 로드
+    config = {
+        'enabled': os.getenv('FORTIMANAGER_ENABLED', 'false').lower() == 'true',
+        'host': os.getenv('FORTIMANAGER_HOST', ''),
+        'port': int(os.getenv('FORTIMANAGER_PORT', '443')),
+        'username': os.getenv('FORTIMANAGER_USERNAME', 'admin'),
+        'password': os.getenv('FORTIMANAGER_PASSWORD', ''),
+        'api_token': os.getenv('FORTIMANAGER_API_TOKEN', ''),
+        'verify_ssl': os.getenv('FORTIMANAGER_VERIFY_SSL', 'false').lower() == 'true',
+        'timeout': int(os.getenv('FORTIMANAGER_TIMEOUT', '30'))
+    }
+    
+    # 최소 설정 검증
+    if not config['host']:
+        return None
+        
+    return config
+
+# Fortinet 제품 설정
+FORTINET_PRODUCTS = {
+    'fortigate': {
+        'default_port': 443,
+        'api_version': 'v2',
+        'timeout': 30
+    },
+    'fortimanager': {
+        'default_port': 443,
+        'api_version': 'jsonrpc',
+        'timeout': 30
+    },
+    'fortianalyzer': {
+        'default_port': 443,
+        'api_version': 'v1',
+        'timeout': 30
+    }
+}
+
 # 애플리케이션 설정
 APP_CONFIG = {
     'external_services': EXTERNAL_SERVICES,
@@ -162,8 +206,10 @@ __all__ = [
     'API_VERSIONS',
     'MOCK_ENDPOINTS',
     'AUTH_ENDPOINTS',
+    'FORTINET_PRODUCTS',
     'APP_CONFIG',
     'get_service_url',
     'get_api_endpoint',
-    'get_csp_header'
+    'get_csp_header',
+    'get_fortimanager_config'
 ]

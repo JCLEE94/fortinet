@@ -1538,3 +1538,51 @@ def get_module_capabilities():
         return jsonify({'capabilities': capabilities})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@fortimanager_bp.route('/adom/list', methods=['GET'])
+@cached(ttl=300)
+def get_adom_list():
+    """ADOM(Administrative Domain) 목록 조회"""
+    try:
+        if is_test_mode():
+            dummy_gen = get_dummy_generator()
+            adoms = [
+                {'name': 'root', 'description': 'Default ADOM', 'status': 'enabled'},
+                {'name': 'adom1', 'description': 'Test ADOM 1', 'status': 'enabled'},
+                {'name': 'adom2', 'description': 'Test ADOM 2', 'status': 'disabled'}
+            ]
+            return jsonify({
+                'success': True,
+                'adoms': adoms,
+                'count': len(adoms),
+                'mode': 'test'
+            })
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({
+                'success': False,
+                'error': 'FortiManager client not available',
+                'adoms': []
+            }), 503
+            
+        adoms = fm_client.get_adom_list()
+        return jsonify({
+            'success': True,
+            'adoms': adoms,
+            'count': len(adoms) if adoms else 0
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'adoms': []
+        }), 500
+
+@fortimanager_bp.route('/adoms', methods=['GET'])
+def get_adoms():
+    """ADOM 목록 조회 (별칭)"""
+    return get_adom_list()

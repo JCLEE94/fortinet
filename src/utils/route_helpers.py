@@ -167,18 +167,29 @@ def format_paginated_response(items: list, total: int, page: int, per_page: int)
     }
 
 def validate_ip_address(ip: str) -> bool:
-    """IP 주소 유효성 검사"""
+    """IP 주소 또는 도메인 이름 유효성 검사"""
+    import re
+    
     try:
+        # IP 주소 형식 검증 시도
         parts = ip.split('.')
-        if len(parts) != 4:
-            return False
+        if len(parts) == 4:
+            try:
+                # 모든 파트가 숫자인지 확인
+                for part in parts:
+                    num = int(part)
+                    if num < 0 or num > 255:
+                        break
+                else:
+                    # 모든 파트가 유효한 숫자면 IP 주소
+                    return True
+            except ValueError:
+                pass
         
-        for part in parts:
-            num = int(part)
-            if num < 0 or num > 255:
-                return False
+        # IP 주소가 아니면 도메인 이름으로 검증
+        domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$'
+        return bool(re.match(domain_pattern, ip)) and len(ip) <= 253
         
-        return True
     except (ValueError, AttributeError):
         return False
 

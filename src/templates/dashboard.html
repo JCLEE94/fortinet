@@ -4,7 +4,7 @@
 
 {% block head_extra %}
 <!-- Chart.js CDN as fallback -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ data.config.external_resources.chartjs_cdn if data.config else 'https://cdn.jsdelivr.net/npm/chart.js' }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -20,10 +20,10 @@
         <div class="stat-icon">
             <i class="fas fa-server fa-lg"></i>
         </div>
-        <div class="stat-value" id="active-devices">{{ data.stats.total_devices if data and data.stats else 48 }}</div>
+        <div class="stat-value" id="active-devices">{{ data.stats.total_devices if data and data.stats else data.config.stats.total_devices }}</div>
         <div class="stat-label">활성 장치</div>
         <div class="stat-trend trend-up">
-            <i class="fas fa-arrow-up"></i> 12%
+            <i class="fas fa-arrow-up"></i> {{ data.config.stats.trend_device_increase if data.config else 12 }}%
         </div>
     </div>
     
@@ -31,10 +31,10 @@
         <div class="stat-icon stat-icon-success">
             <i class="fas fa-globe fa-lg"></i>
         </div>
-        <div class="stat-value" id="uptime">99.8%</div>
+        <div class="stat-value" id="uptime">{{ data.config.stats.uptime_percentage if data.config else '99.8' }}%</div>
         <div class="stat-label">가동률</div>
         <div class="stat-trend trend-up">
-            <i class="fas fa-arrow-up"></i> 0.2%
+            <i class="fas fa-arrow-up"></i> {{ data.config.stats.trend_uptime_increase if data.config else 0.2 }}%
         </div>
     </div>
     
@@ -42,10 +42,10 @@
         <div class="stat-icon stat-icon-info">
             <i class="fas fa-exchange-alt fa-lg"></i>
         </div>
-        <div class="stat-value" id="network-traffic">2.4 Gbps</div>
+        <div class="stat-value" id="network-traffic">{{ data.config.stats.network_traffic if data.config else '2.4 Gbps' }}</div>
         <div class="stat-label">네트워크 트래픽</div>
         <div class="stat-trend trend-down">
-            <i class="fas fa-arrow-down"></i> 8%
+            <i class="fas fa-arrow-down"></i> {{ data.config.stats.trend_traffic_decrease if data.config else 8 }}%
         </div>
     </div>
     
@@ -53,7 +53,7 @@
         <div class="stat-icon stat-icon-warning">
             <i class="fas fa-exclamation-triangle fa-lg"></i>
         </div>
-        <div class="stat-value" id="active-alerts">3</div>
+        <div class="stat-value" id="active-alerts">{{ data.config.stats.active_alerts if data.config else 3 }}</div>
         <div class="stat-label">활성 알림</div>
     </div>
 </div>
@@ -214,7 +214,7 @@
 
 {% block scripts %}
 <!-- Socket.IO for real-time updates -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script src="{{ data.config.external_resources.socketio_cdn if data.config else 'https://cdn.socket.io/4.5.4/socket.io.min.js' }}"></script>
 <!-- Dashboard real-time features -->
 <script src="{{ url_for('static', filename='js/dashboard-realtime.js') }}"></script>
 <script>
@@ -233,12 +233,13 @@ function loadTopDevices() {
                 const deviceList = document.getElementById('top-devices-list');
                 deviceList.innerHTML = '';
                 
-                // 상위 5개 장치만 표시
-                const devices = data.devices.connected_devices.slice(0, 5);
+                // 상위 장치만 표시 (설정에서 가져옴)
+                const topLimit = {{ data.config.device_list.top_devices_limit if data.config else 5 }};
+                const devices = data.devices.connected_devices.slice(0, topLimit);
                 devices.forEach(device => {
                     const bandwidth = device.bandwidth_in + device.bandwidth_out;
                     const trend = Math.random() > 0.5 ? 'up' : 'down';
-                    const trendValue = Math.floor(Math.random() * 20);
+                    const trendValue = Math.floor(Math.random() * {{ data.config.device_list.trend_max_percentage if data.config else 20 }});
                     
                     const html = `
                         <div class="device-item">
@@ -250,7 +251,7 @@ function loadTopDevices() {
                                 </div>
                             </div>
                             <div class="device-stats">
-                                <div class="device-value">${bandwidth} Mbps</div>
+                                <div class="device-value">${bandwidth} {{ data.config.device_list.bandwidth_display_unit if data.config else 'Mbps' }}</div>
                                 <div class="device-trend trend-${trend}">
                                     ${trend === 'up' ? '↑' : '↓'} ${trendValue}%
                                 </div>

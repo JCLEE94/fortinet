@@ -55,7 +55,7 @@ from src.utils.security import add_security_headers, rate_limit, validate_reques
 from src.routes.main_routes import main_bp
 from src.routes.itsm_routes import itsm_bp
 from src.routes.api_routes import api_bp
-from src.routes.fortimanager import fortimanager_bp
+from src.routes.fortimanager_routes import fortimanager_bp
 from src.routes.itsm_api_routes import itsm_api_bp
 
 def create_app():

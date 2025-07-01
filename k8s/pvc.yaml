@@ -1,0 +1,31 @@
+# PersistentVolumeClaim for data storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fortinet-data-pvc
+  namespace: fortinet
+  labels:
+    app: fortinet
+spec:
+  accessModes:
+  - ReadWriteOnce  # Local-path only supports RWO
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: local-path  # K3s default storage class
+---
+# PersistentVolumeClaim for logs storage
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fortinet-logs-pvc
+  namespace: fortinet
+  labels:
+    app: fortinet
+spec:
+  accessModes:
+  - ReadWriteOnce  # Local-path only supports RWO
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path  # K3s default storage class

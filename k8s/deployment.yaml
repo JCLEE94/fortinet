@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet
+  namespace: fortinet
+  labels:
+    app: fortinet
+    version: latest
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fortinet
+  template:
+    metadata:
+      labels:
+        app: fortinet
+        version: latest
+    spec:
+      # Init container to setup permissions
+      initContainers:
+      - name: setup-permissions
+        image: busybox:latest
+        command: ['sh', '-c', 'chmod -R 777 /app/data /app/logs']
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+      
+      containers:
+      - name: fortinet
+        image: registry.jclee.me/fortinet:latest
+        imagePullPolicy: Always  # Always pull latest from registry
+        ports:
+        - containerPort: 7777
+          name: http
+          protocol: TCP
+        
+        # Environment from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: fortinet-config
+        - secretRef:
+            name: fortinet-secret
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 120
+          periodSeconds: 60
+          timeoutSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        # Volume mounts
+        volumeMounts:
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+        
+        # Security context
+        securityContext:
+          runAsNonRoot: false  # Required for fortinet user
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+      
+      # Image pull secrets for private registry
+      imagePullSecrets:
+      - name: regcred
+      
+      # Pod settings
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      
+      # Volumes
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: fortinet-data-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: fortinet-logs-pvc

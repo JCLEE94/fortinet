@@ -38,8 +38,8 @@ def old_way_networks():
 
 # 3. URL 하드코딩
 def old_way_urls():
-    itsm_url = "https://itsm2.nxtd.co.kr"  # 하드코딩
-    health_url = "http://localhost:7777/health"  # 하드코딩
+    itsm_url = os.getenv('ITSM_BASE_URL', '')  # 환경변수로 변경
+    health_url = f"http://localhost:{os.getenv('WEB_APP_PORT', '7777')}/health"  # 환경변수로 변경
     
     return {
         'itsm': itsm_url,

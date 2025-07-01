@@ -30,27 +30,41 @@ class APIIntegrationManager:
     def initialize_connections(self):
         """모든 API 연결 초기화"""
         # FortiManager 연결
-        if self.config.get('fortimanager', {}).get('hostname'):
+        if self.config.get('fortimanager', {}).get('host'):
             self._connect_fortimanager()
         
         # FortiGate 연결 (FortiManager를 통해 장치 목록 가져오기)
         if self.fortimanager_client:
             self._discover_fortigate_devices()
-        elif self.config.get('fortigate', {}).get('hostname'):
+        elif self.config.get('fortigate', {}).get('host'):
             # FortiManager가 없으면 직접 연결
             self._connect_fortigate_direct()
     
     def _connect_fortimanager(self):
         """FortiManager 연결"""
         try:
-            fm_config = self.config['fortimanager']
+            from src.config.unified_settings import get_settings
+            settings = get_settings()
+            
+            # 환경변수에서 우선 읽기
+            fm_config = {
+                'host': os.getenv('FORTIMANAGER_HOST') or settings.fortimanager.host,
+                'username': os.getenv('FORTIMANAGER_USERNAME') or settings.fortimanager.username,
+                'password': os.getenv('FORTIMANAGER_PASSWORD') or settings.fortimanager.password,
+                'api_token': os.getenv('FORTIMANAGER_API_TOKEN') or settings.fortimanager.api_token,
+                'port': int(os.getenv('FORTIMANAGER_PORT', str(settings.fortimanager.port))),
+                'verify_ssl': os.getenv('FORTIMANAGER_VERIFY_SSL', str(settings.fortimanager.verify_ssl)).lower() == 'true'
+            }
+            
+            logger.info(f"FortiManager 연결 시도: {fm_config['host']}:{fm_config['port']}")
+            
             self.fortimanager_client = FortiManagerAPIClient(
-                host=fm_config.get('hostname'),
-                api_token=fm_config.get('api_token'),
-                username=fm_config.get('username'),
-                password=fm_config.get('password'),
-                port=fm_config.get('port', 443),
-                verify_ssl=fm_config.get('verify_ssl', False)
+                host=fm_config['host'],
+                api_token=fm_config['api_token'],
+                username=fm_config['username'],
+                password=fm_config['password'],
+                port=fm_config['port'],
+                verify_ssl=fm_config['verify_ssl']
             )
             
             # 연결 테스트
@@ -87,7 +101,7 @@ class APIIntegrationManager:
         
         try:
             # ADOM 목록 가져오기
-            adoms = self.fortimanager_client.get_adoms()
+            adoms = self.fortimanager_client.get_adom_list()
             if not adoms:
                 adoms = [{'name': 'root'}]
             
@@ -160,7 +174,17 @@ class APIIntegrationManager:
             )
             
             # 연결 테스트
-            success, result = client.test_connection()
+            try:
+                test_result = client.test_connection()
+                if isinstance(test_result, tuple) and len(test_result) == 2:
+                    success, result = test_result
+                else:
+                    success = bool(test_result)
+                    result = str(test_result)
+            except Exception as test_error:
+                success = False
+                result = str(test_error)
+                
             if success:
                 self.fortigate_clients[device_name] = client
                 self.connection_status[device_name] = {

@@ -116,13 +116,13 @@ class MockFortiGate:
         self.policies: Dict[int, MockFortiGatePolicy] = {}
         self.address_objects: Dict[str, MockFortiGateAddressObject] = {}
         self.service_objects: Dict[str, MockFortiGateService] = {}
-        from src.config.network import GATEWAY_IPS, NETWORK_RANGES
+        from src.config.network import DEFAULT_GATEWAYS, NETWORK_ZONES
         
         self.interfaces = {
-            'port1': {'name': 'port1', 'alias': 'internal', 'ip': f"{GATEWAY_IPS['internal']}/24", 'status': 'up'},
+            'port1': {'name': 'port1', 'alias': 'internal', 'ip': f"{DEFAULT_GATEWAYS['internal']}/24", 'status': 'up'},
             'port2': {'name': 'port2', 'alias': 'external', 'ip': '203.0.113.1/24', 'status': 'up'},
-            'port3': {'name': 'port3', 'alias': 'dmz', 'ip': f"{GATEWAY_IPS['dmz']}/24", 'status': 'up'},
-            'port4': {'name': 'port4', 'alias': 'guest', 'ip': f"{GATEWAY_IPS['guest']}/24", 'status': 'up'}
+            'port3': {'name': 'port3', 'alias': 'dmz', 'ip': f"{DEFAULT_GATEWAYS['dmz']}/24", 'status': 'up'},
+            'port4': {'name': 'port4', 'alias': 'guest', 'ip': f"{DEFAULT_GATEWAYS['guest']}/24", 'status': 'up'}
         }
         self.policy_change_listeners = []
         self.analysis_cache = {}
@@ -132,14 +132,14 @@ class MockFortiGate:
     def _init_default_objects(self):
         """기본 주소 객체 및 서비스 생성"""
         # 기본 주소 객체
-        from src.config.network import NETWORK_RANGES, TEST_ADDRESSES
+        from src.config.network import NETWORK_ZONES, TEST_IPS
         
         default_addresses = [
             ('all', 'ipmask', '0.0.0.0/0'),
-            ('internal_network', 'ipmask', NETWORK_RANGES['internal']),
-            ('dmz_network', 'ipmask', NETWORK_RANGES['dmz']),
-            ('guest_network', 'ipmask', NETWORK_RANGES['guest']),
-            ('web_server', 'ipmask', f"{TEST_ADDRESSES['dmz_server']}/32"),
+            ('internal_network', 'ipmask', NETWORK_ZONES['internal']),
+            ('dmz_network', 'ipmask', NETWORK_ZONES['dmz']),
+            ('guest_network', 'ipmask', NETWORK_ZONES['guest']),
+            ('web_server', 'ipmask', f"{TEST_IPS['dmz_server']}/32"),
             ('db_server', 'ipmask', '172.16.20.50/32'),
             ('mail_server', 'ipmask', '172.16.30.10/32')
         ]

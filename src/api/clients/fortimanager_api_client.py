@@ -55,6 +55,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         self.verify_ssl = verify_ssl
         self.session_id = None
         self.transaction_id = None
+        self.request_id = 1  # JSON-RPC request ID counter
         self.adom = os.getenv('FORTIMANAGER_DEFAULT_ADOM', 'root')  # Default administrative domain
         self.auth_headers = {}  # Store successful auth headers
         
@@ -192,8 +193,19 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         Returns:
             tuple: (success, message)
         """
-        # Use the common connection test mixin
-        return self.perform_token_auth_test(self.test_endpoint)
+        try:
+            # Try API token first if available
+            if self.api_token and self.test_token_auth():
+                return True, "API token authentication successful"
+            
+            # Try username/password login
+            if self.username and self.password and self.login():
+                return True, "Username/password authentication successful"
+            
+            return False, "Authentication failed - no valid credentials"
+            
+        except Exception as e:
+            return False, f"Connection test failed: {str(e)}"
     
     # Override _test_with_credentials for FortiManager-specific authentication
     def _test_with_credentials(self):
@@ -208,7 +220,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
         else:
             return False, "Authentication failed", 401
     
-    def _make_api_request(self, method: str, url: str, data: Optional[Dict] = None, verbose: int = 0) -> Tuple[bool, Any]:
+    def _make_api_request(self, method: str, url: str, data: Optional[Dict] = None, verbose: int = 0, timeout: Optional[int] = None) -> Tuple[bool, Any]:
         """
         Make FortiManager API request with automatic authentication retry
         
@@ -217,6 +229,7 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
             url: API endpoint URL
             data: Optional request data
             verbose: Verbose level
+            timeout: Request timeout in seconds
             
         Returns:
             tuple: (success, result)
@@ -243,7 +256,8 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
             self.base_url,
             payload,
             None,
-            headers
+            headers,
+            timeout=timeout
         )
         
         if success:
@@ -281,17 +295,30 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
     # Device management methods
     def get_adom_list(self):
         """
-        Get list of ADOMs (Administrative Domains)
+        Get list of ADOMs (Administrative Domains) with caching
         
         Returns:
             list: ADOMs or empty list on failure
         """
+        # Check if we have cached ADOM list
+        cache_key = 'adom_list'
+        if hasattr(self, '_cache') and cache_key in self._cache:
+            cache_time, cached_data = self._cache[cache_key]
+            if time.time() - cache_time < 300:  # 5 minutes cache
+                self.logger.debug("Returning cached ADOM list")
+                return cached_data
+        
         success, result = self._make_api_request(
             method="get",
-            url="/dvmdb/adom"
+            url="/dvmdb/adom",
+            timeout=10  # 10 second timeout
         )
         
         if success:
+            # Cache the result
+            if not hasattr(self, '_cache'):
+                self._cache = {}
+            self._cache[cache_key] = (time.time(), result)
             return result if isinstance(result, list) else []
         else:
             self.logger.error(f"Failed to get ADOM list: {result}")

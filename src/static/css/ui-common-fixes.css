@@ -146,7 +146,78 @@
 }
 
 /* ==============================================
-   4. 반응형 유틸리티
+   4. 글로벌 텍스트 오버플로우 수정
+   ============================================== */
+
+/* 모든 테이블 셀에 기본 오버플로우 처리 */
+.table td, .table th,
+table td, table th {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 카드 제목 및 내용 */
+.card-title, .card-subtitle, .card-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+}
+
+/* 네비게이션 텍스트 */
+.nav-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 150px;
+}
+
+/* 장치 정보 텍스트 */
+.device-info, .device-name, .device-ip {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 정책 관련 텍스트 */
+.policy-info, .policy-name, .policy-description {
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 통계 및 메트릭 텍스트 */
+.stat-label, .metric-label {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 버튼 텍스트 */
+.button, .btn {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 입력 필드 플레이스홀더 */
+.form-control::placeholder {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 일반적인 컨테이너 요소들 */
+.container, .content, .main-content {
+    overflow-x: hidden;
+}
+
+/* ==============================================
+   5. 반응형 유틸리티
    ============================================== */
 
 @media (max-width: 768px) {

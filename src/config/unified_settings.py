@@ -92,6 +92,17 @@ class UnifiedSettings:
         """API 설정 초기화 (환경변수 우선)"""
         config = APIConfig()
         
+        # 테스트 모드에서 FortiManager 데모 설정 자동 적용
+        if self.app_mode == 'test' and prefix == 'FORTIMANAGER':
+            config.host = os.getenv(f'{prefix}_DEMO_HOST', 'hjsim-1034-453947.fortidemo.fortinet.com')
+            config.username = os.getenv(f'{prefix}_DEMO_USER', 'hjsim')
+            config.password = os.getenv(f'{prefix}_DEMO_PASS', 'SecurityFabric')
+            config.port = int(os.getenv(f'{prefix}_PORT', '14005'))
+            config.enabled = True
+            config.verify_ssl = False
+            config.timeout = int(os.getenv(f'{prefix}_TIMEOUT', '30'))
+            return config
+        
         # 환경변수에서 로드
         config.host = os.getenv(f'{prefix}_HOST', '')
         config.username = os.getenv(f'{prefix}_USERNAME', 'admin')

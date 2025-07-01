@@ -29,24 +29,29 @@
         <h3 class="card-title">장치 관리</h3>
         <div class="button-group">
             <button class="button button-primary" id="refresh-devices">
-                <i class="fas fa-sync-alt"></i> 새로고침
+                <i class="fas fa-sync-alt"></i> {{ config.buttons.refresh if config else '새로고침' }}
             </button>
         </div>
     </div>
     <div class="card-body">
         <div class="button-group mb-4">
+            {% for filter in config.device_filters if config %}
+            <button type="button" class="filter-btn {% if filter.active %}active{% endif %}" data-filter="{{ filter.key }}">{{ filter.label }}</button>
+            {% endfor %}
+            {% if not config %}
             <button type="button" class="filter-btn active" data-filter="all">모든 장치</button>
             <button type="button" class="filter-btn" data-filter="firewall">방화벽</button>
             <button type="button" class="filter-btn" data-filter="router">라우터</button>
             <button type="button" class="filter-btn" data-filter="switch">스위치</button>
             <button type="button" class="filter-btn" data-filter="client">클라이언트</button>
             <button type="button" class="filter-btn" data-filter="server">서버</button>
+            {% endif %}
         </div>
         
         <div class="mb-4">
             <div class="search-box search-box-header">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="device-search" placeholder="장치 검색 (이름, IP, MAC 등)">
+                <input type="text" class="search-input" id="device-search" placeholder="{{ config.search.placeholder if config else '장치 검색 (이름, IP, MAC 등)' }}">
             </div>
         </div>
             
@@ -54,14 +59,14 @@
             <table id="devices-table" class="table data-table table-enhanced">
                 <thead>
                     <tr>
-                        <th class="table-col-xs">유형</th>
-                        <th class="table-col-md">장치 이름</th>
-                        <th class="table-col-sm">IP 주소</th>
-                        <th class="table-col-sm">MAC 주소</th>
-                        <th class="table-col-xs">상태</th>
-                        <th class="table-col-xs">Zone</th>
-                        <th class="table-col-sm">마지막 활동</th>
-                        <th class="table-col-xs">액션</th>
+                        <th class="{{ config.table_columns.type.class if config else 'table-col-xs' }}">{{ config.table_columns.type.header if config else '유형' }}</th>
+                        <th class="{{ config.table_columns.name.class if config else 'table-col-md' }}">{{ config.table_columns.name.header if config else '장치 이름' }}</th>
+                        <th class="{{ config.table_columns.ip.class if config else 'table-col-sm' }}">{{ config.table_columns.ip.header if config else 'IP 주소' }}</th>
+                        <th class="{{ config.table_columns.mac.class if config else 'table-col-sm' }}">{{ config.table_columns.mac.header if config else 'MAC 주소' }}</th>
+                        <th class="{{ config.table_columns.status.class if config else 'table-col-xs' }}">{{ config.table_columns.status.header if config else '상태' }}</th>
+                        <th class="{{ config.table_columns.zone.class if config else 'table-col-xs' }}">{{ config.table_columns.zone.header if config else 'Zone' }}</th>
+                        <th class="{{ config.table_columns.last_seen.class if config else 'table-col-sm' }}">{{ config.table_columns.last_seen.header if config else '마지막 활동' }}</th>
+                        <th class="{{ config.table_columns.actions.class if config else 'table-col-xs' }}">{{ config.table_columns.actions.header if config else '액션' }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -214,20 +219,20 @@ document.addEventListener('DOMContentLoaded', function() {
         responsive: true,
         ordering: true,
         language: {
-            search: "검색:",
-            lengthMenu: "_MENU_ 개씩 보기",
-            info: "_TOTAL_ 개 중 _START_ - _END_ 표시",
-            infoEmpty: "표시할 데이터가 없습니다",
-            infoFiltered: "(총 _MAX_ 개 중 필터링됨)",
+            search: "{{ config.datatable_language.search if config else '검색:' }}",
+            lengthMenu: "{{ config.datatable_language.lengthMenu if config else '_MENU_ 개씩 보기' }}",
+            info: "{{ config.datatable_language.info if config else '_TOTAL_ 개 중 _START_ - _END_ 표시' }}",
+            infoEmpty: "{{ config.datatable_language.infoEmpty if config else '표시할 데이터가 없습니다' }}",
+            infoFiltered: "{{ config.datatable_language.infoFiltered if config else '(총 _MAX_ 개 중 필터링됨)' }}",
             paginate: {
-                first: "처음",
-                last: "마지막",
-                next: "다음",
-                previous: "이전"
+                first: "{{ config.datatable_language.paginate.first if config else '처음' }}",
+                last: "{{ config.datatable_language.paginate.last if config else '마지막' }}",
+                next: "{{ config.datatable_language.paginate.next if config else '다음' }}",
+                previous: "{{ config.datatable_language.paginate.previous if config else '이전' }}"
             }
         },
         ajax: {
-            url: '/api/devices',
+            url: '{{ config.api_endpoints.devices_list if config else "/api/devices" }}',
             dataSrc: function(json) {
                 if (json.success && json.devices) {
                     const devices = [];
@@ -236,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (json.test_mode) {
                         document.getElementById('test-mode-banner').style.display = 'block';
                         document.getElementById('test-mode-message').textContent = 
-                            json.test_mode_info || '현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다.';
+                            json.test_mode_info || '{{ config.test_mode.banner_message if config else "현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다." }}';
                     }
                     
                     // FortiGate 장치 처리
@@ -316,9 +321,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 data: 'status',
                 render: function(data) {
                     const badges = {
-                        'online': '<span class="status-badge status-badge-success">온라인</span>',
-                        'offline': '<span class="status-badge status-badge-danger">오프라인</span>',
-                        'unknown': '<span class="status-badge status-badge-warning">알 수 없음</span>'
+                        'online': '<span class="status-badge status-badge-success">{{ config.status_badges.online.display if config else "온라인" }}</span>',
+                        'offline': '<span class="status-badge status-badge-danger">{{ config.status_badges.offline.display if config else "오프라인" }}</span>',
+                        'unknown': '<span class="status-badge status-badge-warning">{{ config.status_badges.unknown.display if config else "알 수 없음" }}</span>'
                     };
                     return badges[data] || badges['unknown'];
                 }
@@ -328,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
             {
                 data: 'id',
                 render: function(data) {
-                    return '<button class="btn-action btn-view view-device" data-device-id="' + data + '"><i class="fas fa-eye"></i> 상세</button>';
+                    return '<button class="btn-action btn-view view-device" data-device-id="' + data + '"><i class="fas fa-eye"></i> {{ config.buttons.view_details if config else "상세" }}</button>';
                 }
             }
         ]
