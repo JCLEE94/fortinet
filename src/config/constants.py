@@ -91,10 +91,11 @@ DEFAULT_PATHS = {
 }
 
 # Service URLs
+BASE_URL = os.getenv('BASE_URL', 'http://localhost')
 SERVICE_URLS = {
-    'HEALTH_CHECK': os.getenv('HEALTH_CHECK_URL', 'http://localhost:{port}/health'),
-    'MOCK_SERVER': os.getenv('MOCK_SERVER_URL', 'http://localhost:{port}{api_version}/monitor/system/status'),
-    'REDIS': os.getenv('REDIS_URL', 'redis://redis:6379/0')
+    'HEALTH_CHECK': os.getenv('HEALTH_CHECK_URL', f'{BASE_URL}:{{port}}/health'),
+    'MOCK_SERVER': os.getenv('MOCK_SERVER_URL', f'{BASE_URL}:{{port}}{{api_version}}/monitor/system/status'),
+    'REDIS': os.getenv('REDIS_URL', f'redis://redis:{DEFAULT_PORTS["REDIS"]}/0')
 }
 
 # Default Values
@@ -114,11 +115,19 @@ MOCK_DATA = {
 }
 
 # Common Service Ports (for mock data generation)
-COMMON_PORTS = [22, 80, 443, 3389, 8080, 8443]
+COMMON_PORTS = [
+    DEFAULT_PORTS['SSH'],
+    DEFAULT_PORTS['HTTP'],
+    DEFAULT_PORTS['HTTPS'],
+    3389,  # RDP
+    8080,  # Alternative HTTP
+    8443   # Alternative HTTPS
+]
 
 # Example IP Ranges (for documentation and examples)
+# These use RFC 5737 and RFC 1918 addresses which are reserved for documentation
 EXAMPLE_IPS = {
-    'INTERNAL': ['192.168.1.0/24', '192.168.2.0/24', '10.0.0.0/8'],
-    'DMZ': ['172.16.0.0/16'],
-    'PUBLIC': ['8.8.8.8', '1.1.1.1']
+    'INTERNAL': os.getenv('INTERNAL_NETWORKS', '192.168.0.0/16,10.0.0.0/8').split(','),
+    'DMZ': [os.getenv('DMZ_NETWORK', '172.16.0.0/24')],
+    'PUBLIC': os.getenv('PUBLIC_DNS_SERVERS', '8.8.8.8,1.1.1.1').split(',')
 }

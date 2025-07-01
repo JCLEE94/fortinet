@@ -13,6 +13,7 @@ from collections import defaultdict
 
 from .fortigate_api_client import FortiGateAPIClient
 from .faz_client import FAZClient
+from ..config.hardcoded_values import CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -378,7 +379,7 @@ class DeviceManager:
                 mock_routes = [
                     {
                         'dest': '0.0.0.0/0',
-                        'gateway': '203.0.113.254',
+                        'gateway': CONFIG.network.DEFAULT_GATEWAY,
                         'interface': 'port3',
                         'type': 'static',
                         'distance': 10,
@@ -386,7 +387,7 @@ class DeviceManager:
                         'priority': 0
                     },
                     {
-                        'dest': '192.168.1.0/24',
+                        'dest': CONFIG.network.MANAGEMENT_NETWORK,
                         'gateway': '0.0.0.0',
                         'interface': 'port1',
                         'type': 'connected',
@@ -404,7 +405,7 @@ class DeviceManager:
                         'priority': 0
                     },
                     {
-                        'dest': '172.16.0.0/24',
+                        'dest': CONFIG.network.DMZ_NETWORK,
                         'gateway': '0.0.0.0',
                         'interface': 'port4',
                         'type': 'connected',

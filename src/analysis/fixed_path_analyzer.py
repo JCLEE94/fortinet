@@ -8,6 +8,7 @@
 
 from datetime import datetime
 import ipaddress
+from ..config.hardcoded_values import CONFIG
 
 class FixedPathAnalyzer:
     """일관된 경로 분석 데이터 생성"""
@@ -15,8 +16,8 @@ class FixedPathAnalyzer:
     def __init__(self):
         # 네트워크 구성 정의
         self.network_zones = {
-            'internal': '192.168.0.0/16',
-            'dmz': '172.16.0.0/16',
+            'internal': CONFIG.network.INTERNAL_NETWORKS[0] if CONFIG.network.INTERNAL_NETWORKS else '192.168.0.0/16',
+            'dmz': CONFIG.network.DMZ_NETWORK,
             'external': '0.0.0.0/0',
             'guest': '10.10.0.0/16',
             'management': '10.100.0.0/24'
@@ -198,7 +199,7 @@ class FixedPathAnalyzer:
             # 다른 존이면 라우터 경유
             # 1. 소스 -> 게이트웨이
             src_route = self.routing_table.get(f"{src_ip}/32") or \
-                       self.routing_table.get('192.168.0.0/16') or \
+                       self.routing_table.get(CONFIG.network.INTERNAL_NETWORKS[0] if CONFIG.network.INTERNAL_NETWORKS else '192.168.0.0/16') or \
                        self.routing_table.get('0.0.0.0/0')
             
             path.append({
@@ -232,7 +233,9 @@ class FixedPathAnalyzer:
         
         return path
 
-    def analyze_path(self, src_ip, dst_ip, port=80, protocol='tcp'):
+    def analyze_path(self, src_ip, dst_ip, port=None, protocol='tcp'):
+        if port is None:
+            port = CONFIG.ports.SERVICE_PORTS.get('http', 80)
         """경로 분석 수행"""
         # 라우팅 경로 확인
         routing_path = self.get_routing_path(src_ip, dst_ip)

@@ -16,6 +16,7 @@ from threading import RLock
 from .base import MonitoringBase, get_all_monitors, register_monitor, unregister_monitor
 from .config import get_config_manager, MonitoringConfig
 from src.utils.performance_optimizer import LRUCache, profile, measure_time
+from src.config.hardcoded_values import CONFIG
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class EventAggregator:
     
     def __init__(self):
         # 성능 최적화: 메모리 사용량 줄이기
-        self.events = deque(maxlen=5000)  # 10000 -> 5000으로 줄임
+        self.events = deque(maxlen=CONFIG.thresholds.MAX_EVENT_QUEUE_SIZE)
         self.event_handlers = defaultdict(list)
         self.correlation_rules = []
         self._lock = RLock()

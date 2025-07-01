@@ -10,8 +10,10 @@ from pathlib import Path
 from typing import Dict, Optional
 
 # 기본 디렉토리
-BASE_DIR = os.getenv('APP_BASE_DIR', '/app')
-PROJECT_ROOT = os.getenv('PROJECT_ROOT', '/home/jclee/app/fortinet')
+# 프로덕션 환경에서는 컨테이너 경로 사용, 개발 환경에서는 현재 디렉토리 기준
+DEFAULT_BASE_DIR = '/app' if os.path.exists('/app') else os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.getenv('APP_BASE_DIR', DEFAULT_BASE_DIR)
+PROJECT_ROOT = os.getenv('PROJECT_ROOT', os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 ENVIRONMENT = os.getenv('ENVIRONMENT', 'production')
 
 # 환경별 기본 경로
@@ -72,22 +74,24 @@ TEMP_PATHS: Dict[str, str] = {
 }
 
 # 시스템 로그 경로 (모니터링용)
+# 시스템 로그는 OS 표준 경로 사용
+SYSTEM_LOG_BASE = os.getenv('SYSTEM_LOG_PATH', '/var/log')
 SYSTEM_LOG_PATHS: Dict[str, str] = {
-    'auth': '/var/log/auth.log',
-    'syslog': '/var/log/syslog',
-    'messages': '/var/log/messages',
-    'docker': '/var/log/docker.log',
-    'nginx_access': '/var/log/nginx/access.log',
-    'nginx_error': '/var/log/nginx/error.log'
+    'auth': os.path.join(SYSTEM_LOG_BASE, 'auth.log'),
+    'syslog': os.path.join(SYSTEM_LOG_BASE, 'syslog'),
+    'messages': os.path.join(SYSTEM_LOG_BASE, 'messages'),
+    'docker': os.path.join(SYSTEM_LOG_BASE, 'docker.log'),
+    'nginx_access': os.path.join(SYSTEM_LOG_BASE, 'nginx', 'access.log'),
+    'nginx_error': os.path.join(SYSTEM_LOG_BASE, 'nginx', 'error.log')
 }
 
 # 배포 관련 경로
 DEPLOYMENT_PATHS: Dict[str, str] = {
-    'monitor_log': '/tmp/deployment_monitor.log',
-    'pipeline_log': '/tmp/pipeline_monitor.log',
+    'monitor_log': os.path.join(TEMP_PATHS['base'], 'deployment_monitor.log'),
+    'pipeline_log': os.path.join(TEMP_PATHS['base'], 'pipeline_monitor.log'),
     'deploy_script': os.path.join(BASE_DIR, 'deploy.sh'),
-    'docker_socket': '/var/run/docker.sock',
-    'pid_file': '/var/run/fortigate-nextrade.pid'
+    'docker_socket': os.getenv('DOCKER_SOCKET', '/var/run/docker.sock'),
+    'pid_file': os.path.join(os.getenv('RUN_PATH', '/var/run'), 'fortigate-nextrade.pid')
 }
 
 # 서비스별 로그 경로
