@@ -219,7 +219,7 @@ jobs:
         
         # Update image tag in kustomization
         cd k8s
-        kubectl kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        kubectl kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         
         # Set build metadata
         export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
