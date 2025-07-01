@@ -28,12 +28,11 @@ jobs:
         
     - name: 📦 Install dependencies
       run: |
-        # Force reinstall pip
-        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-        python get-pip.py --force-reinstall
-        rm get-pip.py
+        # Create virtual environment to avoid system Python issues
+        python -m venv venv
+        source venv/bin/activate
         
-        # Upgrade pip and setuptools
+        # Upgrade pip and setuptools in venv
         python -m pip install --upgrade pip setuptools wheel
         
         if [ -f requirements.txt ]; then
@@ -44,6 +43,7 @@ jobs:
     - name: 🔍 Code Quality Checks
       run: |
         echo "🔍 Running code quality checks..."
+        source venv/bin/activate
         
         # Code formatting check (non-blocking)
         black --check src/ || echo "❌ Black formatting issues found"
@@ -60,6 +60,7 @@ jobs:
     - name: 🧪 Run Tests
       run: |
         echo "🧪 Running test suite..."
+        source venv/bin/activate
         cd src
         python -m pytest ../tests/ --cov=. --cov-report=xml --cov-report=html -v || echo "⚠️ Some tests failed"
 
@@ -75,11 +76,15 @@ jobs:
       run: |
         echo "🔒 Running security scans..."
         
+        # Create virtual environment for security tools
+        python -m venv security-venv
+        source security-venv/bin/activate
+        
         # Install security tools
         pip install safety bandit || echo "Security tools installation failed"
         
         # Check for known vulnerabilities (non-blocking)
-        safety check || echo "⚠️ Security vulnerabilities found"
+        safety check -r requirements.txt || echo "⚠️ Security vulnerabilities found"
         
         # Code security analysis (non-blocking)
         bandit -r src/ || echo "⚠️ Security issues found"
@@ -108,14 +113,19 @@ jobs:
       
     - name: 🔐 Log in to Docker Hub
       run: |
+        mkdir -p /tmp/docker-config
+        export DOCKER_CONFIG=/tmp/docker-config
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
         
     - name: 🔐 Log in to Private Registry
       run: |
+        export DOCKER_CONFIG=/tmp/docker-config
         echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
         
     - name: 🚀 Build and Push
       run: |
+        export DOCKER_CONFIG=/tmp/docker-config
+        
         # Build image
         docker build -f Dockerfile.production \
           --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \

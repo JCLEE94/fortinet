@@ -70,8 +70,8 @@ def health_check():
         except:
             health_data['cache'] = 'unavailable'
         
-        # Check test mode status
-        health_data['test_mode'] = is_test_mode()
+        # Test mode is always false
+        health_data['test_mode'] = False
         
         return jsonify(health_data), 200
         
