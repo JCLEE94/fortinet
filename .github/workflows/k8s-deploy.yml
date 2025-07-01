@@ -217,18 +217,28 @@ jobs:
         echo "🚀 Deploying to Kubernetes..."
         export KUBECONFIG=/tmp/kubeconfig
         
-        # Update image tag in kustomization
-        cd k8s
-        kubectl kustomize edit set image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        
-        # Set build metadata
+        # Set build metadata environment variables
         export BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         export GIT_COMMIT=${{ github.sha }}
         export GIT_BRANCH=${{ github.ref_name }}
         export VERSION=${{ needs.build.outputs.image-tag }}
         
+        # Apply kustomize manifests with environment substitution
+        cd k8s
+        
+        # Create temporary kustomization with updated image
+        cp kustomization.yaml kustomization.yaml.bak
+        sed -i "s|newTag: .*|newTag: ${{ github.sha }}|" kustomization.yaml
+        
         # Apply manifests
-        kubectl apply -k . --dry-run=client -o yaml | kubectl apply -f -
+        kubectl apply -k . || {
+          echo "❌ Kustomize apply failed, reverting to backup"
+          mv kustomization.yaml.bak kustomization.yaml
+          exit 1
+        }
+        
+        # Restore original kustomization
+        mv kustomization.yaml.bak kustomization.yaml
         
         # Wait for rollout
         kubectl rollout status deployment/fortinet -n ${{ env.K8S_NAMESPACE }} --timeout=300s
