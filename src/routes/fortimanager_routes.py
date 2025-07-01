@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 from src.mock.fortigate import mock_fortigate
 from src.utils.unified_cache_manager import cached
 from src.utils.security import rate_limit
-from src.utils.api_helper import get_data_source, is_test_mode, get_api_manager, get_dummy_generator
+from src.utils.api_helper import get_data_source, get_api_manager
 from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
 import time
 import asyncio
@@ -17,23 +17,6 @@ fortimanager_bp = Blueprint('fortimanager', __name__, url_prefix='/api/fortimana
 def get_fortimanager_status():
     """FortiManager 연결 상태 및 통계 조회"""
     try:
-        if is_test_mode():
-            dummy_gen = get_dummy_generator()
-            return jsonify({
-                'success': True,
-                'data': {
-                    'status': 'connected',
-                    'mode': 'test',
-                    'message': 'Test mode - Mock FortiManager',
-                    'version': '7.2.4',
-                    'hostname': 'FortiManager-Demo',
-                    'managed_devices': dummy_gen.random_int(5, 15),
-                    'policy_packages': dummy_gen.random_int(3, 8),
-                    'adom_count': dummy_gen.random_int(1, 5),
-                    'last_update': time.time()
-                }
-            })
-        
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
         
@@ -148,18 +131,6 @@ def get_fortimanager_status():
 def get_address_objects():
     """주소 객체 목록 조회"""
     try:
-        if is_test_mode():
-            dummy_gen = get_dummy_generator()
-            objects = []
-            for i in range(dummy_gen.random_int(10, 50)):
-                objects.append({
-                    'name': f'ADDR_HOST_{i+1:03d}',
-                    'type': 'ipmask',
-                    'subnet': f'192.168.{dummy_gen.random_int(1, 254)}.{dummy_gen.random_int(1, 254)}/32',
-                    'interface': 'any'
-                })
-            return jsonify({'success': True, 'data': objects})
-        
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
         
@@ -177,19 +148,6 @@ def get_address_objects():
 def get_service_objects():
     """서비스 객체 목록 조회"""
     try:
-        if is_test_mode():
-            dummy_gen = get_dummy_generator()
-            objects = []
-            services = ['HTTP', 'HTTPS', 'SSH', 'FTP', 'SMTP', 'DNS', 'DHCP', 'SNMP']
-            for i, service in enumerate(services):
-                objects.append({
-                    'name': f'{service}_CUSTOM',
-                    'protocol': 'tcp' if service != 'DNS' else 'udp',
-                    'port_range': f'{443+i}-{443+i}',
-                    'category': 'Web Access' if 'HTTP' in service else 'General'
-                })
-            return jsonify({'success': True, 'data': objects})
-        
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
         
@@ -542,53 +500,44 @@ def analyze_packet_path():
     try:
         data = request.get_json()
         
-        if is_test_mode():
-            # Test mode - Mock 데이터 사용
-            result = mock_fortigate.analyze_packet_path(
-                src_ip=data.get('src_ip'),
-                dst_ip=data.get('dst_ip'),
-                port=data.get('port', 80),
-                protocol=data.get('protocol', 'tcp')
-            )
-        else:
-            # Production mode - 실제 FortiManager API 사용
-            from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-            from src.config.services import get_fortimanager_config
-            
-            # FortiManager 설정 로드
-            config = get_fortimanager_config()
-            if not config or not config.get('enabled', False):
-                return jsonify({'error': 'FortiManager not configured'}), 503
-            
-            # API 클라이언트 초기화
-            client = FortiManagerAPIClient(
-                host=config.get('host'),
-                api_token=config.get('api_token'),
-                username=config.get('username'),
-                password=config.get('password'),
-                port=config.get('port'),
-                verify_ssl=config.get('verify_ssl', False)
-            )
-            
-            # 인증
-            if not client.api_token:
-                if not client.login():
-                    return jsonify({'error': 'FortiManager authentication failed'}), 401
-            
-            # 패킷 경로 분석 수행
-            result = client.analyze_packet_path(
-                src_ip=data.get('src_ip'),
-                dst_ip=data.get('dst_ip'),
-                port=data.get('port', 80),
-                protocol=data.get('protocol', 'tcp'),
-                device_name=data.get('device_name'),  # 디바이스 이름 지원
-                vdom=data.get('vdom', 'root')
-            )
-            
-            # 로그아웃 (세션 기반 인증인 경우)
-            if not client.api_token:
-                client.logout()
-            
+        # Production mode - 실제 FortiManager API 사용
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.config.services import get_fortimanager_config
+        
+        # FortiManager 설정 로드
+        config = get_fortimanager_config()
+        if not config or not config.get('enabled', False):
+            return jsonify({'error': 'FortiManager not configured'}), 503
+        
+        # API 클라이언트 초기화
+        client = FortiManagerAPIClient(
+            host=config.get('host'),
+            api_token=config.get('api_token'),
+            username=config.get('username'),
+            password=config.get('password'),
+            port=config.get('port'),
+            verify_ssl=config.get('verify_ssl', False)
+        )
+        
+        # 인증
+        if not client.api_token:
+            if not client.login():
+                return jsonify({'error': 'FortiManager authentication failed'}), 401
+        
+        # 패킷 경로 분석 수행
+        result = client.analyze_packet_path(
+            src_ip=data.get('src_ip'),
+            dst_ip=data.get('dst_ip'),
+            port=data.get('port', 80),
+            protocol=data.get('protocol', 'tcp'),
+            device_name=data.get('device_name'),  # 디바이스 이름 지원
+            vdom=data.get('vdom', 'root')
+        )
+        
+        # 로그아웃 (세션 기반 인증인 경우)
+        if not client.api_token:
+            client.logout()
+        
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

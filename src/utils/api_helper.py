@@ -36,25 +36,20 @@ def get_dummy_generator() -> DummyDataGenerator:
 
 def is_test_mode() -> bool:
     """
-    Check if application is in test mode
+    Check if application is in test mode - 항상 False
     
     Returns:
-        True if in test mode, False otherwise
+        False (운영 모드로 통일)
     """
-    return unified_settings.is_test_mode()
+    return False
 
 def get_data_source() -> Tuple[Optional[APIIntegrationManager], DummyDataGenerator, bool]:
     """
-    Get appropriate data source based on mode
+    Get appropriate data source - 항상 운영 모드
     
     Returns:
         Tuple of (api_manager, dummy_generator, is_test)
-        - In test mode: (None, dummy_generator, True)
-        - In production mode: (api_manager, dummy_generator, False)
-        Note: dummy_generator is always available for fallback
+        - Always returns: (api_manager, dummy_generator, False)
     """
     dummy_generator = get_dummy_generator()
-    if is_test_mode():
-        return None, dummy_generator, True
-    else:
-        return get_api_manager(), dummy_generator, False
+    return get_api_manager(), dummy_generator, False

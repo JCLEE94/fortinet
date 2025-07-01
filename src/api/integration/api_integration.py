@@ -227,7 +227,7 @@ class APIIntegrationManager:
             # 연결된 경우 추가 정보 가져오기
             if status.get('status') == 'connected':
                 try:
-                    system_info = client.get_system_info()
+                    system_info = client.get_system_status()
                     device_info.update(system_info)
                 except Exception as e:
                     logger.error(f"장치 정보 가져오기 오류 ({device_id}): {str(e)}")

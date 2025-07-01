@@ -61,29 +61,17 @@ class UnifiedSettings:
         self.validate_settings()
     
     def _get_app_mode(self) -> str:
-        """앱 모드 결정 (환경변수 우선)"""
-        # 1순위: 환경변수
-        env_mode = os.getenv('APP_MODE')
-        if env_mode:
-            return env_mode.lower()
-        
-        # 2순위: JSON 파일에서 읽기 (나중에 로드됨)
-        # 3순위: 기본값
-        return 'test'
+        """앱 모드 결정 - 항상 production"""
+        return 'production'
     
     def _init_webapp_config(self) -> WebAppConfig:
         """웹앱 설정 초기화"""
         config = WebAppConfig()
         
-        # 환경변수에서 로드 (우선순위 1)
-        if self.app_mode == 'test':
-            config.port = int(os.getenv('FLASK_PORT', '6666'))
-            config.debug = True
-        else:  # production
-            config.port = int(os.getenv('PRODUCTION_PORT', '7777'))
-            config.debug = False
-        
-        config.host = os.getenv('FLASK_HOST', '0.0.0.0')
+        # production 모드 설정
+        config.port = int(os.getenv('WEB_APP_PORT', '7777'))
+        config.debug = False
+        config.host = os.getenv('WEB_APP_HOST', '0.0.0.0')
         config.secret_key = os.getenv('SECRET_KEY', 'change_this_in_production')
         
         return config
@@ -91,17 +79,6 @@ class UnifiedSettings:
     def _init_api_config(self, prefix: str) -> APIConfig:
         """API 설정 초기화 (환경변수 우선)"""
         config = APIConfig()
-        
-        # 테스트 모드에서 FortiManager 데모 설정 자동 적용
-        if self.app_mode == 'test' and prefix == 'FORTIMANAGER':
-            config.host = os.getenv(f'{prefix}_DEMO_HOST', 'hjsim-1034-453947.fortidemo.fortinet.com')
-            config.username = os.getenv(f'{prefix}_DEMO_USER', 'hjsim')
-            config.password = os.getenv(f'{prefix}_DEMO_PASS', 'SecurityFabric')
-            config.port = int(os.getenv(f'{prefix}_PORT', '14005'))
-            config.enabled = True
-            config.verify_ssl = False
-            config.timeout = int(os.getenv(f'{prefix}_TIMEOUT', '30'))
-            return config
         
         # 환경변수에서 로드
         config.host = os.getenv(f'{prefix}_HOST', '')
@@ -126,11 +103,8 @@ class UnifiedSettings:
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # app_mode 업데이트 (환경변수가 없는 경우만)
-            if not os.getenv('APP_MODE') and 'app_mode' in data:
-                self.app_mode = data['app_mode']
-                # 모드 변경에 따른 웹앱 설정 재조정
-                self.webapp = self._init_webapp_config()
+            # app_mode는 항상 production
+            self.app_mode = 'production'
             
             # API 설정 업데이트
             self._update_api_from_json('fortimanager', data.get('fortimanager', {}))
@@ -179,10 +153,6 @@ class UnifiedSettings:
         """설정 유효성 검증"""
         errors = []
         
-        # 앱 모드 검증
-        if self.app_mode not in ['test', 'production']:
-            errors.append(f"Invalid app_mode: {self.app_mode}")
-        
         # 포트 검증
         if not (1 <= self.webapp.port <= 65535):
             errors.append(f"Invalid port: {self.webapp.port}")
@@ -202,23 +172,8 @@ class UnifiedSettings:
                 print(f"   - {error}")
     
     def switch_mode(self, mode: str):
-        """테스트/운영 모드 전환"""
-        if mode not in ['test', 'production']:
-            raise ValueError(f"Invalid mode: {mode}. Use 'test' or 'production'")
-        
-        self.app_mode = mode
-        
-        # 웹앱 설정 조정
-        if mode == 'test':
-            self.webapp.port = int(os.getenv('FLASK_PORT', '6666'))
-            self.webapp.debug = True
-        else:  # production
-            self.webapp.port = int(os.getenv('PRODUCTION_PORT', '7777'))
-            self.webapp.debug = False
-        
-        # 설정 저장
-        self.save_to_json()
-        print(f"✅ 모드 전환 완료: {mode} (포트: {self.webapp.port})")
+        """테스트/운영 모드 전환 - 더 이상 사용하지 않음"""
+        print("⚠️  모드 전환 기능은 제거되었습니다. 항상 운영 모드로 동작합니다.")
     
     def update_api_config(self, service: str, **kwargs):
         """API 설정 동적 업데이트"""
@@ -275,12 +230,12 @@ class UnifiedSettings:
         return getattr(self, service).enabled
     
     def is_test_mode(self) -> bool:
-        """테스트 모드 여부"""
-        return self.app_mode == 'test'
+        """테스트 모드 여부 - 항상 False"""
+        return False
     
     def is_production_mode(self) -> bool:
-        """운영 모드 여부"""
-        return self.app_mode == 'production'
+        """운영 모드 여부 - 항상 True"""
+        return True
     
     def get_api_config(self) -> Dict[str, Dict[str, Any]]:
         """API 설정 딕셔너리 반환 (API 통합 매니저용)"""
