@@ -2,10 +2,9 @@
 FortiManager API routes (Refactored with Advanced Capabilities)
 """
 from flask import Blueprint, jsonify, request
-from src.mock.fortigate import mock_fortigate
 from src.utils.unified_cache_manager import cached
 from src.utils.security import rate_limit
-from src.utils.api_helper import get_data_source, get_api_manager
+from src.utils.api_helper import get_api_manager
 from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
 import time
 import asyncio
@@ -165,24 +164,6 @@ def get_service_objects():
 def get_firewall_policies():
     """방화벽 정책 목록 조회"""
     try:
-        if is_test_mode():
-            dummy_gen = get_dummy_generator()
-            policies = []
-            for i in range(dummy_gen.random_int(15, 30)):
-                policies.append({
-                    'policyid': i + 1,
-                    'name': f'Policy_{i+1:03d}',
-                    'srcintf': ['port1'],
-                    'dstintf': ['port2'],
-                    'srcaddr': ['all'],
-                    'dstaddr': ['all'],
-                    'service': ['ALL'],
-                    'action': 'accept' if i % 10 != 0 else 'deny',
-                    'status': 'enable',
-                    'logtraffic': 'all'
-                })
-            return jsonify({'success': True, 'data': policies})
-        
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
         
@@ -207,24 +188,17 @@ def get_firewall_policies():
 def get_dashboard_data():
     """FortiManager 대시보드 데이터 조회"""
     try:
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
         
-        if test_mode:
+        if fm_client and fm_client.login():
             data = {
-                'stats': dummy_generator.generate_dashboard_stats(),
-                'events': dummy_generator.generate_security_events(10),
-                'devices': dummy_generator.generate_devices(10)
+                'status': fm_client.get_system_status(),
+                'devices': fm_client.get_devices()
             }
         else:
-            fm_client = api_manager.get_fortimanager_client()
-            if fm_client and fm_client.login():
-                data = {
-                    'status': fm_client.get_system_status(),
-                    'devices': fm_client.get_devices()
-                }
-            else:
-                # 연결 실패 시 빈 데이터
-                data = {'status': 'disconnected', 'devices': []}
+            # 연결 실패 시 빈 데이터
+            data = {'status': 'disconnected', 'devices': []}
                 
         return jsonify(data)
     except Exception as e:
@@ -235,12 +209,8 @@ def get_dashboard_data():
 def get_devices():
     """FortiGate 장치 목록 조회"""
     try:
-        api_manager, dummy_generator, test_mode = get_data_source()
-        
-        if test_mode:
-            devices = dummy_generator.generate_devices(20)
-        else:
-            devices = api_manager.get_all_devices()
+        api_manager = get_api_manager()
+        devices = api_manager.get_all_devices()
             
         return jsonify(devices)
     except Exception as e:
@@ -251,21 +221,14 @@ def get_devices():
 def get_device_detail(device_id):
     """특정 장치 상세 정보 조회"""
     try:
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
+        client = api_manager.get_device_client(device_id)
         
-        if test_mode:
-            devices = dummy_generator.generate_devices(1)
-            device = devices[0] if devices else None
-            if device:
-                device['id'] = device_id
-                device['interfaces'] = dummy_generator.generate_interfaces(device_id)
+        if client:
+            device = client.get_system_info()
+            device['interfaces'] = client.get_interfaces()
         else:
-            client = api_manager.get_device_client(device_id)
-            if client:
-                device = client.get_system_info()
-                device['interfaces'] = client.get_interfaces()
-            else:
-                device = None
+            device = None
                 
         return jsonify(device if device else {'error': 'Device not found'})
     except Exception as e:
@@ -276,44 +239,16 @@ def get_device_detail(device_id):
 def get_monitoring_data():
     """실시간 모니터링 데이터 조회"""
     try:
-        api_manager, dummy_generator, test_mode = get_data_source()
-        
-        if test_mode:
-            data = {
-                'stats': dummy_generator.generate_dashboard_stats(),
-                'events': dummy_generator.generate_security_events(5),
-                'packets': dummy_generator.generate_packet_data(20)
-            }
-        else:
-            data = {
-                'connection_status': api_manager.get_connection_status(),
-                'devices': api_manager.get_all_devices()
-            }
+        api_manager = get_api_manager()
+        data = {
+            'connection_status': api_manager.get_connection_status(),
+            'devices': api_manager.get_all_devices()
+        }
             
         return jsonify(data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@fortimanager_bp.route('/policies', methods=['GET'])
-@cached(ttl=300)
-def get_policies():
-    """방화벽 정책 목록 조회"""
-    try:
-        if is_test_mode():
-            policies_result = mock_fortigate.get_policies()
-            policies = policies_result.get('policies', []) if policies_result['status'] == 'success' else []
-        else:
-            api_manager = get_api_manager()
-            fm_client = api_manager.get_fortimanager_client()
-            if fm_client and fm_client.login():
-                policies = fm_client.get_firewall_policies()
-            else:
-                # 연결 실패 시 빈 목록
-                policies = []
-                
-        return jsonify({'status': 'success', 'policies': policies})
-    except Exception as e:
-        return jsonify({'error': str(e), 'policies': []}), 500
 
 @fortimanager_bp.route('/policies', methods=['POST'])
 @rate_limit(max_requests=10, window=60)
@@ -321,16 +256,13 @@ def create_policy():
     """방화벽 정책 생성"""
     try:
         data = request.get_json()
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
         
-        if is_test_mode():
-            result = mock_fortigate.create_policy(data)
+        if fm_client and fm_client.login():
+            result = fm_client.create_firewall_policy(data)
         else:
-            api_manager = get_api_manager()
-            fm_client = api_manager.get_fortimanager_client()
-            if fm_client and fm_client.login():
-                result = fm_client.create_firewall_policy(data)
-            else:
-                result = {'status': 'error', 'message': 'FortiManager connection failed'}
+            result = {'status': 'error', 'message': 'FortiManager connection failed'}
                 
         return jsonify(result)
     except Exception as e:
@@ -341,63 +273,59 @@ def create_policy():
 def get_topology():
     """네트워크 토폴로지 데이터 조회"""
     try:
-        if is_test_mode():
-            dummy_generator = get_dummy_generator()
-            topology = dummy_generator.generate_network_topology()
-        else:
-            api_manager = get_api_manager()
-            fm_client = api_manager.get_fortimanager_client()
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if fm_client and fm_client.login():
+            # FortiManager에서 실제 토폴로지 데이터 수집
+            devices = fm_client.get_devices() or []
             
-            if fm_client and fm_client.login():
-                # FortiManager에서 실제 토폴로지 데이터 수집
-                devices = fm_client.get_devices() or []
+            # 장치 데이터를 토폴로지 형식으로 변환
+            topology_devices = []
+            connections = []
+            
+            for device in devices:
+                topology_devices.append({
+                    'id': device.get('serial', device.get('hostname', f'device_{len(topology_devices)}')),
+                    'hostname': device.get('hostname', 'Unknown'),
+                    'ip': device.get('ip', 'N/A'),
+                    'type': device.get('platform', 'fortigate').lower(),
+                    'status': device.get('conn_status', 'up').lower() if device.get('conn_status', 'up').lower() == 'up' else 'offline',
+                    'model': device.get('model', 'FortiGate'),
+                    'version': device.get('version', 'N/A'),
+                    'cpu_usage': device.get('cpu', 0),
+                    'memory_usage': device.get('memory', 0)
+                })
+            
+            # 기본 인터넷 연결 추가
+            if topology_devices:
+                topology_devices.append({
+                    'id': 'internet',
+                    'hostname': 'Internet',
+                    'ip': 'External',
+                    'type': 'external',
+                    'status': 'online'
+                })
                 
-                # 장치 데이터를 토폴로지 형식으로 변환
-                topology_devices = []
-                connections = []
-                
-                for device in devices:
-                    topology_devices.append({
-                        'id': device.get('serial', device.get('hostname', f'device_{len(topology_devices)}')),
-                        'hostname': device.get('hostname', 'Unknown'),
-                        'ip': device.get('ip', 'N/A'),
-                        'type': device.get('platform', 'fortigate').lower(),
-                        'status': device.get('conn_status', 'up').lower() if device.get('conn_status', 'up').lower() == 'up' else 'offline',
-                        'model': device.get('model', 'FortiGate'),
-                        'version': device.get('version', 'N/A'),
-                        'cpu_usage': device.get('cpu', 0),
-                        'memory_usage': device.get('memory', 0)
-                    })
-                
-                # 기본 인터넷 연결 추가
-                if topology_devices:
-                    topology_devices.append({
-                        'id': 'internet',
-                        'hostname': 'Internet',
-                        'ip': 'External',
-                        'type': 'external',
-                        'status': 'online'
-                    })
-                    
-                    # 첫 번째 장치를 인터넷에 연결
-                    connections.append({
-                        'from': 'internet',
-                        'to': topology_devices[0]['id'],
-                        'bandwidth': '100M',
-                        'status': 'active'
-                    })
-                
-                topology = {
-                    'devices': topology_devices,
-                    'connections': connections
-                }
-            else:
-                # 연결 실패 시 빈 토폴로지
-                topology = {
-                    'devices': [],
-                    'connections': [],
-                    'error': 'FortiManager connection failed'
-                }
+                # 첫 번째 장치를 인터넷에 연결
+                connections.append({
+                    'from': 'internet',
+                    'to': topology_devices[0]['id'],
+                    'bandwidth': '100M',
+                    'status': 'active'
+                })
+            
+            topology = {
+                'devices': topology_devices,
+                'connections': connections
+            }
+        else:
+            # 연결 실패 시 빈 토폴로지
+            topology = {
+                'devices': [],
+                'connections': [],
+                'error': 'FortiManager connection failed'
+            }
             
         return jsonify(topology)
     except Exception as e:
@@ -409,24 +337,17 @@ def start_packet_capture():
     """패킷 캡처 시작"""
     try:
         data = request.get_json()
+        api_manager = get_api_manager()
+        client = api_manager.get_device_client(data.get('device_id'))
         
-        if is_test_mode():
-            result = {
-                'status': 'success',
-                'capture_id': f'capture_{int(time.time())}',
-                'message': 'Packet capture started (test mode)'
-            }
+        if client:
+            result = client.start_packet_capture(
+                interface=data.get('interface'),
+                filter=data.get('filter'),
+                duration=data.get('duration', 60)
+            )
         else:
-            api_manager = get_api_manager()
-            client = api_manager.get_device_client(data.get('device_id'))
-            if client:
-                result = client.start_packet_capture(
-                    interface=data.get('interface'),
-                    filter=data.get('filter'),
-                    duration=data.get('duration', 60)
-                )
-            else:
-                return jsonify({'error': 'Device not found'}), 404
+            return jsonify({'error': 'Device not found'}), 404
                 
         return jsonify(result)
     except Exception as e:
@@ -437,19 +358,13 @@ def stop_packet_capture():
     """패킷 캡처 중지"""
     try:
         data = request.get_json()
+        api_manager = get_api_manager()
+        client = api_manager.get_device_client(data.get('device_id'))
         
-        if is_test_mode():
-            result = {
-                'status': 'success',
-                'message': 'Packet capture stopped (test mode)'
-            }
+        if client:
+            result = client.stop_packet_capture(data.get('capture_id'))
         else:
-            api_manager = get_api_manager()
-            client = api_manager.get_device_client(data.get('device_id'))
-            if client:
-                result = client.stop_packet_capture(data.get('capture_id'))
-            else:
-                return jsonify({'error': 'Device not found'}), 404
+            return jsonify({'error': 'Device not found'}), 404
                 
         return jsonify(result)
     except Exception as e:
@@ -459,19 +374,11 @@ def stop_packet_capture():
 def get_packet_capture_results(capture_id):
     """패킷 캡처 결과 조회"""
     try:
-        if is_test_mode():
-            dummy_generator = get_dummy_generator()
-            results = {
-                'capture_id': capture_id,
-                'packets': dummy_generator.generate_packet_data(100),
-                'status': 'completed'
-            }
-        else:
-            results = {
-                'capture_id': capture_id,
-                'packets': [],
-                'message': 'Packet capture retrieval not yet implemented'
-            }
+        results = {
+            'capture_id': capture_id,
+            'packets': [],
+            'message': 'Packet capture retrieval not yet implemented'
+        }
             
         return jsonify(results)
     except Exception as e:
@@ -482,13 +389,9 @@ def get_packet_capture_results(capture_id):
 def get_device_interfaces(device_id):
     """장치 인터페이스 목록 조회"""
     try:
-        api_manager, dummy_generator, test_mode = get_data_source()
-        
-        if test_mode:
-            interfaces = dummy_generator.generate_interfaces(device_id)
-        else:
-            client = api_manager.get_device_client(device_id)
-            interfaces = client.get_interfaces() if client else []
+        api_manager = get_api_manager()
+        client = api_manager.get_device_client(device_id)
+        interfaces = client.get_interfaces() if client else []
             
         return jsonify(interfaces)
     except Exception as e:
@@ -558,90 +461,6 @@ def analyze_packet_path():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@fortimanager_bp.route('/mock/system-status', methods=['GET'])
-@cached(ttl=60)
-def get_mock_system_status():
-    """Mock FortiGate 시스템 상태 조회"""
-    try:
-        status = mock_fortigate.get_system_status()
-        return jsonify({'status': 'success', 'system_status': status})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/mock/interfaces', methods=['GET'])
-@cached(ttl=120)
-def get_mock_interfaces():
-    """Mock FortiGate 인터페이스 정보 조회"""
-    try:
-        interfaces = mock_fortigate.get_interfaces()
-        return jsonify(interfaces)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/policies/<int:policy_id>', methods=['GET'])
-def get_policy_detail(policy_id):
-    """특정 정책 상세 조회"""
-    try:
-        result = mock_fortigate.get_policies(policy_id)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/policies/<int:policy_id>', methods=['PUT'])
-@rate_limit(max_requests=10, window=60)
-def update_policy(policy_id):
-    """정책 업데이트"""
-    try:
-        data = request.get_json()
-        result = mock_fortigate.update_policy(policy_id, data)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/policies/<int:policy_id>', methods=['DELETE'])
-@rate_limit(max_requests=5, window=60)
-def delete_policy(policy_id):
-    """정책 삭제"""
-    try:
-        result = mock_fortigate.delete_policy(policy_id)
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/test-policy-analysis', methods=['POST'])
-def test_policy_analysis():
-    """정책 분석 테스트 (Mock FortiGate 검증용)"""
-    try:
-        data = request.get_json()
-        test_scenarios = data.get('scenarios', [])
-        
-        if not test_scenarios:
-            # 기본 테스트 시나리오
-            test_scenarios = [
-                {'src_ip': '192.168.1.100', 'dst_ip': '172.16.10.100', 'port': 80, 'protocol': 'tcp'},
-                {'src_ip': '192.168.1.100', 'dst_ip': '203.0.113.50', 'port': 443, 'protocol': 'tcp'},
-                {'src_ip': '10.10.1.50', 'dst_ip': '192.168.1.100', 'port': 22, 'protocol': 'tcp'},
-                {'src_ip': '172.16.10.100', 'dst_ip': '203.0.113.100', 'port': 80, 'protocol': 'tcp'}
-            ]
-        
-        results = []
-        for scenario in test_scenarios:
-            analysis_result = mock_fortigate.analyze_packet_path(
-                src_ip=scenario['src_ip'],
-                dst_ip=scenario['dst_ip'],
-                port=scenario.get('port', 80),
-                protocol=scenario.get('protocol', 'tcp')
-            )
-            results.append({'scenario': scenario, 'analysis': analysis_result})
-        
-        return jsonify({
-            'status': 'success',
-            'test_results': results,
-            'total_scenarios': len(results),
-            'mock_status': mock_fortigate.get_system_status()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 # Advanced FortiManager Routes
 # Initialize advanced hub globally
@@ -1509,20 +1328,6 @@ def get_module_capabilities():
 def get_adom_list():
     """ADOM(Administrative Domain) 목록 조회"""
     try:
-        if is_test_mode():
-            dummy_gen = get_dummy_generator()
-            adoms = [
-                {'name': 'root', 'description': 'Default ADOM', 'status': 'enabled'},
-                {'name': 'adom1', 'description': 'Test ADOM 1', 'status': 'enabled'},
-                {'name': 'adom2', 'description': 'Test ADOM 2', 'status': 'disabled'}
-            ]
-            return jsonify({
-                'success': True,
-                'adoms': adoms,
-                'count': len(adoms),
-                'mode': 'test'
-            })
-        
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
         

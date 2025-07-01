@@ -449,7 +449,28 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
             else:
                 # Get all managed devices
                 all_devices = self.get_managed_devices()
-                devices_to_analyze = [dev.get('name') for dev in all_devices if dev.get('name')]
+                if not all_devices:
+                    # Fallback - try to get from first ADOM
+                    adom_list = self.get_adom_list()
+                    if adom_list:
+                        for adom in adom_list:
+                            devices = self.get_devices(adom.get('name', 'root'))
+                            if devices:
+                                all_devices = devices
+                                break
+                
+                devices_to_analyze = [dev.get('name') for dev in all_devices if dev.get('name')] if all_devices else []
+                
+                # If still no devices, return error
+                if not devices_to_analyze:
+                    return {
+                        'source_ip': src_ip,
+                        'destination_ip': dst_ip,
+                        'port': port,
+                        'protocol': protocol,
+                        'error': 'No managed devices found',
+                        'path_status': 'error'
+                    }
             
             # Path analysis result structure
             path_analysis = {
