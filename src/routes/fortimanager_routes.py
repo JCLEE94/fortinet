@@ -538,6 +538,22 @@ def analyze_packet_path():
         if not client.api_token:
             client.logout()
         
+        # 결과 형식 개선 - 정책별 accept/deny 명확히 표시
+        if result.get('devices_analyzed'):
+            for device in result['devices_analyzed']:
+                if device.get('applied_policies'):
+                    # 정책 요약 정보 추가
+                    policy_summary = []
+                    for policy in device['applied_policies']:
+                        match_info = policy.get('match_details', {})
+                        policy_summary.append({
+                            'policy_id': match_info.get('policy_id'),
+                            'policy_name': match_info.get('policy_name'),
+                            'action': match_info.get('action'),
+                            'decision': f"Policy {match_info.get('policy_id')} ({match_info.get('policy_name')}): {match_info.get('action').upper()}" if match_info.get('action') else 'Unknown'
+                        })
+                    device['policy_decisions'] = policy_summary
+        
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

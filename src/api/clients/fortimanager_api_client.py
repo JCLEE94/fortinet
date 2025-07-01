@@ -439,67 +439,139 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin
             vdom (str): VDOM name (default: root)
             
         Returns:
-            dict: Path analysis result
+            dict: Path analysis result with multi-firewall support
         """
         try:
-            # 1. Get routing information
-            routes = self.get_routes(device_name, vdom)
+            # If no device specified, analyze across all devices
+            devices_to_analyze = []
+            if device_name:
+                devices_to_analyze = [device_name]
+            else:
+                # Get all managed devices
+                all_devices = self.get_managed_devices()
+                devices_to_analyze = [dev.get('name') for dev in all_devices if dev.get('name')]
             
-            # 2. Get interfaces
-            interfaces = self.get_interfaces(device_name, vdom)
-            
-            # 3. Get firewall policies
-            policies = self.get_firewall_policies(device_name, vdom)
-            
-            # 4. Perform path analysis
+            # Path analysis result structure
             path_analysis = {
                 'source_ip': src_ip,
                 'destination_ip': dst_ip,
                 'port': port,
                 'protocol': protocol,
-                'device': device_name,
-                'vdom': vdom,
-                'analysis_result': {
-                    'ingress_interface': None,
-                    'egress_interface': None,
-                    'matching_route': None,
-                    'applied_policies': [],
-                    'final_action': 'unknown',
-                    'path_status': 'analyzing'
-                }
+                'analysis_timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
+                'devices_analyzed': [],
+                'packet_path': [],
+                'final_action': 'unknown',
+                'path_status': 'analyzing'
             }
             
-            # Find ingress interface
-            for interface in interfaces:
-                if self._ip_in_subnet(src_ip, interface.get('ip', ''), interface.get('netmask', '')):
-                    path_analysis['analysis_result']['ingress_interface'] = interface.get('name')
-                    break
-            
-            # Find matching route for destination
-            for route in routes:
-                if self._ip_in_subnet(dst_ip, route.get('dst', ''), route.get('netmask', '')):
-                    path_analysis['analysis_result']['matching_route'] = route
-                    path_analysis['analysis_result']['egress_interface'] = route.get('device', route.get('interface'))
-                    break
-            
-            # Find applicable policies
-            matching_policies = []
-            for policy in policies:
-                if self._policy_matches_traffic(policy, src_ip, dst_ip, port, protocol):
-                    matching_policies.append(policy)
+            # Analyze each device
+            for device in devices_to_analyze:
+                try:
+                    # Get device info
+                    device_info = self.get_device_info(device)
+                    hostname = device_info.get('hostname', device) if device_info else device
                     
-            path_analysis['analysis_result']['applied_policies'] = matching_policies
+                    # Get routing information
+                    routes = self.get_routes(device, vdom)
+                    
+                    # Get interfaces
+                    interfaces = self.get_interfaces(device, vdom)
+                    
+                    # Get firewall policies
+                    policies = self.get_firewall_policies(device, vdom)
+                    
+                    # Device-specific analysis
+                    device_analysis = {
+                        'device_name': device,
+                        'hostname': hostname,
+                        'vdom': vdom,
+                        'ingress_interface': None,
+                        'egress_interface': None,
+                        'matching_route': None,
+                        'applied_policies': [],
+                        'action': 'unknown'
+                    }
+                    
+                    # Find ingress interface
+                    for interface in interfaces:
+                        if self._ip_in_subnet(src_ip, interface.get('ip', ''), interface.get('netmask', '')):
+                            device_analysis['ingress_interface'] = interface.get('name')
+                            break
+                    
+                    # Find matching route for destination
+                    for route in routes:
+                        if self._ip_in_subnet(dst_ip, route.get('dst', ''), route.get('netmask', '')):
+                            device_analysis['matching_route'] = route
+                            device_analysis['egress_interface'] = route.get('device', route.get('interface'))
+                            break
+                    
+                    # Find ALL applicable policies (not just first match)
+                    matching_policies = []
+                    for policy in policies:
+                        if self._policy_matches_traffic(policy, src_ip, dst_ip, port, protocol):
+                            # Add device hostname to policy info
+                            policy_info = policy.copy()
+                            policy_info['device_hostname'] = hostname
+                            policy_info['device_name'] = device
+                            # 정책 매칭 상세 정보 추가
+                            policy_info['match_details'] = {
+                                'policy_id': policy.get('policyid'),
+                                'policy_name': policy.get('name', 'Unnamed'),
+                                'action': policy.get('action', 'unknown'),
+                                'sequence': policy.get('policyid'),  # 정책 순서
+                                'srcintf': policy.get('srcintf'),
+                                'dstintf': policy.get('dstintf'),
+                                'srcaddr': policy.get('srcaddr'),
+                                'dstaddr': policy.get('dstaddr'),
+                                'service': policy.get('service')
+                            }
+                            matching_policies.append(policy_info)
+                    
+                    device_analysis['applied_policies'] = matching_policies
+                    
+                    # Determine action based on policies
+                    if matching_policies:
+                        # Check all matching policies - if any denies, traffic is denied
+                        actions = [p.get('action', 'unknown') for p in matching_policies]
+                        if 'deny' in actions:
+                            device_analysis['action'] = 'deny'
+                        elif 'accept' in actions:
+                            device_analysis['action'] = 'accept'
+                        else:
+                            device_analysis['action'] = actions[0] if actions else 'unknown'
+                    else:
+                        # No matching policy - implicit deny
+                        device_analysis['action'] = 'deny'
+                    
+                    # Add to devices analyzed
+                    path_analysis['devices_analyzed'].append(device_analysis)
+                    
+                    # Build packet path
+                    if device_analysis['ingress_interface'] or device_analysis['egress_interface']:
+                        path_hop = {
+                            'device': device,
+                            'hostname': hostname,
+                            'ingress': device_analysis['ingress_interface'],
+                            'egress': device_analysis['egress_interface'],
+                            'action': device_analysis['action'],
+                            'policies_matched': len(device_analysis['applied_policies'])
+                        }
+                        path_analysis['packet_path'].append(path_hop)
+                    
+                except Exception as e:
+                    self.logger.error(f"Error analyzing device {device}: {e}")
+                    continue
             
-            # Determine final action
-            if matching_policies:
-                # Use first matching policy's action
-                first_policy = matching_policies[0]
-                path_analysis['analysis_result']['final_action'] = first_policy.get('action', 'unknown')
+            # Determine final action based on all devices
+            all_actions = [d['action'] for d in path_analysis['devices_analyzed']]
+            if 'deny' in all_actions:
+                path_analysis['final_action'] = 'deny'
+            elif all_actions and all(a == 'accept' for a in all_actions):
+                path_analysis['final_action'] = 'accept'
             else:
-                # No matching policy - likely denied
-                path_analysis['analysis_result']['final_action'] = 'deny'
+                path_analysis['final_action'] = 'unknown'
             
-            path_analysis['analysis_result']['path_status'] = 'completed'
+            path_analysis['path_status'] = 'completed'
             
             return path_analysis
             
