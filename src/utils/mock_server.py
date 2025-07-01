@@ -149,9 +149,9 @@ def generate_mock_logs():
             'subtype': 'forward',
             'time': int(timestamp.timestamp()),
             'date': timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            'srcip': f'10.{secrets.randbelow(0,255[1] - 0,255[0] + 1) + 0,255[0]}.{secrets.randbelow(0,255[1] - 0,255[0] + 1) + 0,255[0]}.{secrets.randbelow(0,255[1] - 0,255[0] + 1) + 0,255[0]}',
-            'dstip': f'192.168.{secrets.randbelow(0,255[1] - 0,255[0] + 1) + 0,255[0]}.{secrets.randbelow(0,255[1] - 0,255[0] + 1) + 0,255[0]}',
-            'srcport': secrets.randbelow(1024, 65535[1] - 1024, 65535[0] + 1) + 1024, 65535[0],
+            'srcip': f'10.{secrets.randbelow(256)}.{secrets.randbelow(256)}.{secrets.randbelow(256)}',
+            'dstip': f'192.168.{secrets.randbelow(256)}.{secrets.randbelow(256)}',
+            'srcport': secrets.randbelow(65535 - 1024) + 1024,
             'dstport': secrets.choice([80, 443, 22, 3389]),
             'severity': secrets.choice(severities),
             'msg': f'Sample log message {i}'

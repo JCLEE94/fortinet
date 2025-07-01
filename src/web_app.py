@@ -280,16 +280,17 @@ def main():
     host = os.environ.get('HOST_IP', unified_settings.webapp.host)
     port = int(os.environ.get('FLASK_PORT', APP_CONFIG['web_port']))
     debug = os.environ.get('FLASK_ENV') == 'development'
-    
+
     print(f"🌐 서버 시작: http://{host}:{port}")
     print(f"📊 모드: {os.getenv('APP_MODE', 'production')}")
     print(f"🔒 오프라인 모드: {OFFLINE_MODE}")
-    
+
     # 서버 실행
     if socketio and not DISABLE_SOCKETIO:
         socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
     else:
         app.run(host=host, port=port, debug=debug)
+
 
 # Create app instance for import
 app = create_app()
