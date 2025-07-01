@@ -35,12 +35,6 @@
                     </a>
                 </div>
                 
-                <div class="nav-item">
-                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}">
-                        <span class="nav-icon"><i class="fas fa-shield-alt"></i></span>
-                        <span class="nav-text">정책 분석</span>
-                    </a>
-                </div>
                 
                 <div class="nav-item">
                     <a href="{{ url_for('main.devices') }}" class="nav-link {% if request.endpoint == 'main.devices' %}active{% endif %}">
@@ -65,8 +59,8 @@
                 
                 <div class="nav-item">
                     <a href="{{ url_for('main.policy_scenarios') }}" class="nav-link {% if request.endpoint == 'main.policy_scenarios' %}active{% endif %}">
-                        <span class="nav-icon"><i class="fas fa-route"></i></span>
-                        <span class="nav-text">정책 시나리오</span>
+                        <span class="nav-icon"><i class="fas fa-shield-alt"></i></span>
+                        <span class="nav-text">정책 분석</span>
                     </a>
                 </div>
                 
