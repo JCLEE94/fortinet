@@ -130,7 +130,7 @@ def initialize_mock_data():
             'service': ['HTTP', 'HTTPS'],
             'action': 'accept' if i % 3 != 0 else 'deny',
             'status': 'enable' if i % 4 != 0 else 'disable',
-            'hits': secrets.randbelow(0, 10000[1] - 0, 10000[0] + 1) + 0, 10000[0] if i % 5 != 0 else 0
+            'hits': secrets.randbelow(10000) if i % 5 != 0 else 0
         })
     
     # 로그 데이터 생성
