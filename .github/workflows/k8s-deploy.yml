@@ -30,8 +30,12 @@ jobs:
         
     - name: 📦 Install dependencies
       run: |
-        # Reinstall pip to fix broken installation
-        python -m ensurepip --upgrade
+        # Force reinstall pip
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        python get-pip.py --force-reinstall
+        rm get-pip.py
+        
+        # Upgrade pip and setuptools
         python -m pip install --upgrade pip setuptools wheel
         
         if [ -f requirements.txt ]; then
