@@ -18,70 +18,8 @@ images:
   - name: registry.jclee.me/fortinet
     newTag: latest
 
-commonLabels:
-  app: fortinet
-  environment: production
-  managed-by: kustomize
-
-# Patches for different environments
-patchesStrategicMerge:
-  - |-
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: fortinet
-      namespace: fortinet
-    spec:
-      template:
-        spec:
-          containers:
-          - name: fortinet
-            env:
-            - name: BUILD_DATE
-              value: "$(BUILD_DATE)"
-            - name: GIT_COMMIT
-              value: "$(GIT_COMMIT)"
-            - name: GIT_BRANCH
-              value: "$(GIT_BRANCH)"
-            - name: VERSION
-              value: "$(VERSION)"
-
-# ConfigMap generator for dynamic configurations
-configMapGenerator:
-  - name: fortinet-version
-    literals:
-      - BUILD_DATE=$(BUILD_DATE)
-      - GIT_COMMIT=$(GIT_COMMIT)
-      - GIT_BRANCH=$(GIT_BRANCH)
-      - VERSION=$(VERSION)
-
-# Variables that can be substituted
-vars:
-  - name: BUILD_DATE
-    objref:
-      kind: ConfigMap
-      name: fortinet-version
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.BUILD_DATE
-  - name: GIT_COMMIT
-    objref:
-      kind: ConfigMap
-      name: fortinet-version
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.GIT_COMMIT
-  - name: GIT_BRANCH
-    objref:
-      kind: ConfigMap
-      name: fortinet-version
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.GIT_BRANCH
-  - name: VERSION
-    objref:
-      kind: ConfigMap
-      name: fortinet-version
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.VERSION
+labels:
+  - pairs:
+      app: fortinet
+      environment: production
+      managed-by: kustomize
