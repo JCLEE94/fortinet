@@ -159,29 +159,6 @@ def get_service_objects():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-@fortimanager_bp.route('/policies', methods=['GET'])
-@cached(ttl=60)
-def get_firewall_policies():
-    """방화벽 정책 목록 조회"""
-    try:
-        api_manager = get_api_manager()
-        fm_client = api_manager.get_fortimanager_client()
-        
-        if fm_client and fm_client.test_token_auth():
-            # Try to get policies from first available device
-            devices = fm_client.get_managed_devices()
-            if devices:
-                first_device = devices[0].get('name')
-                if first_device:
-                    policies = fm_client.get_firewall_policies(first_device)
-                    return jsonify({'success': True, 'data': policies or []})
-            
-            return jsonify({'success': True, 'data': []})
-        
-        return jsonify({'success': False, 'message': 'FortiManager not available'})
-        
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
 
 @fortimanager_bp.route('/dashboard', methods=['GET'])
 @cached(ttl=60)
@@ -250,23 +227,6 @@ def get_monitoring_data():
         return jsonify({'error': str(e)}), 500
 
 
-@fortimanager_bp.route('/policies', methods=['POST'])
-@rate_limit(max_requests=10, window=60)
-def create_policy():
-    """방화벽 정책 생성"""
-    try:
-        data = request.get_json()
-        api_manager = get_api_manager()
-        fm_client = api_manager.get_fortimanager_client()
-        
-        if fm_client and fm_client.login():
-            result = fm_client.create_firewall_policy(data)
-        else:
-            result = {'status': 'error', 'message': 'FortiManager connection failed'}
-                
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @fortimanager_bp.route('/topology', methods=['GET'])
 @cached(ttl=300)
@@ -397,69 +357,6 @@ def get_device_interfaces(device_id):
     except Exception as e:
         return jsonify({'error': str(e), 'interfaces': []}), 500
 
-@fortimanager_bp.route('/analyze-packet-path', methods=['POST'])
-def analyze_packet_path():
-    """패킷 경로 분석 (FortiManager API 기반)"""
-    try:
-        data = request.get_json()
-        
-        # Production mode - 실제 FortiManager API 사용
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-        from src.config.services import get_fortimanager_config
-        
-        # FortiManager 설정 로드
-        config = get_fortimanager_config()
-        if not config or not config.get('enabled', False):
-            return jsonify({'error': 'FortiManager not configured'}), 503
-        
-        # API 클라이언트 초기화
-        client = FortiManagerAPIClient(
-            host=config.get('host'),
-            api_token=config.get('api_token'),
-            username=config.get('username'),
-            password=config.get('password'),
-            port=config.get('port'),
-            verify_ssl=config.get('verify_ssl', False)
-        )
-        
-        # 인증
-        if not client.api_token:
-            if not client.login():
-                return jsonify({'error': 'FortiManager authentication failed'}), 401
-        
-        # 패킷 경로 분석 수행
-        result = client.analyze_packet_path(
-            src_ip=data.get('src_ip'),
-            dst_ip=data.get('dst_ip'),
-            port=data.get('port', 80),
-            protocol=data.get('protocol', 'tcp'),
-            device_name=data.get('device_name'),  # 디바이스 이름 지원
-            vdom=data.get('vdom', 'root')
-        )
-        
-        # 로그아웃 (세션 기반 인증인 경우)
-        if not client.api_token:
-            client.logout()
-        
-        # 결과 형식 개선 - 정책별 accept/deny 명확히 표시
-        if result.get('devices_analyzed'):
-            for device in result['devices_analyzed']:
-                if device.get('applied_policies'):
-                    # 정책 요약 정보 추가
-                    policy_summary = []
-                    for policy in device['applied_policies']:
-                        match_info = policy.get('match_details', {})
-                        policy_summary.append({
-                            'policy_id': match_info.get('policy_id'),
-                            'policy_name': match_info.get('policy_name'),
-                            'action': match_info.get('action'),
-                            'decision': f"Policy {match_info.get('policy_id')} ({match_info.get('policy_name')}): {match_info.get('action').upper()}" if match_info.get('action') else 'Unknown'
-                        })
-                    device['policy_decisions'] = policy_summary
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 
 # Advanced FortiManager Routes
@@ -489,9 +386,9 @@ def initialize_advanced_features():
                 result = loop.create_task(hub.initialize())
             else:
                 result = asyncio.run(hub.initialize())
-        except:
-            # Fallback to mock result
-            result = {'status': 'initialized', 'mode': 'fallback'}
+        except Exception as init_error:
+            logger.error(f"Advanced hub initialization failed: {init_error}")
+            return jsonify({'error': 'Advanced hub initialization failed'}), 500
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -533,20 +430,9 @@ def apply_policy_template():
                     target_devices=data.get('devices', []),
                     adom=data.get('adom', 'root')
                 ))
-        except:
-            # Fallback to mock result for policy template application
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'template_applied': {
-                    'template_name': data.get('template_name', 'unknown'),
-                    'target_devices': data.get('devices', []),
-                    'policies_created': 0,
-                    'policies_updated': 0,
-                    'policies_failed': 0
-                },
-                'message': 'Policy template application completed in fallback mode'
-            }
+        except Exception as apply_error:
+            logger.error(f"Policy template application failed: {apply_error}")
+            return jsonify({'error': 'Policy template application failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -659,21 +545,9 @@ def remediate_compliance_issues():
                     issue_ids=data.get('issue_ids', []),
                     adom=data.get('adom', 'root')
                 ))
-        except:
-            # Fallback to mock result for remediation
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'remediation_results': {
-                    'total_issues': len(data.get('issue_ids', [])),
-                    'remediated': 0,
-                    'failed': 0,
-                    'skipped': len(data.get('issue_ids', []))
-                },
-                'issue_ids': data.get('issue_ids', []),
-                'message': 'Compliance remediation completed in fallback mode'
-            }
-        
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Compliance remediation failed'}), 500
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -742,20 +616,9 @@ def detect_threats():
                     'affected_assets': threat.affected_assets,
                     'status': threat.status
                 })
-        except:
-            # Fallback to mock threat data
-            threat_list = []
-            for i in range(min(3, data.get('time_window', 60) // 20)):
-                threat_list.append({
-                    'incident_id': f'THREAT-{datetime.now().strftime("%Y%m%d")}-{i+1:03d}',
-                    'timestamp': datetime.now().isoformat(),
-                    'threat_level': 'medium',
-                    'incident_type': 'suspicious_activity',
-                    'affected_assets': [f'device-{i+1}'],
-                    'status': 'detected'
-                })
-        
-        return jsonify({'threats': threat_list})
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Failed to detect threats'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -781,20 +644,9 @@ def respond_to_incident():
                     incident_id=data.get('incident_id'),
                     response_plan=data.get('response_plan', {})
                 ))
-        except:
-            # Fallback to mock incident response
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'incident_id': data.get('incident_id'),
-                'response_status': 'initiated',
-                'actions_taken': [
-                    'Alert sent to security team',
-                    'Affected systems isolated',
-                    'Incident logged for review'
-                ],
-                'message': 'Incident response completed in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Incident response failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -822,17 +674,9 @@ def import_threat_intelligence():
                     source=data.get('source', 'manual'),
                     threat_data=data.get('threat_data', [])
                 ))
-        except:
-            # Fallback to mock threat intel import
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'source': data.get('source', 'manual'),
-                'threats_imported': len(data.get('threat_data', [])),
-                'threats_processed': 0,
-                'threats_failed': 0,
-                'message': 'Threat intelligence import completed in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Threat intelligence import failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -855,24 +699,9 @@ def generate_threat_report():
                 report = loop.create_task(hub.generate_threat_report(hours))
             else:
                 report = asyncio.run(hub.generate_threat_report(hours))
-        except:
-            # Fallback to mock threat report
-            report = {
-                'status': 'success',
-                'mode': 'fallback',
-                'time_range': f'Last {hours} hours',
-                'start_time': (datetime.now() - timedelta(hours=hours)).isoformat(),
-                'end_time': datetime.now().isoformat(),
-                'summary': {
-                    'total_threats': 0,
-                    'high_severity': 0,
-                    'medium_severity': 0,
-                    'low_severity': 0,
-                    'blocked': 0,
-                    'mitigated': 0
-                },
-                'message': 'Threat report generated in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Threat report generation failed'}), 500
         
         return jsonify(report)
     except Exception as e:
@@ -894,21 +723,9 @@ def threat_hunting():
                 result = loop.create_task(hub.perform_threat_hunting(data.get('parameters', {})))
             else:
                 result = asyncio.run(hub.perform_threat_hunting(data.get('parameters', {})))
-        except:
-            # Fallback to mock threat hunting result
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'hunt_id': f'HUNT-{datetime.now().strftime("%Y%m%d%H%M%S")}',
-                'parameters': data.get('parameters', {}),
-                'findings': {
-                    'suspicious_activities': 0,
-                    'potential_threats': 0,
-                    'false_positives': 0,
-                    'confirmed_threats': 0
-                },
-                'message': 'Threat hunting completed in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Threat hunting failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -947,21 +764,9 @@ def analyze_trends():
                     metric_id=data.get('metric_id'),
                     time_range=data.get('time_range', {})
                 ))
-        except:
-            # Fallback to mock trend analysis
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'metric_id': data.get('metric_id'),
-                'time_range': data.get('time_range', {}),
-                'trend_analysis': {
-                    'direction': 'stable',
-                    'confidence': 0.0,
-                    'change_rate': 0.0,
-                    'anomalies_detected': 0
-                },
-                'message': 'Trend analysis completed in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Trend analysis failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -996,20 +801,9 @@ def detect_anomalies():
                     'description': anomaly.description,
                     'confidence': anomaly.confidence
                 })
-        except:
-            # Fallback to mock anomaly detection
-            anomaly_list = []
-            for i in range(min(3, time_window // 20)):
-                anomaly_list.append({
-                    'insight_id': f'ANOMALY-{datetime.now().strftime("%Y%m%d")}-{i+1:03d}',
-                    'timestamp': datetime.now().isoformat(),
-                    'severity': 'medium',
-                    'title': f'Unusual activity pattern {i+1}',
-                    'description': f'Detected anomalous behavior in metric analysis window of {time_window} minutes',
-                    'confidence': 0.75 - (i * 0.1)
-                })
-        
-        return jsonify({'anomalies': anomaly_list})
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Anomaly detection failed'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -1035,24 +829,9 @@ def generate_predictions():
                     model_id=data.get('model_id'),
                     horizon=data.get('horizon', 24)
                 ))
-        except:
-            # Fallback to mock prediction result
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'model_id': data.get('model_id'),
-                'horizon': data.get('horizon', 24),
-                'predictions': {
-                    'forecast_values': [0.0] * data.get('horizon', 24),
-                    'confidence_intervals': {
-                        'lower': [0.0] * data.get('horizon', 24),
-                        'upper': [0.0] * data.get('horizon', 24)
-                    },
-                    'accuracy_score': 0.0,
-                    'trend': 'stable'
-                },
-                'message': 'Prediction generation completed in fallback mode'
-            }
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Prediction generation failed'}), 500
         
         return jsonify(result)
     except Exception as e:
@@ -1084,227 +863,9 @@ def generate_analytics_report():
                     parameters=data.get('parameters', {}),
                     format=data.get('format', 'json')
                 ))
-        except:
-            # Fallback to mock analytics report
-            report_data = {
-                'status': 'success',
-                'mode': 'fallback',
-                'report_type': data.get('report_type', 'executive_summary'),
-                'generated_at': datetime.now().isoformat(),
-                'summary': {
-                    'total_metrics': 0,
-                    'anomalies_detected': 0,
-                    'trend_analysis': 'stable',
-                    'performance_score': 0.0
-                },
-                'parameters': data.get('parameters', {}),
-                'message': 'Analytics report generated in fallback mode'
-            }
-            
-            if data.get('format') == 'json':
-                report = json.dumps(report_data)
-            else:
-                report = str(report_data)
-        
-        if data.get('format') == 'json':
-            if isinstance(report, str):
-                return jsonify(json.loads(report))
-            else:
-                return jsonify(report)
-        else:
-            return report, 200, {'Content-Type': 'application/octet-stream'}
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/advanced/analytics/optimize', methods=['GET'])
-def get_optimization_recommendations():
-    """Get optimization recommendations"""
-    try:
-        hub = get_advanced_hub()
-        
-        # Convert async call to sync using asyncio.run
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If already in async context, create new task
-                recommendations = loop.create_task(hub.get_optimization_recommendations())
-            else:
-                recommendations = asyncio.run(hub.get_optimization_recommendations())
-        except:
-            # Fallback to mock optimization recommendations
-            recommendations = [
-                {
-                    'category': 'performance',
-                    'title': 'Optimize CPU usage',
-                    'description': 'Consider adjusting traffic processing policies',
-                    'priority': 'medium',
-                    'estimated_impact': 'low'
-                },
-                {
-                    'category': 'security',
-                    'title': 'Review firewall rules',
-                    'description': 'Some rules may be redundant or overly permissive',
-                    'priority': 'high',
-                    'estimated_impact': 'medium'
-                },
-                {
-                    'category': 'capacity',
-                    'title': 'Monitor bandwidth usage',
-                    'description': 'Network utilization approaching capacity limits',
-                    'priority': 'low',
-                    'estimated_impact': 'high'
-                }
-            ]
-        
-        return jsonify({'recommendations': recommendations})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/advanced/analytics/capacity', methods=['GET'])
-def capacity_planning():
-    """Perform capacity planning analysis"""
-    try:
-        horizon = request.args.get('horizon', 90, type=int)
-        hub = get_advanced_hub()
-        
-        # Convert async call to sync using asyncio.run
-        import asyncio
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If already in async context, create new task
-                result = loop.create_task(hub.perform_capacity_planning(horizon))
-            else:
-                result = asyncio.run(hub.perform_capacity_planning(horizon))
-        except:
-            # Fallback to mock capacity planning result
-            result = {
-                'status': 'success',
-                'mode': 'fallback',
-                'horizon_days': horizon,
-                'capacity_analysis': {
-                    'current_utilization': 0.0,
-                    'projected_utilization': 0.0,
-                    'capacity_exhaustion_date': None,
-                    'recommended_actions': [],
-                    'growth_rate': 0.0
-                },
-                'resource_forecasts': {
-                    'cpu': {'current': 0.0, 'projected': 0.0},
-                    'memory': {'current': 0.0, 'projected': 0.0},
-                    'bandwidth': {'current': 0.0, 'projected': 0.0},
-                    'sessions': {'current': 0, 'projected': 0}
-                },
-                'message': 'Capacity planning analysis completed in fallback mode'
-            }
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Unified Operations Routes
-@fortimanager_bp.route('/advanced/health', methods=['GET'])
-def get_system_health():
-    """Get comprehensive system health"""
-    try:
-        hub = get_advanced_hub()
-        
-        # Convert async call to sync using asyncio.run
-        import asyncio
-        from datetime import datetime
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If already in async context, create new task
-                health = loop.create_task(hub.get_system_health())
-            else:
-                health = asyncio.run(hub.get_system_health())
-        except:
-            # Fallback to mock system health data
-            health = {
-                'status': 'healthy',
-                'mode': 'fallback',
-                'timestamp': datetime.now().isoformat(),
-                'system_metrics': {
-                    'cpu_usage': 0.0,
-                    'memory_usage': 0.0,
-                    'disk_usage': 0.0,
-                    'network_status': 'unknown'
-                },
-                'service_status': {
-                    'fortimanager': 'unknown',
-                    'database': 'unknown',
-                    'cache': 'unknown',
-                    'api_endpoints': 'unknown'
-                },
-                'health_score': 0,
-                'uptime': '0h 0m',
-                'message': 'System health check completed in fallback mode'
-            }
-        
-        return jsonify(health)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@fortimanager_bp.route('/advanced/executive-report', methods=['POST'])
-def generate_executive_report():
-    """Generate executive report"""
-    try:
-        data = request.get_json()
-        hub = get_advanced_hub()
-        
-        # Convert async call to sync using asyncio.run
-        import asyncio
-        import json
-        from datetime import datetime
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If already in async context, create new task
-                report = loop.create_task(hub.generate_executive_report(
-                    time_range=data.get('time_range', {}),
-                    format=data.get('format', 'pdf')
-                ))
-            else:
-                report = asyncio.run(hub.generate_executive_report(
-                    time_range=data.get('time_range', {}),
-                    format=data.get('format', 'pdf')
-                ))
-        except:
-            # Fallback to mock executive report
-            report_data = {
-                'status': 'success',
-                'mode': 'fallback',
-                'report_type': 'executive_summary',
-                'time_range': data.get('time_range', {}),
-                'generated_at': datetime.now().isoformat(),
-                'executive_summary': {
-                    'security_posture': 'stable',
-                    'threat_level': 'low',
-                    'compliance_score': 0,
-                    'operational_status': 'healthy',
-                    'key_metrics': {
-                        'devices_monitored': 0,
-                        'policies_managed': 0,
-                        'threats_blocked': 0,
-                        'incidents_resolved': 0
-                    }
-                },
-                'recommendations': [
-                    'Continue monitoring security metrics',
-                    'Review compliance frameworks regularly',
-                    'Maintain current security policies'
-                ],
-                'format': data.get('format', 'pdf'),
-                'message': 'Executive report generated in fallback mode'
-            }
-            
-            if data.get('format') == 'pdf':
-                # Return as application/octet-stream for PDF format
-                report = json.dumps(report_data).encode('utf-8')
-            else:
-                report = report_data
+        except Exception as e:
+            logger.error(f"Operation failed: {e}")
+            return jsonify({'error': 'Analytics report generation failed'}), 500
         
         if isinstance(report, dict):
             return jsonify(report)
@@ -1969,3 +1530,240 @@ def analyze_custom_scenario():
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ==========================================
+# 기본 정책 관리 라우트 (정책 분석과 통합)
+# ==========================================
+
+@fortimanager_bp.route('/policies', methods=['GET'])
+@cached(ttl=180)
+def get_policies():
+    """방화벽 정책 목록 조회"""
+    try:
+        device_id = request.args.get('device_id', 'default')
+        adom = request.args.get('adom', 'root')
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({'error': 'FortiManager client not available'}), 503
+        
+        policies = fm_client.get_firewall_policies(device_id, adom)
+        return jsonify({
+            'policies': policies or [],
+            'total': len(policies) if policies else 0,
+            'device_id': device_id,
+            'adom': adom,
+            'mode': 'production'
+        })
+        
+    except Exception as e:
+        logger.error(f"정책 목록 조회 중 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies', methods=['POST'])
+@rate_limit(max_requests=10, window=60)
+def create_policy():
+    """새 방화벽 정책 생성"""
+    try:
+        policy_data = request.get_json()
+        
+        if not policy_data:
+            return jsonify({'error': 'Policy data is required'}), 400
+        
+        adom = policy_data.get('adom', 'root')
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({'error': 'FortiManager client not available'}), 503
+        
+        result = fm_client.create_firewall_policy(policy_data, adom)
+        if result:
+            return jsonify({
+                'success': True,
+                'policy_id': result.get('policyid'),
+                'message': 'Policy created successfully',
+                'mode': 'production'
+            })
+        else:
+            return jsonify({'error': 'Failed to create policy'}), 500
+        
+    except Exception as e:
+        logger.error(f"정책 생성 중 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies/<policy_id>', methods=['PUT'])
+@rate_limit(max_requests=15, window=60)
+def update_policy(policy_id):
+    """방화벽 정책 수정"""
+    try:
+        policy_data = request.get_json()
+        
+        if not policy_data:
+            return jsonify({'error': 'Policy data is required'}), 400
+        
+        adom = policy_data.get('adom', 'root')
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({'error': 'FortiManager client not available'}), 503
+        
+        result = fm_client.update_firewall_policy(policy_id, policy_data, adom)
+        if result:
+            return jsonify({
+                'success': True,
+                'policy_id': policy_id,
+                'message': 'Policy updated successfully',
+                'mode': 'production'
+            })
+        else:
+            return jsonify({'error': 'Failed to update policy'}), 500
+        
+    except Exception as e:
+        logger.error(f"정책 수정 중 오류 ({policy_id}): {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies/<policy_id>', methods=['DELETE'])
+@rate_limit(max_requests=5, window=60)
+def delete_policy(policy_id):
+    """방화벽 정책 삭제"""
+    try:
+        adom = request.args.get('adom', 'root')
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({'error': 'FortiManager client not available'}), 503
+        
+        result = fm_client.delete_firewall_policy(policy_id, adom)
+        if result:
+            return jsonify({
+                'success': True,
+                'policy_id': policy_id,
+                'message': 'Policy deleted successfully',
+                'mode': 'production'
+            })
+        else:
+            return jsonify({'error': 'Failed to delete policy'}), 500
+        
+    except Exception as e:
+        logger.error(f"정책 삭제 중 오류 ({policy_id}): {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies/analyze-packet', methods=['POST'])
+@rate_limit(max_requests=30, window=60)
+def analyze_packet_path():
+    """패킷 경로 분석 (정책 시나리오와 통합)"""
+    try:
+        data = request.get_json()
+        
+        required_fields = ['src_ip', 'dst_ip', 'dst_port', 'protocol']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        src_ip = data['src_ip']
+        dst_ip = data['dst_ip']
+        dst_port = int(data['dst_port'])
+        protocol = data['protocol'].upper()
+        device_id = data.get('device_id', 'default')
+        
+        # 리팩토링된 분석기 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        fg_client = api_manager.get_fortigate_client()
+        
+        if not fm_client and not fg_client:
+            return jsonify({'error': 'No FortiGate/FortiManager client available'}), 503
+        
+        from src.analysis.refactored_analyzer import RefactoredFirewallAnalyzer
+        analyzer = RefactoredFirewallAnalyzer(fg_client, fm_client)
+        
+        # 데이터 로드
+        if not analyzer.load_data(device_id):
+            return jsonify({'error': 'Failed to load firewall data'}), 500
+        
+        # 트래픽 분석 수행
+        analysis_result = analyzer.analyze_traffic(
+            src_ip, dst_ip, dst_port, protocol, device_id
+        )
+        
+        return jsonify({
+            'analysis': analysis_result,
+            'mode': 'production'
+        })
+        
+    except Exception as e:
+        logger.error(f"패킷 경로 분석 중 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies/conflicts', methods=['GET'])
+@cached(ttl=300)
+def analyze_policy_conflicts_basic():
+    """정책 충돌 분석"""
+    try:
+        device_id = request.args.get('device_id', 'default')
+        
+        # 리팩토링된 분석기 사용
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        fg_client = api_manager.get_fortigate_client()
+        
+        if not fm_client and not fg_client:
+            return jsonify({'error': 'No FortiGate/FortiManager client available'}), 503
+        
+        from src.analysis.refactored_analyzer import RefactoredFirewallAnalyzer
+        analyzer = RefactoredFirewallAnalyzer(fg_client, fm_client)
+        
+        # 데이터 로드
+        if not analyzer.load_data(device_id):
+            return jsonify({'error': 'Failed to load firewall data'}), 500
+        
+        # 정책 충돌 분석
+        conflicts_result = analyzer.analyze_policy_conflicts(device_id)
+        
+        return jsonify({
+            'conflicts': conflicts_result,
+            'device_id': device_id,
+            'mode': 'production'
+        })
+        
+    except Exception as e:
+        logger.error(f"정책 충돌 분석 중 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@fortimanager_bp.route('/policies/topology', methods=['GET'])
+@cached(ttl=240)
+def get_network_topology_policies():
+    """네트워크 토폴로지 정보 조회"""
+    try:
+        device_id = request.args.get('device_id', 'default')
+        
+        api_manager = get_api_manager()
+        fm_client = api_manager.get_fortimanager_client()
+        
+        if not fm_client:
+            return jsonify({'error': 'FortiManager client not available'}), 503
+        
+        topology = fm_client.get_network_topology(device_id)
+        return jsonify({
+            'topology': topology or {},
+            'device_id': device_id,
+            'mode': 'production'
+        })
+        
+    except Exception as e:
+        logger.error(f"네트워크 토폴로지 조회 중 오류: {str(e)}")
+        return jsonify({'error': str(e)}), 500

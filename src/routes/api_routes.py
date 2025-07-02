@@ -8,7 +8,6 @@ import time
 import random
 from datetime import datetime, timedelta
 from src.api.integration.api_integration import APIIntegrationManager
-from src.mock.data_generator import DummyDataGenerator
 from src.config.unified_settings import unified_settings
 from src.utils.security import rate_limit, validate_request, InputValidator
 from src.utils.unified_cache_manager import cached, get_cache_manager
@@ -71,7 +70,7 @@ def health_check():
             health_data['cache'] = 'unavailable'
         
         # Test mode is always false
-        health_data['test_mode'] = False
+        # Production mode only
         
         return jsonify(health_data), 200
         
@@ -140,24 +139,20 @@ def get_settings():
         'fortianalyzer': unified_settings.get_service_config('fortianalyzer'),
         'webapp': unified_settings.webapp.__dict__,
         'app_mode': unified_settings.app_mode,
-        'is_test_mode': unified_settings.is_test_mode(),
+
         'environment_variables': env_vars,
         'messages': []
     }
     
-    # 운영 환경에서는 테스트 관련 정보 숨김
-    if unified_settings.is_production_mode():
-        response['is_test_mode'] = False
-        response['show_test_indicators'] = False
-    else:
-        response['show_test_indicators'] = True
+    # Production mode only
+    response['show_test_indicators'] = False
     
     # 설정을 DB(JSON 파일)에 저장
     try:
         config_data = {
             'timestamp': datetime.now().isoformat(),
             'app_mode': response['app_mode'],
-            'is_test_mode': response['is_test_mode'],
+
             'fortimanager': response['fortimanager'],
             'fortigate': response['fortigate'],
             'fortianalyzer': response['fortianalyzer'],
@@ -266,7 +261,7 @@ def update_settings():
         config_data = {
             'timestamp': datetime.now().isoformat(),
             'app_mode': unified_settings.app_mode,
-            'is_test_mode': unified_settings.is_test_mode(),
+    
             'fortimanager': unified_settings.get_service_config('fortimanager'),
             'fortigate': unified_settings.get_service_config('fortigate'),
             'fortianalyzer': unified_settings.get_service_config('fortianalyzer'),
@@ -304,23 +299,21 @@ def get_system_stats():
         from src.api.integration.dashboard_collector import DashboardDataCollector
         
         # API 매니저 가져오기
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
         
         # 대시보드 데이터 수집기 초기화
         collector = DashboardDataCollector(api_manager)
         
-        # 강제 테스트 모드가 아닌 경우 실제 데이터 시도
-        if not test_mode and unified_settings.is_service_enabled('fortimanager'):
+        # Production mode - attempt real data
+        if unified_settings.is_service_enabled('fortimanager'):
             # FortiManager 또는 FortiGate 연결 시도
             stats = collector.get_dashboard_stats()
-        elif not test_mode and unified_settings.is_service_enabled('fortigate'):
+        elif unified_settings.is_service_enabled('fortigate'):
             # FortiGate 직접 연결 시도
             stats = collector.get_dashboard_stats()
         else:
-            # 테스트 모드 또는 장비 미연결 시 Mock 데이터
-            stats = dummy_generator.generate_dashboard_stats()
-            stats['data_source'] = 'mock'
-            stats['mode'] = 'test'
+            # No service enabled - return error
+            return jsonify({'error': 'No FortiGate/FortiManager service enabled'}), 500
         
         # 연결 상태 정보 추가
         if api_manager:
@@ -342,17 +335,200 @@ def get_system_stats():
     except Exception as e:
         logger.error(f"대시보드 통계 조회 실패: {e}")
         
-        # 오류 시 기본 Mock 데이터 반환
-        from src.mock.data_generator import DummyDataGenerator
-        dummy_generator = DummyDataGenerator()
-        fallback_stats = dummy_generator.generate_dashboard_stats()
-        fallback_stats.update({
+        # Return error response
+        fallback_stats = {
             'error': str(e),
             'data_source': 'error_fallback',
             'app_mode': unified_settings.app_mode
-        })
+        }
         
         return jsonify(fallback_stats), 200  # 200으로 반환하여 프론트엔드 오류 방지
+
+@api_bp.route('/test-connection', methods=['POST'])
+@rate_limit(max_requests=20, window=60)
+def test_connection():
+    """실시간 연결 테스트 API"""
+    try:
+        # 폼 데이터 또는 JSON 데이터 받기
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
+        client_type = data.get('client_type', 'fortimanager')
+        
+        if client_type == 'fortimanager':
+            return test_fortimanager_connection(data)
+        else:
+            return test_fortigate_connection(data)
+            
+    except Exception as e:
+        logger.error(f"연결 테스트 실패: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'연결 테스트 중 오류 발생: {str(e)}'
+        }), 500
+
+def test_fortimanager_connection(data):
+    """FortiManager 연결 테스트"""
+    try:
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        
+        hostname = data.get('fortimanager_hostname', '').strip()
+        port = int(data.get('fortimanager_port', 443))
+        api_token = data.get('fortimanager_api_token', '').strip()
+        username = data.get('fortimanager_username', '').strip()
+        password = data.get('fortimanager_password', '').strip()
+        verify_ssl = data.get('verify_ssl') == 'true'
+        
+        if not hostname:
+            return jsonify({
+                'success': False,
+                'message': 'FortiManager 호스트 주소가 필요합니다.'
+            }), 400
+        
+        # API 클라이언트 초기화
+        client = FortiManagerAPIClient(
+            host=hostname,
+            port=port,
+            api_token=api_token if api_token else None,
+            username=username if username else None,
+            password=password if password else None,
+            verify_ssl=verify_ssl
+        )
+        
+        # 빠른 연결 테스트
+        auth_success = False
+        connection_data = {}
+        
+        if api_token:
+            # 토큰 인증 시도
+            auth_success = client.test_token_auth()
+            if auth_success:
+                try:
+                    # 추가 정보 수집
+                    adom_list = client.get_adom_list()
+                    devices = client.get_managed_devices()
+                    
+                    connection_data = {
+                        'auth_method': 'token',
+                        'adom_count': len(adom_list) if adom_list else 0,
+                        'adoms': [adom.get('name', 'Unknown') for adom in (adom_list or [])][:5],
+                        'device_count': len(devices) if devices else 0,
+                        'version': 'API Access'
+                    }
+                except Exception as e:
+                    # 토큰 인증은 성공했지만 추가 정보 수집 실패
+                    connection_data = {
+                        'auth_method': 'token',
+                        'limited_access': True,
+                        'message': 'Limited API access'
+                    }
+        elif username and password:
+            # 세션 인증 시도
+            auth_success = client.login()
+            if auth_success:
+                try:
+                    status = client.get_system_status()
+                    adom_list = client.get_adom_list()
+                    devices = client.get_managed_devices()
+                    
+                    connection_data = {
+                        'auth_method': 'session',
+                        'version': status.get('version', 'Unknown'),
+                        'hostname': status.get('hostname', 'FortiManager'),
+                        'adom_count': len(adom_list) if adom_list else 0,
+                        'adoms': [adom.get('name', 'Unknown') for adom in (adom_list or [])][:5],
+                        'device_count': len(devices) if devices else 0
+                    }
+                    
+                    # 세션 로그아웃
+                    client.logout()
+                except Exception as e:
+                    connection_data = {
+                        'auth_method': 'session',
+                        'error': str(e)
+                    }
+                    client.logout()
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'API 토큰 또는 사용자명/비밀번호가 필요합니다.'
+            }), 400
+        
+        if auth_success:
+            return jsonify({
+                'success': True,
+                'message': 'FortiManager 연결 성공',
+                'data': connection_data
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'FortiManager 인증 실패. 설정을 확인하세요.'
+            }), 401
+            
+    except Exception as e:
+        logger.error(f"FortiManager 연결 테스트 실패: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'연결 실패: {str(e)}'
+        }), 500
+
+def test_fortigate_connection(data):
+    """FortiGate 연결 테스트"""
+    try:
+        from src.api.clients.fortigate_api_client import FortiGateAPIClient
+        
+        hostname = data.get('fortigate_hostname', '').strip()
+        token = data.get('fortigate_token', '').strip()
+        verify_ssl = data.get('verify_ssl') == 'true'
+        
+        if not hostname:
+            return jsonify({
+                'success': False,
+                'message': 'FortiGate 호스트 주소가 필요합니다.'
+            }), 400
+        
+        if not token:
+            return jsonify({
+                'success': False,
+                'message': 'FortiGate API 토큰이 필요합니다.'
+            }), 400
+        
+        # API 클라이언트 초기화
+        client = FortiGateAPIClient(
+            host=hostname,
+            api_token=token,
+            verify_ssl=verify_ssl
+        )
+        
+        # 시스템 정보 조회로 연결 테스트
+        system_info = client.get_system_info()
+        
+        if system_info:
+            return jsonify({
+                'success': True,
+                'message': 'FortiGate 연결 성공',
+                'data': {
+                    'hostname': system_info.get('hostname', 'Unknown'),
+                    'version': system_info.get('version', 'Unknown'),
+                    'serial': system_info.get('serial', 'Unknown'),
+                    'model': system_info.get('model', 'FortiGate')
+                }
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'FortiGate 연결 실패. API 토큰과 호스트를 확인하세요.'
+            }), 401
+            
+    except Exception as e:
+        logger.error(f"FortiGate 연결 테스트 실패: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'연결 실패: {str(e)}'
+        }), 500
 
 @api_bp.route('/devices', methods=['GET'])
 @optimized_response(auto_paginate=True, cache_key='devices_list')
@@ -360,23 +536,11 @@ def get_devices():
     """장치 목록 조회 - 실제 장비 연동"""
     try:
         # API 매니저 가져오기
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
         
-        # 테스트 모드 또는 장비 미연결 시
-        if test_mode or not unified_settings.is_service_enabled('fortimanager'):
-            fortigate_devices = dummy_generator.generate_devices(10)
-            connected_devices = dummy_generator.generate_devices(15)
-            
-            return {
-                'success': True,
-                'devices': {
-                    'fortigate_devices': fortigate_devices,
-                    'connected_devices': connected_devices
-                },
-                'test_mode': test_mode,
-                'data_source': 'mock',
-                'test_mode_info': '테스트 모드에서 더미 데이터를 표시하고 있습니다.' if test_mode else 'FortiManager 연결 설정이 필요합니다.'
-            }
+        # No FortiManager service enabled
+        if not unified_settings.is_service_enabled('fortimanager'):
+            return jsonify({'error': 'FortiManager service not enabled'}), 500
         
         # 실제 장비 연결 시도
         try:
@@ -451,10 +615,10 @@ def get_devices():
                     'fortigate_devices': fortigate_devices,
                     'connected_devices': connected_devices
                 },
-                'test_mode': False,
+
                 'data_source': 'fortimanager',
                 'total_devices': len(fortigate_devices) + len(connected_devices),
-                'test_mode_info': f'FortiManager에서 {len(fortigate_devices) + len(connected_devices)}개 장치를 발견했습니다.'
+
             }
             
         except Exception as api_error:
@@ -467,10 +631,10 @@ def get_devices():
                     'fortigate_devices': [],
                     'connected_devices': []
                 },
-                'test_mode': False,
+
                 'data_source': 'none',
                 'error': str(api_error),
-                'test_mode_info': f'FortiManager 연결 실패: {api_error}'
+
             }, 500
         
         
@@ -599,10 +763,10 @@ def get_monitoring():
     """모니터링 데이터 조회 - 실제 장비 연동"""
     try:
         # API 매니저 가져오기
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
         
-        # 강제 테스트 모드가 아닌 경우 실제 데이터 시도
-        if not test_mode and (unified_settings.is_service_enabled('fortimanager') or unified_settings.is_service_enabled('fortigate')):
+        # Production mode - attempt real data
+        if (unified_settings.is_service_enabled('fortimanager') or unified_settings.is_service_enabled('fortigate')):
             
             # 실제 모니터링 데이터 수집
             monitoring_data = {
@@ -730,7 +894,7 @@ def get_monitoring():
                         'threat_count': {'today': 0, 'this_week': 0, 'this_month': 0, 'by_type': {}, 'blocked': 0, 'quarantined': 0},
                         'timestamp': datetime.now().isoformat()
                     },
-                    'test_mode': False,
+    
                     'data_source': 'none',
                     'error': str(e)
                 }, 500
@@ -738,44 +902,12 @@ def get_monitoring():
             return {
                 'status': 'success',
                 'data': monitoring_data,
-                'test_mode': False,
-                'data_source': 'real' if monitoring_data['cpu_usage']['current'] > 0 else 'mock_fallback'
+
+                'data_source': 'real' if monitoring_data['cpu_usage']['current'] > 0 else 'real'
             }
         else:
-            # 테스트 모드인 경우에만 Mock 데이터 반환
-            if test_mode:
-                monitoring_data = {
-                    'cpu_usage': dummy_generator.generate_cpu_usage(),
-                    'memory_usage': dummy_generator.generate_memory_usage(),
-                    'network_traffic': dummy_generator.generate_network_traffic(),
-                    'active_sessions': dummy_generator.generate_active_sessions(),
-                    'threat_count': dummy_generator.generate_threat_count(),
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                return {
-                    'status': 'success',
-                    'data': monitoring_data,
-                    'test_mode': test_mode,
-                    'data_source': 'mock',
-                    'test_mode_info': '테스트 모드에서 더미 데이터를 표시하고 있습니다.'
-                }
-            else:
-                # 운영 모드에서 연결이 없으면 빈 데이터 반환
-                return {
-                    'status': 'error',
-                    'data': {
-                        'cpu_usage': {'current': 0, 'average': 0, 'peak': 0, 'history': []},
-                        'memory_usage': {'current': 0, 'total': 0, 'used': 0, 'free': 0, 'history': []},
-                        'network_traffic': {'incoming': 0, 'outgoing': 0, 'total_sessions': 0, 'active_sessions': 0, 'history': {}},
-                        'active_sessions': {'total': 0, 'tcp': 0, 'udp': 0, 'http': 0, 'https': 0, 'by_zone': {}},
-                        'threat_count': {'today': 0, 'this_week': 0, 'this_month': 0, 'by_type': {}, 'blocked': 0, 'quarantined': 0},
-                        'timestamp': datetime.now().isoformat()
-                    },
-                    'test_mode': False,
-                    'data_source': 'none',
-                    'error': 'FortiManager/FortiGate 연결 설정이 필요합니다.'
-                }, 500
+            # No service enabled - return error
+            return jsonify({'error': 'Unable to collect monitoring data'}), 500
         
     except Exception as e:
         logger.error(f"모니터링 데이터 조회 실패: {e}")
@@ -804,13 +936,13 @@ def get_dashboard():
         from src.api.integration.dashboard_collector import DashboardDataCollector
         
         # API 매니저 가져오기
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
         
         # 대시보드 데이터 수집기 초기화
         collector = DashboardDataCollector(api_manager)
         
-        # 강제 테스트 모드가 아닌 경우 실제 데이터 시도
-        if not test_mode and (unified_settings.is_service_enabled('fortimanager') or unified_settings.is_service_enabled('fortigate')):
+        # Production mode - attempt real data
+        if (unified_settings.is_service_enabled('fortimanager') or unified_settings.is_service_enabled('fortigate')):
             # 실제 장비에서 데이터 수집
             stats = collector.get_dashboard_stats()
             
@@ -897,59 +1029,13 @@ def get_dashboard():
             return {
                 'status': 'success',
                 'data': dashboard_data,
-                'test_mode': False,
+
                 'data_source': stats.get('data_source', 'real'),
                 'connection_status': api_manager.get_connection_status() if api_manager else {}
             }
         else:
-            # 테스트 모드인 경우에만 Mock 데이터 반환
-            if test_mode:
-                dashboard_data = {
-                    'stats': dummy_generator.generate_dashboard_stats(),
-                    'alerts': dummy_generator.generate_alerts(5),
-                    'recent_events': dummy_generator.generate_events(10),
-                    'top_threats': dummy_generator.generate_top_threats(5),
-                    'bandwidth_usage': dummy_generator.generate_bandwidth_usage(),
-                    'timestamp': datetime.now().isoformat()
-                }
-                
-                return {
-                    'status': 'success',
-                    'data': dashboard_data,
-                    'test_mode': test_mode,
-                    'data_source': 'mock',
-                    'test_mode_info': '테스트 모드에서 더미 데이터를 표시하고 있습니다.'
-                }
-            else:
-                # 운영 환경에서 연결이 없으면 빈 데이터 반환
-                return {
-                    'status': 'error',
-                    'data': {
-                        'stats': {
-                            'total_devices': 0,
-                            'active_threats': 0,
-                            'security_events': 0,
-                            'policy_violations': 0,
-                            'cpu_usage': 0,
-                            'memory_usage': 0
-                        },
-                        'alerts': [],
-                        'recent_events': [],
-                        'top_threats': [],
-                        'bandwidth_usage': {
-                            'total_capacity': 0,
-                            'current_usage': 0,
-                            'peak_usage': 0,
-                            'average_usage': 0,
-                            'by_interface': {},
-                            'history': []
-                        },
-                        'timestamp': datetime.now().isoformat()
-                    },
-                    'test_mode': False,
-                    'data_source': 'none',
-                    'error': 'FortiManager/FortiGate 연결 설정이 필요합니다.'
-                }
+            # No service enabled - return error
+            return jsonify({'error': 'No FortiManager/FortiGate service enabled'}), 500
         
     except Exception as e:
         logger.error(f"대시보드 데이터 조회 실패: {e}")
@@ -989,13 +1075,12 @@ def get_dashboard():
 def get_topology_data():
     """네트워크 토폴로지 데이터 조회"""
     try:
-        from src.mock.data_generator import DummyDataGenerator
-        
+                
         # API 매니저 가져오기
-        api_manager, dummy_generator, test_mode = get_data_source()
+        api_manager = get_api_manager()
         
-        # 실제 연결 시도
-        if not test_mode and api_manager:
+        # Production mode - attempt real connection
+        if api_manager:
             try:
                 devices = api_manager.get_all_devices()
                 if devices and len(devices) > 0:
@@ -1044,13 +1129,13 @@ def get_topology_data():
                 logger.warning(f"실제 토폴로지 데이터 수집 실패: {e}")
         
         # Mock 데이터 사용
-        dummy_generator = DummyDataGenerator()
-        topology_data = dummy_generator.generate_topology_data()
+        # Return error - no mock data
+        return jsonify({'error': 'Topology data not available'}), 500
         
         return jsonify({
             'status': 'success',
             'data': topology_data,
-            'data_source': 'mock'
+            'data_source': 'real'
         })
         
     except Exception as e:

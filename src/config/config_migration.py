@@ -50,7 +50,7 @@ class ConfigMigration:
             
             # 기본 설정 확인
             checks = [
-                ("APP_MODE 설정", settings.app_mode in ['test', 'production']),
+                ("APP_MODE 설정", settings.app_mode == 'production'),
                 ("FortiManager 설정", hasattr(settings, 'fortimanager')),
                 ("FortiGate 설정", hasattr(settings, 'fortigate')),
                 ("웹앱 설정", hasattr(settings, 'webapp')),
@@ -114,7 +114,7 @@ class ConfigMigration:
             "timestamp": str(Path(__file__).stat().st_mtime),
             "current_settings": {
                 "app_mode": settings.app_mode,
-                "test_mode": settings.test_mode,
+
                 "offline_mode": settings.offline_mode,
                 "enabled_services": {
                     "fortimanager": settings.is_service_enabled('fortimanager'),

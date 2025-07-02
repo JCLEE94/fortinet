@@ -50,7 +50,7 @@ class SnifferConfig:
     def __post_init__(self):
         """환경변수에서 설정 로드"""
         self.offline_mode = os.getenv('OFFLINE_MODE', 'false').lower() == 'true'
-        self.mock_data = os.getenv('APP_MODE', 'production').lower() == 'test'
+        # Mock data removed - production only
         self.fortigate_host = os.getenv('FORTIGATE_HOST', self.fortigate_host)
         self.fortigate_token = os.getenv('FORTIGATE_API_TOKEN', self.fortigate_token)
 

@@ -87,8 +87,7 @@ class AppConfig:
     fortimanager_timeout: int = TIMEOUTS['API_REQUEST']
     
     # Test mode settings
-    test_mode: bool = os.getenv('APP_MODE', 'production').lower() == 'test'
-    test_data_enabled: bool = True
+    # Test mode removed - production only
     
     # Monitoring settings
     monitoring_enabled: bool = os.getenv('MONITORING_ENABLED', 'true').lower() == 'true'
@@ -260,8 +259,7 @@ class ConfigManager:
             'API_RETRY_ATTEMPTS': ('api_retry_attempts', int),
             'API_RETRY_DELAY': ('api_retry_delay', int),
             
-            'TEST_MODE': ('test_mode', bool),
-            'APP_MODE': ('test_mode', lambda x: x.lower() == 'test'),
+
             
             'DEPLOY_HOST': ('deploy_host', str),
             'DEPLOY_PORT': ('deploy_port', int),

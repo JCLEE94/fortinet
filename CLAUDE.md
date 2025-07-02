@@ -85,6 +85,9 @@ black src/                          # Format code
 isort src/                          # Sort imports
 flake8 src/ --max-line-length=120  # Lint
 mypy src/ --ignore-missing-imports  # Type check
+
+# Quick quality check command (run all at once)
+black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503 && mypy src/ --ignore-missing-imports
 ```
 
 ### Docker Development
@@ -106,6 +109,10 @@ docker logs -f fortigate-nextrade
 
 # Access container shell
 docker exec -it fortigate-nextrade /bin/bash
+
+# Docker Compose operations
+./scripts/docker-start.sh  # Start with Docker Compose
+./scripts/docker-stop.sh   # Stop containers
 ```
 
 ### GitHub Actions Deployment
@@ -121,6 +128,20 @@ gh run view <run-id> --repo JCLEE94/fortinet
 
 # Check deployment status
 curl https://fortinet.jclee.me/api/health
+
+# Validate CI/CD configuration
+./scripts/validate-cicd.sh all
+```
+
+### Manual Deployment
+```bash
+# Deploy manually to production
+./scripts/manual-deploy.sh
+
+# Deploy with specific options
+./scripts/deploy.sh build   # Build only
+./scripts/deploy.sh push    # Push to registry
+./scripts/deploy.sh deploy  # Full deployment
 ```
 
 ## Critical Implementation Details
@@ -225,6 +246,18 @@ REGISTRY_USERNAME   # Private registry username
 REGISTRY_PASSWORD   # Private registry password
 ```
 
+### Pipeline Validation
+```bash
+# Validate entire CI/CD setup
+./scripts/validate-cicd.sh all
+
+# Individual checks
+./scripts/validate-cicd.sh github      # GitHub Actions validation
+./scripts/validate-cicd.sh docker      # Docker build validation
+./scripts/validate-cicd.sh secrets     # Secrets validation
+./scripts/validate-cicd.sh deployment  # Deployment validation
+```
+
 ## Testing Guidelines
 
 ### Mock FortiGate Testing
@@ -254,6 +287,11 @@ pytest --cov=src --cov-report=html --cov-report=term-missing
 
 # Manual tests (specific FortiManager scenarios)
 python tests/manual/test_fortimanager_demo.py
+
+# Run tests with markers
+pytest -m "unit" -v         # Unit tests only
+pytest -m "integration" -v  # Integration tests only
+pytest -m "not slow" -v     # Skip slow tests
 ```
 
 ## Common Issues & Solutions
@@ -282,6 +320,17 @@ If BuildKit errors occur:
 ```bash
 export DOCKER_BUILDKIT=0
 docker build -f Dockerfile.production -t fortigate-nextrade:latest .
+```
+
+### Troubleshooting Script
+```bash
+# Run comprehensive troubleshooting
+./scripts/troubleshoot.sh all
+
+# Specific checks
+./scripts/troubleshoot.sh docker
+./scripts/troubleshoot.sh network
+./scripts/troubleshoot.sh app
 ```
 
 ## Project Structure

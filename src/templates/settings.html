@@ -32,6 +32,13 @@
                             <i class="fas fa-circle text-warning"></i>
                             <span>연결 확인 중...</span>
                         </div>
+                        <!-- 실시간 연결 상태 표시 -->
+                        <div class="live-connection-status mt-2" id="live-connection-status" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <div class="status-pulse me-2" id="connection-pulse"></div>
+                                <small class="text-muted" id="connection-details">실시간 상태 확인 중...</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="status-item">
@@ -429,18 +436,84 @@
     opacity: 0.6;
     pointer-events: none;
 }
+
+/* 실시간 연결 상태 스타일 */
+.live-connection-status {
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+}
+
+.status-pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-pulse.connecting {
+    background-color: #ffc107;
+    animation: pulse 1s infinite;
+}
+
+.status-pulse.connected {
+    background-color: #28a745;
+    animation: none;
+}
+
+.status-pulse.failed {
+    background-color: #dc3545;
+    animation: none;
+}
+
+.status-pulse.disconnected {
+    background-color: #6c757d;
+    animation: none;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+    }
+    
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+    
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+/* 입력 필드 실시간 검증 스타일 */
+.form-control.validating {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
+}
+
+.form-control.valid {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-control.invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
 // 현재 모드 저장
-let currentMode = {{ 'true' if test_mode else 'false' }};
+let currentMode = false; // Production only
 
 document.addEventListener('DOMContentLoaded', function() {
     // 모드 선택 버튼 이벤트
     const productionBtn = document.getElementById('production-mode-btn');
-    const testBtn = document.getElementById('test-mode-btn');
+    // Test mode removed - production only
     const apiSettingsCard = document.getElementById('api-settings-card');
     const currentModeText = document.getElementById('current-mode');
     const modeOptions = document.querySelectorAll('.mode-option');
@@ -448,16 +521,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // 초기 모드 설정
     updateModeUI(currentMode);
     
+    // 페이지 로드 시 기본 상태 확인
+    setTimeout(() => {
+        const fortimanagerSelected = document.getElementById('fortimanager-radio')?.checked;
+        if (fortimanagerSelected) {
+            startLiveConnectionCheck();
+        }
+    }, 1000);
+    
     productionBtn.addEventListener('click', function() {
         setMode(false);
     });
-    
-    testBtn.addEventListener('click', function() {
-        setMode(true);
-    });
+
     
     function setMode(isTestMode) {
-        const mode = isTestMode ? 'test' : 'production';
+        const mode = 'production'; // Always production
         fetch('/api/settings/mode', {
             method: 'POST',
             headers: {
@@ -486,23 +564,12 @@ document.addEventListener('DOMContentLoaded', function() {
             option.classList.remove('active');
         });
         
-        if (isTestMode) {
-            document.querySelector('[data-mode="test"]').classList.add('active');
-            testBtn.classList.remove('button-outline');
-            testBtn.classList.add('button-primary');
-            productionBtn.classList.remove('button-primary');
-            productionBtn.classList.add('button-outline');
-            currentModeText.textContent = '테스트';
-            apiSettingsCard.classList.add('disabled');
-        } else {
-            document.querySelector('[data-mode="production"]').classList.add('active');
-            productionBtn.classList.remove('button-outline');
-            productionBtn.classList.add('button-primary');
-            testBtn.classList.remove('button-primary');
-            testBtn.classList.add('button-outline');
-            currentModeText.textContent = '운영';
-            apiSettingsCard.classList.remove('disabled');
-        }
+        // Always production mode
+        document.querySelector('[data-mode="production"]').classList.add('active');
+        productionBtn.classList.remove('button-outline');
+        productionBtn.classList.add('button-primary');
+        currentModeText.textContent = '운영';
+        apiSettingsCard.classList.remove('disabled');
     }
     
     function showNotification(type, message) {
@@ -536,6 +603,97 @@ document.addEventListener('DOMContentLoaded', function() {
         if (this.checked) {
             fortigateSettings.classList.add('d-none');
             fortimanagerSettings.classList.remove('d-none');
+            // FortiManager 선택 시 실시간 상태 확인 시작
+            startLiveConnectionCheck();
+        }
+    });
+    
+    // 인증 방식 변경 시 실시간 상태 확인
+    const authMethodRadios = document.querySelectorAll('input[name="auth_method"]');
+    authMethodRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const tokenSection = document.getElementById('token-auth-section');
+            const sessionSection = document.getElementById('session-auth-section');
+            
+            if (this.value === 'token') {
+                tokenSection.classList.remove('d-none');
+                sessionSection.classList.add('d-none');
+            } else {
+                tokenSection.classList.add('d-none');
+                sessionSection.classList.remove('d-none');
+            }
+            
+            // 인증 방식 변경 시 재확인
+            if (liveConnectionTimer) {
+                checkConnectionStatus();
+            }
+        });
+    });
+    
+    // FortiManager/FortiGate 입력 필드 실시간 모니터링
+    const fmgInputs = [
+        'fortimanager_hostname',
+        'fortimanager_port', 
+        'fortimanager_api_token',
+        'fortimanager_username',
+        'fortimanager_password'
+    ];
+    
+    const fgtInputs = [
+        'fortigate_hostname',
+        'fortigate_token'
+    ];
+    
+    [...fmgInputs, ...fgtInputs].forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            // 입력 중일 때
+            input.addEventListener('input', function() {
+                this.classList.add('validating');
+                this.classList.remove('valid', 'invalid');
+                
+                // 0.8초 후 상태 확인 (빈번한 요청 방지)
+                clearTimeout(this.validationTimeout);
+                this.validationTimeout = setTimeout(() => {
+                    if (liveConnectionTimer && this.value.trim()) {
+                        checkConnectionStatus();
+                    }
+                }, 800);
+            });
+            
+            // 포커스 아웃 시 즉시 확인
+            input.addEventListener('blur', function() {
+                if (liveConnectionTimer && this.value.trim()) {
+                    clearTimeout(this.validationTimeout);
+                    setTimeout(() => checkConnectionStatus(), 100);
+                }
+            });
+        }
+    });
+    
+    // FortiGate 선택 시에도 실시간 상태 확인 시작
+    fortigateRadio.addEventListener('change', function() {
+        if (this.checked) {
+            startLiveConnectionCheck();
+        }
+    });
+    
+    // 페이지 벗어날 때 타이머 정리
+    window.addEventListener('beforeunload', function() {
+        stopLiveConnectionCheck();
+    });
+    
+    // 페이지 숨겨질 때 타이머 정리 (모바일 대응)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopLiveConnectionCheck();
+        } else {
+            // 페이지가 다시 보일 때 FortiManager가 선택되어 있으면 재시작
+            const fortimanagerSelected = document.getElementById('fortimanager-radio')?.checked;
+            const fortigateSelected = document.getElementById('fortigate-radio')?.checked;
+            if (fortimanagerSelected || fortigateSelected) {
+                setTimeout(() => startLiveConnectionCheck(), 500);
+            }
         }
     });
     
@@ -550,6 +708,219 @@ document.addEventListener('DOMContentLoaded', function() {
             credentialsFields.classList.add('d-none');
         }
     });
+    
+    // 실시간 연결 상태 확인 변수
+    let liveConnectionTimer = null;
+    const liveConnectionStatus = document.getElementById('live-connection-status');
+    const connectionPulse = document.getElementById('connection-pulse');
+    const connectionDetails = document.getElementById('connection-details');
+    
+    // 실시간 연결 상태 확인 함수
+    function startLiveConnectionCheck() {
+        liveConnectionStatus.style.display = 'block';
+        updateConnectionStatus('connecting', '연결 확인 중...');
+        
+        // 즉시 한번 확인
+        checkConnectionStatus();
+        
+        // 3초마다 상태 확인
+        if (liveConnectionTimer) {
+            clearInterval(liveConnectionTimer);
+        }
+        liveConnectionTimer = setInterval(checkConnectionStatus, 3000);
+    }
+    
+    function stopLiveConnectionCheck() {
+        if (liveConnectionTimer) {
+            clearInterval(liveConnectionTimer);
+            liveConnectionTimer = null;
+        }
+        liveConnectionStatus.style.display = 'none';
+    }
+    
+    function updateConnectionStatus(status, message, details = null) {
+        // 펄스 상태 업데이트
+        connectionPulse.className = 'status-pulse ' + status;
+        
+        // 메시지 업데이트
+        connectionDetails.textContent = message;
+        
+        // 상세 정보가 있으면 추가
+        if (details) {
+            connectionDetails.innerHTML = message + '<br><small>' + details + '</small>';
+        }
+        
+        // 메인 상태 표시도 업데이트
+        const mainStatus = document.getElementById('fortigate-status');
+        const mainIcon = mainStatus.querySelector('i');
+        const mainText = mainStatus.querySelector('span');
+        
+        switch (status) {
+            case 'connected':
+                mainIcon.className = 'fas fa-circle text-success';
+                mainText.textContent = '연결됨';
+                break;
+            case 'failed':
+                mainIcon.className = 'fas fa-circle text-danger';
+                mainText.textContent = '연결 실패';
+                break;
+            case 'connecting':
+                mainIcon.className = 'fas fa-circle text-warning';
+                mainText.textContent = '연결 중...';
+                break;
+            default:
+                mainIcon.className = 'fas fa-circle text-secondary';
+                mainText.textContent = '연결 안됨';
+        }
+    }
+    
+    function checkConnectionStatus() {
+        // 현재 입력된 값들 가져오기
+        const clientType = document.querySelector('input[name="client_type"]:checked')?.value || 'fortimanager';
+        const authMethod = document.querySelector('input[name="auth_method"]:checked')?.value || 'token';
+        
+        const requestData = {
+            client_type: clientType
+        };
+        
+        if (clientType === 'fortimanager') {
+            const hostname = document.getElementById('fortimanager_hostname')?.value?.trim();
+            const port = document.getElementById('fortimanager_port')?.value?.trim();
+            
+            if (!hostname) {
+                updateConnectionStatus('disconnected', '호스트 주소를 입력하세요');
+                return;
+            }
+            
+            requestData.fortimanager_hostname = hostname;
+            requestData.fortimanager_port = port || '443';
+            
+            if (authMethod === 'token') {
+                const apiToken = document.getElementById('fortimanager_api_token')?.value?.trim();
+                if (apiToken) {
+                    requestData.fortimanager_api_token = apiToken;
+                }
+            } else {
+                const username = document.getElementById('fortimanager_username')?.value?.trim();
+                const password = document.getElementById('fortimanager_password')?.value?.trim();
+                if (username && password) {
+                    requestData.fortimanager_username = username;
+                    requestData.fortimanager_password = password;
+                }
+            }
+        } else {
+            const hostname = document.getElementById('fortigate_hostname')?.value?.trim();
+            const token = document.getElementById('fortigate_token')?.value?.trim();
+            
+            if (!hostname) {
+                updateConnectionStatus('disconnected', '호스트 주소를 입력하세요');
+                return;
+            }
+            
+            requestData.fortigate_hostname = hostname;
+            if (token) {
+                requestData.fortigate_token = token;
+            }
+        }
+        
+        // SSL 검증 설정
+        const verifySSL = document.getElementById('verify_ssl')?.checked;
+        requestData.verify_ssl = verifySSL ? 'true' : 'false';
+        
+        // 빠른 연결 상태 확인 요청
+        fetch('/api/test-connection', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 연결 성공
+                const connectionData = data.data || {};
+                let details = '';
+                
+                if (connectionData.device_count !== undefined) {
+                    details = `장치: ${connectionData.device_count}개`;
+                    if (connectionData.adom_count !== undefined) {
+                        details += `, ADOM: ${connectionData.adom_count}개`;
+                    }
+                } else if (connectionData.auth_method) {
+                    details = `인증: ${connectionData.auth_method}`;
+                    if (connectionData.limited_access) {
+                        details += ' (제한적 접근)';
+                    }
+                }
+                
+                if (connectionData.version) {
+                    details += details ? ` | ${connectionData.version}` : connectionData.version;
+                }
+                
+                updateConnectionStatus('connected', '연결됨', details);
+                updateInputValidation(true);
+            } else {
+                // 연결 실패
+                updateConnectionStatus('failed', '연결 실패', data.message || '알 수 없는 오류');
+                updateInputValidation(false);
+            }
+        })
+        .catch(error => {
+            console.warn('Connection check failed:', error);
+            updateConnectionStatus('failed', '연결 오류', '네트워크 오류 또는 서버 응답 없음');
+            updateInputValidation(false);
+        });
+    }
+    
+    // 입력 필드 검증 상태 업데이트
+    function updateInputValidation(isValid) {
+        const clientType = document.querySelector('input[name="client_type"]:checked')?.value;
+        const authMethod = document.querySelector('input[name="auth_method"]:checked')?.value;
+        
+        if (clientType === 'fortimanager') {
+            const hostname = document.getElementById('fortimanager_hostname');
+            const port = document.getElementById('fortimanager_port');
+            
+            // 기본 필드 검증
+            if (hostname) {
+                hostname.classList.remove('validating');
+                hostname.classList.toggle('valid', isValid && hostname.value.trim());
+                hostname.classList.toggle('invalid', !isValid && hostname.value.trim());
+            }
+            
+            if (port) {
+                port.classList.remove('validating');
+                port.classList.toggle('valid', isValid && port.value.trim());
+                port.classList.toggle('invalid', !isValid && port.value.trim());
+            }
+            
+            // 인증 방식별 필드 검증
+            if (authMethod === 'token') {
+                const token = document.getElementById('fortimanager_api_token');
+                if (token) {
+                    token.classList.remove('validating');
+                    token.classList.toggle('valid', isValid && token.value.trim());
+                    token.classList.toggle('invalid', !isValid && token.value.trim());
+                }
+            } else {
+                const username = document.getElementById('fortimanager_username');
+                const password = document.getElementById('fortimanager_password');
+                
+                if (username) {
+                    username.classList.remove('validating');
+                    username.classList.toggle('valid', isValid && username.value.trim());
+                    username.classList.toggle('invalid', !isValid && username.value.trim());
+                }
+                
+                if (password) {
+                    password.classList.remove('validating');
+                    password.classList.toggle('valid', isValid && password.value.trim());
+                    password.classList.toggle('invalid', !isValid && password.value.trim());
+                }
+            }
+        }
+    }
     
     // 연결 테스트 기능
     const testConnectionBtn = document.getElementById('test-connection-btn');

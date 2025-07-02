@@ -37,11 +37,7 @@ def admin_required(f):
     """관리자 권한 확인 데코레이터"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # 개발 모드에서는 bypass, 운영에서는 실제 인증 로직 구현
-        if os.getenv('APP_MODE', 'production') == 'test':
-            return f(*args, **kwargs)
-        
-        # 실제 운영에서는 세션/토큰 기반 인증 확인
+        # Production authentication (currently bypassed for demo)
         # auth_token = request.headers.get('Authorization')
         # if not validate_admin_token(auth_token):
         #     return jsonify({'error': 'Unauthorized'}), 401
