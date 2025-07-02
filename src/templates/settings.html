@@ -485,11 +485,10 @@
 // 현재 모드 저장
 let currentMode = false; // Production only
 
+// 전역 변수 선언
+let liveConnectionTimer = null;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // 페이지 로드 시 실시간 연결 상태 확인 시작
-    setTimeout(() => {
-        startLiveConnectionCheck();
-    }, 1000);
 
     
     function showNotification(type, message) {
@@ -571,12 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // FortiGate 선택 시에도 실시간 상태 확인 시작
-    fortigateRadio.addEventListener('change', function() {
-        if (this.checked) {
-            startLiveConnectionCheck();
-        }
-    });
+    // FortiGate 관련 코드 제거됨 (FortiManager만 지원)
     
     // 페이지 벗어날 때 타이머 정리
     window.addEventListener('beforeunload', function() {
@@ -610,7 +604,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // 실시간 연결 상태 확인 변수
-    let liveConnectionTimer = null;
     const liveConnectionStatus = document.getElementById('live-connection-status');
     const connectionPulse = document.getElementById('connection-pulse');
     const connectionDetails = document.getElementById('connection-details');
@@ -1137,6 +1130,10 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('load', function() {
         checkSSLStatus();
         checkRedisStatus();
+        // 실시간 연결 상태 확인 시작
+        setTimeout(() => {
+            startLiveConnectionCheck();
+        }, 1000);
     });
 });
 </script>
