@@ -111,14 +111,14 @@
                             <div class="auth-method-selector">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="auth_method" id="auth-token" value="token" 
-                                           {% if not config.get('fortimanager', {}).get('username') or config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
+                                           {% if config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
                                     <label class="form-check-label" for="auth-token">
                                         <i class="fas fa-key text-primary me-2"></i>API 토큰 인증 (권장)
                                     </label>
                                 </div>
                                 <div class="form-check mt-2">
                                     <input class="form-check-input" type="radio" name="auth_method" id="auth-session" value="session"
-                                           {% if config.get('fortimanager', {}).get('username') and not config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
+                                           {% if not config.get('fortimanager', {}).get('api_token') %}checked{% endif %}>
                                     <label class="form-check-label" for="auth-session">
                                         <i class="fas fa-user text-success me-2"></i>세션 기반 인증 (사용자/비밀번호)
                                     </label>
@@ -127,7 +127,7 @@
                         </div>
                         
                         <!-- API 토큰 인증 섹션 -->
-                        <div id="token-auth-section" class="auth-section {% if config.get('fortimanager', {}).get('username') and not config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
+                        <div id="token-auth-section" class="auth-section {% if not config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
                             <div class="alert alert-info mb-3">
                                 <i class="fas fa-info-circle me-2"></i>API 토큰은 FortiManager에서 다음 명령으로 생성할 수 있습니다:
                                 <code class="d-block mt-2">execute api-user generate-key [username]</code>
@@ -148,7 +148,7 @@
                         </div>
                         
                         <!-- 세션 인증 섹션 -->
-                        <div id="session-auth-section" class="auth-section {% if not config.get('fortimanager', {}).get('username') or config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
+                        <div id="session-auth-section" class="auth-section {% if config.get('fortimanager', {}).get('api_token') %}d-none{% endif %}">
                             <div class="alert alert-warning mb-3">
                                 <i class="fas fa-exclamation-triangle me-2"></i>세션 인증은 주기적인 재로그인이 필요할 수 있습니다.
                             </div>
