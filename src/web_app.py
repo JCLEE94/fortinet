@@ -63,6 +63,10 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key-here')
     
+    # JSON 한글 인코딩 설정
+    app.config['JSON_AS_ASCII'] = False
+    app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+    
     # 애플리케이션 시작 시간 설정 (uptime 계산용)
     app.start_time = time.time()
     
