@@ -96,13 +96,13 @@
                             <label for="fortimanager_host" class="form-label">FortiManager 호스트 주소:</label>
                             <input type="text" class="form-control" id="fortimanager_hostname" name="fortimanager_hostname" 
                                    placeholder="예: 192.168.1.10 또는 fortimanager.example.com" 
-                                   value="{{ config.get('fortimanager', {}).get('hostname', '') }}">
+                                   value="{{ config.get('fortimanager', {}).get('hostname', 'hjsim-1034-453947.fortidemo.fortinet.com') }}">
                         </div>
                         
                         <div class="mb-3">
                             <label for="fortimanager_port" class="form-label">FortiManager 포트:</label>
                             <input type="number" class="form-control" id="fortimanager_port" name="fortimanager_port" 
-                                   placeholder="기본값: 443" value="{{ config.get('fortimanager', {}).get('port', 443) }}">
+                                   placeholder="기본값: 14005" value="{{ config.get('fortimanager', {}).get('port', 14005) }}">
                         </div>
                         
                         <!-- 인증 방식 선택 -->
@@ -157,7 +157,7 @@
                                     <i class="fas fa-user me-2"></i>FortiManager 사용자 이름:
                                 </label>
                                 <input type="text" class="form-control" id="fortimanager_username" name="fortimanager_username" 
-                                       placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', '') }}">
+                                       placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', 'hjsim') }}">
                             </div>
                             
                             <div class="mb-3">
@@ -166,7 +166,7 @@
                                 </label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="fortimanager_password" name="fortimanager_password" 
-                                           placeholder="관리자 비밀번호" value="{{ config.get('fortimanager', {}).get('password', '') }}">
+                                           placeholder="관리자 비밀번호" value="{{ config.get('fortimanager', {}).get('password', 'SecurityFabric') }}">
                                     <button class="btn btn-outline-secondary" type="button" id="toggle-password-visibility">
                                         <i class="fas fa-eye"></i>
                                     </button>
@@ -885,10 +885,19 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const formData = new FormData(settingsForm);
+        const data = {};
+        
+        // FormData를 JSON 객체로 변환
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
         
         fetch('/api/settings', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
@@ -913,11 +922,20 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 폼 데이터 수집
         const formData = new FormData(document.getElementById('settings-form'));
+        const data = {};
+        
+        // FormData를 JSON 객체로 변환
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
         
         // 연결 테스트 요청
         fetch('{{ url_for("api.test_connection") }}', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
