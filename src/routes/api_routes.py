@@ -355,12 +355,8 @@ def test_connection():
         else:
             data = request.form.to_dict()
         
-        client_type = data.get('client_type', 'fortimanager')
-        
-        if client_type == 'fortimanager':
-            return test_fortimanager_connection(data)
-        else:
-            return test_fortigate_connection(data)
+        # FortiManager 전용 연결 테스트
+        return test_fortimanager_connection(data)
             
     except Exception as e:
         logger.error(f"연결 테스트 실패: {e}")
@@ -475,60 +471,6 @@ def test_fortimanager_connection(data):
             'message': f'연결 실패: {str(e)}'
         }), 500
 
-def test_fortigate_connection(data):
-    """FortiGate 연결 테스트"""
-    try:
-        from src.api.clients.fortigate_api_client import FortiGateAPIClient
-        
-        hostname = data.get('fortigate_hostname', '').strip()
-        token = data.get('fortigate_token', '').strip()
-        verify_ssl = data.get('verify_ssl') == 'true'
-        
-        if not hostname:
-            return jsonify({
-                'success': False,
-                'message': 'FortiGate 호스트 주소가 필요합니다.'
-            }), 400
-        
-        if not token:
-            return jsonify({
-                'success': False,
-                'message': 'FortiGate API 토큰이 필요합니다.'
-            }), 400
-        
-        # API 클라이언트 초기화
-        client = FortiGateAPIClient(
-            host=hostname,
-            api_token=token,
-            verify_ssl=verify_ssl
-        )
-        
-        # 시스템 정보 조회로 연결 테스트
-        system_info = client.get_system_info()
-        
-        if system_info:
-            return jsonify({
-                'success': True,
-                'message': 'FortiGate 연결 성공',
-                'data': {
-                    'hostname': system_info.get('hostname', 'Unknown'),
-                    'version': system_info.get('version', 'Unknown'),
-                    'serial': system_info.get('serial', 'Unknown'),
-                    'model': system_info.get('model', 'FortiGate')
-                }
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'message': 'FortiGate 연결 실패. API 토큰과 호스트를 확인하세요.'
-            }), 401
-            
-    except Exception as e:
-        logger.error(f"FortiGate 연결 테스트 실패: {e}")
-        return jsonify({
-            'success': False,
-            'message': f'연결 실패: {str(e)}'
-        }), 500
 
 @api_bp.route('/devices', methods=['GET'])
 @optimized_response(auto_paginate=True, cache_key='devices_list')

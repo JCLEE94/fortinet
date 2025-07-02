@@ -79,43 +79,18 @@
         </div>
         <div class="card-body">
                 <form id="settings-form" method="post" action="/api/settings">
+                    <!-- FortiManager 연결만 지원 -->
+                    <input type="hidden" name="client_type" value="fortimanager">
                     <div class="mb-4">
-                        <label class="form-label">API 연결 대상 선택:</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="client_type" id="fortigate-radio" value="fortigate" 
-                                   {% if not config or config.get('client_type') == 'fortigate' %}checked{% endif %}>
-                            <label class="form-check-label" for="fortigate-radio">
-                                <i class="fas fa-shield-alt me-2"></i>FortiGate 직접 연결
-                            </label>
-                        </div>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="radio" name="client_type" id="fortimanager-radio" value="fortimanager"
-                                   {% if config and config.get('client_type') == 'fortimanager' %}checked{% endif %}>
-                            <label class="form-check-label" for="fortimanager-radio">
-                                <i class="fas fa-server me-2"></i>FortiManager 연결
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- FortiGate 설정 (기본값) -->
-                    <div id="fortigate-settings" class="api-settings mb-4 {% if config and config.get('client_type') == 'fortimanager' %}d-none{% endif %}">
-                        <h5 class="card-title">FortiGate 설정</h5>
-                        <div class="mb-3">
-                            <label for="fortigate_host" class="form-label">FortiGate 호스트 주소:</label>
-                            <input type="text" class="form-control" id="fortigate_hostname" name="fortigate_hostname" 
-                                   placeholder="예: your-fortigate-host.com 또는 IP 주소" 
-                                   value="{{ config.get('fortigate', {}).get('hostname', '') }}">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="fortigate_api_token" class="form-label">FortiGate API 토큰:</label>
-                            <input type="password" class="form-control" id="fortigate_token" name="fortigate_token" 
-                                   placeholder="API 토큰" value="{{ config.get('fortigate', {}).get('token', '') }}">
+                        <div class="alert alert-info">
+                            <i class="fas fa-server me-2"></i>
+                            <strong>FortiManager 연결</strong><br>
+                            이 시스템은 FortiManager를 통한 중앙집중식 관리를 지원합니다.
                         </div>
                     </div>
                     
                     <!-- FortiManager 설정 -->
-                    <div id="fortimanager-settings" class="api-settings mb-4 {% if not config or config.get('client_type') != 'fortimanager' %}d-none{% endif %}">
+                    <div id="fortimanager-settings" class="api-settings mb-4">
                         <h5 class="card-title">FortiManager 설정</h5>
                         <div class="mb-3">
                             <label for="fortimanager_host" class="form-label">FortiManager 호스트 주소:</label>
@@ -521,12 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 초기 모드 설정
     updateModeUI(currentMode);
     
-    // 페이지 로드 시 기본 상태 확인
+    // 페이지 로드 시 실시간 연결 상태 확인 시작
     setTimeout(() => {
-        const fortimanagerSelected = document.getElementById('fortimanager-radio')?.checked;
-        if (fortimanagerSelected) {
-            startLiveConnectionCheck();
-        }
+        startLiveConnectionCheck();
     }, 1000);
     
     productionBtn.addEventListener('click', function() {
@@ -586,27 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notification.remove();
         }, 3000);
     }
-    // API 타입 라디오 버튼 이벤트 처리
-    const fortigateRadio = document.getElementById('fortigate-radio');
-    const fortimanagerRadio = document.getElementById('fortimanager-radio');
-    const fortigateSettings = document.getElementById('fortigate-settings');
-    const fortimanagerSettings = document.getElementById('fortimanager-settings');
-    
-    fortigateRadio.addEventListener('change', function() {
-        if (this.checked) {
-            fortigateSettings.classList.remove('d-none');
-            fortimanagerSettings.classList.add('d-none');
-        }
-    });
-    
-    fortimanagerRadio.addEventListener('change', function() {
-        if (this.checked) {
-            fortigateSettings.classList.add('d-none');
-            fortimanagerSettings.classList.remove('d-none');
-            // FortiManager 선택 시 실시간 상태 확인 시작
-            startLiveConnectionCheck();
-        }
-    });
+    // FortiManager만 지원하므로 타입 선택 관련 코드 제거됨
     
     // 인증 방식 변경 시 실시간 상태 확인
     const authMethodRadios = document.querySelectorAll('input[name="auth_method"]');
