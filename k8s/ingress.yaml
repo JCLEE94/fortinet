@@ -6,20 +6,14 @@ metadata:
   labels:
     app: fortinet
   annotations:
-    # NGINX specific settings
-    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
-    
-    # TLS certificate management
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Traefik specific settings
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure,web
+    traefik.ingress.kubernetes.io/router.tls: "true"
     
     # Enable WebSocket support for SSE
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    traefik.ingress.kubernetes.io/router.middlewares: default-headers@kubernetescrd
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
   - hosts:
     - fortinet.jclee.me

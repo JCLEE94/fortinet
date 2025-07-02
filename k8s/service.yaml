@@ -31,5 +31,5 @@ spec:
   - name: http
     port: 7777
     targetPort: 7777
-    nodePort: 32000  # Fixed NodePort for consistent access
+    nodePort: 30777  # Fixed NodePort for consistent access
     protocol: TCP
