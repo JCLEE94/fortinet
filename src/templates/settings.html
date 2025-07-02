@@ -93,7 +93,7 @@
                     <div id="fortimanager-settings" class="api-settings mb-4">
                         <h5 class="card-title">FortiManager 설정</h5>
                         <div class="mb-3">
-                            <label for="fortimanager_host" class="form-label">FortiManager 호스트 주소:</label>
+                            <label for="fortimanager_hostname" class="form-label">FortiManager 호스트 주소:</label>
                             <input type="text" class="form-control" id="fortimanager_hostname" name="fortimanager_hostname" 
                                    placeholder="예: 192.168.1.10 또는 fortimanager.example.com" 
                                    value="{{ config.get('fortimanager', {}).get('hostname', 'hjsim-1034-453947.fortidemo.fortinet.com') }}">
@@ -486,63 +486,11 @@
 let currentMode = false; // Production only
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 모드 선택 버튼 이벤트
-    const productionBtn = document.getElementById('production-mode-btn');
-    // Test mode removed - production only
-    const apiSettingsCard = document.getElementById('api-settings-card');
-    const currentModeText = document.getElementById('current-mode');
-    const modeOptions = document.querySelectorAll('.mode-option');
-    
-    // 초기 모드 설정
-    updateModeUI(currentMode);
-    
     // 페이지 로드 시 실시간 연결 상태 확인 시작
     setTimeout(() => {
         startLiveConnectionCheck();
     }, 1000);
-    
-    productionBtn.addEventListener('click', function() {
-        setMode(false);
-    });
 
-    
-    function setMode(isTestMode) {
-        const mode = 'production'; // Always production
-        fetch('/api/settings/mode', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ mode: mode })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                currentMode = isTestMode;
-                updateModeUI(isTestMode);
-                showNotification('success', '모드가 변경되었습니다.');
-            } else {
-                showNotification('error', '모드 변경에 실패했습니다.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('error', '서버 오류가 발생했습니다.');
-        });
-    }
-    
-    function updateModeUI(isTestMode) {
-        modeOptions.forEach(option => {
-            option.classList.remove('active');
-        });
-        
-        // Always production mode
-        document.querySelector('[data-mode="production"]').classList.add('active');
-        productionBtn.classList.remove('button-outline');
-        productionBtn.classList.add('button-primary');
-        currentModeText.textContent = '운영';
-        apiSettingsCard.classList.remove('disabled');
-    }
     
     function showNotification(type, message) {
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
