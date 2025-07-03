@@ -195,6 +195,24 @@ jobs:
           echo "Note: Manual deployment may be required"
         fi
         
+    - name: 🔄 Trigger K8s Update
+      run: |
+        echo "🔄 Triggering K8s deployment update..."
+        
+        # kubeconfig 설정
+        export KUBECONFIG=/tmp/kubeconfig-${{ github.run_id }}
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > $KUBECONFIG
+        chmod 600 $KUBECONFIG
+        
+        # K8s deployment 재시작
+        kubectl rollout restart deployment/fortinet -n fortinet || echo "⚠️ K8s update failed"
+        
+        # 롤아웃 상태 확인
+        kubectl rollout status deployment/fortinet -n fortinet --timeout=5m || echo "⚠️ K8s rollout status check failed"
+        
+        # Cleanup
+        rm -f $KUBECONFIG
+        
     - name: ⏱️ Wait for Deployment
       run: |
         echo "⏱️ Waiting for deployment to complete..."
