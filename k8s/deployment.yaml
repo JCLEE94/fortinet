@@ -6,6 +6,12 @@ metadata:
   labels:
     app: fortinet
     version: latest
+  annotations:
+    # Keel 자동 업데이트 설정
+    keel.sh/policy: all          # major, minor, patch, all
+    keel.sh/trigger: poll        # poll (폴링) 또는 webhook
+    keel.sh/pollSchedule: "@every 1m"  # 1분마다 체크
+    keel.sh/approvals: "0"       # 승인 없이 자동 업데이트
 spec:
   replicas: 3
   selector:

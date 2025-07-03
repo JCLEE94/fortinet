@@ -210,6 +210,13 @@ jobs:
         # 롤아웃 상태 확인
         kubectl rollout status deployment/fortinet -n fortinet --timeout=5m || echo "⚠️ K8s rollout status check failed"
         
+        # Webhook 트리거 (선택사항)
+        curl -X POST https://fortinet.jclee.me:9301/webhook/update \
+          -H "Authorization: Bearer MySuperSecretToken12345" \
+          -H "Content-Type: application/json" \
+          -d '{"image": "'${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'"}' \
+          || echo "⚠️ Webhook trigger failed"
+        
         # Cleanup
         rm -f $KUBECONFIG
         

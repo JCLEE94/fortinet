@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: fortinet-image-updater
+  namespace: fortinet
+spec:
+  schedule: "*/5 * * * *"  # 5분마다 실행
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: image-updater
+          containers:
+          - name: updater
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/bash
+            - -c
+            - |
+              echo "🔄 Checking for new images..."
+              
+              # 현재 이미지 가져오기
+              CURRENT_IMAGE=$(kubectl get deployment fortinet -n fortinet -o jsonpath='{.spec.template.spec.containers[0].image}')
+              echo "Current image: $CURRENT_IMAGE"
+              
+              # Deployment 재시작으로 최신 이미지 pull
+              kubectl rollout restart deployment/fortinet -n fortinet
+              
+              # 롤아웃 완료 대기
+              kubectl rollout status deployment/fortinet -n fortinet --timeout=5m
+              
+              echo "✅ Image update check completed"
+          restartPolicy: OnFailure
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: image-updater
+  namespace: fortinet
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: image-updater
+  namespace: fortinet
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "patch", "update"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: image-updater
+  namespace: fortinet
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: image-updater
+subjects:
+- kind: ServiceAccount
+  name: image-updater
+  namespace: fortinet
