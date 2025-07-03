@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fortinet-config
+  namespace: fortinet
+data:
+  APP_MODE: "production"
+  OFFLINE_MODE: "false"
+  WEB_APP_PORT: "7777"
+  WEB_APP_HOST: "0.0.0.0"
+  PROJECT_NAME: "fortinet"
+  REDIS_ENABLED: "false"

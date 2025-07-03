@@ -1,0 +1,156 @@
+name: ArgoCD GitOps Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'argocd/**'
+
+env:
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-push:
+    name: 🐳 Build & Push Docker Image
+    runs-on: self-hosted
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+      git-sha: ${{ github.sha }}
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        clean: true
+        fetch-depth: 0
+      
+    - name: 🔐 Log in to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        
+    - name: 🔐 Log in to Private Registry
+      run: |
+        echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+        
+    - name: 🏷️ Generate metadata
+      id: meta
+      run: |
+        # Generate tags
+        TIMESTAMP=$(date +%Y%m%d%H%M%S)
+        SHA_SHORT=${GITHUB_SHA::7}
+        
+        # Tags
+        TAGS="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHA_SHORT}"
+        TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TIMESTAMP}"
+        TAGS="${TAGS},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        
+        echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+        echo "version=${SHA_SHORT}" >> $GITHUB_OUTPUT
+        echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+        
+    - name: 🚀 Build and Push
+      id: build
+      run: |
+        # Build with specific tag
+        docker build -f Dockerfile.production \
+          --build-arg BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) \
+          --build-arg GIT_COMMIT=${{ github.sha }} \
+          --build-arg GIT_BRANCH=${{ github.ref_name }} \
+          --build-arg VERSION=${{ steps.meta.outputs.version }} \
+          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }} \
+          -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+          .
+        
+        # Push all tags
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        
+        echo "✅ Image pushed: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
+
+  update-manifest:
+    name: 📝 Update K8s Manifests
+    runs-on: self-hosted
+    needs: build-and-push
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        clean: true
+        fetch-depth: 0
+        
+    - name: 🔧 Update Kustomization
+      run: |
+        # Update image tag in kustomization.yaml
+        cd argocd/environments/production
+        
+        # Use kustomize to update image
+        cat > kustomization.yaml << EOF
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        
+        bases:
+          - ../base
+        
+        namespace: fortinet
+        
+        patchesStrategicMerge:
+          - deployment-patch.yaml
+        
+        images:
+          - name: registry.jclee.me/fortinet
+            newTag: ${{ needs.build-and-push.outputs.git-sha }}
+        
+        configMapGenerator:
+          - name: fortinet-config
+            behavior: merge
+            literals:
+              - APP_MODE=production
+              - OFFLINE_MODE=false
+              - WEB_APP_PORT=7777
+              - WEB_APP_HOST=0.0.0.0
+              - GIT_COMMIT=${{ needs.build-and-push.outputs.git-sha }}
+              - BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        EOF
+        
+        echo "✅ Updated image tag to: ${{ needs.build-and-push.outputs.git-sha }}"
+        
+    - name: 📤 Commit and Push
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        git add argocd/environments/production/kustomization.yaml
+        git commit -m "chore: update image tag to ${{ needs.build-and-push.outputs.git-sha }} [skip ci]" || echo "No changes to commit"
+        
+        git push origin ${{ github.ref_name }}
+        
+    - name: 🔔 Trigger ArgoCD Sync (Optional)
+      continue-on-error: true
+      run: |
+        # If ArgoCD webhook is configured
+        curl -X POST https://argocd.jclee.me/api/v1/applications/fortinet/sync \
+          -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "revision": "${{ github.ref_name }}",
+            "prune": true,
+            "dryRun": false
+          }' || echo "ArgoCD webhook not configured"
+          
+    - name: 📊 Deployment Summary
+      run: |
+        echo "📊 GitOps Update Summary"
+        echo "========================"
+        echo "🏷️ Image Tag: ${{ needs.build-and-push.outputs.git-sha }}"
+        echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-and-push.outputs.git-sha }}"
+        echo "🌿 Branch: ${{ github.ref_name }}"
+        echo "📅 Time: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        echo ""
+        echo "✅ Manifest updated! ArgoCD will automatically sync the changes."
