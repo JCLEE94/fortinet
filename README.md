@@ -1,6 +1,6 @@
 # FortiGate Nextrade
 
-[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/ci-cd.yml)
+[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/)
 [![License](https://img.shields.io/badge/license-proprietary-red.svg)](LICENSE)
 
@@ -14,51 +14,65 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 - **ITSM 연동**: 방화벽 정책 요청 및 티켓 관리
 - **FortiManager Hub**: AI 기반 정책 오케스트레이션 및 컴플라이언스 자동화
 - **Docker 지원**: 컨테이너 오케스트레이션을 통한 간편한 배포
-- **CI/CD 파이프라인**: GitHub Actions를 통한 자동화된 배포
+- **ArgoCD GitOps**: 쿠버네티스 환경에서 자동화된 배포
+- **CI/CD 파이프라인**: GitHub Actions + ArgoCD를 통한 완전 자동화
 - **로그 관리**: 실시간 로그 스트리밍 및 분석
 
 ## 📋 시스템 요구사항
 
-### 최소 요구사항
+### 프로덕션 환경 (ArgoCD)
+- **Kubernetes**: 1.20+ 클러스터
+- **ArgoCD**: 2.8+ 설치됨
+- **Docker Registry**: registry.jclee.me 접근 가능
+- **ArgoCD CLI**: 로컬 관리용
+
+### 로컬 개발 환경
 - **OS**: Linux (Ubuntu 18.04+, CentOS 7+) 또는 Windows 10+
-- **RAM**: 4GB 이상
-- **Storage**: 20GB 이상 여유 공간  
+- **RAM**: 4GB 이상 (권장: 8GB)
+- **Storage**: 20GB 이상 여유 공간
 - **Docker**: 20.10+ 또는 Podman 3.0+
 - **Python**: 3.11+
 
-### 권장 사양
-- **OS**: Ubuntu 20.04 LTS 또는 CentOS 8
-- **RAM**: 8GB 이상
-- **Storage**: 50GB 이상 SSD
-- **CPU**: 4 Core 이상
-
 ## 🚀 빠른 시작
 
-### Docker를 사용한 배포 (권장)
+### 최초 배포 (프로덕션)
 ```bash
 # 1. 레포지토리 클론
 git clone https://github.com/JCLEE94/fortinet.git
 cd fortinet
 
-# 2. Docker Compose로 실행
-docker-compose up -d
+# 2. 최초 배포 스크립트 실행 (모든 설정 자동화)
+./scripts/initial-deploy.sh
+
+# 스크립트가 자동으로 수행하는 작업:
+# - ArgoCD 서버 연결 및 인증
+# - GitHub Repository 등록
+# - ArgoCD 애플리케이션 생성
+# - 초기 동기화 및 배포
+# - 헬스체크 및 상태 확인
+
+# 3. 배포 확인
+# ArgoCD: https://argo.jclee.me/applications/fortinet
+# 애플리케이션: https://fortinet.jclee.me/api/health
+```
+
+### 로컬 개발 환경
+```bash
+# 1. 의존성 설치
+pip install -r requirements.txt
+
+# 2. 개발 서버 실행 (Mock 모드)
+APP_MODE=test python src/main.py --web
 
 # 3. 접속
 # http://localhost:7777
 ```
 
-### 수동 설치
+### Docker 로컬 테스트
 ```bash
-# 1. 의존성 설치
-pip install -r requirements.txt
-
-# 2. 환경 변수 설정
-export APP_MODE=production
-export WEB_APP_PORT=7777
-
-# 3. 애플리케이션 실행
-cd src
-python main.py --web
+# Docker로 로컬 테스트
+docker build -f Dockerfile.production -t fortinet-test .
+docker run -p 7777:7777 -e APP_MODE=test fortinet-test
 ```
 
 ## 🔧 환경 설정
@@ -96,14 +110,17 @@ fortinet/
 │   ├── api/clients/       # API 클라이언트
 │   ├── modules/           # 비즈니스 로직
 │   └── templates/         # HTML 템플릿
+├── k8s/manifests/         # Kubernetes 배포 매니페스트
+├── argocd/                # ArgoCD 애플리케이션 설정
 ├── tests/                 # 테스트 코드
 ├── docs/                  # 문서
 │   ├── guides/           # 사용자 가이드
-│   ├── api/              # API 문서
+│   ├── deployment/       # 배포 가이드
 │   └── reports/          # 분석 리포트
 ├── scripts/              # 유틸리티 스크립트
-├── docker-compose.yml    # Docker 구성
-└── .github/workflows/    # CI/CD 파이프라인
+│   └── initial-deploy.sh # 최초 배포 스크립트
+├── Dockerfile.production # 프로덕션 Docker 이미지
+└── .github/workflows/    # GitHub Actions CI/CD
 ```
 
 ## 🔌 API 엔드포인트
@@ -146,28 +163,60 @@ APP_MODE=test python src/main.py --web
 
 ## 🚢 배포
 
-### GitHub Actions CI/CD
+### ArgoCD GitOps 자동 배포
 마스터 브랜치에 푸시하면 자동으로:
-1. 테스트 실행
-2. Docker 이미지 빌드
-3. Private Registry 푸시
-4. Production 서버 배포
+1. **테스트 실행**: pytest, 코드 품질 검사
+2. **Docker 빌드**: Multi-stage 프로덕션 이미지
+3. **Registry 푸시**: registry.jclee.me/fortinet
+4. **GitOps 업데이트**: kustomization.yaml 이미지 태그 수정
+5. **ArgoCD 동기화**: 자동으로 Kubernetes에 배포
 
-### 수동 배포
+### 수동 배포 및 관리
 ```bash
-# Docker 이미지 빌드
-docker build -f Dockerfile.production -t fortigate-nextrade:latest .
+# ArgoCD 로그인
+argocd login argo.jclee.me --username admin --password bingogo1 --insecure --grpc-web
 
-# Registry에 푸시
-docker tag fortigate-nextrade:latest registry.jclee.me/fortinet:latest
-docker push registry.jclee.me/fortinet:latest
+# 애플리케이션 상태 확인
+argocd app get fortinet
+
+# 수동 동기화 (긴급 배포)
+argocd app sync fortinet --prune
+
+# 웹 대시보드
+open https://argo.jclee.me/applications/fortinet
+```
+
+### 직접 배포 (비상시)
+```bash
+# Kubernetes에 직접 배포
+kubectl apply -k k8s/manifests/
+
+# 이미지 직접 업데이트
+kubectl set image deployment/fortinet-app fortinet=registry.jclee.me/fortinet:new-tag -n fortinet
 ```
 
 ## 📊 모니터링
 
+### ArgoCD 모니터링
+- **ArgoCD 대시보드**: https://argo.jclee.me/applications/fortinet
+- **애플리케이션 헬스체크**: https://fortinet.jclee.me/api/health
+- **실시간 동기화 상태**: `argocd app get fortinet`
+
+### Kubernetes 모니터링
+```bash
+# Pod 상태 확인
+kubectl get pods -n fortinet
+
+# 애플리케이션 로그
+kubectl logs -f -n fortinet -l app=fortinet
+
+# 리소스 사용량
+kubectl top pods -n fortinet
+```
+
+### 로컬 개발 모니터링
+- **개발 서버**: http://localhost:7777/dashboard
 - **애플리케이션 로그**: `/logs/web_app.log`
-- **Docker 로그**: `docker logs fortinet`
-- **실시간 모니터링**: http://localhost:7777/dashboard
 
 ## 🔒 보안
 
@@ -193,4 +242,4 @@ docker push registry.jclee.me/fortinet:latest
 
 - **이슈 트래커**: [GitHub Issues](https://github.com/JCLEE94/fortinet/issues)
 - **문서**: [docs/](docs/)
-- **이메일**: support@nextrade.comCI/CD 테스트용 변경사항
+- **이메일**: support@nextrade.com
