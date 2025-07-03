@@ -16,6 +16,8 @@ images:
   - name: registry.jclee.me/fortinet
     newTag: latest
 
-commonLabels:
-  app: fortinet
-  managed-by: argocd
+labels:
+  - includeSelectors: true
+    pairs:
+      app: fortinet
+      managed-by: argocd
