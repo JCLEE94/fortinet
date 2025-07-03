@@ -46,23 +46,21 @@ jobs:
         # Update kustomization.yaml
         sed -i "s|newTag:.*|newTag: $IMAGE_TAG|g" environments/production/kustomization.yaml
         
-        # Update deployment metadata
-        cat > environments/production/deployment-patch.yaml << EOF
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: fortinet-app
-  annotations:
-    deployed-by: "github-actions"
-    deployed-at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    commit-sha: "${{ github.sha }}"
-    image-tag: "$IMAGE_TAG"
-spec:
-  template:
-    metadata:
-      annotations:
-        deployed-at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-EOF
+        # Update deployment metadata annotations
+        echo "apiVersion: apps/v1" > environments/production/deployment-patch.yaml
+        echo "kind: Deployment" >> environments/production/deployment-patch.yaml
+        echo "metadata:" >> environments/production/deployment-patch.yaml
+        echo "  name: fortinet-app" >> environments/production/deployment-patch.yaml
+        echo "  annotations:" >> environments/production/deployment-patch.yaml
+        echo "    deployed-by: \"github-actions\"" >> environments/production/deployment-patch.yaml
+        echo "    deployed-at: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" >> environments/production/deployment-patch.yaml
+        echo "    commit-sha: \"${{ github.sha }}\"" >> environments/production/deployment-patch.yaml
+        echo "    image-tag: \"$IMAGE_TAG\"" >> environments/production/deployment-patch.yaml
+        echo "spec:" >> environments/production/deployment-patch.yaml
+        echo "  template:" >> environments/production/deployment-patch.yaml
+        echo "    metadata:" >> environments/production/deployment-patch.yaml
+        echo "      annotations:" >> environments/production/deployment-patch.yaml
+        echo "        deployed-at: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" >> environments/production/deployment-patch.yaml
         
     - name: 📤 Commit and Push
       run: |
