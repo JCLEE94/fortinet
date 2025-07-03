@@ -57,10 +57,19 @@ jobs:
         docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:emergency-${{ github.sha }}
         docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         
-    - name: 🔔 Trigger Deployment
+    - name: ☸️ Trigger Deployment
       run: |
-        echo "Deployment triggered via Watchtower"
-        echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:emergency-${{ github.sha }}"
+        echo "☸️ Emergency deployment to Kubernetes..."
+        
+        # K8s deployment (if kubectl available)
+        if command -v kubectl &> /dev/null; then
+          kubectl set image deployment/fortinet-app \
+            fortinet=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:emergency-${{ github.sha }} \
+            -n fortinet || echo "K8s deployment failed - manual intervention required"
+        else
+          echo "⚠️ kubectl not available - manual deployment required"
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:emergency-${{ github.sha }}"
+        fi
         
     - name: 📊 Summary
       run: |

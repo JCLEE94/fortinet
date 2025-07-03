@@ -42,7 +42,7 @@ FortiGate Nextrade 프로젝트의 CI/CD 파이프라인 문서입니다.
 ```yaml
 DOCKER_REGISTRY: registry.jclee.me
 DOCKER_IMAGE_NAME: fortinet
-DEPLOY_METHOD: watchtower  # Options: watchtower, k8s-direct, argocd
+DEPLOY_METHOD: k8s-direct  # Options: k8s-direct, argocd
 ARGOCD_SERVER: argocd.jclee.me
 ```
 
@@ -56,17 +56,12 @@ KUBECONFIG: Kubernetes 설정 (base64 인코딩)
 
 ## 🚀 배포 방식
 
-### 1. Watchtower (기본)
-- 이미지가 레지스트리에 푸시되면 자동으로 감지하여 업데이트
-- 가장 간단한 방식
-- 설정 불필요
-
-### 2. K8s Direct
+### 1. K8s Direct (기본)
 - kubectl을 사용하여 직접 deployment 업데이트
 - 빠른 배포 가능
 - KUBECONFIG secret 필요
 
-### 3. ArgoCD
+### 2. ArgoCD
 - GitOps 방식으로 선언적 배포
 - 변경 사항 추적 가능
 - 롤백 용이
@@ -91,7 +86,7 @@ git push origin main
 ### 배포 방식 변경
 1. Settings → Secrets and variables → Actions
 2. Variables 탭에서 DEPLOY_METHOD 수정
-3. 옵션: watchtower, k8s-direct, argocd
+3. 옵션: k8s-direct, argocd
 
 ## 🔍 트러블슈팅
 

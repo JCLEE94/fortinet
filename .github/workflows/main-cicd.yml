@@ -15,7 +15,7 @@ env:
   REGISTRY: ${{ vars.DOCKER_REGISTRY || 'registry.jclee.me' }}
   IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'fortinet' }}
   PYTHON_VERSION: '3.11'
-  DEPLOY_METHOD: ${{ vars.DEPLOY_METHOD || 'watchtower' }}  # watchtower, k8s-direct, argocd
+  DEPLOY_METHOD: ${{ vars.DEPLOY_METHOD || 'k8s-direct' }}  # k8s-direct, argocd
 
 jobs:
   # 테스트 및 품질 검사
@@ -117,15 +117,8 @@ jobs:
         echo "Image: ${{ needs.build.outputs.image-tag }}"
         echo "Registry: ${{ env.REGISTRY }}"
         
-    # Watchtower 배포 (기본)
-    - name: 🔔 Deploy via Watchtower
-      if: env.DEPLOY_METHOD == 'watchtower'
-      run: |
-        echo "🔔 Triggering Watchtower..."
-        # Watchtower will automatically detect and update the new image
-        echo "✅ Image pushed to registry, Watchtower will auto-update"
         
-    # K8s 직접 배포
+    # K8s 직접 배포 (기본)
     - name: ☸️ Deploy to K8s
       if: env.DEPLOY_METHOD == 'k8s-direct'
       run: |
