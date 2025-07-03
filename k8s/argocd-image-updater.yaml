@@ -1,44 +1,32 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: argocd-image-updater-config
-  namespace: argocd
-data:
-  registries.conf: |
-    registries:
-    - name: jclee-registry
-      api_url: https://registry.jclee.me
-      prefix: registry.jclee.me
-      insecure: yes
-      default: true
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: argocd-image-updater-secret
-  namespace: argocd
-type: Opaque
-stringData:
-  argocd.token: ""  # ArgoCD API token
----
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet
+  name: fortinet-app
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater 설정
-    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:latest
-    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
-    argocd-image-updater.argoproj.io/fortinet.pull-secret: pullsecret:fortinet/regcred
+    # ArgoCD Image Updater annotations
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet
     argocd-image-updater.argoproj.io/write-back-method: git
     argocd-image-updater.argoproj.io/git-branch: master
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[a-f0-9]{7,40}$|^latest$|^v\d+\.\d+\.\d+.*$
+    argocd-image-updater.argoproj.io/fortinet.ignore-tags: alpha,beta,rc
+    argocd-image-updater.argoproj.io/fortinet.platform: linux/amd64
+    argocd-image-updater.argoproj.io/fortinet.helm.image-name: registry.jclee.me/fortinet
+    argocd-image-updater.argoproj.io/fortinet.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/fortinet.pull-secret: registry-secret
+    # Registry configuration
+    argocd-image-updater.argoproj.io/fortinet.registry.credential: secret:argocd/registry-secret
+    # Update frequency (check every 2 minutes)
+    argocd-image-updater.argoproj.io/fortinet.update-frequency: 2m
+    # Force update even if tag is same (useful for 'latest' tag)
+    argocd-image-updater.argoproj.io/fortinet.force-update: "true"
 spec:
   project: default
   source:
-    repoURL: https://github.com/JCLEE94/fortinet
-    targetRevision: master
-    path: k8s
+    repoURL: https://github.com/JCLEE94/fortinet.git
+    targetRevision: HEAD
+    path: argocd/environments/production
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
@@ -46,5 +34,167 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
-    - CreateNamespace=true
+      - CreateNamespace=true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+data:
+  registries.conf: |
+    registries:
+    - name: registry.jclee.me
+      prefix: registry.jclee.me
+      api_url: https://registry.jclee.me/v2
+      credentials: secret:argocd/registry-secret
+      default: true
+      insecure: false
+      
+  log_level: info
+  interval: 2m
+  
+  # Git commit message template
+  git.commit-message-template: |
+    build: automatic update of {{ .AppName }}
+    
+    {{ range .AppChanges -}}
+    updates image {{ .Image }} tag '{{ .OldTag }}' to '{{ .NewTag }}'
+    {{ end -}}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-secret
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+type: Opaque
+stringData:
+  # Registry credentials (base64 encoded)
+  # username: <REGISTRY_USERNAME>
+  # password: <REGISTRY_PASSWORD>
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "registry.jclee.me": {
+          "username": "qws9411",
+          "password": "bingogo1",
+          "auth": "cXdzOTQxMTpiaW5nb2dvMQ=="
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-image-updater
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: argocd-image-updater
+    spec:
+      serviceAccountName: argocd-image-updater
+      containers:
+      - name: argocd-image-updater
+        image: argoprojlabs/argocd-image-updater:v0.12.2
+        env:
+        - name: ARGOCD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: argocd-image-updater-secret
+              key: argocd.token
+              optional: true
+        - name: ARGOCD_SERVER
+          value: "argocd-server.argocd.svc.cluster.local:443"
+        - name: ARGOCD_INSECURE
+          value: "true"
+        - name: ARGOCD_GRPC_WEB
+          value: "true"
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: ssh-config
+          mountPath: /app/.ssh
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+      - name: config
+        configMap:
+          name: argocd-image-updater-config
+      - name: ssh-config
+        secret:
+          secretName: argocd-image-updater-ssh-config
+          optional: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argocd-image-updater
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argocd-image-updater
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - argoproj.io
+  resources:
+  - applications
+  verbs:
+  - get
+  - list
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argocd-image-updater
+  labels:
+    app.kubernetes.io/name: argocd-image-updater
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argocd-image-updater
+subjects:
+- kind: ServiceAccount
+  name: argocd-image-updater
+  namespace: argocd

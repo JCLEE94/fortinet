@@ -1,25 +1,32 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: fortinet-data-pvc
+  name: fortinet-data
   namespace: fortinet
+  labels:
+    app: fortinet
+    managed-by: argocd
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi
-  storageClassName: local-path
+  storageClassName: default
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: fortinet-logs-pvc
+  name: fortinet-logs
   namespace: fortinet
+  labels:
+    app: fortinet
+    component: logs
+    managed-by: argocd
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
-  storageClassName: local-path
+      storage: 2Gi
+  storageClassName: default

@@ -4,4 +4,31 @@ metadata:
   name: fortinet
   namespace: fortinet
 spec:
-  replicas: 3  # Production uses 3 replicas
+  replicas: 3
+  template:
+    metadata:
+      annotations:
+        deployment.kubernetes.io/revision: "1"
+        config.linkerd.io/proxy-cpu-request: "100m"
+        config.linkerd.io/proxy-memory-request: "20Mi"
+    spec:
+      containers:
+      - name: fortinet
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: MAX_WORKERS
+          value: "8"
+        - name: WORKER_TIMEOUT
+          value: "120"
+        - name: KEEP_ALIVE
+          value: "5"

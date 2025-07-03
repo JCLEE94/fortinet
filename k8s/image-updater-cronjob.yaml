@@ -3,66 +3,174 @@ kind: CronJob
 metadata:
   name: fortinet-image-updater
   namespace: fortinet
+  labels:
+    app: fortinet
+    component: image-updater
 spec:
-  schedule: "*/5 * * * *"  # 5분마다 실행
+  # Run every 5 minutes
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:
     spec:
       template:
+        metadata:
+          labels:
+            app: fortinet
+            component: image-updater-job
         spec:
-          serviceAccountName: image-updater
+          restartPolicy: OnFailure
           containers:
-          - name: updater
-            image: bitnami/kubectl:latest
+          - name: image-updater
+            image: curlimages/curl:latest
+            env:
+            - name: REGISTRY_URL
+              value: "registry.jclee.me"
+            - name: IMAGE_NAME
+              value: "fortinet"
+            - name: NAMESPACE
+              value: "fortinet"
+            - name: DEPLOYMENT_NAME
+              value: "fortinet"
+            - name: CONTAINER_NAME
+              value: "fortinet"
             command:
-            - /bin/bash
+            - /bin/sh
             - -c
             - |
-              echo "🔄 Checking for new images..."
+              set -e
               
-              # 현재 이미지 가져오기
-              CURRENT_IMAGE=$(kubectl get deployment fortinet -n fortinet -o jsonpath='{.spec.template.spec.containers[0].image}')
-              echo "Current image: $CURRENT_IMAGE"
+              echo "🔍 Checking for new image versions..."
               
-              # Deployment 재시작으로 최신 이미지 pull
-              kubectl rollout restart deployment/fortinet -n fortinet
+              # Get current image tag from deployment
+              CURRENT_TAG=$(kubectl get deployment $DEPLOYMENT_NAME -n $NAMESPACE -o jsonpath='{.spec.template.spec.containers[?(@.name=="'$CONTAINER_NAME'")].image}' | cut -d':' -f2)
+              echo "Current image tag: $CURRENT_TAG"
               
-              # 롤아웃 완료 대기
-              kubectl rollout status deployment/fortinet -n fortinet --timeout=5m
+              # Check latest tag in registry
+              # This is a simplified version - in production, you'd want to use proper registry API
+              LATEST_SHA=$(curl -s "https://api.github.com/repos/JCLEE94/fortinet/commits/master" | grep -o '"sha":"[^"]*"' | head -1 | cut -d'"' -f4 | head -c 7)
+              echo "Latest commit SHA: $LATEST_SHA"
               
-              echo "✅ Image update check completed"
-          restartPolicy: OnFailure
+              # Compare current vs latest
+              if [ "$CURRENT_TAG" != "$LATEST_SHA" ] && [ "$CURRENT_TAG" != "latest" ]; then
+                echo "🔄 New version detected, updating deployment..."
+                
+                # Update deployment with new image
+                kubectl set image deployment/$DEPLOYMENT_NAME $CONTAINER_NAME=$REGISTRY_URL/$IMAGE_NAME:$LATEST_SHA -n $NAMESPACE
+                
+                # Wait for rollout to complete
+                kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE --timeout=300s
+                
+                echo "✅ Image updated successfully to $LATEST_SHA"
+                
+                # Create event for successful update
+                kubectl create event image-update \
+                  --type=Normal \
+                  --reason=ImageUpdated \
+                  --message="Updated image from $CURRENT_TAG to $LATEST_SHA" \
+                  --for=deployment/$DEPLOYMENT_NAME \
+                  -n $NAMESPACE || true
+                  
+              else
+                echo "ℹ️ No update needed, current tag is up to date"
+              fi
+          serviceAccountName: fortinet-image-updater
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: image-updater
+  name: fortinet-image-updater
   namespace: fortinet
+  labels:
+    app: fortinet
+    component: image-updater
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: image-updater
+  name: fortinet-image-updater
   namespace: fortinet
+  labels:
+    app: fortinet
+    component: image-updater
 rules:
 - apiGroups: ["apps"]
   resources: ["deployments"]
   verbs: ["get", "list", "patch", "update"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["get", "list", "watch"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: image-updater
+  name: fortinet-image-updater
   namespace: fortinet
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: image-updater
+  labels:
+    app: fortinet
+    component: image-updater
 subjects:
 - kind: ServiceAccount
-  name: image-updater
+  name: fortinet-image-updater
   namespace: fortinet
+roleRef:
+  kind: Role
+  name: fortinet-image-updater
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fortinet-image-updater-manual
+  namespace: fortinet
+  labels:
+    app: fortinet
+    component: image-updater-manual
+  annotations:
+    description: "Manual image update job for testing"
+spec:
+  template:
+    metadata:
+      labels:
+        app: fortinet
+        component: image-updater-manual-job
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: manual-image-updater
+        image: bitnami/kubectl:latest
+        env:
+        - name: REGISTRY_URL
+          value: "registry.jclee.me"
+        - name: IMAGE_NAME
+          value: "fortinet"
+        - name: NAMESPACE
+          value: "fortinet"
+        - name: DEPLOYMENT_NAME
+          value: "fortinet"
+        - name: CONTAINER_NAME
+          value: "fortinet"
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+          
+          echo "🚀 Manual image update initiated..."
+          
+          # Force update to latest
+          echo "🔄 Updating to latest image..."
+          kubectl set image deployment/$DEPLOYMENT_NAME $CONTAINER_NAME=$REGISTRY_URL/$IMAGE_NAME:latest -n $NAMESPACE
+          
+          # Wait for rollout
+          kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE --timeout=300s
+          
+          # Check status
+          kubectl get pods -n $NAMESPACE -l app=$IMAGE_NAME
+          
+          echo "✅ Manual update completed successfully"
+      serviceAccountName: fortinet-image-updater

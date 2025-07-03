@@ -1,48 +1,41 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet
+  name: fortinet-app
   namespace: argocd
+  labels:
+    app: fortinet
+    managed-by: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  
   source:
-    repoURL: https://github.com/JCLEE94/fortinet
+    repoURL: https://github.com/JCLEE94/fortinet.git
     targetRevision: master
     path: argocd/environments/production
-    
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
-    
   syncPolicy:
     automated:
-      prune: true        # 자동으로 삭제된 리소스 정리
-      selfHeal: true     # 수동 변경사항 자동 복원
-      allowEmpty: false  # 빈 리소스 허용하지 않음
+      prune: true
+      selfHeal: true
+      allowEmpty: false
     syncOptions:
-    - CreateNamespace=true
-    - PrunePropagationPolicy=foreground
-    - PruneLast=true
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - RespectIgnoreDifferences=true
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-        
-  # Health checks
   revisionHistoryLimit: 10
-  
-  # Ignore differences for dynamic fields
   ignoreDifferences:
-  - group: apps
-    kind: Deployment
-    jsonPointers:
-    - /spec/replicas
-  - group: ""
-    kind: Service
-    jsonPointers:
-    - /spec/clusterIP
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

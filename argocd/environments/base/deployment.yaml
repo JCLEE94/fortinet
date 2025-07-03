@@ -3,6 +3,9 @@ kind: Deployment
 metadata:
   name: fortinet
   namespace: fortinet
+  labels:
+    app: fortinet
+    managed-by: argocd
 spec:
   replicas: 2
   selector:
@@ -12,72 +15,76 @@ spec:
     metadata:
       labels:
         app: fortinet
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7777"
+        prometheus.io/path: "/metrics"
     spec:
-      initContainers:
-      - name: setup-permissions
-        image: busybox:latest
-        command: ['sh', '-c', 'chmod -R 777 /app/data /app/logs']
-        volumeMounts:
-        - name: data
-          mountPath: /app/data
-        - name: logs
-          mountPath: /app/logs
-      
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest  # Will be updated by CI/CD
-        imagePullPolicy: Always
+        image: registry.jclee.me/fortinet:latest
         ports:
         - containerPort: 7777
           name: http
           protocol: TCP
-        
-        envFrom:
-        - configMapRef:
-            name: fortinet-config
-        - secretRef:
-            name: fortinet-secret
-            optional: true
-        
+        env:
+        - name: APP_MODE
+          value: "production"
+        - name: WEB_APP_HOST
+          value: "0.0.0.0"
+        - name: WEB_APP_PORT
+          value: "7777"
+        - name: OFFLINE_MODE
+          value: "false"
+        - name: REDIS_ENABLED
+          value: "true"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         livenessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 120
-          periodSeconds: 60
-          timeoutSeconds: 10
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
           failureThreshold: 3
-        
         readinessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 30
-          periodSeconds: 30
-          timeoutSeconds: 5
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
           failureThreshold: 3
-        
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "200m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
-        
         volumeMounts:
-        - name: data
+        - name: fortinet-data
           mountPath: /app/data
-        - name: logs
+        - name: fortinet-logs
           mountPath: /app/logs
-      
-      imagePullSecrets:
-      - name: regcred
-      
+        - name: fortinet-config
+          mountPath: /app/config
+          readOnly: true
       volumes:
-      - name: data
+      - name: fortinet-data
         persistentVolumeClaim:
-          claimName: fortinet-data-pvc
-      - name: logs
+          claimName: fortinet-data
+      - name: fortinet-logs
         persistentVolumeClaim:
-          claimName: fortinet-logs-pvc
+          claimName: fortinet-logs
+      - name: fortinet-config
+        configMap:
+          name: fortinet-config
+      restartPolicy: Always
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000

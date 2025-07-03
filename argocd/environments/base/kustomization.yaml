@@ -9,5 +9,22 @@ resources:
   - pvc.yaml
 
 commonLabels:
+  app: fortinet
+  managed-by: argocd
+
+commonAnnotations:
   app.kubernetes.io/name: fortinet
+  app.kubernetes.io/component: web-application
+  app.kubernetes.io/part-of: fortinet-nextrade
   app.kubernetes.io/managed-by: argocd
+
+images:
+  - name: registry.jclee.me/fortinet
+    newTag: latest
+
+namePrefix: ""
+namespace: fortinet
+
+replicas:
+  - name: fortinet
+    count: 2
