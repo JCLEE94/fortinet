@@ -15,7 +15,7 @@ env:
   REGISTRY: ${{ vars.DOCKER_REGISTRY || 'registry.jclee.me' }}
   IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'fortinet' }}
   PYTHON_VERSION: '3.11'
-  DEPLOY_METHOD: ${{ vars.DEPLOY_METHOD || 'k8s-direct' }}  # k8s-direct, argocd
+  DEPLOY_METHOD: ${{ vars.DEPLOY_METHOD || 'argocd' }}  # argocd, k8s-direct
 
 jobs:
   # 테스트 및 품질 검사
@@ -118,7 +118,7 @@ jobs:
         echo "Registry: ${{ env.REGISTRY }}"
         
         
-    # K8s 직접 배포 (기본)
+    # K8s 직접 배포
     - name: ☸️ Deploy to K8s
       if: env.DEPLOY_METHOD == 'k8s-direct'
       run: |
@@ -128,20 +128,33 @@ jobs:
           -n fortinet
         kubectl rollout status deployment/fortinet-app -n fortinet
         
-    # ArgoCD 배포
+    # ArgoCD 배포 (기본)
     - name: 🎯 Deploy via ArgoCD
       if: env.DEPLOY_METHOD == 'argocd'
       run: |
-        echo "🎯 Updating ArgoCD application..."
-        # Update kustomization.yaml with new image tag
-        sed -i "s|newTag:.*|newTag: ${{ github.sha }}|g" argocd/kustomization.yaml
+        echo "🎯 Deploying via ArgoCD..."
         
-        # Commit changes
+        # Update kustomization.yaml with new image tag
+        sed -i "s|newTag:.*|newTag: ${{ github.sha }}|g" k8s/manifests/kustomization.yaml
+        
+        # Commit and push changes
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
-        git add argocd/kustomization.yaml
-        git commit -m "Update image tag to ${{ github.sha }}"
-        git push
+        git add k8s/manifests/kustomization.yaml
+        git commit -m "🚀 Update image tag to ${{ github.sha }}
+        
+        Triggered by: ${{ github.event_name }}
+        Branch: ${{ github.ref_name }}
+        Actor: ${{ github.actor }}"
+        git push origin HEAD:${{ github.ref_name }}
+        
+        # Trigger ArgoCD sync via API
+        echo "🔄 Triggering ArgoCD sync..."
+        curl -X POST "https://argo.jclee.me/api/v1/applications/fortinet-app/sync" \
+          -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{"prune": true, "dryRun": false}' \
+          --fail || echo "ArgoCD API sync failed, will rely on auto-sync"
         
     # 헬스 체크
     - name: 🏥 Health Check

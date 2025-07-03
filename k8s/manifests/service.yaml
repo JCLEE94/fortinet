@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortinet-service
+  namespace: fortinet
+  labels:
+    app: fortinet
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: fortinet
+    component: backend
+  ports:
+  - port: 80
+    targetPort: 7777
+    protocol: TCP
+    name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: fortinet
+  labels:
+    app: fortinet
+    component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: fortinet
+    component: cache
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
