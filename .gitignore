@@ -97,3 +97,4 @@ offline-packages/
 # Kubernetes Secrets
 k8s/manifests/secrets.yaml
 **/secrets.yaml
+venv_ppt/
