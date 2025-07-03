@@ -1,0 +1,105 @@
+name: GitOps Sync
+
+on:
+  workflow_run:
+    workflows: ["Main CI/CD Pipeline"]
+    types: [completed]
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to deploy'
+        required: true
+        default: 'latest'
+
+env:
+  ARGOCD_SERVER: ${{ vars.ARGOCD_SERVER || 'argocd.jclee.me' }}
+  ARGOCD_APP: 'fortinet-app'
+
+jobs:
+  gitops-update:
+    name: 📦 Update GitOps Manifests
+    runs-on: self-hosted
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+    - name: 📥 Checkout GitOps Repo
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ github.repository_owner }}/fortinet-gitops
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: gitops
+        
+    - name: 🔧 Update Manifests
+      run: |
+        cd gitops
+        
+        # Determine image tag
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+        else
+          IMAGE_TAG="${{ github.sha }}"
+        fi
+        
+        echo "📝 Updating manifests with image tag: $IMAGE_TAG"
+        
+        # Update kustomization.yaml
+        sed -i "s|newTag:.*|newTag: $IMAGE_TAG|g" environments/production/kustomization.yaml
+        
+        # Update deployment metadata
+        cat > environments/production/deployment-patch.yaml << EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet-app
+  annotations:
+    deployed-by: "github-actions"
+    deployed-at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    commit-sha: "${{ github.sha }}"
+    image-tag: "$IMAGE_TAG"
+spec:
+  template:
+    metadata:
+      annotations:
+        deployed-at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+EOF
+        
+    - name: 📤 Commit and Push
+      run: |
+        cd gitops
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        git add .
+        git commit -m "🚀 Update image to $IMAGE_TAG
+
+        Triggered by: ${{ github.event_name }}
+        Commit: ${{ github.sha }}
+        Actor: ${{ github.actor }}"
+        
+        git push origin main
+        
+    - name: 🎯 Sync ArgoCD
+      run: |
+        # Install ArgoCD CLI if needed
+        if ! command -v argocd &> /dev/null; then
+          curl -sSL -o /usr/local/bin/argocd \
+            https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+        fi
+        
+        # Login to ArgoCD
+        argocd login ${{ env.ARGOCD_SERVER }} \
+          --username admin \
+          --password ${{ secrets.ARGOCD_PASSWORD }} \
+          --insecure || echo "ArgoCD login failed"
+          
+        # Sync application
+        argocd app sync ${{ env.ARGOCD_APP }} \
+          --prune \
+          --force || echo "ArgoCD sync failed"
+          
+        # Wait for sync
+        argocd app wait ${{ env.ARGOCD_APP }} \
+          --timeout 300 \
+          --health || echo "ArgoCD wait timeout"

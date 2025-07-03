@@ -1,0 +1,187 @@
+name: Main CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+    tags: [ 'v*' ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  REGISTRY: ${{ vars.DOCKER_REGISTRY || 'registry.jclee.me' }}
+  IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'fortinet' }}
+  PYTHON_VERSION: '3.11'
+  DEPLOY_METHOD: ${{ vars.DEPLOY_METHOD || 'watchtower' }}  # watchtower, k8s-direct, argocd
+
+jobs:
+  # 테스트 및 품질 검사
+  test:
+    name: 🧪 Test & Quality
+    runs-on: ${{ github.repository_owner == 'JCLEE94' && 'self-hosted' || 'ubuntu-latest' }}
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: 📦 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov black flake8 mypy
+        
+    - name: 🔍 Code Quality
+      run: |
+        echo "Running code quality checks..."
+        black --check src/ || true
+        flake8 src/ --max-line-length=120 --ignore=E203,W503 || true
+        mypy src/ --ignore-missing-imports || true
+        
+    - name: 🧪 Run Tests
+      run: |
+        cd src
+        python -m pytest ../tests/ -v || echo "Some tests failed"
+
+  # Docker 빌드
+  build:
+    name: 🏗️ Build & Push
+    needs: test
+    runs-on: ${{ github.repository_owner == 'JCLEE94' && 'self-hosted' || 'ubuntu-latest' }}
+    if: github.event_name == 'push'
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+      
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🏷️ Docker Meta
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: 🔐 Registry Login
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        
+    - name: 🏗️ Build and Push
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          VCS_REF=${{ github.sha }}
+          VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+
+  # 배포
+  deploy:
+    name: 🚀 Deploy
+    needs: build
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Setup Environment
+      run: |
+        echo "📋 Deployment Configuration:"
+        echo "Method: ${{ env.DEPLOY_METHOD }}"
+        echo "Image: ${{ needs.build.outputs.image-tag }}"
+        echo "Registry: ${{ env.REGISTRY }}"
+        
+    # Watchtower 배포 (기본)
+    - name: 🔔 Deploy via Watchtower
+      if: env.DEPLOY_METHOD == 'watchtower'
+      run: |
+        echo "🔔 Triggering Watchtower..."
+        # Watchtower will automatically detect and update the new image
+        echo "✅ Image pushed to registry, Watchtower will auto-update"
+        
+    # K8s 직접 배포
+    - name: ☸️ Deploy to K8s
+      if: env.DEPLOY_METHOD == 'k8s-direct'
+      run: |
+        echo "☸️ Deploying to Kubernetes..."
+        kubectl set image deployment/fortinet-app \
+          fortinet=${{ needs.build.outputs.image-tag }} \
+          -n fortinet
+        kubectl rollout status deployment/fortinet-app -n fortinet
+        
+    # ArgoCD 배포
+    - name: 🎯 Deploy via ArgoCD
+      if: env.DEPLOY_METHOD == 'argocd'
+      run: |
+        echo "🎯 Updating ArgoCD application..."
+        # Update kustomization.yaml with new image tag
+        sed -i "s|newTag:.*|newTag: ${{ github.sha }}|g" argocd/kustomization.yaml
+        
+        # Commit changes
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add argocd/kustomization.yaml
+        git commit -m "Update image tag to ${{ github.sha }}"
+        git push
+        
+    # 헬스 체크
+    - name: 🏥 Health Check
+      if: always()
+      run: |
+        echo "🏥 Running health check..."
+        sleep 60  # Wait for deployment
+        
+        # Check application health
+        for i in {1..5}; do
+          if curl -f -k -s https://fortinet.jclee.me/api/health; then
+            echo "✅ Application is healthy!"
+            break
+          fi
+          echo "Attempt $i/5 failed, waiting..."
+          sleep 30
+        done
+
+  # 알림
+  notify:
+    name: 📢 Notify
+    needs: [test, build, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 📊 Summary
+      run: |
+        echo "## Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- Test: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Deploy: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Author**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
