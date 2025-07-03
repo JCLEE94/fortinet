@@ -94,3 +94,6 @@ node_modules/
 
 # 오프라인 패키지 (Git LFS로 관리)
 offline-packages/
+# Kubernetes Secrets
+k8s/manifests/secrets.yaml
+**/secrets.yaml
