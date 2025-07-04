@@ -16,4 +16,4 @@
 3. ArgoCD Sync → Kubernetes Deploy
 4. Live at https://fortinet.jclee.me
 
-🚀 Manual Push Test Initiated!# 강제 재배포 2025. 07. 05. (토) 00:09:01 KST
+🚀 Manual Push Test Initiated!# 강제 재배포 2025. 07. 05. (토) 01:54:00 KST - 502 에러 해결 시도
