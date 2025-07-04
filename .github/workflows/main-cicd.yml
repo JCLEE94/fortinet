@@ -61,11 +61,6 @@ jobs:
       run: |
         cd src
         python -m pytest ../tests/ -v || echo "Some tests failed"
-        
-    - name: 🔥 TEST FAILURE - Remove after testing
-      run: |
-        echo "Intentional failure to test Issue creation"
-        exit 1
 
   # Docker 빌드
   build:

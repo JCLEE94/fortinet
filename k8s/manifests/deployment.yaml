@@ -77,27 +77,27 @@ spec:
           value: "false"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "512Mi"
+            cpu: "200m"
         livenessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 30
+          initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 10
-          failureThreshold: 3
+          failureThreshold: 5
         readinessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 20
+          initialDelaySeconds: 45
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 3
+          failureThreshold: 5
         volumeMounts:
         - name: data
           mountPath: /app/data
