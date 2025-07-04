@@ -54,6 +54,12 @@ jobs:
       run: |
         cd src
         python -m pytest ../tests/ -v || echo "Some tests failed"
+        
+    - name: 🔥 TEST - Intentional Failure (Remove this after testing)
+      if: github.actor == 'JCLEE94'
+      run: |
+        echo "This is an intentional failure to test Issue creation"
+        exit 1
 
   # Docker 빌드
   build:
@@ -470,7 +476,13 @@ jobs:
     name: 🚨 Create Issue on Failure
     needs: [test, build, deploy, offline-package]
     runs-on: ubuntu-latest
-    if: failure() && github.event_name == 'push'
+    if: |
+      always() && 
+      github.event_name == 'push' &&
+      (needs.test.result == 'failure' || 
+       needs.build.result == 'failure' || 
+       needs.deploy.result == 'failure' || 
+       needs.offline-package.result == 'failure')
     
     steps:
     - name: 📥 Checkout
