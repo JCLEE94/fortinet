@@ -11,12 +11,10 @@ if [ -z "$APP_MODE" ]; then
     export APP_MODE="production"
 fi
 
-# Set PYTHONPATH to include src directory
-export PYTHONPATH=/app:/app/src:$PYTHONPATH
+# Debug mode - use simple server first
+echo "🔧 Starting Simple Python Server (debug mode)..."
+echo "📍 Current directory: $(pwd)"
+echo "📁 Files in /app: $(ls -la /app/)"
 
-# Start the server
-echo "🔧 Starting Flask Development Server (simple mode)..."
-echo "📍 PYTHONPATH: $PYTHONPATH"
-
-# Simple approach - direct execution
-cd /app/src && exec python main.py --web
+# Start simple server for debugging
+cd /app && exec python simple_server.py
