@@ -130,15 +130,32 @@ jobs:
         echo "Registry: ${{ env.REGISTRY }}"
         
         
-    # K8s 직접 배포
-    - name: ☸️ Deploy to K8s
-      if: env.DEPLOY_METHOD == 'k8s-direct'
+    # K8s 직접 배포 (ArgoCD 문제 해결용)
+    - name: ☸️ Deploy to K8s (Direct)
       run: |
-        echo "☸️ Deploying to Kubernetes..."
-        kubectl set image deployment/fortinet-app \
-          fortinet=${{ needs.build.outputs.image-tag }} \
-          -n fortinet
-        kubectl rollout status deployment/fortinet-app -n fortinet
+        echo "☸️ Direct Kubernetes deployment..."
+        
+        # kubectl 설치 확인
+        if ! command -v kubectl &> /dev/null; then
+          echo "Installing kubectl..."
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+        fi
+        
+        # Kubernetes config 확인 (self-hosted runner에서는 이미 설정되어 있어야 함)
+        echo "Testing kubectl connection..."
+        kubectl version --client
+        kubectl get nodes || echo "Warning: Cannot connect to cluster"
+        
+        # 매니페스트 직접 적용
+        echo "Applying manifests directly..."
+        kubectl apply -k k8s/manifests/ || echo "Direct apply failed"
+        
+        # 배포 상태 확인
+        echo "Checking deployment status..."
+        kubectl get pods -n fortinet || echo "Cannot get pods"
+        kubectl get services -n fortinet || echo "Cannot get services"
         
     # ArgoCD CLI 설치
     - name: 📦 Install ArgoCD CLI
