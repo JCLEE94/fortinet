@@ -22,8 +22,8 @@ spec:
       - name: regcred
       containers:
       - name: fortinet
-        image: nginx:alpine
-        imagePullPolicy: Always
+        image: registry.jclee.me/fortinet:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 7777
           name: http
@@ -92,18 +92,18 @@ spec:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 120
-          periodSeconds: 60
-          timeoutSeconds: 30
-          failureThreshold: 10
+          initialDelaySeconds: 300
+          periodSeconds: 120
+          timeoutSeconds: 60
+          failureThreshold: 20
         readinessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          timeoutSeconds: 15
-          failureThreshold: 10
+          initialDelaySeconds: 180
+          periodSeconds: 60
+          timeoutSeconds: 30
+          failureThreshold: 20
         volumeMounts:
         - name: data
           mountPath: /app/data
