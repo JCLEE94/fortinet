@@ -13,9 +13,9 @@ resources:
   - ingress.yaml
   - test-deployment.yaml
 
-images:
-  - name: registry.jclee.me/fortinet
-    newTag: latest
+# images:
+#   - name: registry.jclee.me/fortinet
+#     newTag: latest
 
 labels:
   - includeSelectors: true

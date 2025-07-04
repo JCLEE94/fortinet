@@ -22,7 +22,7 @@ spec:
       - name: regcred
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest
+        image: nginx:alpine
         imagePullPolicy: Always
         ports:
         - containerPort: 7777
