@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch, MagicMock
 import json
 
 from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.api_common import JsonRpcMixin
+from src.utils.api_utils import JsonRpcMixin
 
 
 class TestFortiManagerAPIRefactored(unittest.TestCase):

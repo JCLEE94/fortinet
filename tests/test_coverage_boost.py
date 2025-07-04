@@ -13,7 +13,7 @@ class TestCoverageBoost(unittest.TestCase):
     
     def test_import_api_common(self):
         """API 공통 모듈 임포트 테스트"""
-        from src.utils.api_common import (
+        from src.utils.api_utils import (
             ConnectionTestMixin, JsonRpcMixin, MonitoringMixin,
             ErrorHandlingMixin, RequestRetryMixin, CacheMixin,
             sanitize_sensitive_data, format_api_response
@@ -147,7 +147,7 @@ class TestCoverageBoost(unittest.TestCase):
         
     def test_coverage_helper_functions(self):
         """커버리지 향상을 위한 헬퍼 함수들 테스트"""
-        from src.utils.api_common import create_timeout_context, validate_config, merge_monitoring_data
+        from src.utils.api_utils import create_timeout_context, validate_config, merge_monitoring_data
         
         # 설정 검증 테스트
         valid, missing = validate_config({"key1": "value1"}, ["key1"])

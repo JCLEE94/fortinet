@@ -12,8 +12,14 @@ from src.config.unified_settings import unified_settings
 from src.utils.security import rate_limit, validate_request, InputValidator
 from src.utils.unified_cache_manager import cached, get_cache_manager
 # from src.utils.performance_cache import get_performance_cache, cached  # 제거됨
-from src.utils.api_optimizer import get_api_optimizer, optimized_response
-from src.utils.api_helper import get_data_source, get_api_manager
+# from src.utils.api_optimizer import get_api_optimizer, optimized_response
+
+# Dummy decorator to replace optimized_response
+def optimized_response(**kwargs):
+    def decorator(func):
+        return func
+    return decorator
+from src.utils.api_utils import get_data_source, get_api_manager
 from src.utils.route_helpers import (
     standard_api_response, handle_api_exceptions, require_json_data,
     validate_required_fields, api_route, validate_ip_address, validate_port

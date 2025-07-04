@@ -10,14 +10,11 @@ import json
 import time
 from typing import Dict, Any, Optional, List
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from src.utils.api_common import (
-    JsonRpcMixin, ConnectionTestMixin, MonitoringMixin, 
-    ErrorHandlingMixin, RequestRetryMixin, CacheMixin, sanitize_sensitive_data
+from src.utils.api_utils import (
+    ConnectionTestMixin
 )
 
-class FAZClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin, 
-                ConnectionTestMixin, MonitoringMixin, ErrorHandlingMixin, 
-                RequestRetryMixin, CacheMixin):
+class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
     """
     FortiAnalyzer API Client
     Inherits common functionality from BaseApiClient and uses JSON-RPC mixin

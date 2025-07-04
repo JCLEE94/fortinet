@@ -34,7 +34,7 @@ except ImportError as e:
 from src.utils.unified_logger import setup_logger
 from src.utils.unified_cache_manager import cached
 from src.utils.security import rate_limit
-# from src.utils.api_helper import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지
+# from src.utils.api_utils import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지
 
 # 상수 정의
 DEFAULT_TIMEOUT = 30

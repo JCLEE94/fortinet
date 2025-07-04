@@ -12,16 +12,13 @@ import threading
 from typing import Dict, Any, Optional, List, Tuple
 from requests.exceptions import RequestException
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from src.utils.api_common import (
-    JsonRpcMixin, ConnectionTestMixin, MonitoringMixin, 
-    ErrorHandlingMixin, RequestRetryMixin, CacheMixin, sanitize_sensitive_data
+from src.utils.api_utils import (
+    ConnectionTestMixin
 )
 from src.utils.unified_logger import get_logger
 import requests
 
-class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, JsonRpcMixin, 
-                            ConnectionTestMixin, MonitoringMixin, ErrorHandlingMixin, 
-                            RequestRetryMixin, CacheMixin):
+class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
     """
     FortiManager API Client for central management of FortiGate devices
     Inherits common functionality from BaseApiClient and uses common mixins

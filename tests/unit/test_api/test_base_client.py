@@ -8,7 +8,7 @@ import os
 from unittest.mock import patch, MagicMock, Mock
 
 from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from src.utils.api_common import JsonRpcMixin
+from src.utils.api_utils import JsonRpcMixin
 
 
 class MockApiClient(BaseApiClient):

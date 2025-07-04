@@ -7,7 +7,7 @@ FortiManager 컴플라이언스 라우트
 from flask import Blueprint, jsonify, request
 from src.utils.unified_cache_manager import cached
 from src.utils.security import rate_limit
-from src.utils.api_helper import get_data_source, is_test_mode, get_api_manager, get_dummy_generator
+from src.utils.api_utils import get_data_source, is_test_mode, get_api_manager, get_dummy_generator
 from src.utils.unified_logger import setup_logger
 from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
 import asyncio
