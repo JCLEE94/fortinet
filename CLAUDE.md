@@ -10,6 +10,7 @@ Key differentiators:
 - **Mock FortiGate** subsystem for hardware-free development and testing
 - **FortiManager Advanced Hub** with AI-driven policy orchestration and compliance automation
 - **Offline-first design** with comprehensive fallback mechanisms
+- **ArgoCD GitOps** deployment with multi-cluster support
 - **GitHub Actions CI/CD** with automated deployment via Docker registry
 
 ## Architecture Overview
@@ -19,7 +20,8 @@ Key differentiators:
 - **Frontend**: Bootstrap 5 + Vanilla JS (no React/Vue dependencies)
 - **Database**: Redis (cache) + JSON file storage (persistence)
 - **Container**: Docker/Podman with multi-stage builds
-- **Deployment**: GitHub Actions → registry.jclee.me → Watchtower → Production
+- **Orchestration**: Kubernetes + ArgoCD GitOps
+- **CI/CD**: GitHub Actions → registry.jclee.me → ArgoCD → Kubernetes
 - **Monitoring**: Real-time SSE (Server-Sent Events) for log streaming
 
 ### Key Architecture Patterns
@@ -72,13 +74,11 @@ cd src && python main.py --web
 APP_MODE=test python src/main.py --web
 APP_MODE=production python src/main.py --web
 
-# Run specific test file or test function
-pytest tests/test_api_clients.py -v                           # Run single test file
-pytest tests/test_api_clients.py::TestBaseApiClient -v       # Run single test class
-pytest tests/test_api_clients.py::TestBaseApiClient::test_offline_mode_detection -v  # Run single test
-
-# Run tests with coverage
-pytest tests/ --cov=src --cov-report=html -v
+# Run tests
+pytest tests/ -v                                    # All tests
+pytest tests/test_api_clients.py -v                # Single test file
+pytest tests/test_api_clients.py::TestBaseApiClient -v  # Single test class
+pytest --cov=src --cov-report=html -v             # With coverage
 
 # Code quality checks
 black src/                          # Format code
@@ -86,7 +86,7 @@ isort src/                          # Sort imports
 flake8 src/ --max-line-length=120  # Lint
 mypy src/ --ignore-missing-imports  # Type check
 
-# Quick quality check command (run all at once)
+# Quick quality check (run all at once)
 black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503 && mypy src/ --ignore-missing-imports
 ```
 
@@ -107,24 +107,21 @@ docker run -d --name fortigate-nextrade \
 # View container logs
 docker logs -f fortigate-nextrade
 
-# Access container shell
-docker exec -it fortigate-nextrade /bin/bash
-
 # Docker Compose operations
 ./scripts/docker-start.sh  # Start with Docker Compose
 ./scripts/docker-stop.sh   # Stop containers
 ```
 
-### GitHub Actions Deployment
+### ArgoCD GitOps Deployment
 ```bash
 # Deploy to production (automatic on push to master/main)
 git add -A
 git commit -m "feat: your feature description"
 git push origin master
 
-# Monitor deployment
-gh run list --limit 5 --repo JCLEE94/fortinet
-gh run view <run-id> --repo JCLEE94/fortinet
+# Monitor ArgoCD deployment
+argocd app get fortinet-primary    # Primary cluster
+argocd app list                    # All applications
 
 # Check deployment status
 curl https://fortinet.jclee.me/api/health
@@ -133,15 +130,19 @@ curl https://fortinet.jclee.me/api/health
 ./scripts/validate-cicd.sh all
 ```
 
-### Manual Deployment
+### Manual Deployment Scripts
 ```bash
+# Initial deployment to production (first time)
+./scripts/initial-deploy.sh
+
+# Multi-cluster deployment setup
+./scripts/setup-multi-cluster-simple.sh
+
+# Add new cluster (when 192.168.50.110 is ready)
+./scripts/add-cluster.sh
+
 # Deploy manually to production
 ./scripts/manual-deploy.sh
-
-# Deploy with specific options
-./scripts/deploy.sh build   # Build only
-./scripts/deploy.sh push    # Push to registry
-./scripts/deploy.sh deploy  # Full deployment
 ```
 
 ## Critical Implementation Details
@@ -229,33 +230,48 @@ anomalies = await hub.analytics_engine.detect_anomalies()
 
 ## CI/CD Pipeline
 
-### GitHub Actions Workflow
+### ArgoCD GitOps Workflow
 The pipeline runs on push to main/master/develop branches:
 
 1. **Test Stage**: Runs pytest with coverage
-2. **Security Scan**: Checks for vulnerabilities
-3. **Build Stage**: Creates Docker image
-4. **Push Stage**: Pushes to registry.jclee.me
-5. **Deploy Stage**: Watchtower auto-deploys
+2. **Build Stage**: Creates Docker image
+3. **Push Stage**: Pushes to registry.jclee.me
+4. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
+5. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
 
 ### Required GitHub Secrets
 ```
-DOCKER_USERNAME     # Docker Hub username
-DOCKER_PASSWORD     # Docker Hub password
-REGISTRY_USERNAME   # Private registry username  
-REGISTRY_PASSWORD   # Private registry password
+REGISTRY_USERNAME    # Private registry username (qws9411)
+REGISTRY_PASSWORD    # Private registry password
+ARGOCD_AUTH_TOKEN    # ArgoCD API authentication token
+ARGOCD_PASSWORD      # ArgoCD admin password
 ```
 
-### Pipeline Validation
-```bash
-# Validate entire CI/CD setup
-./scripts/validate-cicd.sh all
+### ArgoCD Application Management
 
-# Individual checks
-./scripts/validate-cicd.sh github      # GitHub Actions validation
-./scripts/validate-cicd.sh docker      # Docker build validation
-./scripts/validate-cicd.sh secrets     # Secrets validation
-./scripts/validate-cicd.sh deployment  # Deployment validation
+#### Quick Sync Commands
+```bash
+# 1. Login (once)
+argocd login argo.jclee.me --username admin --password bingogo1 --insecure --grpc-web
+
+# 2. Check status
+argocd app list                    # All applications
+argocd app get fortinet-primary    # Primary cluster
+
+# 3. Manual sync (emergency deployment)
+argocd app sync fortinet-primary --prune
+
+# 4. Web dashboard
+# https://argo.jclee.me/applications/fortinet-primary
+```
+
+#### Direct Kubernetes Deployment (Emergency)
+```bash
+# Bypass ArgoCD
+kubectl apply -k k8s/manifests/
+
+# Update image directly
+kubectl set image deployment/fortinet-app fortinet=registry.jclee.me/fortinet:new-tag -n fortinet
 ```
 
 ## Testing Guidelines
@@ -285,14 +301,35 @@ pytest tests/integration/ -v
 # All tests with coverage
 pytest --cov=src --cov-report=html --cov-report=term-missing
 
-# Manual tests (specific FortiManager scenarios)
-python tests/manual/test_fortimanager_demo.py
-
 # Run tests with markers
 pytest -m "unit" -v         # Unit tests only
 pytest -m "integration" -v  # Integration tests only
 pytest -m "not slow" -v     # Skip slow tests
 ```
+
+## Multi-Cluster Deployment
+
+### Current Status
+- **Primary Cluster**: kubernetes.default.svc ✅ Active
+  - Application: fortinet-primary
+  - Replicas: 3 (High resources)
+  
+- **Secondary Cluster**: 192.168.50.110:6443 ⚠️ Ready for activation
+  - Application: fortinet-secondary (prepared)
+  - Replicas: 2 (Medium resources)
+
+### Multi-Cluster Setup
+```bash
+# When secondary cluster is ready:
+./scripts/add-cluster.sh             # Register cluster with ArgoCD
+./scripts/setup-multi-cluster-simple.sh  # Create multi-cluster apps
+
+# Monitor both clusters
+argocd app list
+argocd cluster list
+```
+
+For detailed multi-cluster setup, see `docs/multi-cluster-setup.md`.
 
 ## Common Issues & Solutions
 
@@ -303,10 +340,6 @@ sudo lsof -ti:7777 | xargs kill -9
 
 # Docker containers
 docker ps --filter "publish=7777" -q | xargs docker stop
-docker ps -a --filter "publish=7777" -q | xargs docker rm
-
-# Windows PowerShell
-Get-Process -Id (Get-NetTCPConnection -LocalPort 7777).OwningProcess | Stop-Process -Force
 ```
 
 ### Flask Development Server Warning
@@ -316,21 +349,9 @@ The application currently uses Flask development server in production due to a G
 This is a warning, not an error. The system falls back to memory cache when Redis is unavailable.
 
 ### Docker Build Failures
-If BuildKit errors occur:
 ```bash
 export DOCKER_BUILDKIT=0
 docker build -f Dockerfile.production -t fortigate-nextrade:latest .
-```
-
-### Troubleshooting Script
-```bash
-# Run comprehensive troubleshooting
-./scripts/troubleshoot.sh all
-
-# Specific checks
-./scripts/troubleshoot.sh docker
-./scripts/troubleshoot.sh network
-./scripts/troubleshoot.sh app
 ```
 
 ## Project Structure
@@ -341,11 +362,6 @@ fortinet/
 │   ├── main.py                 # Entry point with CLI args
 │   ├── web_app.py             # Flask application factory
 │   ├── routes/                # Blueprint routes
-│   │   ├── main_routes.py    # Page routes
-│   │   ├── api_routes.py     # REST API routes
-│   │   ├── fortimanager_routes.py   # FortiManager routes
-│   │   ├── itsm_routes.py    # ITSM routes
-│   │   └── logs_routes.py    # Log management routes
 │   ├── api/clients/          # External API clients
 │   ├── modules/              # Core business logic
 │   ├── fortimanager/         # Advanced FortiManager features
@@ -354,16 +370,12 @@ fortinet/
 │   ├── templates/            # Jinja2 HTML templates
 │   └── static/               # CSS, JS, images
 ├── tests/                    # Test suite
-│   ├── unit/                # Unit tests
-│   ├── integration/         # Integration tests
-│   └── manual/              # Manual test scripts
 ├── docs/                    # Documentation
-│   ├── guides/             # User guides
-│   ├── deployment/         # Deployment guides
-│   └── reports/            # Analysis reports
 ├── scripts/                # Utility scripts
-├── data/                   # Runtime data and configs
-├── logs/                   # Application logs
+├── k8s/
+│   ├── manifests/          # Kubernetes deployment manifests
+│   └── overlays/           # Environment-specific configurations
+├── argocd/                  # ArgoCD application definitions
 ├── .github/workflows/      # GitHub Actions CI/CD
 └── Dockerfile.production   # Production Docker image
 ```
@@ -414,22 +426,10 @@ fortinet/
 Every API client MUST properly initialize and maintain a requests session. This is critical for connection pooling and performance. The base class handles this, but if overriding `__init__`, always call `super().__init__()`.
 
 ### Template Routing
-Always use blueprint namespaces in templates. This is a common source of errors:
-```jinja2
-{# WRONG - Will cause 404 errors #}
-<a href="{{ url_for('dashboard') }}">Dashboard</a>
-
-{# CORRECT - Uses blueprint namespace #}
-<a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-```
+Always use blueprint namespaces in templates to avoid 404 errors.
 
 ### Mock Mode Activation
-The mock system activates automatically when `APP_MODE=test`. This allows full testing without FortiGate hardware. Mock data is comprehensive and includes:
-- System status and health metrics
-- Firewall policies and rules
-- Network topology
-- Security events
-- Performance metrics
+The mock system activates automatically when `APP_MODE=test`. This allows full testing without FortiGate hardware.
 
 ### FortiManager Authentication
 The client tries multiple auth methods in order:
@@ -443,6 +443,14 @@ Check `logs/web_app.log` for which method succeeded.
 1. Code pushed to GitHub
 2. GitHub Actions builds and tests
 3. Docker image pushed to registry.jclee.me
-4. Watchtower detects new image
-5. Automatic rolling update in production
-6. Available at https://fortinet.jclee.me
+4. GitHub Actions updates kustomization.yaml with new image tag
+5. ArgoCD polls Git repository and detects changes
+6. ArgoCD automatically deploys to all configured clusters
+7. Available at https://fortinet.jclee.me
+
+### ArgoCD Application Structure
+- **fortinet-primary**: Main application on primary cluster ✅
+- **fortinet-secondary**: Secondary cluster deployment (ready when cluster is available)
+- **blacklist**: IP blacklist management system (separate namespace)
+
+Each application has independent deployment cycles and can target different clusters.

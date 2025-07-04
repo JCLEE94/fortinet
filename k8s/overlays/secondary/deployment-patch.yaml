@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet-app
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: fortinet
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "125m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+        env:
+        - name: CLUSTER_NAME
+          value: "secondary"
+        - name: DEPLOYMENT_ENV
+          value: "production-secondary"

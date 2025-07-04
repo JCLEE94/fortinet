@@ -168,8 +168,8 @@ APP_MODE=test python src/main.py --web
 1. **테스트 실행**: pytest, 코드 품질 검사
 2. **Docker 빌드**: Multi-stage 프로덕션 이미지
 3. **Registry 푸시**: registry.jclee.me/fortinet
-4. **GitOps 업데이트**: kustomization.yaml 이미지 태그 수정
-5. **ArgoCD 동기화**: 자동으로 Kubernetes에 배포
+4. **GitOps 업데이트**: kustomization.yaml 이미지 태그 수정 후 Git에 커밋
+5. **ArgoCD Pull**: ArgoCD가 Git 변경사항을 감지하여 자동 배포 (3분마다 폴링)
 
 ### 수동 배포 및 관리
 ```bash
