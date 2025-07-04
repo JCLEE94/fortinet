@@ -12,11 +12,11 @@ if [ -z "$APP_MODE" ]; then
 fi
 
 # Set PYTHONPATH to include src directory
-export PYTHONPATH=/app:$PYTHONPATH
+export PYTHONPATH=/app:/app/src:$PYTHONPATH
 
 # Start the server
-echo "🔧 Starting Flask Development Server (temporary)..."
-echo "⚠️ Note: Production deployment pending Gunicorn fix"
+echo "🔧 Starting Flask Development Server (simple mode)..."
+echo "📍 PYTHONPATH: $PYTHONPATH"
 
-# Change to /app directory and run main.py with proper module resolution
-cd /app && exec python -m src.main --web
+# Simple approach - direct execution
+cd /app/src && exec python main.py --web

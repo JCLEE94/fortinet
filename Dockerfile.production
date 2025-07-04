@@ -140,8 +140,8 @@ RUN chmod +x /app/start.sh
 # Runtime Configuration
 # =============================================================================
 
-# Switch to non-root user
-USER fortinet
+# Switch to non-root user (temporarily disabled for debugging)
+# USER fortinet
 
 # Working directory
 WORKDIR /app
