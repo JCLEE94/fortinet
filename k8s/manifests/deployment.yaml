@@ -7,7 +7,7 @@ metadata:
     app: fortinet
     component: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: fortinet
@@ -38,11 +38,13 @@ spec:
         - name: FLASK_ENV
           value: "production"
         - name: REDIS_HOST
-          value: "redis-service"
+          value: ""
         - name: REDIS_PORT
           value: "6379"
         - name: OFFLINE_MODE
-          value: "false"
+          value: "true"
+        - name: DISABLE_EXTERNAL_CALLS
+          value: "true"
         # FortiManager Configuration
         - name: FORTIMANAGER_HOST
           valueFrom:
