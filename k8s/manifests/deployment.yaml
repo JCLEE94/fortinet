@@ -26,59 +26,7 @@ spec:
         - containerPort: 80
           name: http
           protocol: TCP
-        env:
-        - name: APP_MODE
-          value: "production"
-        - name: WEB_APP_PORT
-          value: "7777"
-        - name: WEB_APP_HOST
-          value: "0.0.0.0"
-        - name: FLASK_ENV
-          value: "production"
-        - name: REDIS_HOST
-          value: ""
-        - name: REDIS_PORT
-          value: "6379"
-        - name: OFFLINE_MODE
-          value: "true"
-        - name: DISABLE_EXTERNAL_CALLS
-          value: "true"
-        - name: PYTHONPATH
-          value: "/app:/app/src"
-        - name: LOG_LEVEL
-          value: "INFO"
-        # FortiManager Configuration
-        - name: FORTIMANAGER_HOST
-          valueFrom:
-            secretKeyRef:
-              name: fortinet-secrets
-              key: fortimanager-host
-              optional: true
-        - name: FORTIMANAGER_PORT
-          value: "443"
-        - name: FORTIMANAGER_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: fortinet-secrets
-              key: fortimanager-api-key
-              optional: true
-        - name: FORTIMANAGER_VERIFY_SSL
-          value: "false"
-        # FortiGate Configuration
-        - name: FORTIGATE_HOST
-          valueFrom:
-            secretKeyRef:
-              name: fortinet-secrets
-              key: fortigate-host
-              optional: true
-        - name: FORTIGATE_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: fortinet-secrets
-              key: fortigate-api-key
-              optional: true
-        - name: FORTIGATE_VERIFY_SSL
-          value: "false"
+# 환경 변수 제거 - nginx는 이런 변수들이 필요 없음
         resources:
           requests:
             memory: "512Mi"
@@ -102,14 +50,4 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 3
           failureThreshold: 3
-        volumeMounts:
-        - name: data
-          mountPath: /app/data
-        - name: logs
-          mountPath: /app/logs
-      volumes:
-      - name: data
-        persistentVolumeClaim:
-          claimName: fortinet-data-pvc
-      - name: logs
-        emptyDir: {}
+# 볼륨 마운트 제거 - nginx 테스트에는 불필요
