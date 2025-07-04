@@ -508,32 +508,44 @@ jobs:
       id: check-issues
       uses: actions/github-script@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ github.token }}
         script: |
-          const owner = context.repo.owner;
-          const repo = context.repo.repo;
-          const workflow_run_id = context.runId;
-          const commit_sha = context.sha.substring(0, 7);
-          
-          // Search for existing open issues with same error
-          const issues = await github.rest.issues.listForRepo({
-            owner,
-            repo,
-            state: 'open',
-            labels: 'ci-failure,automated'
-          });
-          
-          // Check if issue already exists for this workflow run or commit
-          const existingIssue = issues.data.find(issue => 
-            issue.body.includes(workflow_run_id) || 
-            issue.title.includes(commit_sha)
-          );
-          
-          if (existingIssue) {
-            console.log(`Found existing issue: #${existingIssue.number}`);
-            core.setOutput('issue_exists', 'true');
-            core.setOutput('issue_number', existingIssue.number);
-          } else {
+          try {
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflow_run_id = context.runId;
+            const commit_sha = context.sha.substring(0, 7);
+            
+            console.log(`Checking for existing issues in ${owner}/${repo}`);
+            console.log(`Workflow Run ID: ${workflow_run_id}`);
+            console.log(`Commit SHA: ${commit_sha}`);
+            
+            // Search for existing open issues with same error
+            const issues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              labels: 'ci-failure,automated'
+            });
+            
+            console.log(`Found ${issues.data.length} open issues with labels ci-failure,automated`);
+            
+            // Check if issue already exists for this workflow run or commit
+            const existingIssue = issues.data.find(issue => 
+              issue.body && (issue.body.includes(workflow_run_id) || 
+              issue.title.includes(commit_sha))
+            );
+            
+            if (existingIssue) {
+              console.log(`Found existing issue: #${existingIssue.number}`);
+              core.setOutput('issue_exists', 'true');
+              core.setOutput('issue_number', existingIssue.number);
+            } else {
+              console.log('No existing issue found');
+              core.setOutput('issue_exists', 'false');
+            }
+          } catch (error) {
+            console.error('Error checking for existing issues:', error);
             core.setOutput('issue_exists', 'false');
           }
           
@@ -570,21 +582,27 @@ jobs:
       if: steps.check-issues.outputs.issue_exists == 'false'
       uses: actions/github-script@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ github.token }}
         script: |
-          const owner = context.repo.owner;
-          const repo = context.repo.repo;
-          const workflow_run_id = context.runId;
-          const workflow_url = '${{ steps.collect-info.outputs.workflow_url }}';
-          const failed_jobs = '${{ steps.collect-info.outputs.failed_jobs }}';
-          const commit_sha = context.sha;
-          const commit_message = '${{ github.event.head_commit.message }}';
-          const actor = '${{ github.actor }}';
-          const branch = '${{ github.ref_name }}';
-          
-          const issueTitle = `🚨 CI/CD Pipeline Failed - ${failed_jobs} - ${branch}`;
-          
-          const issueBody = `## CI/CD Pipeline Failure Report
+          try {
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const workflow_run_id = context.runId;
+            const workflow_url = '${{ steps.collect-info.outputs.workflow_url }}';
+            const failed_jobs = '${{ steps.collect-info.outputs.failed_jobs }}';
+            const commit_sha = context.sha;
+            const commit_message = '${{ github.event.head_commit.message }}';
+            const actor = '${{ github.actor }}';
+            const branch = '${{ github.ref_name }}';
+            
+            console.log('Creating issue with:');
+            console.log(`Owner: ${owner}`);
+            console.log(`Repo: ${repo}`);
+            console.log(`Failed Jobs: ${failed_jobs}`);
+            
+            const issueTitle = `🚨 CI/CD Pipeline Failed - ${failed_jobs} - ${branch}`;
+            
+            const issueBody = `## CI/CD Pipeline Failure Report
           
           ### 📋 Summary
           The CI/CD pipeline has failed for commit \`${commit_sha.substring(0, 7)}\`.
@@ -619,22 +637,31 @@ jobs:
           *This issue was automatically created by GitHub Actions*
           `;
           
-          const issue = await github.rest.issues.create({
-            owner,
-            repo,
-            title: issueTitle,
-            body: issueBody,
-            labels: ['ci-failure', 'automated', 'bug'],
-            assignees: [actor]
-          });
-          
-          console.log(`Created issue #${issue.data.number}`);
+            const issue = await github.rest.issues.create({
+              owner,
+              repo,
+              title: issueTitle,
+              body: issueBody,
+              labels: ['ci-failure', 'automated', 'bug'],
+              assignees: [actor]
+            });
+            
+            console.log(`Successfully created issue #${issue.data.number}`);
+          } catch (error) {
+            console.error('Error creating issue:', error);
+            console.error('Error details:', error.message);
+            if (error.response) {
+              console.error('Response status:', error.response.status);
+              console.error('Response data:', error.response.data);
+            }
+            throw error;
+          }
           
     - name: 💬 Comment on Existing Issue
       if: steps.check-issues.outputs.issue_exists == 'true'
       uses: actions/github-script@v7
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ github.token }}
         script: |
           const owner = context.repo.owner;
           const repo = context.repo.repo;
