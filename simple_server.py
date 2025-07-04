@@ -56,12 +56,9 @@ if __name__ == "__main__":
     print(f"📍 Current directory: {os.getcwd()}")
     print(f"📁 Files: {os.listdir('.')}")
     
-    # Intentional error for testing log collection
-    print("🧪 Testing error log collection...")
-    raise Exception("Intentional error for testing GitHub issue creation with logs!")
-    
     with socketserver.TCPServer(("", PORT), HealthHandler) as httpd:
         print(f"✅ Server running at http://0.0.0.0:{PORT}")
+        print(f"🌐 Access: http://0.0.0.0:{PORT} or http://0.0.0.0:{PORT}/api/health")
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
