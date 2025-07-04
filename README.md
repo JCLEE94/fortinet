@@ -243,3 +243,4 @@ kubectl top pods -n fortinet
 - **이슈 트래커**: [GitHub Issues](https://github.com/JCLEE94/fortinet/issues)
 - **문서**: [docs/](docs/)
 - **이메일**: support@nextrade.com
+# CI/CD trigger - 2025. 07. 04. (금) 14:09:25 KST
