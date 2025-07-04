@@ -21,3 +21,8 @@ labels:
     pairs:
       app: fortinet
       managed-by: argocd
+
+commonAnnotations:
+  app.kubernetes.io/version: "ad2c2f0"
+  deployed-by: "github-actions"
+  deployed-at: "2025-07-04T00:00:00Z"

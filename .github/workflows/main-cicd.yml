@@ -11,6 +11,11 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# 중복 실행 방지
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   REGISTRY: ${{ vars.DOCKER_REGISTRY || 'registry.jclee.me' }}
   IMAGE_NAME: ${{ vars.DOCKER_IMAGE_NAME || 'fortinet' }}
@@ -21,7 +26,7 @@ jobs:
   # 테스트 및 품질 검사
   test:
     name: 🧪 Test & Quality
-    runs-on: ${{ github.repository_owner == 'JCLEE94' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     
     steps:
     - name: 📥 Checkout
@@ -54,7 +59,7 @@ jobs:
   build:
     name: 🏗️ Build & Push
     needs: test
-    runs-on: ${{ github.repository_owner == 'JCLEE94' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     if: github.event_name == 'push'
     
     outputs:
@@ -155,8 +160,20 @@ jobs:
         echo "Image tag: $IMAGE_TAG"
         echo "Short SHA: $SHORT_SHA"
         
-        # Update kustomization.yaml with new image tag
+        # Update kustomization.yaml with new image tag and timestamp
         sed -i "s|newTag:.*|newTag: $SHORT_SHA|g" k8s/manifests/kustomization.yaml
+        
+        # Add deployment metadata
+        if ! grep -q "commonAnnotations:" k8s/manifests/kustomization.yaml; then
+          echo "" >> k8s/manifests/kustomization.yaml
+          echo "commonAnnotations:" >> k8s/manifests/kustomization.yaml
+          echo "  app.kubernetes.io/version: \"$SHORT_SHA\"" >> k8s/manifests/kustomization.yaml
+          echo "  deployed-by: \"github-actions\"" >> k8s/manifests/kustomization.yaml
+          echo "  deployed-at: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" >> k8s/manifests/kustomization.yaml
+        else
+          sed -i "s|app.kubernetes.io/version:.*|app.kubernetes.io/version: \"$SHORT_SHA\"|g" k8s/manifests/kustomization.yaml
+          sed -i "s|deployed-at:.*|deployed-at: \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"|g" k8s/manifests/kustomization.yaml
+        fi
         
         # Commit and push changes
         git config user.name "GitHub Actions Bot"
@@ -186,7 +203,7 @@ jobs:
         
         # Trigger ArgoCD sync via API
         echo "🔄 Triggering ArgoCD sync..."
-        SYNC_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/${{ vars.ARGOCD_APP_NAME || 'fortinet' }}/sync" \
+        SYNC_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/${{ vars.ARGOCD_APP_NAME || 'fortinet-primary' }}/sync" \
           -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
           -H "Content-Type: application/json" \
           -d '{
@@ -203,13 +220,31 @@ jobs:
           
         if [[ "$SYNC_RESPONSE" == *"200"* ]] || [[ "$SYNC_RESPONSE" == *"202"* ]]; then
           echo "✅ ArgoCD sync triggered successfully"
+          
+          # Also trigger secondary cluster if available
+          SECONDARY_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/fortinet-secondary/sync" \
+            -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "prune": true, 
+              "dryRun": false,
+              "strategy": {"hook": {"force": true}},
+              "syncOptions": {"items": ["CreateNamespace=true"]}
+            }' \
+            --fail -w "%{http_code}" 2>/dev/null || echo "SECONDARY_SYNC_SKIPPED")
+            
+          if [[ "$SECONDARY_RESPONSE" == *"200"* ]] || [[ "$SECONDARY_RESPONSE" == *"202"* ]]; then
+            echo "✅ Secondary cluster sync triggered"
+          else
+            echo "ℹ️ Secondary cluster not available or sync failed"
+          fi
         else
           echo "⚠️ ArgoCD API sync failed (HTTP: $SYNC_RESPONSE), relying on auto-sync"
         fi
         
         # Get application status
         echo "📊 Checking ArgoCD application status..."
-        argocd app get ${{ vars.ARGOCD_APP_NAME || 'fortinet' }} --grpc-web || echo "Status check failed"
+        argocd app get ${{ vars.ARGOCD_APP_NAME || 'fortinet-primary' }} --grpc-web || echo "Primary cluster status check failed"
         
     # 헬스 체크
     - name: 🏥 Health Check
@@ -228,10 +263,230 @@ jobs:
           sleep 30
         done
 
+  # 오프라인 패키지 생성
+  offline-package:
+    name: 📦 Create Offline Package
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    
+    outputs:
+      package_name: ${{ steps.create-package.outputs.package_name }}
+      package_sha256: ${{ steps.create-package.outputs.package_sha256 }}
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🔐 Registry Login
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        
+    - name: 🐳 Pull Built Image
+      run: |
+        # Extract the first tag from build output
+        IMAGE_TAG=$(echo "${{ needs.build.outputs.image-tag }}" | cut -d',' -f1 | xargs)
+        echo "Pulling image: $IMAGE_TAG"
+        docker pull $IMAGE_TAG
+        docker tag $IMAGE_TAG fortigate-nextrade:latest
+        
+    - name: 📦 Create Offline Package
+      id: create-package
+      run: |
+        echo "🔧 Creating offline deployment package..."
+        
+        # Set variables
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        VERSION="${{ github.ref_name }}-${GITHUB_SHA:0:7}"
+        PACKAGE_NAME="fortinet-offline-deploy-${VERSION}-${TIMESTAMP}"
+        TEMP_DIR="./${PACKAGE_NAME}"
+        
+        # Create temp directory
+        mkdir -p "${TEMP_DIR}"
+        
+        # Create directories structure
+        mkdir -p "${TEMP_DIR}/images"
+        mkdir -p "${TEMP_DIR}/manifests"
+        mkdir -p "${TEMP_DIR}/scripts"
+        mkdir -p "${TEMP_DIR}/config"
+        
+        # 1. Save Docker image
+        echo "💾 Saving Docker image..."
+        docker save -o "${TEMP_DIR}/images/fortigate-nextrade.tar" fortigate-nextrade:latest
+        
+        # 2. Copy Kubernetes manifests
+        echo "📋 Copying Kubernetes manifests..."
+        cp -r k8s/manifests/* "${TEMP_DIR}/manifests/"
+        
+        # 3. Copy deployment scripts
+        echo "📝 Copying deployment scripts..."
+        if [ -f "deploy/installers/fortinet-installer.sh" ]; then
+          cp deploy/installers/fortinet-installer.sh "${TEMP_DIR}/scripts/"
+        fi
+        if [ -f "deploy/installers/fortinet-installer.ps1" ]; then
+          cp deploy/installers/fortinet-installer.ps1 "${TEMP_DIR}/scripts/"
+        fi
+        
+        # 4. Copy configuration files
+        echo "⚙️ Copying configuration files..."
+        if [ -d "data" ]; then
+          cp -r data/*.json "${TEMP_DIR}/config/" 2>/dev/null || echo "No JSON config files found"
+        fi
+        
+        # Create a default config.json if not exists
+        if [ ! -f "${TEMP_DIR}/config/config.json" ]; then
+          echo '{"app_mode": "production", "offline_mode": true}' > "${TEMP_DIR}/config/config.json"
+        fi
+        
+        # 5. Create deployment instructions
+        cat > "${TEMP_DIR}/README.md" << EOF
+        # FortiGate Nextrade Offline Deployment Package
+        
+        Version: ${VERSION}
+        Build Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+        Git SHA: ${GITHUB_SHA}
+        
+        ## Contents
+        - \`images/\`: Docker container images
+        - \`manifests/\`: Kubernetes deployment manifests
+        - \`scripts/\`: Installation scripts
+        - \`config/\`: Configuration files
+        
+        ## Installation Instructions
+        
+        ### 1. Load Docker Image
+        \`\`\`bash
+        docker load -i images/fortigate-nextrade.tar
+        \`\`\`
+        
+        ### 2. Deploy to Kubernetes
+        \`\`\`bash
+        kubectl apply -k manifests/
+        \`\`\`
+        
+        ### 3. Alternative: Run with Docker
+        \`\`\`bash
+        docker run -d --name fortigate-nextrade \\
+          -p 7777:7777 \\
+          -v \$(pwd)/config:/app/data \\
+          -e APP_MODE=production \\
+          fortigate-nextrade:latest
+        \`\`\`
+        
+        ## Configuration
+        Edit \`config/config.json\` before deployment to set your environment-specific values.
+        
+        EOF
+        
+        # 6. Create offline deployment script
+        cat > "${TEMP_DIR}/deploy.sh" << 'EOF'
+        #!/bin/bash
+        set -e
+        
+        echo "🚀 FortiGate Nextrade Offline Deployment"
+        echo "========================================"
+        
+        # Check if Docker is available
+        if command -v docker &> /dev/null; then
+            echo "✅ Docker found"
+            echo "Loading Docker image..."
+            docker load -i images/fortigate-nextrade.tar
+            echo "✅ Image loaded successfully"
+        else
+            echo "❌ Docker not found. Please install Docker first."
+            exit 1
+        fi
+        
+        # Check if kubectl is available
+        if command -v kubectl &> /dev/null; then
+            echo "✅ kubectl found"
+            read -p "Deploy to Kubernetes? (y/n) " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                kubectl apply -k manifests/
+                echo "✅ Deployed to Kubernetes"
+            fi
+        else
+            echo "⚠️ kubectl not found. Skipping Kubernetes deployment."
+        fi
+        
+        echo "🎉 Deployment package ready!"
+        EOF
+        
+        chmod +x "${TEMP_DIR}/deploy.sh"
+        
+        # 7. Create tar.gz package
+        echo "🗜️ Creating compressed package..."
+        tar -czf "${PACKAGE_NAME}.tar.gz" "${PACKAGE_NAME}"
+        
+        # Calculate checksum
+        SHA256SUM=$(sha256sum "${PACKAGE_NAME}.tar.gz" | awk '{print $1}')
+        echo "${SHA256SUM}  ${PACKAGE_NAME}.tar.gz" > "${PACKAGE_NAME}.tar.gz.sha256"
+        
+        # Clean up
+        rm -rf "${TEMP_DIR}"
+        
+        echo "✅ Offline package created: ${PACKAGE_NAME}.tar.gz"
+        echo "📊 Size: $(ls -lh ${PACKAGE_NAME}.tar.gz | awk '{print $5}')"
+        echo "🔐 SHA256: ${SHA256SUM}"
+        
+        # Set outputs for next steps
+        echo "package_name=${PACKAGE_NAME}.tar.gz" >> $GITHUB_OUTPUT
+        echo "package_sha256=${SHA256SUM}" >> $GITHUB_OUTPUT
+        
+    - name: 📤 Upload Package Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: offline-deployment-package
+        path: |
+          fortinet-offline-deploy-*.tar.gz
+          fortinet-offline-deploy-*.tar.gz.sha256
+        retention-days: 30
+
+  # GitHub Release 생성
+  release:
+    name: 🎁 Create Release
+    needs: [build, offline-package]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: 📥 Download Offline Package
+      uses: actions/download-artifact@v4
+      with:
+        name: offline-deployment-package
+        
+    - name: 🎁 Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          fortinet-offline-deploy-*.tar.gz
+          fortinet-offline-deploy-*.tar.gz.sha256
+        generate_release_notes: true
+        body: |
+          ## 🚀 FortiGate Nextrade Release
+          
+          ### Docker Image
+          - Registry: `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}`
+          - Tag: `${{ github.ref_name }}`
+          - Digest: `${{ needs.build.outputs.image-digest }}`
+          
+          ### Offline Deployment Package
+          - Package includes all necessary files for air-gapped deployment
+          - See README.md inside the package for installation instructions
+          
+          ### Changes
+          See automated release notes below.
+        draft: false
+        prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+
   # 알림
   notify:
     name: 📢 Notify
-    needs: [test, build, deploy]
+    needs: [test, build, deploy, offline-package]
     runs-on: ubuntu-latest
     if: always()
     
@@ -242,7 +497,15 @@ jobs:
         echo "- Test: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
         echo "- Build: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
         echo "- Deploy: ${{ needs.deploy.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Offline Package: ${{ needs.offline-package.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
         echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
         echo "**Author**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.offline-package.result }}" == "success" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Offline Package" >> $GITHUB_STEP_SUMMARY
+          echo "- Package: ${{ needs.offline-package.outputs.package_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- SHA256: ${{ needs.offline-package.outputs.package_sha256 }}" >> $GITHUB_STEP_SUMMARY
+        fi

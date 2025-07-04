@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet-primary
+  name: fortinet-secondary
   namespace: argocd
   labels:
     app.kubernetes.io/name: fortinet
-    app.kubernetes.io/component: primary
+    app.kubernetes.io/component: secondary
     app.kubernetes.io/part-of: fortinet-stack
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-wave: "2"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -18,9 +18,13 @@ spec:
     repoURL: https://github.com/JCLEE94/fortinet.git
     targetRevision: HEAD
     path: k8s/manifests
+    kustomize:
+      replicas:
+      - name: fortinet-app
+        count: 2  # Secondary cluster: reduced replicas
   
   destination:
-    server: https://kubernetes.default.svc
+    server: https://192.168.50.110:6443  # Secondary cluster (when ready)
     namespace: fortinet
   
   syncPolicy:
@@ -33,10 +37,17 @@ spec:
     - PrunePropagationPolicy=foreground
     - PruneLast=true
     retry:
-      limit: 5
+      limit: 3
       backoff:
-        duration: 5s
+        duration: 10s
         factor: 2
-        maxDuration: 3m
+        maxDuration: 5m
   
-  revisionHistoryLimit: 10
+  revisionHistoryLimit: 5
+  
+  # Health check configuration
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    managedFieldsManagers:
+    - kube-controller-manager
