@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: fortinet-data-pv
+  labels:
+    app: fortinet
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /data/fortinet
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redis-data-pv
+  labels:
+    app: fortinet
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  hostPath:
+    path: /data/redis
+    type: DirectoryOrCreate
