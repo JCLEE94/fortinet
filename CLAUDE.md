@@ -310,13 +310,9 @@ pytest -m "not slow" -v     # Skip slow tests
 ## Multi-Cluster Deployment
 
 ### Current Status
-- **Primary Cluster**: kubernetes.default.svc ✅ Active
-  - Application: fortinet-primary
-  - Replicas: 3 (High resources)
-  
-- **Secondary Cluster**: 192.168.50.110:6443 ⚠️ Ready for activation
-  - Application: fortinet-secondary (prepared)
-  - Replicas: 2 (Medium resources)
+- **Cluster**: kubernetes.default.svc ✅ Active
+  - Application: fortinet
+  - Replicas: 3
 
 ### Multi-Cluster Setup
 ```bash
@@ -449,8 +445,7 @@ Check `logs/web_app.log` for which method succeeded.
 7. Available at https://fortinet.jclee.me
 
 ### ArgoCD Application Structure
-- **fortinet-primary**: Main application on primary cluster ✅
-- **fortinet-secondary**: Secondary cluster deployment (ready when cluster is available)
+- **fortinet**: Main application ✅
 - **blacklist**: IP blacklist management system (separate namespace)
 
 Each application has independent deployment cycles and can target different clusters.

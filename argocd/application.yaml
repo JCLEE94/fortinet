@@ -1,11 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet-primary
+  name: fortinet
   namespace: argocd
   labels:
     app.kubernetes.io/name: fortinet
-    app.kubernetes.io/component: primary
     app.kubernetes.io/part-of: fortinet-stack
   annotations:
     argocd.argoproj.io/sync-wave: "1"

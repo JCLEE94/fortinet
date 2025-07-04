@@ -203,7 +203,7 @@ jobs:
         
         # Trigger ArgoCD sync via API
         echo "🔄 Triggering ArgoCD sync..."
-        SYNC_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/${{ vars.ARGOCD_APP_NAME || 'fortinet-primary' }}/sync" \
+        SYNC_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/${{ vars.ARGOCD_APP_NAME || 'fortinet' }}/sync" \
           -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
           -H "Content-Type: application/json" \
           -d '{
@@ -220,31 +220,13 @@ jobs:
           
         if [[ "$SYNC_RESPONSE" == *"200"* ]] || [[ "$SYNC_RESPONSE" == *"202"* ]]; then
           echo "✅ ArgoCD sync triggered successfully"
-          
-          # Also trigger secondary cluster if available
-          SECONDARY_RESPONSE=$(curl -s -X POST "https://argo.jclee.me/api/v1/applications/fortinet-secondary/sync" \
-            -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "prune": true, 
-              "dryRun": false,
-              "strategy": {"hook": {"force": true}},
-              "syncOptions": {"items": ["CreateNamespace=true"]}
-            }' \
-            --fail -w "%{http_code}" 2>/dev/null || echo "SECONDARY_SYNC_SKIPPED")
-            
-          if [[ "$SECONDARY_RESPONSE" == *"200"* ]] || [[ "$SECONDARY_RESPONSE" == *"202"* ]]; then
-            echo "✅ Secondary cluster sync triggered"
-          else
-            echo "ℹ️ Secondary cluster not available or sync failed"
-          fi
         else
           echo "⚠️ ArgoCD API sync failed (HTTP: $SYNC_RESPONSE), relying on auto-sync"
         fi
         
         # Get application status
         echo "📊 Checking ArgoCD application status..."
-        argocd app get ${{ vars.ARGOCD_APP_NAME || 'fortinet-primary' }} --grpc-web || echo "Primary cluster status check failed"
+        argocd app get ${{ vars.ARGOCD_APP_NAME || 'fortinet' }} --grpc-web || echo "Status check failed"
         
     # 헬스 체크
     - name: 🏥 Health Check
