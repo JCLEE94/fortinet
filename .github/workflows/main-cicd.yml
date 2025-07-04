@@ -152,10 +152,21 @@ jobs:
         echo "Applying manifests directly..."
         kubectl apply -k k8s/manifests/ || echo "Direct apply failed"
         
-        # 배포 상태 확인
+        # 배포 상태 확인 및 로그 수집
         echo "Checking deployment status..."
         kubectl get pods -n fortinet || echo "Cannot get pods"
         kubectl get services -n fortinet || echo "Cannot get services"
+        
+        # Pod 로그 수집 (디버깅용)
+        echo "Collecting pod logs..."
+        kubectl get pods -n fortinet -o name | head -3 | while read pod; do
+          echo "=== Logs for $pod ==="
+          kubectl logs $pod -n fortinet --tail=50 || echo "Cannot get logs for $pod"
+        done
+        
+        # 이벤트 로그 수집
+        echo "Collecting events..."
+        kubectl get events -n fortinet --sort-by=.metadata.creationTimestamp || echo "Cannot get events"
         
     # ArgoCD CLI 설치
     - name: 📦 Install ArgoCD CLI
@@ -561,7 +572,7 @@ jobs:
             core.setOutput('issue_exists', 'false');
           }
           
-    - name: 📝 Collect Failure Information
+    - name: 📝 Collect Failure Information & Logs
       if: steps.check-issues.outputs.issue_exists == 'false'
       id: collect-info
       run: |
@@ -589,6 +600,24 @@ jobs:
         echo "failed_jobs=${FAILED_JOBS}" >> $GITHUB_OUTPUT
         echo "workflow_url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
         echo "error_signature=${ERROR_SIGNATURE}" >> $GITHUB_OUTPUT
+        
+        # Collect detailed logs for issue
+        echo "Collecting detailed error logs..."
+        
+        # Try to collect kubectl logs if deploy failed
+        if [[ "${{ needs.deploy.result }}" == "failure" ]]; then
+          echo "=== KUBERNETES DEBUG INFO ===" > debug_logs.txt
+          kubectl get pods -n fortinet -o wide >> debug_logs.txt 2>&1 || echo "Cannot get pods" >> debug_logs.txt
+          echo "" >> debug_logs.txt
+          echo "=== POD LOGS ===" >> debug_logs.txt
+          kubectl get pods -n fortinet -o name | head -3 | while read pod; do
+            echo "--- Logs for $pod ---" >> debug_logs.txt
+            kubectl logs $pod -n fortinet --tail=100 >> debug_logs.txt 2>&1 || echo "Cannot get logs for $pod" >> debug_logs.txt
+            echo "" >> debug_logs.txt
+          done
+          echo "=== EVENTS ===" >> debug_logs.txt
+          kubectl get events -n fortinet --sort-by=.metadata.creationTimestamp >> debug_logs.txt 2>&1 || echo "Cannot get events" >> debug_logs.txt
+        fi
         
     - name: 📝 Create Issue Content
       if: steps.check-issues.outputs.issue_exists == 'false'
@@ -625,6 +654,16 @@ jobs:
         2. Review the commit changes that triggered this failure
         3. Fix the issues and push a new commit
         4. Close this issue once the pipeline is green
+        
+        ### 📋 Debug Logs
+        \`\`\`
+        $(if [ -f debug_logs.txt ]; then cat debug_logs.txt | head -100; else echo "No debug logs available"; fi)
+        \`\`\`
+        
+        ### 🔗 Quick Links
+        - [Workflow Run Logs](${{ steps.collect-info.outputs.workflow_url }})
+        - [ArgoCD Dashboard](https://argo.jclee.me/applications/fortinet)
+        - [Application URL](https://fortinet.jclee.me/)
         
         ---
         *This issue was automatically created by GitHub Actions*
