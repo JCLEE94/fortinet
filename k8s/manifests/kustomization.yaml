@@ -14,7 +14,7 @@ resources:
 
 images:
   - name: registry.jclee.me/fortinet
-    newTag: f5b7fcd
+    newTag: 4eae3ef
 
 labels:
   - includeSelectors: true
@@ -23,6 +23,6 @@ labels:
       managed-by: argocd
 
 commonAnnotations:
-  app.kubernetes.io/version: "f5b7fcd"
+  app.kubernetes.io/version: "4eae3ef"
   deployed-by: "github-actions"
-  deployed-at: "2025-07-04T16:00:00Z"
+  deployed-at: "2025-07-04T16:15:00Z"
