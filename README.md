@@ -1,4 +1,4 @@
-# FortiGate Nextrade
+# FortiGate Nextrade - CICD Pipeline Test
 
 [![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml)
 [![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/)
