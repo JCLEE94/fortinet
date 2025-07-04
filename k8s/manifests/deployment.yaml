@@ -45,6 +45,10 @@ spec:
           value: "true"
         - name: DISABLE_EXTERNAL_CALLS
           value: "true"
+        - name: PYTHONPATH
+          value: "/app"
+        - name: LOG_LEVEL
+          value: "INFO"
         # FortiManager Configuration
         - name: FORTIMANAGER_HOST
           valueFrom:
@@ -88,18 +92,18 @@ spec:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 120
+          initialDelaySeconds: 180
           periodSeconds: 30
           timeoutSeconds: 15
-          failureThreshold: 6
+          failureThreshold: 10
         readinessProbe:
           httpGet:
             path: /api/health
             port: 7777
-          initialDelaySeconds: 90
+          initialDelaySeconds: 150
           periodSeconds: 15
           timeoutSeconds: 10
-          failureThreshold: 6
+          failureThreshold: 10
         volumeMounts:
         - name: data
           mountPath: /app/data
