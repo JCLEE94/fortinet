@@ -307,6 +307,67 @@ pytest -m "integration" -v  # Integration tests only
 pytest -m "not slow" -v     # Skip slow tests
 ```
 
+### CI/CD Integration Testing
+```bash
+# Run CI/CD integration tests
+pytest tests/integration/test_pipeline_triggers.py -v
+pytest tests/integration/test_docker_registry.py -v
+pytest tests/integration/test_gitops_integration.py -v
+pytest tests/integration/test_argocd_integration.py -v
+pytest tests/integration/test_health_check.py -v
+
+# Run all integration tests with coverage
+pytest tests/integration/ -v --cov=src/cicd --cov-report=html
+
+# Test individual CI/CD modules with inline tests
+python src/cicd/pipeline_coordinator.py -v
+python src/cicd/argocd_client.py -v
+python src/cicd/gitops_manager.py -v
+python src/cicd/docker_registry.py -v
+```
+
+## CI/CD Pipeline Testing Architecture
+
+### Testable CI/CD Modules
+The CI/CD pipeline has been refactored into testable modules in `src/cicd/`:
+
+1. **PipelineCoordinator** - Pipeline decision logic and flow control
+   - Deployment trigger decisions
+   - Branch strategy management
+   - Image tag generation
+   - Deployment metadata creation
+
+2. **ArgoCDClient** - ArgoCD operations wrapper
+   - Multi-method authentication (password, token, existing)
+   - Application sync and status monitoring
+   - Retry logic and error handling
+
+3. **GitOpsManager** - GitOps workflow management
+   - Kustomization.yaml updates
+   - Git commit automation
+   - Push with retry logic
+   - Deployment annotations
+
+4. **DockerRegistryClient** - Docker registry operations
+   - Image build and tagging
+   - Registry authentication
+   - Push/pull operations
+   - Offline package support
+
+### Integration Test Coverage
+- **Pipeline Triggers**: Test various GitHub Actions trigger scenarios
+- **Docker Registry**: Test build, tag, and push operations
+- **GitOps Workflow**: Test kustomization updates and Git operations
+- **ArgoCD Deployment**: Test authentication, sync, and monitoring
+- **Health Checks**: Test post-deployment validation and retry logic
+
+### Best Practices for CI/CD Testing
+1. Use mock objects for external dependencies (subprocess, requests)
+2. Test authentication fallback mechanisms
+3. Verify retry logic for transient failures
+4. Test both success and failure scenarios
+5. Use fixtures for common test data and contexts
+
 ## Multi-Cluster Deployment
 
 ### Current Status

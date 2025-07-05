@@ -75,6 +75,29 @@ docker build -f Dockerfile.production -t fortinet-test .
 docker run -p 7777:7777 -e APP_MODE=test fortinet-test
 ```
 
+## 🧪 테스트
+
+### 테스트 실행
+```bash
+# 모든 테스트 실행
+pytest tests/ -v
+
+# 커버리지 포함
+pytest --cov=src --cov-report=html --cov-report=term-missing
+
+# CI/CD 통합 테스트
+pytest tests/integration/ -v --cov=src/cicd
+
+# 인라인 테스트 (Rust 스타일)
+python src/cicd/pipeline_coordinator.py -v
+python src/cicd/argocd_client.py -v
+```
+
+### 테스트 구조
+- `tests/unit/` - 단위 테스트
+- `tests/integration/` - 통합 테스트 (CI/CD 포함)
+- `tests/fixtures/` - 테스트 픽스처 및 Mock 객체
+
 ## 🔧 환경 설정
 
 ### 환경 변수
