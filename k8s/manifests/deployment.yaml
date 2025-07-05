@@ -20,13 +20,20 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: busybox
+        image: python:3.11-alpine
         imagePullPolicy: Always
-        command: ['sh', '-c', 'while true; do echo "OK" | nc -l -p 80; done']
+        command: ['/bin/sh', '/app/start.sh']
         ports:
-        - containerPort: 80
+        - containerPort: 7777
           name: http
           protocol: TCP
+        env:
+        - name: APP_MODE
+          value: "production"
+        - name: WEB_APP_PORT
+          value: "7777"
+        - name: WEB_APP_HOST
+          value: "0.0.0.0"
         resources:
           requests:
             memory: "512Mi"
@@ -34,5 +41,27 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-# health check 제거 - busybox 테스트용
-# 볼륨 마운트 제거 - nginx 테스트에는 불필요
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: scripts
+          mountPath: /app
+      volumes:
+      - name: scripts
+        configMap:
+          name: fortinet-scripts
+          defaultMode: 0755

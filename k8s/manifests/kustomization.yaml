@@ -8,6 +8,7 @@ resources:
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
+  - configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

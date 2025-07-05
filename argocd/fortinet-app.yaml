@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/JCLEE94/fortinet.git
+    targetRevision: HEAD
+    path: k8s/manifests
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
