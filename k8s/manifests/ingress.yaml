@@ -6,17 +6,12 @@ metadata:
   labels:
     app: fortinet
   annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
 spec:
   ingressClassName: nginx
-  tls:
-  - hosts:
-    - fortinet.jclee.me
-    secretName: fortinet-tls
   rules:
   - host: fortinet.jclee.me
     http:
