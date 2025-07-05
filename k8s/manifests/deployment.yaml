@@ -20,13 +20,17 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: nginx:alpine
+        image: registry.jclee.me/fortinet:a044329
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 7777
           name: http
           protocol: TCP
-# 환경 변수 제거 - nginx는 이런 변수들이 필요 없음
+        env:
+        - name: APP_MODE
+          value: "production"
+        - name: WEB_APP_PORT
+          value: "7777"
         resources:
           requests:
             memory: "512Mi"
@@ -36,18 +40,18 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 30
           periodSeconds: 30
-          timeoutSeconds: 5
+          timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 20
           periodSeconds: 10
-          timeoutSeconds: 3
+          timeoutSeconds: 5
           failureThreshold: 3
 # 볼륨 마운트 제거 - nginx 테스트에는 불필요
