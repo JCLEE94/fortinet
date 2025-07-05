@@ -11,10 +11,10 @@ if [ -z "$APP_MODE" ]; then
     export APP_MODE="production"
 fi
 
-# Debug mode - use simple server first
-echo "🔧 Starting Simple Python Server (debug mode)..."
+# Start the real FortiGate Nextrade application
+echo "🔧 Starting FortiGate Nextrade Application..."
 echo "📍 Current directory: $(pwd)"
 echo "📁 Files in /app: $(ls -la /app/)"
 
-# Start simple server for debugging
-cd /app && exec python simple_server.py
+# Start real application
+cd /app && exec python -m src.main --web

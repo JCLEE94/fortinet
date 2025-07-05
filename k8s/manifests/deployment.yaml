@@ -18,9 +18,11 @@ spec:
         app: fortinet
         component: backend
     spec:
+      imagePullSecrets:
+      - name: regcred
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest
+        image: registry.jclee.me/fortinet:20250705-162424
         imagePullPolicy: Always
         ports:
         - containerPort: 7777

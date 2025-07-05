@@ -17,7 +17,7 @@ resources:
 
 images:
   - name: registry.jclee.me/fortinet
-    newTag: latest
+    newTag: 20250705-162424
 
 labels:
   - includeSelectors: true
