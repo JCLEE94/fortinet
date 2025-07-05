@@ -91,137 +91,60 @@ class TroubleshootingLoop:
         return loop_thread, perf_thread
     
     def _main_loop(self):
-        """메인 모니터링 루프"""
-        while self.running:
-            try:
-                # 시스템 진단
-                issues = self._diagnose_system()
-                
-                # 문제가 있으면 해결 시도
-                if issues:
-                    self.logger.warning(f"발견된 문제: {issues}")
-                    
-                    # 텔레그램 알림 전송
-                    for issue in issues:
-                        issue_type = issue['type']
-                        error_msg = f"문제 유형: {issue_type}"
-                        if 'error' in issue:
-                            error_msg += f", 오류: {issue['error']}"
-                        elif 'status_code' in issue:
-                            error_msg += f", 상태 코드: {issue['status_code']}"
-                        
-                        # 오류 로깅
-                        self.logger.error(f"발견된 문제: {issue_type} - {error_msg} (복구 시도 예정)")
-                    
-                    # 복구 시도
-                    self._attempt_recovery(issues)
-                else:
-                    self.logger.info("시스템 정상")
-                
-                # 대기
-                time.sleep(self.check_interval)
-                
-            except Exception as e:
-                error_msg = f"트러블슈팅 루프 오류: {str(e)}"
-                self.logger.error(error_msg)
-                
-                # 오류 로깅
-                self.logger.error(f"트러블슈팅 루프 오류: {str(e)}")
-                
-                time.sleep(self.check_interval)
+        """메인 모니터링 루프 - 비활성화됨"""
+        self.logger.info("메인 모니터링 루프가 비활성화되었습니다 (무한프로세싱 방지)")
+        return
+        
+        # 원래 무한루프 코드는 주석 처리됨
+        # while self.running:
+        #     try:
+        #         # 시스템 진단
+        #         issues = self._diagnose_system()
+        #         
+        #         # 문제가 있으면 해결 시도
+        #         if issues:
+        #             self.logger.warning(f"발견된 문제: {issues}")
+        #             
+        #             # 텔레그램 알림 전송
+        #             for issue in issues:
+        #                 issue_type = issue['type']
+        #                 error_msg = f"문제 유형: {issue_type}"
+        #                 if 'error' in issue:
+        #                     error_msg += f", 오류: {issue['error']}"
+        #                 elif 'status_code' in issue:
+        #                     error_msg += f", 상태 코드: {issue['status_code']}"
+        #                 
+        #                 # 오류 로깅
+        #                 self.logger.error(f"발견된 문제: {issue_type} - {error_msg} (복구 시도 예정)")
+        #             
+        #             # 복구 시도
+        #             self._attempt_recovery(issues)
+        #         else:
+        #             self.logger.info("시스템 정상")
+        #         
+        #         # 대기
+        #         time.sleep(self.check_interval)
+        #         
+        #     except Exception as e:
+        #         error_msg = f"트러블슈팅 루프 오류: {str(e)}"
+        #         self.logger.error(error_msg)
+        #         
+        #         # 오류 로깅
+        #         self.logger.error(f"트러블슈팅 루프 오류: {str(e)}")
+        #         
+        #         time.sleep(self.check_interval)
     
     def _performance_monitor_loop(self):
-        """성능 모니터링 루프"""
+        """성능 모니터링 루프 - 비활성화됨"""
+        self.logger.info("성능 모니터링 루프가 비활성화되었습니다 (무한프로세싱 방지)")
+        return
+        
+        # 원래 무한루프 코드는 주석 처리됨
         # 정기 리포트 카운터
         report_counter = 0
         
-        while self.running:
-            try:
-                # CPU, 메모리, 디스크 사용률 체크
-                cpu_percent = psutil.cpu_percent(interval=1)
-                memory_percent = psutil.virtual_memory().percent
-                disk_percent = psutil.disk_usage('/').percent
-                
-                # 시스템 상태 데이터
-                status_data = {
-                    'cpu': cpu_percent,
-                    'memory': memory_percent,
-                    'disk': disk_percent
-                }
-                
-                # 서비스 상태 확인
-                services_status = {}
-                try:
-                    # 웹 앱 상태
-                    web_resp = requests.get(self.monitors['web_app']['url'], timeout=2)
-                    services_status['web_app'] = "running" if web_resp.status_code == 200 else "error"
-                except:
-                    services_status['web_app'] = "down"
-                
-                try:
-                    # Mock 서버 상태
-                    mock_resp = requests.get(self.monitors['mock_server']['url'], timeout=2)
-                    services_status['mock_server'] = "running" if mock_resp.status_code == 200 else "error"
-                except:
-                    services_status['mock_server'] = "down"
-                
-                status_data['services'] = services_status
-                
-                # 임계값 초과 확인 및 알림
-                critical_issues = False
-                
-                if cpu_percent > self.monitors['cpu']['threshold']:
-                    self.issues.append({
-                        'type': 'cpu_critical',
-                        'value': cpu_percent,
-                        'threshold': self.monitors['cpu']['threshold']
-                    })
-                    critical_issues = True
-                
-                if memory_percent > self.monitors['memory']['threshold']:
-                    self.issues.append({
-                        'type': 'memory_critical',
-                        'value': memory_percent,
-                        'threshold': self.monitors['memory']['threshold']
-                    })
-                    critical_issues = True
-                
-                if disk_percent > self.monitors['disk_space']['threshold']:
-                    self.issues.append({
-                        'type': 'disk_space_critical',
-                        'value': disk_percent,
-                        'threshold': self.monitors['disk_space']['threshold']
-                    })
-                    critical_issues = True
-                
-                # 위험 상태면 로깅
-                if critical_issues:
-                    self.logger.warning(f"시스템 상태 위험: CPU {cpu_percent}%, 메모리 {memory_percent}%, 디스크 {disk_percent}%")
-                
-                # 매 6시간마다 정기 상태 로깅 (6시간 = 360분)
-                report_counter += 1
-                if report_counter >= 360:
-                    self.logger.info(f"정기 시스템 상태 리포트: CPU {cpu_percent}%, 메모리 {memory_percent}%, 디스크 {disk_percent}%, 서비스 상태: {json.dumps(services_status)}")
-                    report_counter = 0
-                
-                # 성능 데이터 로깅
-                self._log_performance_data({
-                    'cpu': cpu_percent,
-                    'memory': memory_percent,
-                    'disk': disk_percent,
-                    'timestamp': datetime.now().isoformat()
-                })
-                
-                time.sleep(CHECK_INTERVALS['RECOVERY'])  # 정기 체크
-                
-            except Exception as e:
-                error_msg = f"성능 모니터링 오류: {str(e)}"
-                self.logger.error(error_msg)
-                
-                # 오류 로깅
-                self.logger.error(f"성능 모니터링 오류: {str(e)}")
-                
-                time.sleep(CHECK_INTERVALS['RECOVERY'])
+        # 모든 성능 모니터링 코드가 비활성화되었습니다 (무한프로세싱 방지)
+        pass
     
     def _diagnose_system(self) -> List[Dict[str, Any]]:
         """시스템 진단"""
@@ -501,14 +424,18 @@ class TroubleshootingLoop:
 
 
 if __name__ == '__main__':
-    # 트러블슈팅 루프 실행
-    troubleshooter = TroubleshootingLoop()
-    main_thread, perf_thread = troubleshooter.start()
+    # 트러블슈팅 루프 실행 - 비활성화됨
+    print("트러블슈팅 루프가 비활성화되었습니다 (무한프로세싱 방지)")
+    print("시스템 안정성을 위해 이 모듈은 실행되지 않습니다.")
     
-    try:
-        # 무한 대기
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\n트러블슈팅 루프 종료 중...")
-        troubleshooter.stop()
+    # 원래 코드는 주석 처리됨
+    # troubleshooter = TroubleshootingLoop()
+    # main_thread, perf_thread = troubleshooter.start()
+    # 
+    # try:
+    #     # 무한 대기
+    #     while True:
+    #         time.sleep(1)
+    # except KeyboardInterrupt:
+    #     print("\n트러블슈팅 루프 종료 중...")
+    #     troubleshooter.stop()

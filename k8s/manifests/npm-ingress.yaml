@@ -1,0 +1,64 @@
+# Ingress configuration for NPM integration
+# This will be picked up by External-DNS or NPM sync job
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fortinet-npm-ingress
+  namespace: fortinet
+  annotations:
+    # External-DNS annotation
+    external-dns.alpha.kubernetes.io/hostname: fortinet.jclee.me
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    
+    # NPM sync annotations (custom)
+    npm.jclee.me/enabled: "true"
+    npm.jclee.me/ssl-forced: "false"
+    npm.jclee.me/websocket: "true"
+    npm.jclee.me/http2: "true"
+    
+    # Target service info for NPM
+    npm.jclee.me/target-service: "fortinet-nodeport"
+    npm.jclee.me/target-port: "30777"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: fortinet.jclee.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80
+---
+# Additional hosts can be added
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fortinet-api-ingress
+  namespace: fortinet
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: api.fortinet.jclee.me
+    external-dns.alpha.kubernetes.io/ttl: "300"
+    npm.jclee.me/enabled: "true"
+    npm.jclee.me/target-service: "fortinet-nodeport"
+    npm.jclee.me/target-port: "30777"
+    npm.jclee.me/advanced-config: |
+      # API specific headers
+      proxy_set_header X-Api-Version "1.0";
+      proxy_hide_header X-Powered-By;
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.fortinet.jclee.me
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80

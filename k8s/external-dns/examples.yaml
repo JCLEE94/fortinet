@@ -1,0 +1,105 @@
+# External-DNS 사용 예시
+
+# 1. Ingress를 통한 DNS 레코드 생성
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fortinet-ingress
+  namespace: fortinet
+  annotations:
+    # External-DNS가 이 annotation을 읽고 DNS 레코드 생성
+    external-dns.alpha.kubernetes.io/hostname: fortinet.jclee.me
+    external-dns.alpha.kubernetes.io/ttl: "300"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: fortinet.jclee.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80
+
+---
+# 2. LoadBalancer Service를 통한 DNS 레코드 생성
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortinet-lb
+  namespace: fortinet
+  annotations:
+    # Service에도 사용 가능
+    external-dns.alpha.kubernetes.io/hostname: fortinet-lb.jclee.me
+    external-dns.alpha.kubernetes.io/ttl: "60"
+spec:
+  type: LoadBalancer
+  selector:
+    app: fortinet
+  ports:
+  - port: 80
+    targetPort: 7777
+
+---
+# 3. 여러 도메인 설정
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: multi-domain-ingress
+  namespace: fortinet
+  annotations:
+    # 쉼표로 구분하여 여러 도메인 설정
+    external-dns.alpha.kubernetes.io/hostname: "app.jclee.me,www.jclee.me,fortinet.jclee.me"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: app.jclee.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80
+  - host: www.jclee.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80
+
+---
+# 4. Cloudflare 특별 기능
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloudflare-features
+  namespace: fortinet
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: cf.jclee.me
+    # Cloudflare 프록시 활성화
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    # A 레코드와 AAAA 레코드 모두 생성
+    external-dns.alpha.kubernetes.io/target: "192.168.50.110,2001:db8::1"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cf.jclee.me
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fortinet-service
+            port:
+              number: 80

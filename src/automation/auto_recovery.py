@@ -737,20 +737,23 @@ if __name__ == "__main__":
     engine.add_listener(test_listener)
     engine.start()
     
-    try:
-        # 헬스 상태 모니터링
-        while True:
-            health = engine.get_health_status()
-            print(f"시스템 헬스: {health}")
-            
-            # 복구 통계 출력
-            stats = engine.get_recovery_stats()
-            print(f"복구 통계: {stats}")
-            
-            time.sleep(60)
-            
-    except KeyboardInterrupt:
-        print("중단됨")
+    # 무한루프 비활성화 (무한프로세싱 방지)
+    print("자동 복구 테스트 모드가 비활성화되었습니다 (무한프로세싱 방지)")
+    
+    # try:
+    #     # 헬스 상태 모니터링
+    #     while True:
+    #         health = engine.get_health_status()
+    #         print(f"시스템 헬스: {health}")
+    #         
+    #         # 복구 통계 출력
+    #         stats = engine.get_recovery_stats()
+    #         print(f"복구 통계: {stats}")
+    #         
+    #         time.sleep(60)
+    #         
+    # except KeyboardInterrupt:
+    #     print("중단됨")
         
     engine.stop()
     print("테스트 완료")

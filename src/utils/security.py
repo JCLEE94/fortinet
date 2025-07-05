@@ -313,5 +313,5 @@ def start_cleanup_task():
     cleanup_thread = threading.Thread(target=cleanup, daemon=True)
     cleanup_thread.start()
 
-# 애플리케이션 시작 시 정리 작업 시작
-start_cleanup_task()
+# 무한프로세싱 방지를 위해 자동 시작 비활성화
+# start_cleanup_task()  # 필요시 수동으로 호출하세요

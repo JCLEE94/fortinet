@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: npm-sync
+---
+# ConfigMap with sync script
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: npm-sync-script
+  namespace: npm-sync
+data:
+  sync.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "🔄 NPM Sync Job Started"
+    echo "======================="
+    
+    # Configuration
+    NPM_URL="${NPM_URL:-http://192.168.50.215:81}"
+    NPM_EMAIL="${NPM_EMAIL:-admin@example.com}"
+    NPM_PASSWORD="${NPM_PASSWORD}"
+    
+    # Login to NPM
+    echo "1️⃣ Authenticating with NPM..."
+    TOKEN=$(curl -s -X POST "${NPM_URL}/api/tokens" \
+      -H "Content-Type: application/json" \
+      -d "{\"identity\":\"${NPM_EMAIL}\",\"secret\":\"${NPM_PASSWORD}\"}" \
+      | jq -r '.token')
+    
+    if [ -z "$TOKEN" ]; then
+      echo "❌ Authentication failed"
+      exit 1
+    fi
+    
+    echo "✅ Authentication successful"
+    
+    # Get all Ingresses with external-dns annotation
+    echo "2️⃣ Checking Kubernetes Ingresses..."
+    
+    # Get all ingresses with the annotation
+    kubectl get ingress -A -o json | jq -r '
+      .items[] | 
+      select(.metadata.annotations."external-dns.alpha.kubernetes.io/hostname" != null) |
+      {
+        namespace: .metadata.namespace,
+        name: .metadata.name,
+        hostname: .metadata.annotations."external-dns.alpha.kubernetes.io/hostname",
+        service: .spec.rules[0].http.paths[0].backend.service.name,
+        port: .spec.rules[0].http.paths[0].backend.service.port.number
+      }' > /tmp/ingresses.json
+    
+    # Process each ingress
+    while IFS= read -r ingress; do
+      HOSTNAME=$(echo "$ingress" | jq -r '.hostname')
+      NAMESPACE=$(echo "$ingress" | jq -r '.namespace')
+      SERVICE=$(echo "$ingress" | jq -r '.service')
+      
+      echo "📌 Processing: $HOSTNAME"
+      
+      # Get NodePort for the service
+      NODE_PORT=$(kubectl get service -n "$NAMESPACE" "$SERVICE-nodeport" -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null || echo "30777")
+      
+      # Get first available node IP
+      NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+      
+      # Check if proxy host exists
+      EXISTING_ID=$(curl -s -X GET "${NPM_URL}/api/nginx/proxy-hosts" \
+        -H "Authorization: Bearer ${TOKEN}" \
+        | jq -r ".[] | select(.domain_names[] == \"$HOSTNAME\") | .id" | head -1)
+      
+      if [ -n "$EXISTING_ID" ]; then
+        echo "  📝 Updating existing proxy host (ID: $EXISTING_ID)"
+        # Update existing
+        curl -s -X GET "${NPM_URL}/api/nginx/proxy-hosts/${EXISTING_ID}" \
+          -H "Authorization: Bearer ${TOKEN}" \
+          | jq ".forward_host = \"$NODE_IP\" | .forward_port = $NODE_PORT" \
+          | curl -s -X PUT "${NPM_URL}/api/nginx/proxy-hosts/${EXISTING_ID}" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d @- > /dev/null
+      else
+        echo "  ✨ Creating new proxy host"
+        # Create new proxy host
+        curl -s -X POST "${NPM_URL}/api/nginx/proxy-hosts" \
+          -H "Authorization: Bearer ${TOKEN}" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"domain_names\": [\"$HOSTNAME\"],
+            \"forward_scheme\": \"http\",
+            \"forward_host\": \"$NODE_IP\",
+            \"forward_port\": $NODE_PORT,
+            \"access_list_id\": 0,
+            \"certificate_id\": 0,
+            \"meta\": {
+              \"letsencrypt_agree\": false,
+              \"dns_challenge\": false,
+              \"k8s_managed\": true,
+              \"k8s_namespace\": \"$NAMESPACE\",
+              \"k8s_service\": \"$SERVICE\"
+            },
+            \"advanced_config\": \"\",
+            \"locations\": [],
+            \"block_exploits\": true,
+            \"caching_enabled\": false,
+            \"allow_websocket_upgrade\": true,
+            \"http2_support\": true,
+            \"hsts_enabled\": false,
+            \"hsts_subdomains\": false,
+            \"ssl_forced\": false
+          }" > /dev/null
+      fi
+      
+      echo "  ✅ Done: $HOSTNAME → $NODE_IP:$NODE_PORT"
+      
+    done < <(cat /tmp/ingresses.json | jq -c '.')
+    
+    # Clean up old proxy hosts that are no longer in K8s
+    echo "3️⃣ Cleaning up orphaned proxy hosts..."
+    
+    # Get all K8s managed hosts from NPM
+    MANAGED_HOSTS=$(curl -s -X GET "${NPM_URL}/api/nginx/proxy-hosts" \
+      -H "Authorization: Bearer ${TOKEN}" \
+      | jq -r '.[] | select(.meta.k8s_managed == true)')
+    
+    # TODO: Implement cleanup logic
+    
+    echo "✅ Sync completed successfully!"
+---
+# Secret for NPM credentials
+apiVersion: v1
+kind: Secret
+metadata:
+  name: npm-credentials
+  namespace: npm-sync
+type: Opaque
+stringData:
+  NPM_EMAIL: "admin@example.com"
+  NPM_PASSWORD: "changeme"  # Change this!
+---
+# ServiceAccount
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: npm-sync
+  namespace: npm-sync
+---
+# ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: npm-sync
+rules:
+- apiGroups: [""]
+  resources: ["services", "nodes"]
+  verbs: ["get", "list"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list"]
+---
+# ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: npm-sync
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: npm-sync
+subjects:
+- kind: ServiceAccount
+  name: npm-sync
+  namespace: npm-sync
+---
+# CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: npm-sync
+  namespace: npm-sync
+spec:
+  schedule: "*/5 * * * *"  # Every 5 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: npm-sync
+          restartPolicy: OnFailure
+          containers:
+          - name: sync
+            image: bitnami/kubectl:latest
+            command:
+            - /bin/bash
+            - /scripts/sync.sh
+            env:
+            - name: NPM_URL
+              value: "http://192.168.50.215:81"
+            envFrom:
+            - secretRef:
+                name: npm-credentials
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+          volumes:
+          - name: script
+            configMap:
+              name: npm-sync-script
+              defaultMode: 0755
