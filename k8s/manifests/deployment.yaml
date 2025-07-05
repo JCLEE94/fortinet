@@ -20,9 +20,8 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: python:3.11-alpine
+        image: registry.jclee.me/fortinet:latest
         imagePullPolicy: Always
-        command: ['/bin/sh', '/app/start.sh']
         ports:
         - containerPort: 7777
           name: http
@@ -57,11 +56,3 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-        volumeMounts:
-        - name: scripts
-          mountPath: /app
-      volumes:
-      - name: scripts
-        configMap:
-          name: fortinet-scripts
-          defaultMode: 0755

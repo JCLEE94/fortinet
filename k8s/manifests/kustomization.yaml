@@ -15,9 +15,9 @@ resources:
   - test-deployment.yaml
   - debug-pod.yaml
 
-# images:
-#   - name: registry.jclee.me/fortinet
-#     newTag: latest
+images:
+  - name: registry.jclee.me/fortinet
+    newTag: latest
 
 labels:
   - includeSelectors: true
