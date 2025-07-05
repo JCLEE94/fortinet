@@ -68,32 +68,34 @@
       "name": "ArgoCD fortinet 앱 동기화 및 검증",
       "description": "변경사항을 커밋하고 ArgoCD를 통해 배포 진행 및 상태 모니터링",
       "notes": "새 API 토큰 사용: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcmdvY2QiLCJzdWIiOiJhZG1pbjphcGlLZXkiLCJuYmYiOjE3NTE2ODAxOTAsImlhdCI6MTc1MTY4MDE5MCwianRpIjoiMjliNzczOGEtODkxOS00ZTkzLTkzODEtNjQ0Y2VlMzY1NGY5In0.ddSlpYuNBfAS8NLzIswpmAw5PHVJv4SvhaygyiIqR58",
-      "status": "in_progress",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "8ecbf4d7-caef-40d2-adac-c4d584c0300d"
         }
       ],
       "createdAt": "2025-07-05T02:00:45.092Z",
-      "updatedAt": "2025-07-05T02:04:51.937Z",
+      "updatedAt": "2025-07-05T02:15:38.181Z",
       "relatedFiles": [],
       "implementationGuide": "1. git add -A && git commit -m 'fix: simple server로 fortinet 서비스 복원'\n2. git push origin master\n3. argocd app sync fortinet --server argo.jclee.me --insecure --grpc-web\n4. argocd app get fortinet로 상태 확인\n5. fortinet-app이 Healthy 상태가 될 때까지 모니터링",
       "verificationCriteria": "1. ArgoCD에서 fortinet 앱이 Synced 상태\n2. Health Status가 Healthy로 변경\n3. 모든 Pod가 Running 상태",
-      "analysisResult": "fortinet.jclee.me와 blacklist.jclee.me 502 Bad Gateway 에러를 해결하여 서비스 정상화. 기존 simple_server.py와 start.sh를 활용한 즉시 배포 가능한 솔루션 구현"
+      "analysisResult": "fortinet.jclee.me와 blacklist.jclee.me 502 Bad Gateway 에러를 해결하여 서비스 정상화. 기존 simple_server.py와 start.sh를 활용한 즉시 배포 가능한 솔루션 구현",
+      "summary": "ArgoCD 동기화 및 fortinet-app deployment 복구 완료. replicas 0->1 재시작을 통해 Healthy 상태 달성",
+      "completedAt": "2025-07-05T02:15:38.181Z"
     },
     {
       "id": "592b4377-d487-4111-9805-25f69bdffa56",
       "name": "fortinet.jclee.me 접속 테스트 및 502 에러 해결 확인",
       "description": "서비스가 정상적으로 외부에서 접근 가능한지 확인",
       "notes": "여전히 502면 ingress controller 자체 문제일 가능성",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "02af9aae-02ec-4a20-9bb7-2be068cbd1fb"
         }
       ],
       "createdAt": "2025-07-05T02:00:45.092Z",
-      "updatedAt": "2025-07-05T02:00:45.092Z",
+      "updatedAt": "2025-07-05T02:15:44.428Z",
       "relatedFiles": [],
       "implementationGuide": "1. curl https://fortinet.jclee.me 실행\n2. curl https://fortinet.jclee.me/api/health 실행\n3. 502 에러가 아닌 정상 응답 확인\n4. 브라우저에서도 접속 테스트",
       "verificationCriteria": "1. HTTP 200 응답 수신\n2. simple server의 HTML 페이지 표시\n3. /api/health에서 JSON 응답 확인",
