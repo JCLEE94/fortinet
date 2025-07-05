@@ -20,6 +20,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: test-nginx-service
+            name: fortinet-service
             port:
               number: 80
