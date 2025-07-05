@@ -233,11 +233,14 @@ anomalies = await hub.analytics_engine.detect_anomalies()
 ### ArgoCD GitOps Workflow
 The pipeline runs on push to main/master/develop branches:
 
-1. **Test Stage**: Runs pytest with coverage
-2. **Build Stage**: Creates Docker image
-3. **Push Stage**: Pushes to registry.jclee.me
-4. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
-5. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
+1. **Claude Analysis**: AI-powered code analysis and optimization suggestions (beta)
+2. **Test Stage**: Runs pytest with coverage
+3. **Build Stage**: Creates Docker image
+4. **Push Stage**: Pushes to registry.jclee.me
+5. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
+6. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
+
+Note: Claude analysis failures do not block the pipeline - tests and deployment continue regardless.
 
 ### Required GitHub Secrets
 ```
@@ -305,7 +308,26 @@ pytest --cov=src --cov-report=html --cov-report=term-missing
 pytest -m "unit" -v         # Unit tests only
 pytest -m "integration" -v  # Integration tests only
 pytest -m "not slow" -v     # Skip slow tests
+
+# CI/CD integration tests
+pytest tests/integration/ -v --cov=src/cicd
+
+# Run inline tests (Rust style)
+python src/cicd/pipeline_coordinator.py -v
+python src/cicd/argocd_client.py -v
+python src/cicd/gitops_manager.py -v
+python src/cicd/docker_registry.py -v
 ```
+
+### CI/CD Pipeline Testing Architecture
+
+The CI/CD pipeline has been refactored into testable modules in `src/cicd/`:
+- **PipelineCoordinator**: Manages pipeline decisions and flow control
+- **ArgoCDClient**: ArgoCD operations with authentication fallback
+- **GitOpsManager**: Git operations for GitOps workflow
+- **DockerRegistryClient**: Docker registry operations
+
+Each module includes inline tests that can be run directly.
 
 ## Multi-Cluster Deployment
 
@@ -350,6 +372,27 @@ export DOCKER_BUILDKIT=0
 docker build -f Dockerfile.production -t fortigate-nextrade:latest .
 ```
 
+### Production URL Not Accessible
+If https://fortinet.jclee.me is not accessible but NodePort (e.g., http://192.168.50.110:30777) works:
+
+1. **Trigger deployment**: 
+   ```bash
+   git commit --allow-empty -m "chore: trigger deployment"
+   git push origin master
+   ```
+
+2. **Manual deployment**:
+   ```bash
+   ./scripts/manual-deploy.sh
+   ```
+
+3. **Direct ArgoCD sync**:
+   ```bash
+   argocd app sync fortinet --prune
+   ```
+
+4. **Check NGINX proxy configuration** - ensure it points to the correct backend port (7777)
+
 ## Project Structure
 
 ```
@@ -361,6 +404,7 @@ fortinet/
 │   ├── api/clients/          # External API clients
 │   ├── modules/              # Core business logic
 │   ├── fortimanager/         # Advanced FortiManager features
+│   ├── cicd/                 # CI/CD testable modules (if exists)
 │   ├── utils/                # Utilities (logging, caching, security)
 │   ├── config/               # Configuration management
 │   ├── templates/            # Jinja2 HTML templates
@@ -449,3 +493,19 @@ Check `logs/web_app.log` for which method succeeded.
 - **blacklist**: IP blacklist management system (separate namespace)
 
 Each application has independent deployment cycles and can target different clusters.
+
+## Development Best Practices
+
+### When Making Changes
+1. **Test in mock mode first**: Always use `APP_MODE=test` for local development
+2. **Check blueprint namespacing**: Ensure all Flask routes use proper namespace (e.g., `main.dashboard`)
+3. **Session management**: All API clients must initialize `requests.Session()`
+4. **Use existing patterns**: Check similar code before implementing new features
+5. **Run tests before committing**: `pytest tests/ -v`
+6. **Verify deployment**: After pushing, monitor GitHub Actions and ArgoCD
+
+### Common Pitfalls to Avoid
+- Don't forget to call `super().__init__()` when extending API clients
+- Don't use hardcoded URLs - use environment variables or config
+- Don't skip error handling - use the established patterns
+- Don't bypass the mock system when `APP_MODE=test`
