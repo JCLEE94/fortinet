@@ -124,7 +124,7 @@ jobs:
   deploy:
     name: 🚀 Deploy
     needs: build
-    runs-on: ubuntu-latest  # GitHub hosted runner 사용
+    runs-on: self-hosted  # self-hosted runner 사용
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
