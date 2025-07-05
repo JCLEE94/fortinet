@@ -32,9 +32,9 @@ env:
   ARGOCD_APP_NAME: 'fortinet'
 
 jobs:
-  # Claude AI 코드 분석 및 개선
-  claude-analysis:
-    name: 🤖 Claude AI Code Analysis
+  # Claude Max AI 코드 분석 및 최적화
+  claude-max-analysis:
+    name: 🤖 Claude Max Code Analysis & Optimization
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     
@@ -44,85 +44,141 @@ jobs:
       with:
         fetch-depth: 0
       
-    - name: 🤖 Claude Code Analysis
-      id: claude-analysis
-      uses: anthropics/claude-code-base-action@beta
+    - name: 🤖 Claude Max 코드 분석 및 최적화
+      id: claude-max-analysis
+      uses: grll/claude-code-base-action@beta
       with:
         prompt: |
-          FortiGate Nextrade 프로젝트의 코드를 전면적으로 분석해주세요.
+          FortiGate Nextrade 프로젝트를 포괄적으로 분석하고 최적화해주세요.
+
+          ## 🎯 주요 분석 영역
           
-          분석 영역:
-          1. 보안 취약점 검사 (인증, 권한, 입력 검증, XSS, CSRF 등)
-          2. 성능 최적화 기회 (데이터베이스 쿼리, 캐싱, 비동기 처리)
-          3. 코드 품질 (가독성, 유지보수성, 모듈화)
-          4. Docker/Kubernetes 설정 최적화
-          5. Flask 애플리케이션 아키텍처 개선
-          6. CI/CD 파이프라인 최적화
+          ### 1. 🔐 보안 분석
+          - Flask 보안 설정 (CSRF, XSS, SQLi 방지)
+          - 인증/권한 시스템 검토
+          - 입력 검증 및 출력 인코딩
+          - Docker/K8s 보안 모범사례
+          - Secrets 관리 및 환경변수 보안
           
-          특히 src/ 디렉토리의 Python 코드와 k8s/ 디렉토리의 Kubernetes 매니페스트를 중점적으로 검토해주세요.
+          ### 2. ⚡ 성능 최적화
+          - Redis 캐싱 전략 개선
+          - 데이터베이스 쿼리 최적화
+          - 비동기 처리 개선
+          - Docker 이미지 크기 최적화
+          - Kubernetes 리소스 효율성
           
-          발견한 문제점은 심각도별로 분류하고, 구체적인 개선 방안을 제시해주세요.
-        allowed_tools: "Bash(git:*),View,GlobTool,GrepTool,BatchTool"
-        max_turns: "10"
-        timeout_minutes: "15"
-        anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-        
-    - name: 📊 Create Analysis Summary
-      if: steps.claude-analysis.outputs.conclusion == 'success'
+          ### 3. 🏗️ 아키텍처 개선
+          - Flask Blueprint 구조 최적화
+          - 모듈화 및 의존성 관리
+          - 에러 핸들링 개선
+          - 로깅 및 모니터링 강화
+          
+          ### 4. 🔧 DevOps 최적화
+          - CI/CD 파이프라인 개선
+          - ArgoCD GitOps 최적화
+          - Docker 빌드 최적화
+          - K8s 매니페스트 개선
+          
+          ### 5. 📚 코드 품질
+          - PEP 8 준수 및 코드 스타일
+          - 테스트 커버리지 개선
+          - 문서화 품질
+          - 코드 중복 제거
+          
+          ## 📋 분석 결과 요구사항
+          1. 발견된 문제를 **심각도별** (Critical/High/Medium/Low)로 분류
+          2. 각 문제에 대한 **구체적인 해결방안** 제시
+          3. **우선순위가 높은 개선사항** 식별
+          4. **구현 가능한 코드 예시** 제공
+          5. **성능/보안 벤치마크** 제안
+          
+          특히 `src/`, `k8s/`, `.github/workflows/` 디렉토리를 집중 분석해주세요.
+        allowed_tools: "Bash(git:*),View,GlobTool,GrepTool,BatchTool,Edit,Write"
+        max_turns: "15"
+        timeout_minutes: "20"
+        use_oauth: "true"
+        claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+        claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+        claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+        secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
+        claude_env: |
+          PROJECT_NAME: FortiGate Nextrade
+          PROJECT_TYPE: Flask Web Application
+          DEPLOYMENT_TARGET: Kubernetes
+          ENVIRONMENT: production
+          
+    - name: 📊 분석 결과 처리 및 이슈/PR 코멘트 생성
+      if: always() && steps.claude-max-analysis.outputs.execution_file
       uses: actions/github-script@v7
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const fs = require('fs');
           
-          // Read Claude analysis results
-          const executionFile = '${{ steps.claude-analysis.outputs.execution_file }}';
-          if (fs.existsSync(executionFile)) {
-            const executionLog = JSON.parse(fs.readFileSync(executionFile, 'utf8'));
+          try {
+            // Claude 분석 결과 읽기
+            const executionFile = '${{ steps.claude-max-analysis.outputs.execution_file }}';
+            if (!fs.existsSync(executionFile)) {
+              console.log('Execution file not found');
+              return;
+            }
             
-            // Create issue for critical findings
+            const executionLog = JSON.parse(fs.readFileSync(executionFile, 'utf8'));
+            const analysisStatus = '${{ steps.claude-max-analysis.outputs.conclusion }}';
+            
+            // 분석 요약 생성
+            const summary = `## 🤖 Claude Max AI 코드 분석 결과
+            
+### 📋 분석 개요
+- **실행 시간**: ${new Date().toISOString()}
+- **분석 상태**: ${analysisStatus}
+- **커밋**: \`${context.sha.substring(0, 7)}\`
+- **브랜치**: \`${context.ref.replace('refs/heads/', '')}\`
+- **트리거**: ${context.eventName}
+
+### 🔍 분석 범위
+- 🔐 보안 취약점 검사
+- ⚡ 성능 최적화 기회
+- 🏗️ 아키텍처 개선사항
+- 🔧 DevOps 최적화
+- 📚 코드 품질 검토
+
+### 📄 상세 결과
+분석 로그에서 상세한 결과를 확인할 수 있습니다:
+- [GitHub Actions 로그](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+---
+*🤖 Claude Max AI가 자동으로 생성한 분석 보고서입니다.*`;
+
             if (context.eventName === 'push') {
+              // Push 이벤트 시 이슈 생성
               await github.rest.issues.create({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                title: '🤖 Claude AI 코드 분석 결과 - ' + new Date().toISOString().split('T')[0],
-                body: `## 🤖 Claude AI 자동 코드 분석 결과
-                
-### 📋 분석 개요
-- **실행 시간**: ${new Date().toISOString()}
-- **분석 상태**: ${executionLog.conclusion || 'completed'}
-- **커밋**: ${context.sha.substring(0, 7)}
-
-### 📄 상세 분석 로그
-실행 파일에서 자세한 분석 결과를 확인할 수 있습니다.
-
----
-*자동 생성된 보고서입니다.*`,
-                labels: ['claude-analysis', 'automated', 'code-quality']
+                title: `🤖 Claude Max 코드 분석 결과 - ${new Date().toISOString().split('T')[0]}`,
+                body: summary,
+                labels: ['claude-max-analysis', 'automated', 'code-quality', 'enhancement']
               });
-            }
-            
-            // Add PR comment for pull requests
-            if (context.eventName === 'pull_request') {
+              console.log('Issue created for push event');
+            } else if (context.eventName === 'pull_request') {
+              // PR 이벤트 시 코멘트 추가
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.issue.number,
-                body: `## 🤖 Claude AI 코드 분석 완료
-                
-분석이 완료되었습니다. 상세한 결과는 Actions 로그에서 확인하실 수 있습니다.
-
-**분석 상태**: ${executionLog.conclusion || 'completed'}
-**커밋**: ${context.sha.substring(0, 7)}`
+                body: summary
               });
+              console.log('Comment added to PR');
             }
+          } catch (error) {
+            console.error('Error processing analysis results:', error);
           }
 
   # 테스트 및 품질 검사
   test:
     name: 🧪 Test & Quality
     runs-on: ubuntu-latest
-    needs: claude-analysis
+    needs: claude-max-analysis
     if: always()  # Claude analysis 실패해도 테스트 진행
     
     steps:

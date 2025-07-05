@@ -12,8 +12,6 @@ resources:
   - deployment.yaml
   - service.yaml
   - ingress.yaml
-  - test-deployment.yaml
-  - debug-pod.yaml
 
 images:
   - name: registry.jclee.me/fortinet
