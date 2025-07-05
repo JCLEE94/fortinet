@@ -20,8 +20,9 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: httpd:alpine
+        image: busybox
         imagePullPolicy: Always
+        command: ['sh', '-c', 'while true; do echo "OK" | nc -l -p 80; done']
         ports:
         - containerPort: 80
           name: http
@@ -33,20 +34,5 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 3
+# health check 제거 - busybox 테스트용
 # 볼륨 마운트 제거 - nginx 테스트에는 불필요
