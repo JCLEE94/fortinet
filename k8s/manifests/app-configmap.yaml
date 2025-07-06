@@ -13,7 +13,7 @@ data:
     pip install Flask flask-cors redis requests jinja2
     
     # Create minimal Flask app
-    cat > /app/app.py << 'EOF'
+    cat > /tmp/app.py << 'EOF'
     from flask import Flask, render_template_string, jsonify
     
     app = Flask(__name__)
@@ -64,4 +64,4 @@ data:
     EOF
     
     # Run the app
-    python /app/app.py
+    python /tmp/app.py
