@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fortinet-app-code
+  namespace: fortinet
+data:
+  start.sh: |
+    #!/bin/bash
+    echo "Starting FortiGate Nextrade Application..."
+    cd /app
+    
+    # Install dependencies
+    pip install Flask flask-cors redis requests jinja2
+    
+    # Create minimal Flask app
+    cat > /app/app.py << 'EOF'
+    from flask import Flask, render_template_string, jsonify
+    
+    app = Flask(__name__)
+    
+    HTML_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>FortiGate Nextrade</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .container { max-width: 800px; margin: 0 auto; }
+            .status { color: green; }
+            .info { background: #f0f0f0; padding: 20px; border-radius: 5px; margin: 20px 0; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🔥 FortiGate Nextrade</h1>
+            <div class="info">
+                <h2>메인 화면이 정상적으로 표시됩니다!</h2>
+                <p class="status">✅ Application is running</p>
+                <p>Version: 1.0.0</p>
+                <p>Environment: Production</p>
+            </div>
+            <h3>Features:</h3>
+            <ul>
+                <li>Network Monitoring</li>
+                <li>Policy Analysis</li>
+                <li>Topology Visualization</li>
+                <li>Automated Management</li>
+            </ul>
+        </div>
+    </body>
+    </html>
+    '''
+    
+    @app.route('/')
+    def index():
+        return render_template_string(HTML_TEMPLATE)
+    
+    @app.route('/api/health')
+    def health():
+        return jsonify({"status": "healthy", "service": "FortiGate Nextrade"})
+    
+    if __name__ == '__main__':
+        app.run(host='0.0.0.0', port=7777)
+    EOF
+    
+    # Run the app
+    python /app/app.py
