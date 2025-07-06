@@ -5,6 +5,7 @@ namespace: fortinet
 
 resources:
   - namespace.yaml
+  - secrets.yaml
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
