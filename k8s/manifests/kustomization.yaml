@@ -14,7 +14,7 @@ resources:
   - ingress.yaml
 
 images:
-  - name: registry.jclee.me/fortinet
+  - name: ghcr.io/jclee94/fortinet
     newTag: latest
 
 labels:
