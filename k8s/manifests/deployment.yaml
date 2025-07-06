@@ -20,8 +20,9 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: ghcr.io/jclee94/fortinet:latest
+        image: python:3.11-slim
         imagePullPolicy: Always
+        command: ["python", "-m", "http.server", "7777"]
         ports:
         - containerPort: 7777
           name: http
@@ -42,7 +43,7 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /api/health
+            path: /
             port: 7777
           initialDelaySeconds: 30
           periodSeconds: 30
@@ -50,7 +51,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /api/health
+            path: /
             port: 7777
           initialDelaySeconds: 20
           periodSeconds: 10

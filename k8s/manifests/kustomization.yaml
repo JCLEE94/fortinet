@@ -14,8 +14,8 @@ resources:
   - ingress.yaml
 
 images:
-  - name: ghcr.io/jclee94/fortinet
-    newTag: latest
+  - name: python
+    newTag: 3.11-slim
 
 labels:
   - includeSelectors: true
