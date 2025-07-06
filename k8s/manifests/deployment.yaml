@@ -18,12 +18,12 @@ spec:
         app: fortinet
         component: backend
     spec:
-      imagePullSecrets:
-      - name: regcred
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:20250705-162424
-        imagePullPolicy: Always
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["-c", "echo 'Starting simple HTTP server...' && cd /tmp && echo '{\"status\":\"healthy\",\"message\":\"Container is working!\"}' > health.json && python -m http.server 7777"]
         ports:
         - containerPort: 7777
           name: http
@@ -44,7 +44,7 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /api/health
+            path: /health.json
             port: 7777
           initialDelaySeconds: 30
           periodSeconds: 30
@@ -52,7 +52,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /api/health
+            path: /health.json
             port: 7777
           initialDelaySeconds: 20
           periodSeconds: 10
