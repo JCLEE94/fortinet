@@ -5,7 +5,6 @@ namespace: fortinet
 
 resources:
   - namespace.yaml
-  - secrets.yaml
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
@@ -15,7 +14,7 @@ resources:
   - ingress.yaml
 
 images:
-  - name: registry.jclee.me/fortinet
+  - name: ghcr.io/jclee94/fortinet
     newTag: latest
 
 labels:

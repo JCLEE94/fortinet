@@ -18,14 +18,12 @@ spec:
         app: fortinet
         component: backend
     spec:
-      imagePullSecrets:
-      - name: regcred
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest
-        imagePullPolicy: Always
+        image: nginx:latest
+        imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 7777
+        - containerPort: 80
           name: http
           protocol: TCP
         env:
@@ -44,16 +42,16 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /api/health
-            port: 7777
+            path: /
+            port: 80
           initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /api/health
-            port: 7777
+            path: /
+            port: 80
           initialDelaySeconds: 20
           periodSeconds: 10
           timeoutSeconds: 5
