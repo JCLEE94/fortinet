@@ -14,8 +14,8 @@ resources:
   - ingress.yaml
 
 images:
-  - name: ghcr.io/jclee94/fortinet
-    newTag: latest
+  - name: registry.jclee.me/fortinet
+    newTag: b0ddd71
 
 labels:
   - includeSelectors: true
@@ -25,5 +25,5 @@ labels:
 
 commonAnnotations:
   app.kubernetes.io/version: "b0ddd71"
-  deployed-by: "manual-fix"
-  deployed-at: "2025-07-06T09:54:00Z"
+  deployed-by: "argocd-fix"
+  deployed-at: "2025-07-07T07:29:00Z"
