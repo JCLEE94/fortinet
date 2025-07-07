@@ -481,132 +481,22 @@ def test_fortimanager_connection(data):
 @api_bp.route('/devices', methods=['GET'])
 @optimized_response(auto_paginate=True, cache_key='devices_list')
 def get_devices():
-    """장치 목록 조회 - 실제 장비 연동 및 Mock 데이터 지원"""
+    """장치 목록 조회 - 실제 FortiManager 연동"""
     try:
-        # APP_MODE 확인
-        app_mode = os.getenv('APP_MODE', 'production').lower()
-        
-        # 테스트 모드일 때는 Mock 데이터 반환
-        if app_mode == 'test':
-            mock_devices = [
-                {
-                    'id': 'fg_001',
-                    'name': 'FortiGate-001 (Test)',
-                    'type': 'firewall',
-                    'ip_address': '192.168.1.100',
-                    'mac_address': '00:09:0F:AA:01:01',
-                    'serial_number': 'FG100F1234567890',
-                    'firmware_version': 'v7.2.4',
-                    'adom': 'root',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 21:45:00',
-                    'model': 'FortiGate 100F',
-                    'zone': 'WAN',
-                    'is_dummy': True,
-                    'dummy_info': '테스트 모드 - 가상 장치'
-                },
-                {
-                    'id': 'fg_002', 
-                    'name': 'FortiGate-002 (Test)',
-                    'type': 'firewall',
-                    'ip_address': '192.168.1.101',
-                    'mac_address': '00:09:0F:AA:01:02',
-                    'serial_number': 'FG200F0987654321',
-                    'firmware_version': 'v7.2.3',
-                    'adom': 'root',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 21:44:30',
-                    'model': 'FortiGate 200F',
-                    'zone': 'DMZ',
-                    'is_dummy': True,
-                    'dummy_info': '테스트 모드 - 가상 장치'
-                },
-                {
-                    'id': 'client_001',
-                    'name': 'Workstation-01',
-                    'type': 'client',
-                    'ip_address': '192.168.10.100',
-                    'mac_address': '00:1B:21:AA:BB:CC',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 21:43:00',
-                    'zone': 'LAN',
-                    'is_dummy': True,
-                    'dummy_info': '테스트 모드 - 가상 클라이언트'
-                },
-                {
-                    'id': 'server_001',
-                    'name': 'Web-Server-01',
-                    'type': 'server',
-                    'ip_address': '192.168.20.100',
-                    'mac_address': '00:1C:42:DD:EE:FF',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 21:42:15',
-                    'zone': 'DMZ',
-                    'is_dummy': True,
-                    'dummy_info': '테스트 모드 - 가상 서버'
-                }
-            ]
-            
-            return {
-                'success': True,
-                'devices': {
-                    'fortigate_devices': [d for d in mock_devices if d['type'] == 'firewall'],
-                    'connected_devices': [d for d in mock_devices if d['type'] in ['client', 'server']]
-                },
-                'test_mode': True,
-                'test_mode_info': '현재 테스트 모드로 실행 중입니다. 표시된 장치들은 가상 데이터입니다.',
-                'data_source': 'mock',
-                'total_devices': len(mock_devices)
-            }
-        
         # API 매니저 가져오기
         api_manager = get_api_manager()
         
-        # No FortiManager service enabled - Mock 데이터 반환
+        # FortiManager 서비스 확인
         if not unified_settings.is_service_enabled('fortimanager'):
-            # 기본 Mock 데이터 반환 (서비스 비활성화 상태)
-            mock_devices = [
-                {
-                    'id': 'demo_fg_001',
-                    'name': 'Demo FortiGate-001',
-                    'type': 'firewall',
-                    'ip_address': '192.168.1.100',
-                    'mac_address': '00:09:0F:AA:01:01',
-                    'serial_number': 'DEMO001',
-                    'firmware_version': 'v7.2.4',
-                    'adom': 'root',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 22:30:00',
-                    'model': 'FortiGate Demo',
-                    'zone': 'WAN',
-                    'is_dummy': True,
-                    'dummy_info': 'FortiManager 서비스 미설정 - 데모 데이터'
-                },
-                {
-                    'id': 'demo_client_001',
-                    'name': 'Demo Workstation',
-                    'type': 'client',
-                    'ip_address': '192.168.10.100',
-                    'mac_address': '00:1B:21:AA:BB:CC',
-                    'status': 'online',
-                    'last_seen': '2025-07-07 22:29:00',
-                    'zone': 'LAN',
-                    'is_dummy': True,
-                    'dummy_info': 'FortiManager 서비스 미설정 - 데모 데이터'
-                }
-            ]
-            
-            return {
-                'success': True,
+            return jsonify({
+                'success': False,
+                'error': 'FortiManager 서비스가 활성화되지 않았습니다. 설정 페이지에서 FortiManager 연결을 구성해주세요.',
                 'devices': {
-                    'fortigate_devices': [d for d in mock_devices if d['type'] == 'firewall'],
-                    'connected_devices': [d for d in mock_devices if d['type'] in ['client', 'server']]
+                    'fortigate_devices': [],
+                    'connected_devices': []
                 },
-                'data_source': 'demo',
-                'total_devices': len(mock_devices),
-                'message': 'FortiManager 서비스가 비활성화되어 있어 데모 데이터를 표시합니다.',
-                'app_mode': app_mode
-            }
+                'total_devices': 0
+            }), 400
         
         # 실제 장비 연결 시도
         try:
@@ -718,105 +608,42 @@ def get_devices():
 @api_bp.route('/device/<device_id>', methods=['GET'])
 @optimized_response(cache_key='device_detail')
 def get_device_detail(device_id):
-    """장치 상세 정보 조회"""
+    """장치 상세 정보 조회 - 실제 FortiManager 연동"""
     try:
-        app_mode = os.getenv('APP_MODE', 'production').lower()
+        # API 매니저 가져오기
+        api_manager = get_api_manager()
         
-        # 테스트 모드일 때 Mock 데이터 반환
-        if app_mode == 'test':
-            mock_device_details = {
-                'fg_001': {
-                    'id': 'fg_001',
-                    'name': 'FortiGate-001 (Test)',
-                    'type': 'firewall',
-                    'model': 'FortiGate 100F',
-                    'firmware_version': 'v7.2.4',
-                    'serial_number': 'FG100F1234567890',
-                    'ip_address': '192.168.1.100',
-                    'mac_address': '00:09:0F:AA:01:01',
-                    'zone': 'WAN',
-                    'status': 'online',
-                    'connection': 'Ethernet',
-                    'location': 'Rack A-1',
-                    'is_dummy': True,
-                    'interfaces': [
-                        {'name': 'port1', 'ip': '192.168.1.100', 'vlan': '1', 'zone': 'WAN', 'status': 'up'},
-                        {'name': 'port2', 'ip': '192.168.10.1', 'vlan': '10', 'zone': 'LAN', 'status': 'up'},
-                        {'name': 'port3', 'ip': '192.168.20.1', 'vlan': '20', 'zone': 'DMZ', 'status': 'up'}
-                    ],
-                    'policies': [
-                        {'id': '1', 'name': 'LAN to WAN', 'srcaddr': 'LAN_subnet', 'dstaddr': 'all', 'service': 'ALL', 'action': 'accept'},
-                        {'id': '2', 'name': 'DMZ to WAN', 'srcaddr': 'DMZ_subnet', 'dstaddr': 'all', 'service': 'HTTP HTTPS', 'action': 'accept'}
-                    ]
-                },
-                'fg_002': {
-                    'id': 'fg_002',
-                    'name': 'FortiGate-002 (Test)',
-                    'type': 'firewall',
-                    'model': 'FortiGate 200F',
-                    'firmware_version': 'v7.2.3',
-                    'serial_number': 'FG200F0987654321',
-                    'ip_address': '192.168.1.101',
-                    'mac_address': '00:09:0F:AA:01:02',
-                    'zone': 'DMZ',
-                    'status': 'online',
-                    'connection': 'Ethernet',
-                    'location': 'Rack A-2',
-                    'is_dummy': True,
-                    'interfaces': [
-                        {'name': 'port1', 'ip': '192.168.1.101', 'vlan': '1', 'zone': 'WAN', 'status': 'up'},
-                        {'name': 'port2', 'ip': '192.168.30.1', 'vlan': '30', 'zone': 'LAN', 'status': 'up'}
-                    ],
-                    'policies': [
-                        {'id': '3', 'name': 'Internal Access', 'srcaddr': 'internal', 'dstaddr': 'DMZ', 'service': 'ALL', 'action': 'accept'}
-                    ]
-                },
-                'client_001': {
-                    'id': 'client_001',
-                    'name': 'Workstation-01',
-                    'type': 'client',
-                    'model': 'Windows PC',
-                    'ip_address': '192.168.10.100',
-                    'mac_address': '00:1B:21:AA:BB:CC',
-                    'zone': 'LAN',
-                    'status': 'online',
-                    'connection': 'Ethernet',
-                    'is_dummy': True,
-                    'interfaces': [],
-                    'policies': []
-                },
-                'server_001': {
-                    'id': 'server_001',
-                    'name': 'Web-Server-01',
-                    'type': 'server',
-                    'model': 'Linux Server',
-                    'ip_address': '192.168.20.100',
-                    'mac_address': '00:1C:42:DD:EE:FF',
-                    'zone': 'DMZ',
-                    'status': 'online',
-                    'connection': 'Ethernet',
-                    'is_dummy': True,
-                    'interfaces': [],
-                    'policies': []
-                }
-            }
+        # FortiManager 서비스 확인
+        if not unified_settings.is_service_enabled('fortimanager'):
+            return jsonify({
+                'success': False,
+                'error': 'FortiManager 서비스가 활성화되지 않았습니다.',
+                'device': None
+            }), 400
+        
+        # FortiManager 클라이언트를 통해 장치 정보 조회
+        try:
+            fm_client = api_manager.get_fortimanager_client()
+            if not fm_client:
+                raise Exception("FortiManager 클라이언트를 찾을 수 없음")
             
-            device_detail = mock_device_details.get(device_id)
-            if device_detail:
-                return {
-                    'success': True,
-                    'device': device_detail,
-                    'test_mode': True
-                }
-            else:
-                return {'success': False, 'error': '장치를 찾을 수 없습니다.'}, 404
-        
-        # 프로덕션 모드에서는 실제 API 호출 (현재는 기본 응답)
-        return {
-            'success': False,
-            'error': '장치 정보를 가져올 수 없습니다.',
-            'device': None
-        }, 500
+            # 실제 장치 정보 조회 로직 구현
+            # TODO: FortiManager API를 통한 실제 장치 정보 조회
+            logger.info(f"장치 상세 정보 조회: {device_id}")
+            
+            return {
+                'success': False,
+                'error': '장치 정보 조회 기능이 아직 구현되지 않았습니다.',
+                'device': None
+            }, 501
+            
+        except Exception as api_error:
+            logger.error(f"FortiManager API 호출 실패: {api_error}")
+            return {
+                'success': False,
+                'error': f'FortiManager 연결 실패: {str(api_error)}',
+                'device': None
+            }, 500
         
     except Exception as e:
         logger.error(f"장치 상세 정보 조회 오류: {e}")
