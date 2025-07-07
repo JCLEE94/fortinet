@@ -205,18 +205,307 @@ data:
         
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            function loadPage(page) {
+            function setActiveNav(clickedElement) {
                 // Remove active class from all nav links
                 document.querySelectorAll('.nav-link').forEach(link => {
                     link.classList.remove('active');
                 });
-                
                 // Add active class to clicked link
-                event.target.closest('.nav-link').classList.add('active');
-                
-                // Load different content based on page
+                clickedElement.classList.add('active');
+            }
+            
+            function showDashboard() {
+                setActiveNav(event.target.closest('.nav-link'));
+                location.reload();
+            }
+            
+            function showDevices() {
+                setActiveNav(event.target.closest('.nav-link'));
                 const mainContent = document.querySelector('.main-content');
-                
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-network-wired me-2"></i>네트워크 장비 관리</h2>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <h5>FortiGate 장비 목록</h5>
+                            <button class="btn btn-primary btn-sm" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i>새로고침
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr><th>장비명</th><th>IP 주소</th><th>상태</th><th>CPU</th><th>메모리</th><th>관리</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>FW-01</strong></td>
+                                        <td>192.168.1.1</td>
+                                        <td><span class="badge bg-success">ONLINE</span></td>
+                                        <td>25%</td>
+                                        <td>45%</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="alert('FW-01 세부정보')">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FW-02</strong></td>
+                                        <td>192.168.1.2</td>
+                                        <td><span class="badge bg-success">ONLINE</span></td>
+                                        <td>30%</td>
+                                        <td>52%</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="alert('FW-02 세부정보')">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>FW-03</strong></td>
+                                        <td>192.168.1.3</td>
+                                        <td><span class="badge bg-danger">OFFLINE</span></td>
+                                        <td>0%</td>
+                                        <td>0%</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="alert('FW-03 연결 시도')">
+                                                <i class="fas fa-power-off"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showPolicies() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-shield-alt me-2"></i>보안 정책 관리</h2>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between">
+                            <h5>방화벽 정책 목록</h5>
+                            <button class="btn btn-success btn-sm" onclick="alert('새 정책 추가')">
+                                <i class="fas fa-plus me-1"></i>정책 추가
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr><th>ID</th><th>정책명</th><th>액션</th><th>상태</th><th>관리</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td><strong>Allow HTTP</strong></td>
+                                        <td><span class="badge bg-success">ALLOW</span></td>
+                                        <td><span class="badge bg-primary">활성</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="alert('정책 1 비활성화')">
+                                                <i class="fas fa-toggle-on"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td><strong>Block Malware</strong></td>
+                                        <td><span class="badge bg-warning">DENY</span></td>
+                                        <td><span class="badge bg-primary">활성</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="alert('정책 2 비활성화')">
+                                                <i class="fas fa-toggle-on"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td><strong>VPN Access</strong></td>
+                                        <td><span class="badge bg-success">ALLOW</span></td>
+                                        <td><span class="badge bg-secondary">비활성</span></td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="alert('정책 3 활성화')">
+                                                <i class="fas fa-toggle-off"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showTopology() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-project-diagram me-2"></i>네트워크 토폴로지</h2>
+                    <div class="card">
+                        <div class="card-body text-center" style="height: 400px; display: flex; align-items: center; justify-content: center;">
+                            <div>
+                                <i class="fas fa-project-diagram fa-5x text-muted mb-3"></i>
+                                <h4>네트워크 토폴로지 뷰</h4>
+                                <p class="text-muted">실시간 네트워크 구성도가 여기에 표시됩니다</p>
+                                <button class="btn btn-primary" onclick="alert('토폴로지 새로고침')">토폴로지 새로고침</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showAnalytics() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-chart-line me-2"></i>네트워크 분석</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header"><h5>트래픽 분석</h5></div>
+                                <div class="card-body text-center" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <div>
+                                        <i class="fas fa-chart-bar fa-3x text-primary mb-2"></i>
+                                        <p>실시간 트래픽 차트</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header"><h5>대역폭 사용률</h5></div>
+                                <div class="card-body text-center" style="height: 200px; display: flex; align-items: center; justify-content: center;">
+                                    <div>
+                                        <i class="fas fa-chart-pie fa-3x text-success mb-2"></i>
+                                        <p>대역폭 사용 현황</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showThreats() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-exclamation-triangle me-2"></i>위협 탐지</h2>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        <strong>현재 12개의 경고가 있습니다</strong>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h5>최근 위협 이벤트</h5></div>
+                        <div class="card-body">
+                            <div class="alert alert-danger alert-sm">
+                                <strong>HIGH</strong> - Malware detected from 192.168.1.50
+                            </div>
+                            <div class="alert alert-warning alert-sm">
+                                <strong>MEDIUM</strong> - Suspicious login attempt
+                            </div>
+                            <div class="alert alert-info alert-sm">
+                                <strong>LOW</strong> - Unusual traffic pattern detected
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showFortiManager() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-cogs me-2"></i>FortiManager</h2>
+                    <div class="card">
+                        <div class="card-header"><h5>FortiManager 연결 상태</h5></div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>서버:</strong> 192.168.10.100</p>
+                                    <p><strong>상태:</strong> <span class="badge bg-success">연결됨</span></p>
+                                    <p><strong>정책 패키지:</strong> 5개</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>관리 장비:</strong> 3개</p>
+                                    <p><strong>마지막 동기화:</strong> 5분 전</p>
+                                    <button class="btn btn-primary" onclick="alert('FortiManager 동기화')">동기화</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showITSM() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-tools me-2"></i>ITSM 연동</h2>
+                    <div class="card">
+                        <div class="card-header"><h5>ServiceNow 연동 상태</h5></div>
+                        <div class="card-body">
+                            <p><strong>상태:</strong> <span class="badge bg-success">연결됨</span></p>
+                            <p><strong>자동 티켓 생성:</strong> 활성화</p>
+                            <button class="btn btn-primary" onclick="alert('ITSM 설정')">설정</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showLogs() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-file-alt me-2"></i>로그 관리</h2>
+                    <div class="card">
+                        <div class="card-header"><h5>실시간 로그</h5></div>
+                        <div class="card-body">
+                            <div style="background: #000; color: #0f0; padding: 15px; border-radius: 5px; font-family: monospace;">
+                                [2025-07-07 18:13:45] INFO: System startup completed<br>
+                                [2025-07-07 18:13:46] INFO: FortiGate FW-01 connected<br>
+                                [2025-07-07 18:13:47] WARN: High CPU usage on FW-02<br>
+                                [2025-07-07 18:13:48] INFO: Policy update completed<br>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showSettings() {
+                setActiveNav(event.target.closest('.nav-link'));
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <h2><i class="fas fa-cog me-2"></i>시스템 설정</h2>
+                    <div class="card">
+                        <div class="card-header"><h5>기본 설정</h5></div>
+                        <div class="card-body">
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">모니터링 간격</label>
+                                    <select class="form-select">
+                                        <option>30초</option>
+                                        <option>1분</option>
+                                        <option>5분</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">알림 설정</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" checked>
+                                        <label class="form-check-label">이메일 알림</label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="alert('설정이 저장되었습니다')">저장</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function loadPage(page) {
                 if (page === 'devices') {
                     fetch('/api/devices')
                         .then(response => response.json())
