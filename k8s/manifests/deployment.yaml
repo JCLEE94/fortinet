@@ -27,7 +27,7 @@ spec:
       - name: fortinet
         image: python:3.11
         imagePullPolicy: Always
-        command: ["sh", "-c", "cd /tmp && cp -r /app/src . && pip install -r /app/requirements.txt 2>/dev/null || pip install Flask flask-cors redis requests jinja2 psutil loguru typer && export APP_MODE=production && export WEB_APP_PORT=7777 && export WEB_APP_HOST=0.0.0.0 && export OFFLINE_MODE=true && python src/main.py --web"]
+        command: ["/app/start.sh"]
         volumeMounts:
         - name: app-code
           mountPath: /app
