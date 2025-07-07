@@ -25,4 +25,4 @@ labels:
 commonAnnotations:
   app.kubernetes.io/version: "b0ddd71"
   deployed-by: "argocd-fix"
-  deployed-at: "2025-07-07T10:59:07Z"
+  deployed-at: "2025-07-07T11:10:13Z"
