@@ -18,19 +18,10 @@ spec:
         app: fortinet
         component: backend
     spec:
-      volumes:
-      - name: app-code
-        configMap:
-          name: fortinet-real-app
-          defaultMode: 0755
       containers:
       - name: fortinet
-        image: python:3.11
+        image: registry.jclee.me/fortinet:latest
         imagePullPolicy: Always
-        command: ["/app/start.sh"]
-        volumeMounts:
-        - name: app-code
-          mountPath: /app
         ports:
         - containerPort: 7777
           name: http
