@@ -11,6 +11,7 @@ resources:
   - configmap.yaml
   - app-configmap.yaml
   - real-app-configmap.yaml
+  - original-app-configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
