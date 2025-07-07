@@ -9,13 +9,12 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - real-nextrade-dashboard-configmap.yaml
   - deployment.yaml
   - service.yaml
 
 images:
-  - name: python
-    newTag: 3.11-slim
+  - name: registry.jclee.me/fortinet
+    newTag: latest
 
 labels:
   - includeSelectors: true

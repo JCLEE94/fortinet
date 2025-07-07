@@ -18,38 +18,10 @@ spec:
         app: fortinet
         component: backend
     spec:
-      volumes:
-      - name: app-code
-        configMap:
-          name: real-nextrade-dashboard
-          defaultMode: 0755
       containers:
       - name: fortinet
-        image: python:3.11-slim
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            echo "🚀 Starting FortiGate Nextrade..."
-            
-            # Create necessary directories
-            mkdir -p /app/templates /app/static
-            
-            # Debug: List mounted files
-            echo "📁 Available files in /app:"
-            ls -la /app/
-            
-            # Copy templates if they exist as separate files
-            find /app -name "*.html" -exec cp {} /app/templates/ \; 2>/dev/null || true
-            
-            # Make start script executable
-            chmod +x /app/start.sh
-            
-            # Start the application
-            /app/start.sh
-        volumeMounts:
-        - name: app-code
-          mountPath: /app
+        image: registry.jclee.me/fortinet:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 7777
           name: http
