@@ -9,8 +9,7 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - nextrade-original-configmap.yaml
-  - fortinet-app-complete-configmap.yaml
+  - fortinet-nextrade-logo-configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
