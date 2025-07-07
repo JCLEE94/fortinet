@@ -8,13 +8,15 @@ resources:
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
-  - simple-deployment.yaml
+  - configmap.yaml
+  - real-nextrade-dashboard-configmap.yaml
+  - deployment.yaml
   - service.yaml
   - ingress.yaml
 
 images:
-  - name: registry.jclee.me/fortinet
-    newTag: latest
+  - name: python
+    newTag: 3.11-slim
 
 labels:
   - includeSelectors: true
