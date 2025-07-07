@@ -9,7 +9,6 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - registry-secret.yaml
   - deployment.yaml
   - service.yaml
 
