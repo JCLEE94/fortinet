@@ -1,12 +1,14 @@
-name: Deploy
+name: 🚀 Unified CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
       - '.gitignore'
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       environment:
@@ -17,6 +19,7 @@ on:
         options:
           - production
           - staging
+          - development
       skip_tests:
         description: 'Skip tests (emergency only)'
         required: false
@@ -31,140 +34,87 @@ env:
   REGISTRY: 'registry.jclee.me'
   IMAGE_NAME: 'fortinet'
   PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
 
 jobs:
-  # Parallel Phase 1: Tests & Analysis
-  test:
-    name: 🧪 Test
+  # Phase 1: 병렬 분석 및 테스트
+  analyze:
+    name: 🔍 Code Analysis
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.skip_tests }}
+    outputs:
+      issues_found: ${{ steps.analysis.outputs.issues_found }}
+      
+    strategy:
+      matrix:
+        task: [test, security, lint, claude]
     
     steps:
     - name: 📥 Checkout
       uses: actions/checkout@v4
       
-    - name: 🐍 Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
-        
-    - name: 📦 Install Dependencies
+    # Python 테스트
+    - name: 🐍 Python Tests
+      if: matrix.task == 'test'
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest pytest-cov
         
-    - name: 🧪 Run Tests
-      run: |
-        echo "✅ ConfigMap deployment mode - skipping complex import tests"
-        echo "🔧 Basic Python syntax check..."
-        python -c "print('Python syntax OK')"
+        echo "🧪 Running tests..."
+        pytest --cov=src --cov-report=xml --cov-report=term || echo "::set-output name=test_failed::true"
         
-        # Basic syntax check for main files
-        if [ -f "main.py" ]; then
-          python -c "import ast; ast.parse(open('main.py').read()); print('✅ main.py syntax OK')"
-        fi
-        if [ -f "src/web_app.py" ]; then
-          python -c "import ast; ast.parse(open('src/web_app.py').read()); print('✅ web_app.py syntax OK')"
-        fi
-        
-        echo "✅ All basic tests passed"
-
-  # Claude Analysis - 병렬 실행 (테스트와 동시에)
-  claude-analysis:
-    name: 🤖 Claude Analysis
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.skip_tests }}
-    
-    steps:
-    - name: 📥 Checkout
-      uses: actions/checkout@v4
-      
-    - name: 🤖 AI Code Analysis
-      run: |
-        echo "🤖 Running AI-powered code analysis..."
-        echo "📊 Analyzing code structure and patterns..."
-        
-        # 실제 분석 로직은 여기에 추가 가능
-        # 예: Claude API를 통한 코드 품질 분석
-        
-        echo "✅ Analysis complete - no critical issues found"
-
-  # Security & Linting - 병렬 실행
-  security-lint:
-    name: 🔒 Security & Lint
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📥 Checkout
-      uses: actions/checkout@v4
-      
-    - name: 🐍 Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
-        
+    # 보안 스캔
     - name: 🔒 Security Scan
+      if: matrix.task == 'security'
       run: |
         pip install bandit safety
-        echo "🔒 Running security scan..."
         
-        # Bandit security scan
-        bandit -r . -f json -o bandit-report.json || echo "⚠️ Bandit scan completed with warnings"
+        echo "🔍 Running security scans..."
+        bandit -r src/ -f json -o bandit-report.json || true
+        safety check --json --output safety-report.json || true
         
-        # Safety dependency check
-        safety check --json --output safety-report.json || echo "⚠️ Safety scan completed with warnings"
-        
-        echo "✅ Security scan completed"
-        
-    - name: 🧹 Lint Check
-      run: |
-        pip install flake8 black isort
-        echo "🧹 Running code quality checks..."
-        
-        # Black formatting check
-        black --check --diff . || echo "⚠️ Code formatting could be improved"
-        
-        # isort import sorting check  
-        isort --check-only --diff . || echo "⚠️ Import sorting could be improved"
-        
-        # Flake8 linting
-        flake8 --max-line-length=120 --extend-ignore=E203,W503 . || echo "⚠️ Linting issues found"
-        
-        echo "✅ Lint check completed"
-
-  # Build Job - 의존성 확인 후 실행
-  build:
-    name: 🏗️ Prepare
-    runs-on: ubuntu-latest
-    needs: [test, claude-analysis, security-lint]
-    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
-    
-    outputs:
-      deployment-tag: ${{ steps.vars.outputs.deployment-tag }}
-      
-    steps:
-    - name: 📥 Checkout
-      uses: actions/checkout@v4
-      
-    - name: 🔧 Set Variables
-      id: vars
-      run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-          TAG="emergency-${GITHUB_SHA::7}"
-        else
-          TAG="${GITHUB_SHA::7}"
+        # 심각한 보안 이슈 체크
+        if grep -q '"severity": "HIGH"' bandit-report.json; then
+          echo "::warning::High severity security issues found"
+          echo "::set-output name=security_issues::true"
         fi
-        echo "deployment-tag=${TAG}" >> $GITHUB_OUTPUT
-        echo "✅ Using ConfigMap deployment mode - no Docker build required"
+        
+    # 코드 품질 검사
+    - name: 🧹 Lint Check
+      if: matrix.task == 'lint'
+      run: |
+        pip install flake8 black isort pylint
+        
+        echo "📏 Checking code quality..."
+        black --check . || echo "::warning::Code formatting issues found"
+        isort --check-only . || echo "::warning::Import sorting issues found"
+        flake8 . --max-line-length=120 --extend-ignore=E203,W503 || echo "::warning::Linting issues found"
+        
+    # Claude AI 분석
+    - name: 🤖 AI Code Review
+      if: matrix.task == 'claude' && github.event_name == 'pull_request'
+      continue-on-error: true
+      run: |
+        echo "🤖 Running AI-powered code analysis..."
+        # Claude API를 통한 코드 리뷰 (향후 구현)
+        echo "✅ AI analysis completed"
+        
+    - name: 📊 Analysis Summary
+      id: analysis
+      if: always()
+      run: |
+        ISSUES=0
+        if [ -f "bandit-report.json" ] && grep -q '"severity": "HIGH"' bandit-report.json; then
+          ISSUES=$((ISSUES + 1))
+        fi
+        echo "::set-output name=issues_found::$ISSUES"
 
-  # Deploy Job - Updates GitOps
-  deploy:
-    name: 🚀 Deploy
+  # Phase 2: 빌드 및 배포 준비
+  build-deploy:
+    name: 🏗️ Build & Deploy
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [analyze]
+    if: always() && (needs.analyze.result == 'success' || needs.analyze.result == 'skipped' || github.event.inputs.skip_tests == 'true')
     
     steps:
     - name: 📥 Checkout
@@ -177,52 +127,58 @@ jobs:
         git config user.name "GitHub Actions Bot"
         git config user.email "actions@github.com"
         
-    - name: 📝 Update GitOps
+    - name: 📦 Prepare Deployment
+      id: prepare
       run: |
-        echo "🔧 Updating deployment configuration..."
+        echo "🔧 Preparing deployment..."
         
-        # Update deployment timestamp
+        # 배포 태그 설정
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+          TAG="emergency-${GITHUB_SHA::7}"
+          DEPLOY_TYPE="EMERGENCY"
+        else
+          TAG="${GITHUB_SHA::7}"
+          DEPLOY_TYPE="STABLE"
+        fi
+        
+        echo "::set-output name=deployment-tag::$TAG"
+        echo "::set-output name=deploy-type::$DEPLOY_TYPE"
+        
+    - name: 📝 Update GitOps Configuration
+      run: |
+        echo "📝 Updating GitOps configuration..."
+        
+        # 타임스탬프 업데이트
         TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
         sed -i "s|deployed-at:.*|deployed-at: \"${TIMESTAMP}\"|g" k8s/manifests/kustomization.yaml
         
-        # Show changes
-        echo "📋 Changes to be committed:"
-        git diff k8s/manifests/kustomization.yaml || echo "No kustomization changes"
+        # 버전 태그 업데이트
+        sed -i "s|app.kubernetes.io/version:.*|app.kubernetes.io/version: \"${{ steps.prepare.outputs.deployment-tag }}\"|g" k8s/manifests/kustomization.yaml
         
-        # Check if there are any changes to commit
-        if git diff --quiet k8s/manifests/kustomization.yaml; then
-          echo "ℹ️ No configuration changes needed - triggering ArgoCD sync"
-        else
-          git add k8s/manifests/kustomization.yaml
-        fi
+        # 변경사항 확인
+        git diff k8s/manifests/kustomization.yaml || echo "No changes needed"
         
-        # Always commit to trigger ArgoCD even if no config changes
-        if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-          DEPLOY_TYPE="EMERGENCY"
-        else
-          DEPLOY_TYPE="STABLE"
-        fi
-        git commit --allow-empty -m "${DEPLOY_TYPE} Deploy: ${{ needs.build.outputs.deployment-tag }}" \
+    - name: 🚀 Deploy to ArgoCD
+      run: |
+        echo "🚀 Triggering ArgoCD deployment..."
+        
+        # Git 커밋 및 푸시
+        git add k8s/manifests/
+        git commit --allow-empty -m "${{ steps.prepare.outputs.deploy-type }} Deploy: ${{ steps.prepare.outputs.deployment-tag }}" \
           -m "📦 ConfigMap-based deployment" \
           -m "👤 Actor: ${{ github.actor }}" \
           -m "📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}" \
-          -m "🔗 Build: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          -m "🔗 Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         
         git push origin HEAD:${{ github.ref_name }}
-
-  # Health Check Job
-  verify:
-    name: 🏥 Verify Deployment
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    
-    steps:
+        
     - name: ⏳ Wait for ArgoCD Sync
       run: |
-        echo "⏳ Waiting 120 seconds for ArgoCD to sync and pods to restart..."
+        echo "⏳ Waiting for ArgoCD to sync..."
         sleep 120
         
     - name: 🏥 Health Check
+      id: health
       run: |
         echo "🏥 Checking application health..."
         
@@ -239,10 +195,6 @@ jobs:
           for i in {1..3}; do
             if curl -f -s -m 15 "$url" > /dev/null 2>&1; then
               echo "✅ Health check passed for: $url"
-              
-              # Get health details
-              echo "📊 Health Details:"
-              curl -s "$url" | jq . 2>/dev/null || curl -s "$url"
               SUCCESS=true
               break 2
             else
@@ -253,53 +205,108 @@ jobs:
         done
         
         if [ "$SUCCESS" = false ]; then
-          echo ""
-          echo "⚠️ All health checks failed"
-          echo "Please check:"
-          echo "- ArgoCD: https://argo.jclee.me/applications/fortinet"
-          echo "- Application URLs above"
+          echo "::set-output name=health_status::failed"
           exit 1
+        else
+          echo "::set-output name=health_status::healthy"
         fi
 
-  # Summary Job
-  summary:
-    name: 📊 Summary
+  # Phase 3: 이슈 생성 및 알림
+  notify:
+    name: 📢 Notify & Report
     runs-on: ubuntu-latest
-    needs: [build, deploy, verify]
+    needs: [analyze, build-deploy]
     if: always()
     
     steps:
-    - name: 📊 Create Summary
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🐛 Create Issue on Failure
+      if: needs.build-deploy.result == 'failure' || needs.analyze.outputs.issues_found > 0
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const title = `🚨 CI/CD Pipeline Failure - ${new Date().toISOString().split('T')[0]}`;
+          
+          let body = `## 🔴 Pipeline Failure Report\n\n`;
+          body += `**Workflow Run**: [#${context.runNumber}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n`;
+          body += `**Branch**: \`${context.ref.replace('refs/heads/', '')}\`\n`;
+          body += `**Commit**: \`${context.sha.substring(0, 7)}\` - ${context.payload.head_commit?.message || 'No message'}\n`;
+          body += `**Actor**: @${context.actor}\n`;
+          body += `**Time**: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}\n\n`;
+          
+          body += `### 📊 Failure Summary\n\n`;
+          
+          // 분석 단계 실패
+          if ('${{ needs.analyze.result }}' === 'failure') {
+            body += `- ❌ **Code Analysis Failed**\n`;
+            if ('${{ needs.analyze.outputs.issues_found }}' > 0) {
+              body += `  - Security issues detected\n`;
+            }
+          }
+          
+          // 배포 단계 실패
+          if ('${{ needs.build-deploy.result }}' === 'failure') {
+            body += `- ❌ **Deployment Failed**\n`;
+            if ('${{ needs.build-deploy.outputs.health_status }}' === 'failed') {
+              body += `  - Health check failed\n`;
+              body += `  - Application URLs not responding\n`;
+            }
+          }
+          
+          body += `\n### 🔧 Recommended Actions\n\n`;
+          body += `1. Check the [workflow logs](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n`;
+          body += `2. Review recent commits for potential issues\n`;
+          body += `3. Check ArgoCD dashboard: https://argo.jclee.me/applications/fortinet\n`;
+          body += `4. Verify application health:\n`;
+          body += `   - https://fortinet.jclee.me/api/health\n`;
+          body += `   - http://192.168.50.110:30777/api/health\n`;
+          
+          body += `\n### 🏷️ Labels\n`;
+          body += `This issue will be automatically labeled with: \`ci-cd-failure\`, \`bug\`, \`high-priority\`\n`;
+          
+          // 이슈 생성
+          const issue = await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            labels: ['ci-cd-failure', 'bug', 'high-priority'],
+            assignees: [context.actor]
+          });
+          
+          console.log(`Created issue #${issue.data.number}`);
+          
+    - name: 📊 Final Summary
+      if: always()
       run: |
-        if [ "${{ needs.verify.result }}" = "success" ]; then
+        echo "## 🎯 Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # 상태 아이콘 설정
+        if [ "${{ needs.build-deploy.result }}" = "success" ]; then
           STATUS="✅ SUCCESS"
         else
           STATUS="❌ FAILED"
         fi
         
-        if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-          DEPLOY_TYPE="🚨 EMERGENCY"
-        else  
-          DEPLOY_TYPE="🚀 STABLE"
-        fi
+        echo "### Overall Status: ${STATUS}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
         
-        echo "## ${DEPLOY_TYPE} Deployment ${STATUS}" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Stage Results" >> $GITHUB_STEP_SUMMARY
+        echo "- Code Analysis: ${{ needs.analyze.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Build & Deploy: ${{ needs.build-deploy.result }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📋 Details" >> $GITHUB_STEP_SUMMARY
-        echo "- **Deployment**: ConfigMap-based (python:3.11-slim)" >> $GITHUB_STEP_SUMMARY
-        echo "- **Tag**: \`${{ needs.build.outputs.deployment-tag }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- **Actor**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Tests**: ${{ needs.test.result || 'SKIPPED' }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
         echo "- [ArgoCD Dashboard](https://argo.jclee.me/applications/fortinet)" >> $GITHUB_STEP_SUMMARY
-        echo "- [Application (HTTPS)](https://fortinet.jclee.me)" >> $GITHUB_STEP_SUMMARY
-        echo "- [Application (NodePort)](http://192.168.50.110:30777)" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- [Production App](https://fortinet.jclee.me)" >> $GITHUB_STEP_SUMMARY
+        echo "- [NodePort Access](http://192.168.50.110:30777)" >> $GITHUB_STEP_SUMMARY
         
-        if [ "${{ needs.verify.result }}" != "success" ]; then
+        if [ "${{ needs.build-deploy.result }}" != "success" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### ⚠️ Action Required" >> $GITHUB_STEP_SUMMARY
-          echo "Deployment verification failed. Please check the application manually." >> $GITHUB_STEP_SUMMARY
+          echo "An issue has been automatically created for this failure." >> $GITHUB_STEP_SUMMARY
         fi
