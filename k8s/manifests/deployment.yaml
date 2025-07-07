@@ -21,7 +21,7 @@ spec:
       volumes:
       - name: app-code
         configMap:
-          name: fortinet-nextrade-logo
+          name: real-nextrade-dashboard
           defaultMode: 0755
       containers:
       - name: fortinet

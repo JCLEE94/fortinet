@@ -9,7 +9,7 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - fortinet-nextrade-logo-configmap.yaml
+  - real-nextrade-dashboard-configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

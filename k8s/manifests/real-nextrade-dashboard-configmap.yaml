@@ -1,0 +1,1360 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: real-nextrade-dashboard
+  namespace: fortinet
+  labels:
+    app: fortinet
+    component: real-dashboard
+data:
+  start.sh: |
+    #!/bin/bash
+    echo "🚀 Starting Real Nextrade Dashboard..."
+    cd /app
+    
+    # Install required packages
+    pip install Flask requests redis loguru
+    
+    # Start the application
+    python main.py --web
+    
+  main.py: |
+    import argparse
+    import sys
+    import os
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent))
+
+    def main():
+        parser = argparse.ArgumentParser(description='Nextrade Network Monitor')
+        parser.add_argument('--web', action='store_true', help='Start web application')
+        args = parser.parse_args()
+        
+        if args.web:
+            from web_app import create_app
+            app = create_app()
+            port = int(os.getenv('WEB_APP_PORT', 7777))
+            host = os.getenv('WEB_APP_HOST', '0.0.0.0')
+            print(f"🌐 Starting Real Nextrade Dashboard on {host}:{port}")
+            app.run(host=host, port=port, debug=False)
+
+    if __name__ == '__main__':
+        main()
+        
+  web_app.py: |
+    from flask import Flask, render_template_string, jsonify, request
+    import os
+    import datetime
+    import random
+
+    def create_app():
+        app = Flask(__name__)
+        
+        @app.route('/static/img/nextrade/<path:filename>')
+        def serve_logo(filename):
+            # Serve the embedded logo
+            if filename == 'logo_new.svg':
+                svg_content = '''<svg width="181" height="32" viewBox="0 0 181 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clip-path="url(#clip0_1048_3143)">
+    <path d="M28.5992 17.2802V10.6777V10.6612C28.5992 8.61953 27.5125 6.74249 25.7507 5.72165L17.1724 0.765631C15.4106 -0.25521 13.2207 -0.25521 11.4589 0.765631L2.84766 5.72165L15.7234 13.345L21.1405 8.5372V28.1637L25.7343 25.5293C27.496 24.5084 28.5827 22.6314 28.5827 20.5897V17.2802H28.5992Z" fill="url(#paint0_linear_1048_3143)"/>
+    <path d="M0 13.9694V20.572V20.5884C0 22.6301 1.0867 24.5071 2.84848 25.528L11.4268 30.484C13.1886 31.5049 15.3785 31.5049 17.1403 30.484L25.8997 25.4292L12.8593 17.9046L7.44226 22.7124V3.08594L2.84848 5.72037C1.0867 6.74121 0 8.61824 0 10.6599V13.9694Z" fill="url(#paint1_linear_1048_3143)"/>
+    <path d="M51.8885 20.8671H51.3879L47.1198 9.94258C46.7751 9.08898 45.8559 8.54727 44.7806 8.54727H42.1295C40.7014 8.54727 39.659 9.4255 39.659 10.632L39.6016 22.8369H43.3443L43.4017 10.7387H43.9024L48.0555 21.4252C48.392 22.287 49.2785 22.8369 50.3701 22.8369H55.623L55.6805 8.53906H51.9378L51.8885 20.8671Z" fill="#E10139"/>
+    <path d="M72.557 20.7147L63.1673 20.7229L63.1755 16.9227L72.122 16.9145C72.3682 16.9145 72.5652 16.7175 72.5652 16.4713V14.8297L63.1755 14.8379V10.5781L72.5406 10.5699C72.7868 10.5699 72.9838 10.3729 72.9838 10.1267V8.46875L60.4916 8.49337C59.3754 8.49337 58.727 9.04329 58.727 9.99539L58.7188 22.8159H73.0166V21.1661C73.0166 20.9199 72.8114 20.7147 72.557 20.7147Z" fill="#E10139"/>
+    <path d="M180.01 20.7139L170.62 20.7221L170.628 16.9219L179.575 16.9137C179.821 16.9137 180.018 16.7167 180.018 16.4705V14.8289L170.636 14.8372V10.5773L180.001 10.5691C180.248 10.5691 180.445 10.3722 180.445 10.1259V8.48438L167.953 8.49258C166.836 8.49258 166.188 9.0425 166.188 9.9946L166.18 22.8151H180.478V21.1653C180.469 20.9191 180.264 20.7139 180.01 20.7139Z" fill="#E10139"/>
+    <path d="M92.1406 11.0546H97.6398L97.6316 22.8245H102.08L102.088 11.0546H107.588L107.596 8.46094H92.1406V11.0546Z" fill="#E10139"/>
+    <path d="M125.536 13.9773V11.9254C125.536 11.3098 125.396 10.686 125.059 10.1607C124.354 9.06089 123.04 8.44531 121.506 8.44531C121.506 8.44531 121.506 8.44531 121.497 8.44531L109.555 8.45352L109.547 22.817H114.004L114.012 17.3671H118.042L120.759 21.8814C121.087 22.4231 121.67 22.817 122.293 22.817H125.979L122.655 17.2276C124.395 16.85 125.536 15.5696 125.536 13.9773ZM121.391 14.1004C121.391 14.7324 120.824 15.4301 120.036 15.4301L114.004 15.4383L114.012 10.5629L120.045 10.5547C120.43 10.5547 120.783 10.6696 121.029 10.8748C121.267 11.0718 121.399 11.3344 121.399 11.6381L121.391 14.1004Z" fill="#E10139"/>
+    <path d="M159.031 8.42188H159.023L149.132 8.43008C148.016 8.43008 147.368 8.98 147.368 9.9321L147.359 22.8264H159.014C162.002 22.8264 163.652 21.3408 163.652 18.8375L163.66 12.2959C163.66 11.1633 163.332 10.2604 162.675 9.60379C161.879 8.82405 160.656 8.42188 159.031 8.42188ZM159.154 18.78C159.154 19.847 158.202 20.6186 156.897 20.6186L151.816 20.6268L151.824 10.5395L156.913 10.5313C157.635 10.5313 158.259 10.7611 158.67 11.1715C158.99 11.4916 159.162 11.902 159.162 12.3616L159.154 18.78Z" fill="#E10139"/>
+    <path d="M138.389 8.44531H136.599H134.211C132.955 8.44531 132.159 8.95419 131.798 10.0048L127.415 22.8335H127.316H131.773L133.521 17.6954H136.304H139.086L140.835 22.8335H145.291L140.81 10.0048C140.432 8.95419 139.644 8.44531 138.389 8.44531ZM136.296 15.5696H134.236L135.91 10.8912C135.976 10.7189 136.09 10.6286 136.296 10.5957C136.501 10.6286 136.616 10.7189 136.681 10.883L138.356 15.5696H136.296Z" fill="#E10139"/>
+    <path d="M86.6986 8.46094L83.0954 12.9506L79.5005 8.47735H75.1914L80.8958 15.6919L75.1914 22.8245H79.6728L83.0954 18.4744L86.5263 22.8245H91.0077L85.2951 15.6919L91.0077 8.46094H86.6986Z" fill="#E10139"/>
+    </g>
+    <defs>
+    <linearGradient id="paint0_linear_1048_3143" x1="2.85424" y1="14.0791" x2="28.5999" y2="14.0791" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#301942"/>
+    <stop offset="0.2606" stop-color="#6E103F"/>
+    <stop offset="0.5068" stop-color="#A2093C"/>
+    <stop offset="0.7198" stop-color="#C7043B"/>
+    <stop offset="0.8914" stop-color="#DE0139"/>
+    </linearGradient>
+    <linearGradient id="paint1_linear_1048_3143" x1="2.85182" y1="17.1705" x2="28.5975" y2="17.1705" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#3B4CE5"/>
+    <stop offset="0.2671" stop-color="#5D4FCF"/>
+    <stop offset="0.5459" stop-color="#7A51BC"/>
+    <stop offset="0.8082" stop-color="#9053AC"/>
+    <stop offset="1" stop-color="#9C54A2"/>
+    </linearGradient>
+    </defs>
+    </svg>'''
+                return svg_content, 200, {'Content-Type': 'image/svg+xml'}
+            return 'Not Found', 404
+        
+        @app.route('/')
+        def dashboard():
+            return render_template_string(DASHBOARD_TEMPLATE)
+            
+        @app.route('/api/health')
+        def health():
+            return jsonify({
+                "status": "healthy",
+                "service": "Nextrade Network Monitor",
+                "version": "4.0.0",
+                "environment": os.getenv('APP_MODE', 'production'),
+                "timestamp": datetime.datetime.now().isoformat()
+            })
+            
+        @app.route('/api/devices')
+        def get_devices():
+            # Mock device data
+            devices = {
+                "success": True,
+                "devices": {
+                    "connected_devices": [
+                        {"name": "FIREWALL-01", "ip_address": "192.168.1.1", "status": "online", "bandwidth_in": 1200, "bandwidth_out": 800},
+                        {"name": "SWITCH-CORE", "ip_address": "192.168.1.10", "status": "online", "bandwidth_in": 980, "bandwidth_out": 650},
+                        {"name": "ROUTER-EDGE", "ip_address": "192.168.1.2", "status": "warning", "bandwidth_in": 650, "bandwidth_out": 420},
+                        {"name": "AP-FLOOR-03", "ip_address": "192.168.1.20", "status": "online", "bandwidth_in": 320, "bandwidth_out": 180},
+                        {"name": "SERVER-DB", "ip_address": "192.168.1.100", "status": "online", "bandwidth_in": 280, "bandwidth_out": 150}
+                    ]
+                }
+            }
+            return jsonify(devices)
+            
+        return app
+
+    DASHBOARD_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko" data-theme="light">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>대시보드 - Nextrade Network Monitor</title>
+        
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#0a0e27">
+        
+        <!-- FontAwesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
+        <style>
+            /* CSS Reset and Base */
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+
+            /* CSS Variables - Unified Color System */
+            :root {
+              /* Primary Colors */
+              --primary: #E50038;
+              --primary-dark: #C60030;
+              --primary-hover: #ff1744;
+              --secondary: #64748b;
+              --accent: #4ECDC4;
+              
+              /* Background Colors - Light Theme */
+              --bg-primary: #f8fafc;
+              --bg-secondary: #f1f5f9;
+              --bg-card: #ffffff;
+              --bg-hover: rgba(229, 0, 56, 0.08);
+              
+              /* Text Colors - Light Theme */
+              --text-primary: #1e293b;
+              --text-secondary: #64748b;
+              --text-muted: #94a3b8;
+              
+              /* Border & Spacing */
+              --border: #e2e8f0;
+              --border-radius: 0.5rem;
+              --border-radius-lg: 0.75rem;
+              
+              /* Status Colors */
+              --success: #22c55e;
+              --warning: #f59e0b;
+              --danger: #ef4444;
+              --info: #2196F3;
+              
+              /* Layout Variables */
+              --sidebar-width: 250px;
+              --sidebar-collapsed: 60px;
+              --header-height: 60px;
+              
+              /* Shadows - Light Theme */
+              --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+              --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+              --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+              
+              /* Transitions */
+              --transition: all 0.3s ease;
+              --transition-fast: all 0.15s ease;
+            }
+
+            /* Base Elements */
+            html {
+              height: 100%;
+              scroll-behavior: smooth;
+            }
+
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, system-ui, sans-serif;
+              background: var(--bg-secondary);
+              color: var(--text-primary);
+              height: 100vh;
+              overflow: hidden;
+              line-height: 1.6;
+            }
+
+            /* App Container */
+            .app-container {
+              display: flex;
+              height: 100vh;
+            }
+
+            /* Sidebar */
+            .sidebar {
+              width: var(--sidebar-width);
+              background: var(--bg-card);
+              border-right: 1px solid var(--border);
+              display: flex;
+              flex-direction: column;
+              box-shadow: var(--shadow-lg);
+              z-index: 50;
+            }
+
+            .sidebar-header {
+              padding: 1.5rem;
+              border-bottom: 1px solid var(--border);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            .logo img {
+              max-width: 150px;
+              height: auto;
+            }
+
+            /* Navigation Menu */
+            .nav-menu {
+              flex: 1;
+              padding: 1rem 0;
+              overflow-y: auto;
+            }
+
+            .nav-item {
+              margin-bottom: 0.25rem;
+            }
+
+            .nav-link {
+              display: flex;
+              align-items: center;
+              padding: 0.75rem 1.5rem;
+              color: var(--text-secondary);
+              text-decoration: none;
+              transition: var(--transition);
+              border-right: 3px solid transparent;
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+              background: var(--bg-hover);
+              color: var(--primary);
+              border-right-color: var(--primary);
+            }
+
+            .nav-icon {
+              width: 20px;
+              margin-right: 0.75rem;
+              text-align: center;
+            }
+
+            .nav-text {
+              font-weight: 500;
+            }
+
+            /* Main Content */
+            .main-content {
+              flex: 1;
+              overflow-y: auto;
+              background: var(--bg-primary);
+            }
+
+            .content-wrapper {
+              padding: 1.5rem;
+              max-width: 1400px;
+              margin: 0 auto;
+            }
+
+            /* Page Header */
+            .page-header {
+              margin-bottom: 2rem;
+            }
+
+            .page-title {
+              font-size: 2rem;
+              font-weight: 700;
+              color: var(--text-primary);
+              margin-bottom: 0.5rem;
+            }
+
+            .page-subtitle {
+              color: var(--text-secondary);
+              font-size: 1rem;
+            }
+
+            /* Grid Systems */
+            .grid {
+              display: grid;
+              gap: 1.5rem;
+            }
+
+            .grid-cols-4 {
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+
+            .grid-cols-3 {
+              grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+
+            .grid-cols-2 {
+              grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            }
+
+            .content-grid-3 {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+              gap: 1.5rem;
+            }
+
+            .content-grid-2 {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+              gap: 1.5rem;
+            }
+
+            .span-2 {
+              grid-column: span 2;
+            }
+
+            .mt-6 {
+              margin-top: 3rem;
+            }
+
+            /* Cards */
+            .card {
+              background: var(--bg-card);
+              border-radius: var(--border-radius-lg);
+              box-shadow: var(--shadow-sm);
+              border: 1px solid var(--border);
+              overflow: hidden;
+              transition: var(--transition);
+            }
+
+            .card:hover {
+              box-shadow: var(--shadow-md);
+            }
+
+            .card-header {
+              padding: 1.5rem;
+              border-bottom: 1px solid var(--border);
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: var(--bg-secondary);
+            }
+
+            .card-title {
+              font-size: 1.125rem;
+              font-weight: 600;
+              color: var(--text-primary);
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+            }
+
+            /* Stat Cards */
+            .stat-card {
+              background: var(--bg-card);
+              border-radius: var(--border-radius-lg);
+              padding: 1.5rem;
+              box-shadow: var(--shadow-sm);
+              border: 1px solid var(--border);
+              transition: var(--transition);
+              position: relative;
+              overflow: hidden;
+            }
+
+            .stat-card::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              height: 4px;
+              background: linear-gradient(90deg, var(--primary), var(--accent));
+            }
+
+            .stat-card:hover {
+              transform: translateY(-2px);
+              box-shadow: var(--shadow-md);
+            }
+
+            .stat-icon {
+              width: 3rem;
+              height: 3rem;
+              border-radius: 0.75rem;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 1rem;
+              background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+              color: white;
+              font-size: 1.25rem;
+            }
+
+            .stat-icon-success {
+              background: linear-gradient(135deg, var(--success), #059669);
+            }
+
+            .stat-icon-info {
+              background: linear-gradient(135deg, var(--info), #1976d2);
+            }
+
+            .stat-icon-warning {
+              background: linear-gradient(135deg, var(--warning), #e65100);
+            }
+
+            .stat-value {
+              font-size: 2rem;
+              font-weight: 700;
+              color: var(--text-primary);
+              margin-bottom: 0.5rem;
+              line-height: 1;
+            }
+
+            .stat-label {
+              color: var(--text-secondary);
+              font-size: 0.875rem;
+              font-weight: 500;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              margin-bottom: 0.5rem;
+            }
+
+            .stat-trend {
+              font-size: 0.8rem;
+              font-weight: 600;
+              display: flex;
+              align-items: center;
+              gap: 0.25rem;
+            }
+
+            .trend-up {
+              color: var(--success);
+            }
+
+            .trend-down {
+              color: var(--danger);
+            }
+
+            /* Chart Container */
+            .chart-container {
+              padding: 1.5rem;
+              height: 300px;
+              position: relative;
+            }
+
+            /* Device List */
+            .device-list {
+              padding: 1.5rem;
+            }
+
+            .device-item {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              padding: 1rem 0;
+              border-bottom: 1px solid var(--border);
+              transition: var(--transition);
+            }
+
+            .device-item:last-child {
+              border-bottom: none;
+            }
+
+            .device-item:hover {
+              background: var(--bg-hover);
+              margin: 0 -1rem;
+              padding: 1rem;
+              border-radius: var(--border-radius);
+            }
+
+            .device-info {
+              display: flex;
+              align-items: center;
+              gap: 0.75rem;
+            }
+
+            .status-indicator {
+              width: 0.75rem;
+              height: 0.75rem;
+              border-radius: 50%;
+              background: var(--success);
+            }
+
+            .status-indicator.status-warning {
+              background: var(--warning);
+            }
+
+            .status-indicator.status-offline {
+              background: var(--danger);
+            }
+
+            .device-name {
+              font-weight: 600;
+              color: var(--text-primary);
+            }
+
+            .device-ip {
+              font-size: 0.875rem;
+              color: var(--text-muted);
+            }
+
+            .device-stats {
+              text-align: right;
+            }
+
+            .device-value {
+              font-weight: 600;
+              color: var(--text-primary);
+            }
+
+            .device-trend {
+              font-size: 0.8rem;
+              font-weight: 500;
+            }
+
+            /* Badges */
+            .badge-success {
+              background: var(--success);
+              color: white;
+              padding: 0.25rem 0.75rem;
+              border-radius: 1rem;
+              font-size: 0.8rem;
+              font-weight: 500;
+            }
+
+            .badge-warning {
+              background: var(--warning);
+              color: white;
+              padding: 0.25rem 0.75rem;
+              border-radius: 1rem;
+              font-size: 0.8rem;
+              font-weight: 500;
+            }
+
+            .badge-count {
+              background: var(--primary);
+              color: white;
+              padding: 0.25rem 0.75rem;
+              border-radius: 1rem;
+              font-size: 0.8rem;
+              font-weight: 500;
+            }
+
+            /* Buttons */
+            .btn-group {
+              display: flex;
+              gap: 0.5rem;
+            }
+
+            .btn-time {
+              padding: 0.5rem 1rem;
+              border: 1px solid var(--border);
+              background: var(--bg-card);
+              border-radius: var(--border-radius);
+              font-size: 0.875rem;
+              font-weight: 500;
+              color: var(--text-secondary);
+              cursor: pointer;
+              transition: var(--transition);
+            }
+
+            .btn-time:hover,
+            .btn-time.active {
+              background: var(--primary);
+              color: white;
+              border-color: var(--primary);
+            }
+
+            .btn-primary {
+              background: var(--primary);
+              color: white;
+              border: 1px solid var(--primary);
+              padding: 0.5rem 1rem;
+              border-radius: var(--border-radius);
+              font-size: 0.875rem;
+              font-weight: 500;
+              cursor: pointer;
+              transition: var(--transition);
+            }
+
+            .btn-primary:hover {
+              background: var(--primary-dark);
+            }
+
+            .btn-secondary {
+              background: var(--secondary);
+              color: white;
+              border: 1px solid var(--secondary);
+              padding: 0.5rem 1rem;
+              border-radius: var(--border-radius);
+              font-size: 0.875rem;
+              font-weight: 500;
+              cursor: pointer;
+              transition: var(--transition);
+            }
+
+            .btn-outline {
+              background: transparent;
+              color: var(--text-secondary);
+              border: 1px solid var(--border);
+              padding: 0.5rem 1rem;
+              border-radius: var(--border-radius);
+              font-size: 0.875rem;
+              font-weight: 500;
+              cursor: pointer;
+              transition: var(--transition);
+            }
+
+            .btn-outline:hover {
+              background: var(--bg-hover);
+              color: var(--primary);
+              border-color: var(--primary);
+            }
+
+            .btn-sm {
+              padding: 0.375rem 0.75rem;
+              font-size: 0.8rem;
+            }
+
+            /* Links */
+            .link-accent {
+              color: var(--primary);
+              text-decoration: none;
+              font-size: 0.875rem;
+              font-weight: 500;
+              transition: var(--transition);
+            }
+
+            .link-accent:hover {
+              color: var(--primary-dark);
+              text-decoration: underline;
+            }
+
+            /* Stats Grid */
+            .stats-grid {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 1rem;
+              padding: 1.5rem;
+            }
+
+            .stat-item {
+              text-align: center;
+            }
+
+            /* Policy Summary */
+            .policy-summary {
+              padding: 1.5rem;
+            }
+
+            .policy-item {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0.75rem 0;
+              border-bottom: 1px solid var(--border);
+            }
+
+            .policy-item:last-child {
+              border-bottom: none;
+            }
+
+            .policy-name {
+              font-weight: 500;
+              color: var(--text-primary);
+            }
+
+            .policy-count {
+              font-weight: 600;
+              color: var(--text-secondary);
+            }
+
+            /* Security Events */
+            .security-events-list {
+              padding: 1.5rem;
+              max-height: 200px;
+              overflow-y: auto;
+            }
+
+            /* Alert List */
+            .alert-list {
+              padding: 1.5rem;
+            }
+
+            .alert-item {
+              display: flex;
+              gap: 1rem;
+              padding: 1rem;
+              border-radius: var(--border-radius);
+              margin-bottom: 1rem;
+              transition: var(--transition);
+            }
+
+            .alert-item:last-child {
+              margin-bottom: 0;
+            }
+
+            .alert-critical {
+              background: rgba(239, 68, 68, 0.1);
+              border-left: 4px solid var(--danger);
+            }
+
+            .alert-warning {
+              background: rgba(245, 158, 11, 0.1);
+              border-left: 4px solid var(--warning);
+            }
+
+            .alert-info {
+              background: rgba(33, 150, 243, 0.1);
+              border-left: 4px solid var(--info);
+            }
+
+            .alert-icon {
+              font-size: 1.2rem;
+              margin-top: 0.1rem;
+            }
+
+            .alert-content {
+              flex: 1;
+            }
+
+            .alert-title {
+              font-weight: 600;
+              color: var(--text-primary);
+              margin-bottom: 0.25rem;
+            }
+
+            .alert-description {
+              font-size: 0.875rem;
+              color: var(--text-secondary);
+              margin-bottom: 0.25rem;
+            }
+
+            .alert-time {
+              font-size: 0.8rem;
+              color: var(--text-muted);
+            }
+
+            /* Quick Actions */
+            .quick-actions-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 1rem;
+              padding: 1.5rem;
+            }
+
+            .quick-action-btn {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              gap: 0.5rem;
+              padding: 1.5rem 1rem;
+              background: var(--bg-secondary);
+              border: 1px solid var(--border);
+              border-radius: var(--border-radius-lg);
+              color: var(--text-primary);
+              text-decoration: none;
+              transition: var(--transition);
+              cursor: pointer;
+            }
+
+            .quick-action-btn:hover {
+              background: var(--bg-hover);
+              transform: translateY(-2px);
+              box-shadow: var(--shadow-md);
+              border-color: var(--primary);
+            }
+
+            .quick-action-icon {
+              font-size: 1.5rem;
+            }
+
+            /* Utility Classes */
+            .mt-3 {
+              margin-top: 1rem;
+            }
+
+            .truncate {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+            }
+
+            .pulse {
+              animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+              0%, 100% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.5;
+              }
+            }
+
+            /* Responsive Design */
+            @media (max-width: 1024px) {
+              .sidebar {
+                width: var(--sidebar-collapsed);
+              }
+              
+              .nav-text {
+                display: none;
+              }
+              
+              .grid-cols-4 {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+              }
+              
+              .span-2 {
+                grid-column: span 1;
+              }
+            }
+
+            @media (max-width: 768px) {
+              .content-wrapper {
+                padding: 1rem;
+              }
+              
+              .page-title {
+                font-size: 1.5rem;
+              }
+              
+              .grid-cols-4,
+              .grid-cols-3,
+              .grid-cols-2,
+              .content-grid-3,
+              .content-grid-2 {
+                grid-template-columns: 1fr;
+              }
+              
+              .quick-actions-grid {
+                grid-template-columns: 1fr;
+              }
+              
+              .stats-grid {
+                grid-template-columns: 1fr;
+              }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <img src="/static/img/nextrade/logo_new.svg" alt="Nextrade">
+                    </div>
+                </div>
+                
+                <nav class="nav-menu">
+                    <div class="nav-item">
+                        <a href="/" class="nav-link active">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                            <span class="nav-text">대시보드</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-server"></i></span>
+                            <span class="nav-text">장치 관리</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-project-diagram"></i></span>
+                            <span class="nav-text">네트워크 맵</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-shield-alt"></i></span>
+                            <span class="nav-text">보안</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                            <span class="nav-text">성능</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-file-alt"></i></span>
+                            <span class="nav-text">로그</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                            <span class="nav-text">설정</span>
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">네트워크 대시보드</h1>
+                        <p class="page-subtitle">실시간 네트워크 상태 및 성능 모니터링</p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-4">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-server fa-lg"></i>
+                            </div>
+                            <div class="stat-value" id="active-devices">24</div>
+                            <div class="stat-label">활성 장치</div>
+                            <div class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> 12%
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-success">
+                                <i class="fas fa-globe fa-lg"></i>
+                            </div>
+                            <div class="stat-value" id="uptime">99.8%</div>
+                            <div class="stat-label">가동률</div>
+                            <div class="stat-trend trend-up">
+                                <i class="fas fa-arrow-up"></i> 0.2%
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-info">
+                                <i class="fas fa-exchange-alt fa-lg"></i>
+                            </div>
+                            <div class="stat-value" id="network-traffic">2.4 Gbps</div>
+                            <div class="stat-label">네트워크 트래픽</div>
+                            <div class="stat-trend trend-down">
+                                <i class="fas fa-arrow-down"></i> 8%
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-warning">
+                                <i class="fas fa-exclamation-triangle fa-lg"></i>
+                            </div>
+                            <div class="stat-value" id="active-alerts">3</div>
+                            <div class="stat-label">활성 알림</div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Grid -->
+                    <div class="grid grid-cols-3">
+                        <!-- Network Performance Chart -->
+                        <div class="card span-2">
+                            <div class="card-header">
+                                <h3 class="card-title">네트워크 성능</h3>
+                                <div class="btn-group">
+                                    <button class="btn-time">1시간</button>
+                                    <button class="btn-time active">24시간</button>
+                                    <button class="btn-time">7일</button>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Top Devices -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">상위 장치 (트래픽)</h3>
+                                <a href="#" class="link-accent">전체 보기</a>
+                            </div>
+                            <div class="device-list" id="top-devices-list">
+                                <!-- 동적으로 로드됨 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FortiManager Management Section -->
+                    <div class="content-grid-3 mt-6">
+                        <!-- FortiManager Status -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-server" style="color: #FF6B35;"></i>
+                                    FortiManager 상태
+                                </h3>
+                                <span class="badge-success" id="fortimanager-status">연결됨</span>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-value" id="managed-devices-count">8</div>
+                                    <div class="stat-label">관리 장치</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="policy-packages-count">12</div>
+                                    <div class="stat-label">정책 패키지</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value" id="adom-count">3</div>
+                                    <div class="stat-label">ADOM</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn-primary btn-sm" onclick="refreshFortiManagerStatus()">
+                                    <i class="fas fa-sync-alt"></i> 상태 새로고침
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Policy Management -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-shield-alt" style="color: #4ECDC4;"></i>
+                                    정책 관리
+                                </h3>
+                            </div>
+                            <div class="policy-summary" id="policy-summary">
+                                <div class="policy-item">
+                                    <div class="policy-name">방화벽 정책</div>
+                                    <div class="policy-count" id="firewall-policies-count">152</div>
+                                </div>
+                                <div class="policy-item">
+                                    <div class="policy-name">주소 객체</div>
+                                    <div class="policy-count" id="address-objects-count">89</div>
+                                </div>
+                                <div class="policy-item">
+                                    <div class="policy-name">서비스 객체</div>
+                                    <div class="policy-count" id="service-objects-count">45</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn-secondary btn-sm" onclick="openPolicyAnalysis()">
+                                    <i class="fas fa-route"></i> 경로 분석
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Security Events -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-exclamation-triangle" style="color: #FF6B6B;"></i>
+                                    보안 이벤트
+                                </h3>
+                                <span class="badge-warning" id="security-events-count">3 건</span>
+                            </div>
+                            <div class="security-events-list" id="security-events-list">
+                                <div class="alert-item alert-critical">
+                                    <div class="alert-icon">🚨</div>
+                                    <div class="alert-content">
+                                        <div class="alert-title">DDoS 공격 감지</div>
+                                        <div class="alert-description">외부에서 비정상적인 트래픽</div>
+                                        <div class="alert-time">10분 전</div>
+                                    </div>
+                                </div>
+                                <div class="alert-item alert-warning">
+                                    <div class="alert-icon">⚠️</div>
+                                    <div class="alert-content">
+                                        <div class="alert-title">정책 위반</div>
+                                        <div class="alert-description">차단된 사이트 접근 시도</div>
+                                        <div class="alert-time">25분 전</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn-outline btn-sm" onclick="viewAllSecurityEvents()">
+                                    <i class="fas fa-list"></i> 전체 보기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row -->
+                    <div class="content-grid-2 mt-6">
+                        <!-- Recent Alerts -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">최근 알림</h3>
+                                <span class="badge-count pulse">3 활성</span>
+                            </div>
+                            <div class="alert-list" id="recent-alerts-list">
+                                <!-- 동적으로 로드됨 -->
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">빠른 작업</h3>
+                            </div>
+                            <div class="quick-actions-grid">
+                                <button class="quick-action-btn" onclick="openTrafficAnalysis()">
+                                    <i class="fas fa-brain quick-action-icon" style="color: #7C3AED;"></i>
+                                    <span>트래픽 분석</span>
+                                </button>
+                                
+                                <button class="quick-action-btn" onclick="openPolicyOptimization()">
+                                    <i class="fas fa-magic quick-action-icon" style="color: var(--accent);"></i>
+                                    <span>정책 최적화</span>
+                                </button>
+                                
+                                <button class="quick-action-btn" onclick="generateReport()">
+                                    <i class="fas fa-file-alt quick-action-icon" style="color: var(--success);"></i>
+                                    <span>리포트 생성</span>
+                                </button>
+                                
+                                <button class="quick-action-btn" onclick="openSecurityDiagnostics()">
+                                    <i class="fas fa-shield-alt quick-action-icon" style="color: var(--warning);"></i>
+                                    <span>보안 진단</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <script>
+            // 페이지 로드 시 데이터 가져오기
+            document.addEventListener('DOMContentLoaded', function() {
+                loadTopDevices();
+                loadRecentAlerts();
+            });
+
+            // 상위 장치 로드
+            function loadTopDevices() {
+                fetch('/api/devices')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.devices && data.devices.connected_devices) {
+                            const deviceList = document.getElementById('top-devices-list');
+                            deviceList.innerHTML = '';
+                            
+                            const topLimit = 5;
+                            const devices = data.devices.connected_devices.slice(0, topLimit);
+                            devices.forEach(device => {
+                                const bandwidth = device.bandwidth_in + device.bandwidth_out;
+                                const trend = Math.random() > 0.5 ? 'up' : 'down';
+                                const trendValue = Math.floor(Math.random() * 20);
+                                
+                                const html = `
+                                    <div class="device-item">
+                                        <div class="device-info">
+                                            <div class="status-indicator status-${device.status}"></div>
+                                            <div>
+                                                <div class="device-name truncate">${device.name}</div>
+                                                <div class="device-ip">${device.ip_address}</div>
+                                            </div>
+                                        </div>
+                                        <div class="device-stats">
+                                            <div class="device-value">${bandwidth} Mbps</div>
+                                            <div class="device-trend trend-${trend}">
+                                                ${trend === 'up' ? '↑' : '↓'} ${trendValue}%
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                deviceList.innerHTML += html;
+                            });
+                        }
+                    })
+                    .catch(error => console.error('Error loading devices:', error));
+            }
+
+            // 최근 알림 로드
+            function loadRecentAlerts() {
+                const alertList = document.getElementById('recent-alerts-list');
+                
+                const alerts = [
+                    {
+                        type: 'critical',
+                        icon: 'exclamation-circle',
+                        color: 'var(--danger)',
+                        title: '높은 CPU 사용률',
+                        description: 'FIREWALL-09에서 CPU 사용률이 85%를 초과했습니다.',
+                        time: '5분 전'
+                    },
+                    {
+                        type: 'warning',
+                        icon: 'exclamation-triangle',
+                        color: 'var(--warning)',
+                        title: '메모리 사용량 경고',
+                        description: 'SWITCH-11에서 메모리 사용률이 75%를 초과했습니다.',
+                        time: '12분 전'
+                    },
+                    {
+                        type: 'info',
+                        icon: 'info-circle',
+                        color: 'var(--info)',
+                        title: '장치 연결 해제',
+                        description: 'WORKSTATION-14가 네트워크에서 연결 해제되었습니다.',
+                        time: '25분 전'
+                    }
+                ];
+                
+                alertList.innerHTML = '';
+                alerts.forEach(alert => {
+                    const html = `
+                        <div class="alert-item alert-${alert.type}">
+                            <i class="fas fa-${alert.icon} alert-icon" style="color: ${alert.color};"></i>
+                            <div class="alert-content">
+                                <div class="alert-title">${alert.title}</div>
+                                <div class="alert-description">${alert.description}</div>
+                                <div class="alert-time">${alert.time}</div>
+                            </div>
+                        </div>
+                    `;
+                    alertList.innerHTML += html;
+                });
+            }
+
+            // Chart initialization
+            window.addEventListener('load', function() {
+                const ctx = document.getElementById('performanceChart');
+                if (ctx) {
+                    ctx.style.width = '100%';
+                    ctx.style.height = '300px';
+                    
+                    window.performanceChart = new Chart(ctx.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                        datasets: [{
+                            label: 'Inbound',
+                            data: Array.from({length: 24}, () => Math.random() * 3 + 1),
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Outbound',
+                            data: Array.from({length: 24}, () => Math.random() * 2 + 0.5),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#94a3b8',
+                                    usePointStyle: true,
+                                    padding: 15
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    color: 'rgba(148, 163, 184, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: 'rgba(148, 163, 184, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#94a3b8',
+                                    callback: function(value) {
+                                        return value + ' Gbps';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                }
+            });
+
+            // Navigation menu click handlers
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Time button click handlers
+            document.querySelectorAll('.btn-time').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.btn-time').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Button click handlers
+            function refreshFortiManagerStatus() {
+                console.log('FortiManager 상태 새로고침');
+            }
+
+            function openPolicyAnalysis() {
+                console.log('정책 분석 열기');
+            }
+
+            function viewAllSecurityEvents() {
+                console.log('모든 보안 이벤트 보기');
+            }
+
+            function openTrafficAnalysis() {
+                console.log('트래픽 분석 열기');
+            }
+
+            function openPolicyOptimization() {
+                console.log('정책 최적화 열기');
+            }
+
+            function generateReport() {
+                console.log('리포트 생성');
+            }
+
+            function openSecurityDiagnostics() {
+                console.log('보안 진단 열기');
+            }
+
+            console.log('Real Nextrade Dashboard loaded successfully');
+        </script>
+    </body>
+    </html>
+    '''

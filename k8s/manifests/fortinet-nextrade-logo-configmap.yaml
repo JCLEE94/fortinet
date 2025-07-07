@@ -89,7 +89,7 @@ data:
         
         @app.route('/')
         def dashboard():
-            return render_template_string(DASHBOARD_TEMPLATE)
+            return render_template_string(REAL_DASHBOARD_TEMPLATE)
             
         @app.route('/dashboard')
         def dashboard_page():
