@@ -33,17 +33,16 @@ spec:
             apt-get update && apt-get install -y git
             
             # Clone repository
-            git clone https://github.com/JCLEE94/fortinet.git /tmp/src
+            git clone https://github.com/JCLEE94/fortinet.git /tmp/fortinet
             
-            # Copy source code
-            cp -r /tmp/src/src/* /app/
-            cp /tmp/src/requirements.txt /app/
+            # Copy everything to /app
+            cp -r /tmp/fortinet/* /app/
             
             # Install Python dependencies
-            pip install -r /app/requirements.txt
+            cd /app && pip install -r requirements.txt
             
             # Start application
-            cd /app && python main.py --web
+            cd /app/src && python main.py --web
         ports:
         - containerPort: 7777
           name: http
