@@ -15,6 +15,7 @@ resources:
 
 images:
   - name: registry.jclee.me/fortinet
+    newName: registry.jclee.me/fortinet
     newTag: latest
 
 labels:
