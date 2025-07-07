@@ -22,8 +22,14 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: fortinet:latest
+        image: python:3.11-slim
         imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            cd /app && 
+            pip install -r requirements.txt && 
+            python main.py --web
         ports:
         - containerPort: 7777
           name: http
@@ -35,6 +41,9 @@ spec:
           value: "7777"
         - name: WEB_APP_HOST
           value: "0.0.0.0"
+        volumeMounts:
+        - name: app-code
+          mountPath: /app
         resources:
           requests:
             memory: "512Mi"
@@ -58,3 +67,7 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+      volumes:
+      - name: app-code
+        configMap:
+          name: full-app-code

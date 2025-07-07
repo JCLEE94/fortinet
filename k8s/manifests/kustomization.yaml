@@ -9,6 +9,7 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
+  - full-app-configmap.yaml
   - deployment.yaml
   - service.yaml
 

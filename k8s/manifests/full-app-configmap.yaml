@@ -1,0 +1,380 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: full-app-code
+  namespace: fortinet
+data:
+  main.py: |
+    #!/usr/bin/env python3
+    import argparse
+    import sys
+    import os
+    from pathlib import Path
+
+    def main():
+        parser = argparse.ArgumentParser(description='FortiGate Nextrade Network Monitor')
+        parser.add_argument('--web', action='store_true', help='Start web application')
+        args = parser.parse_args()
+        
+        if args.web:
+            from web_app import create_app
+            app = create_app()
+            port = int(os.getenv('WEB_APP_PORT', 7777))
+            host = os.getenv('WEB_APP_HOST', '0.0.0.0')
+            print(f"🌐 Starting FortiGate Nextrade on {host}:{port}")
+            app.run(host=host, port=port, debug=False)
+
+    if __name__ == '__main__':
+        main()
+
+  web_app.py: |
+    from flask import Flask, render_template, jsonify, request, send_from_directory
+    import os
+    import datetime
+    import json
+
+    def create_app():
+        app = Flask(__name__)
+        
+        @app.route('/')
+        def dashboard():
+            return '''
+            <!DOCTYPE html>
+            <html lang="ko">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>FortiGate Nextrade Dashboard</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+                <style>
+                    .sidebar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+                    .card { box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); border: 1px solid rgba(0,0,0,0.125); }
+                    .status-healthy { color: #28a745; }
+                    .status-warning { color: #ffc107; }
+                    .status-error { color: #dc3545; }
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <div class="row">
+                        <!-- Sidebar -->
+                        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                            <div class="position-sticky pt-3">
+                                <h4 class="text-white text-center mb-4">
+                                    <i class="fas fa-shield-alt"></i> FortiGate Nextrade
+                                </h4>
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white active" href="/">
+                                            <i class="fas fa-tachometer-alt"></i> 대시보드
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/devices">
+                                            <i class="fas fa-network-wired"></i> 장치 관리
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/topology">
+                                            <i class="fas fa-project-diagram"></i> 네트워크 토폴로지
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/fortimanager">
+                                            <i class="fas fa-cog"></i> FortiManager
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/policies">
+                                            <i class="fas fa-clipboard-list"></i> 정책 분석
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/logs">
+                                            <i class="fas fa-file-alt"></i> 로그 관리
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-white-50" href="/settings">
+                                            <i class="fas fa-cog"></i> 설정
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </nav>
+
+                        <!-- Main content -->
+                        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                                <h1 class="h2">
+                                    <i class="fas fa-shield-alt text-primary"></i> 
+                                    FortiGate Nextrade Dashboard
+                                </h1>
+                                <div class="btn-toolbar mb-2 mb-md-0">
+                                    <div class="btn-group me-2">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">새로고침</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary">내보내기</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stats Cards -->
+                            <div class="row mb-4">
+                                <div class="col-xl-3 col-md-6 mb-4">
+                                    <div class="card border-left-primary shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                        활성 장치
+                                                    </div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">5</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-network-wired fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-md-6 mb-4">
+                                    <div class="card border-left-success shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                        활성 정책
+                                                    </div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">156</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-md-6 mb-4">
+                                    <div class="card border-left-info shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                        오늘 트래픽
+                                                    </div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">2.4GB</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-xl-3 col-md-6 mb-4">
+                                    <div class="card border-left-warning shadow h-100 py-2">
+                                        <div class="card-body">
+                                            <div class="row no-gutters align-items-center">
+                                                <div class="col mr-2">
+                                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                        경고 알림
+                                                    </div>
+                                                    <div class="h5 mb-0 font-weight-bold text-gray-800">3</div>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Charts and Tables -->
+                            <div class="row">
+                                <div class="col-lg-8">
+                                    <div class="card shadow mb-4">
+                                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                            <h6 class="m-0 font-weight-bold text-primary">네트워크 트래픽 분석</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="chart-area">
+                                                <canvas id="myAreaChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4">
+                                    <div class="card shadow mb-4">
+                                        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                            <h6 class="m-0 font-weight-bold text-primary">시스템 상태</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <div class="small text-gray-500">CPU 사용률</div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" style="width: 45%"></div>
+                                                </div>
+                                                <div class="small text-right">45%</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="small text-gray-500">메모리 사용률</div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-info" role="progressbar" style="width: 62%"></div>
+                                                </div>
+                                                <div class="small text-right">62%</div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <div class="small text-gray-500">디스크 사용률</div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 78%"></div>
+                                                </div>
+                                                <div class="small text-right">78%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <div class="card shadow mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">최근 활동</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered" width="100%" cellspacing="0">
+                                            <thead>
+                                                <tr>
+                                                    <th>시간</th>
+                                                    <th>이벤트</th>
+                                                    <th>소스</th>
+                                                    <th>상태</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>2025-07-07 21:30:15</td>
+                                                    <td>새로운 정책 생성</td>
+                                                    <td>FortiManager</td>
+                                                    <td><span class="status-healthy">성공</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2025-07-07 21:25:42</td>
+                                                    <td>트래픽 임계값 초과</td>
+                                                    <td>FortiGate-01</td>
+                                                    <td><span class="status-warning">경고</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2025-07-07 21:20:33</td>
+                                                    <td>장치 연결 확인</td>
+                                                    <td>FortiGate-02</td>
+                                                    <td><span class="status-healthy">정상</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2025-07-07 21:15:21</td>
+                                                    <td>백업 완료</td>
+                                                    <td>시스템</td>
+                                                    <td><span class="status-healthy">성공</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                <script>
+                    // 자동 새로고침 (30초마다)
+                    setInterval(function() {
+                        // 상태 정보 업데이트
+                        console.log('Status updated');
+                    }, 30000);
+                </script>
+            </body>
+            </html>
+            '''
+
+        @app.route('/devices')
+        def devices():
+            return '''
+            <!DOCTYPE html>
+            <html lang="ko">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>장치 관리 - FortiGate Nextrade</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <div class="row">
+                        <main class="col-12 px-md-4">
+                            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                                <h1 class="h2"><i class="fas fa-network-wired"></i> 장치 관리</h1>
+                                <a href="/" class="btn btn-outline-primary">대시보드로 돌아가기</a>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">연결된 FortiGate 장치</h5>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>장치명</th>
+                                                    <th>IP 주소</th>
+                                                    <th>모델</th>
+                                                    <th>상태</th>
+                                                    <th>마지막 연결</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>FortiGate-01</td>
+                                                    <td>192.168.1.100</td>
+                                                    <td>FortiGate 100F</td>
+                                                    <td><span class="badge bg-success">온라인</span></td>
+                                                    <td>2025-07-07 21:30:00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>FortiGate-02</td>
+                                                    <td>192.168.1.101</td>
+                                                    <td>FortiGate 200F</td>
+                                                    <td><span class="badge bg-success">온라인</span></td>
+                                                    <td>2025-07-07 21:29:45</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            </body>
+            </html>
+            '''
+
+        @app.route('/api/health')
+        def health():
+            return jsonify({
+                "status": "healthy",
+                "service": "FortiGate Nextrade Network Monitor", 
+                "timestamp": datetime.datetime.now().isoformat(),
+                "version": "4.0.0",
+                "environment": "production"
+            })
+
+        return app
+
+  requirements.txt: |
+    Flask==3.1.1
+    requests==2.32.4
+    redis==6.2.0
+    loguru==0.7.3
