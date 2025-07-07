@@ -247,6 +247,77 @@ body {
   min-width: 0;
 }
 
+/* Fix for settings page overflow */
+.settings-page .main-container {
+  overflow: visible;
+}
+
+.settings-page .content {
+  overflow-y: auto;
+  max-height: calc(100vh - var(--header-height));
+}
+
+/* Settings page specific fixes */
+.settings-page .card {
+  margin-bottom: 1.5rem;
+  overflow: visible;
+}
+
+.settings-page .form-group {
+  margin-bottom: 1rem;
+  overflow: visible;
+}
+
+.settings-page .form-control {
+  width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.settings-page .connection-status-grid {
+  display: grid;
+  gap: 1rem;
+  overflow: visible;
+}
+
+.settings-page .status-item {
+  overflow: visible;
+  word-wrap: break-word;
+}
+
+.settings-page .accordion {
+  overflow: visible;
+}
+
+.settings-page .accordion-body {
+  overflow: visible;
+  max-height: none;
+}
+
+/* Prevent text overflow in settings */
+.settings-page .text-truncate {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.settings-page .table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for long environment variable names */
+.settings-page .env-var-name {
+  word-break: break-all;
+  max-width: 200px;
+}
+
+.settings-page .env-var-value {
+  word-break: break-all;
+  max-width: 300px;
+}
+
 /* HEADER STYLES */
 .header {
   height: var(--header-height);
