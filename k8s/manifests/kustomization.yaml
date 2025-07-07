@@ -25,6 +25,6 @@ labels:
       managed-by: argocd
 
 commonAnnotations:
-  app.kubernetes.io/version: "1e40e15"
+  app.kubernetes.io/version: "6bcab3a"
   deployed-by: "argocd-fix"
-  deployed-at: "2025-07-07T13:14:21Z"
+  deployed-at: "2025-07-07T13:30:19Z"
