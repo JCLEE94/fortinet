@@ -15,8 +15,8 @@ resources:
   - ingress.yaml
 
 images:
-  - name: registry.jclee.me/fortinet
-    newTag: latest
+  - name: python
+    newTag: 3.11-slim
 
 labels:
   - includeSelectors: true
