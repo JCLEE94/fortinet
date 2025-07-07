@@ -27,7 +27,13 @@ spec:
       - name: fortinet
         image: python:3.11-slim
         imagePullPolicy: IfNotPresent
-        command: ["/app/start.sh"]
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            mkdir -p /app/templates /app/static
+            cp /app/templates/* /app/templates/ 2>/dev/null || true
+            chmod +x /app/start.sh
+            /app/start.sh
         volumeMounts:
         - name: app-code
           mountPath: /app
