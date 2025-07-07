@@ -17,6 +17,8 @@ spec:
       labels:
         app: fortinet
         component: backend
+      annotations:
+        deployment.kubernetes.io/revision: "2"
     spec:
       imagePullSecrets:
       - name: registry-credentials
