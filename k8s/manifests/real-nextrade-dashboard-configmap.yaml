@@ -94,11 +94,38 @@ data:
             
         @app.route('/devices')
         def devices():
-            return render_template_string(DEVICES_TEMPLATE)
+            # Mock device data with real structure
+            device_data = {
+                "success": True,
+                "devices": [
+                    {"name": "FIREWALL-01", "ip": "192.168.1.1", "mac": "00:1B:21:8B:9A:01", "type": "firewall", "status": "online", "zone": "WAN", "last_seen": "2분 전"},
+                    {"name": "SWITCH-CORE", "ip": "192.168.1.10", "mac": "00:1B:21:8B:9A:02", "type": "switch", "status": "online", "zone": "LAN", "last_seen": "1분 전"},
+                    {"name": "ROUTER-EDGE", "ip": "192.168.1.2", "mac": "00:1B:21:8B:9A:03", "type": "router", "status": "warning", "zone": "DMZ", "last_seen": "5분 전"},
+                    {"name": "AP-FLOOR-03", "ip": "192.168.1.20", "mac": "00:1B:21:8B:9A:04", "type": "wireless", "status": "online", "zone": "LAN", "last_seen": "3분 전"},
+                    {"name": "SERVER-DB", "ip": "192.168.1.100", "mac": "00:1B:21:8B:9A:05", "type": "server", "status": "online", "zone": "LAN", "last_seen": "1분 전"}
+                ]
+            }
+            return render_template_string(DEVICES_TEMPLATE, devices=device_data["devices"])
             
         @app.route('/topology')  
         def topology():
-            return render_template_string(TOPOLOGY_TEMPLATE)
+            # Mock topology data
+            topology_data = {
+                "nodes": [
+                    {"id": "fw1", "name": "FIREWALL-01", "type": "firewall", "x": 400, "y": 100},
+                    {"id": "sw1", "name": "SWITCH-CORE", "type": "switch", "x": 400, "y": 250},
+                    {"id": "rt1", "name": "ROUTER-EDGE", "type": "router", "x": 200, "y": 250},
+                    {"id": "ap1", "name": "AP-FLOOR-03", "type": "wireless", "x": 600, "y": 250},
+                    {"id": "srv1", "name": "SERVER-DB", "type": "server", "x": 400, "y": 400}
+                ],
+                "links": [
+                    {"source": "fw1", "target": "sw1", "bandwidth": "1Gbps"},
+                    {"source": "sw1", "target": "rt1", "bandwidth": "100Mbps"},
+                    {"source": "sw1", "target": "ap1", "bandwidth": "1Gbps"},
+                    {"source": "sw1", "target": "srv1", "bandwidth": "1Gbps"}
+                ]
+            }
+            return render_template_string(TOPOLOGY_TEMPLATE, topology=topology_data)
             
         @app.route('/packet-sniffer')
         def packet_sniffer():
@@ -1649,13 +1676,99 @@ data:
     <html lang="ko">
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>장치 관리 - Nextrade</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: system-ui; background: #f8fafc; }
+            .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+            .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .back-link { color: #E50038; text-decoration: none; display: inline-block; margin-bottom: 15px; }
+            .back-link:hover { text-decoration: underline; }
+            h1 { color: #1e293b; margin-bottom: 10px; }
+            .subtitle { color: #64748b; }
+            .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+            .card-header { padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: between; align-items: center; }
+            .card-body { padding: 20px; }
+            .device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+            .device-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; transition: all 0.2s; }
+            .device-item:hover { border-color: #E50038; box-shadow: 0 2px 8px rgba(229,0,56,0.1); }
+            .device-type { font-size: 12px; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
+            .device-name { font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+            .device-details { font-size: 14px; color: #64748b; }
+            .device-details div { margin-bottom: 4px; }
+            .status { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+            .status.online { background: #dcfce7; color: #166534; }
+            .status.warning { background: #fef3c7; color: #92400e; }
+            .status.offline { background: #fee2e2; color: #991b1b; }
+            .device-type.firewall { color: #dc2626; }
+            .device-type.switch { color: #2563eb; }
+            .device-type.router { color: #7c3aed; }
+            .device-type.wireless { color: #059669; }
+            .device-type.server { color: #ea580c; }
+            .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+            .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+            .stat-number { font-size: 24px; font-weight: bold; color: #E50038; }
+            .stat-label { color: #64748b; margin-top: 5px; }
+        </style>
     </head>
-    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
-        <h1><i class="fas fa-server"></i> 장치 관리</h1>
-        <p>네트워크 장치 관리 및 모니터링</p>
-        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="/" class="back-link">
+                    <i class="fas fa-arrow-left"></i> 대시보드로 돌아가기
+                </a>
+                <h1><i class="fas fa-server"></i> 네트워크 장치 관리</h1>
+                <p class="subtitle">연결된 모든 네트워크 장치를 모니터링하고 관리합니다</p>
+            </div>
+
+            <!-- 통계 카드 -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ devices|length }}</div>
+                    <div class="stat-label">총 장치</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ devices|selectattr("status", "equalto", "online")|list|length }}</div>
+                    <div class="stat-label">온라인</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ devices|selectattr("status", "equalto", "warning")|list|length }}</div>
+                    <div class="stat-label">경고</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ devices|selectattr("status", "equalto", "offline")|list|length }}</div>
+                    <div class="stat-label">오프라인</div>
+                </div>
+            </div>
+
+            <!-- 장치 목록 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>장치 목록</h3>
+                </div>
+                <div class="card-body">
+                    <div class="device-grid">
+                        {% for device in devices %}
+                        <div class="device-item">
+                            <div class="device-type {{ device.type }}">{{ device.type }}</div>
+                            <div class="device-name">{{ device.name }}</div>
+                            <div class="device-details">
+                                <div><i class="fas fa-network-wired"></i> IP: {{ device.ip }}</div>
+                                <div><i class="fas fa-ethernet"></i> MAC: {{ device.mac }}</div>
+                                <div><i class="fas fa-shield-alt"></i> Zone: {{ device.zone }}</div>
+                                <div><i class="fas fa-clock"></i> {{ device.last_seen }}</div>
+                                <div style="margin-top: 8px;">
+                                    <span class="status {{ device.status }}">{{ device.status.upper() }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </body>
     </html>
     '''
@@ -1665,13 +1778,154 @@ data:
     <html lang="ko">
     <head>
         <meta charset="UTF-8">
-        <title>네트워크 맵 - Nextrade</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>네트워크 토폴로지 - Nextrade</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: system-ui; background: #f8fafc; }
+            .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+            .header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .back-link { color: #E50038; text-decoration: none; display: inline-block; margin-bottom: 15px; }
+            .back-link:hover { text-decoration: underline; }
+            h1 { color: #1e293b; margin-bottom: 10px; }
+            .subtitle { color: #64748b; }
+            .topology-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; position: relative; height: 600px; overflow: hidden; }
+            .node { position: absolute; width: 80px; height: 80px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+            .node:hover { transform: scale(1.1); z-index: 10; }
+            .node.firewall { background: linear-gradient(135deg, #dc2626, #ef4444); }
+            .node.switch { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+            .node.router { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+            .node.wireless { background: linear-gradient(135deg, #059669, #10b981); }
+            .node.server { background: linear-gradient(135deg, #ea580c, #f97316); }
+            .node i { font-size: 24px; margin-bottom: 4px; }
+            .connection { position: absolute; background: #64748b; height: 2px; transform-origin: left center; }
+            .connection.active { background: #22c55e; animation: pulse 2s infinite; }
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+            .legend { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.95); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            .legend-item { display: flex; align-items: center; margin-bottom: 8px; }
+            .legend-color { width: 16px; height: 16px; border-radius: 4px; margin-right: 8px; }
+            .stats-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+            .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
+            .stat-number { font-size: 24px; font-weight: bold; color: #E50038; }
+            .stat-label { color: #64748b; margin-top: 5px; }
+        </style>
     </head>
-    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
-        <h1><i class="fas fa-project-diagram"></i> 네트워크 토폴로지</h1>
-        <p>네트워크 구성도 및 연결 상태</p>
-        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    <body>
+        <div class="container">
+            <div class="header">
+                <a href="/" class="back-link">
+                    <i class="fas fa-arrow-left"></i> 대시보드로 돌아가기
+                </a>
+                <h1><i class="fas fa-project-diagram"></i> 네트워크 토폴로지</h1>
+                <p class="subtitle">실시간 네트워크 구성도 및 연결 상태를 확인합니다</p>
+            </div>
+
+            <!-- 통계 패널 -->
+            <div class="stats-panel">
+                <div class="stat-card">
+                    <div class="stat-number">{{ topology.nodes|length }}</div>
+                    <div class="stat-label">네트워크 노드</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ topology.links|length }}</div>
+                    <div class="stat-label">연결</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">98.5%</div>
+                    <div class="stat-label">가용성</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">1.2Gbps</div>
+                    <div class="stat-label">총 대역폭</div>
+                </div>
+            </div>
+
+            <!-- 토폴로지 뷰 -->
+            <div class="topology-container">
+                <!-- 범례 -->
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #dc2626, #ef4444);"></div>
+                        <span>방화벽</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #2563eb, #3b82f6);"></div>
+                        <span>스위치</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6);"></div>
+                        <span>라우터</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #059669, #10b981);"></div>
+                        <span>무선 AP</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: linear-gradient(135deg, #ea580c, #f97316);"></div>
+                        <span>서버</span>
+                    </div>
+                </div>
+
+                <!-- 네트워크 노드들 -->
+                {% for node in topology.nodes %}
+                <div class="node {{ node.type }}" style="left: {{ node.x }}px; top: {{ node.y }}px;" title="{{ node.name }}">
+                    <i class="fas fa-{% if node.type == 'firewall' %}shield-alt{% elif node.type == 'switch' %}network-wired{% elif node.type == 'router' %}route{% elif node.type == 'wireless' %}wifi{% elif node.type == 'server' %}server{% endif %}"></i>
+                    <span>{{ node.name.split('-')[0] }}</span>
+                </div>
+                {% endfor %}
+
+                <!-- 연결선들 -->
+                {% for link in topology.links %}
+                <div class="connection active" id="link-{{ loop.index }}" 
+                     data-source="{{ link.source }}" 
+                     data-target="{{ link.target }}"
+                     data-bandwidth="{{ link.bandwidth }}"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <script>
+            // 연결선 그리기
+            document.addEventListener('DOMContentLoaded', function() {
+                const nodes = {};
+                document.querySelectorAll('.node').forEach(node => {
+                    const rect = node.getBoundingClientRect();
+                    const container = document.querySelector('.topology-container').getBoundingClientRect();
+                    nodes[node.title] = {
+                        x: rect.left - container.left + 40,
+                        y: rect.top - container.top + 40
+                    };
+                });
+
+                // 연결선 매핑
+                const connections = {
+                    'fw1': 'FIREWALL-01',
+                    'sw1': 'SWITCH-CORE', 
+                    'rt1': 'ROUTER-EDGE',
+                    'ap1': 'AP-FLOOR-03',
+                    'srv1': 'SERVER-DB'
+                };
+
+                document.querySelectorAll('.connection').forEach(conn => {
+                    const source = connections[conn.dataset.source];
+                    const target = connections[conn.dataset.target];
+                    
+                    if (nodes[source] && nodes[target]) {
+                        const dx = nodes[target].x - nodes[source].x;
+                        const dy = nodes[target].y - nodes[source].y;
+                        const length = Math.sqrt(dx*dx + dy*dy);
+                        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                        
+                        conn.style.left = nodes[source].x + 'px';
+                        conn.style.top = nodes[source].y + 'px';
+                        conn.style.width = length + 'px';
+                        conn.style.transform = `rotate(${angle}deg)`;
+                        conn.title = `${source} ↔ ${target} (${conn.dataset.bandwidth})`;
+                    }
+                });
+            });
+        </script>
     </body>
     </html>
     '''
