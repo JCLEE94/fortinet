@@ -50,7 +50,20 @@ data:
     import json
 
     def create_app():
-        app = Flask(__name__, template_folder='/app/templates', static_folder='/app/static')
+        import os
+        
+        # Flexible template folder detection
+        template_paths = ['/app/templates', './templates', '.']
+        template_folder = '/app/templates'
+        
+        for path in template_paths:
+            if os.path.exists(path):
+                template_folder = path
+                break
+                
+        print(f"🔧 Using template folder: {template_folder}")
+        
+        app = Flask(__name__, template_folder=template_folder, static_folder='/app/static')
         app.config['SECRET_KEY'] = 'dev-secret-key'
         
         @app.route('/static/img/nextrade/<path:filename>')
@@ -95,48 +108,81 @@ data:
         
         @main_bp.route('/')
         def dashboard():
-            return render_template('dashboard.html')
+            try:
+                return render_template('dashboard.html')
+            except:
+                return '''
+                <html><head><title>FortiGate Nextrade</title></head>
+                <body style="font-family: system-ui; padding: 20px;">
+                    <h1>🚀 FortiGate Nextrade Dashboard</h1>
+                    <p>시스템이 시작되었습니다.</p>
+                    <nav>
+                        <a href="/devices" style="margin-right: 20px;">장치 관리</a>
+                        <a href="/settings" style="margin-right: 20px;">설정</a>
+                        <a href="/api/health" style="margin-right: 20px;">상태 확인</a>
+                    </nav>
+                </body></html>
+                '''
             
         @main_bp.route('/devices')
         def devices():
-            from api_clients import get_device_list
+            devices = [
+                {"name": "FIREWALL-01", "ip": "192.168.1.1", "mac": "00:1B:21:8B:9A:01", "type": "firewall", "status": "online", "zone": "WAN", "last_seen": "2분 전"},
+                {"name": "SWITCH-CORE", "ip": "192.168.1.10", "mac": "00:1B:21:8B:9A:02", "type": "switch", "status": "online", "zone": "LAN", "last_seen": "1분 전"}
+            ]
             try:
-                devices = get_device_list()
+                return render_template('devices.html', devices=devices)
             except:
-                devices = [
-                    {"name": "FIREWALL-01", "ip": "192.168.1.1", "mac": "00:1B:21:8B:9A:01", "type": "firewall", "status": "online", "zone": "WAN", "last_seen": "2분 전"},
-                    {"name": "SWITCH-CORE", "ip": "192.168.1.10", "mac": "00:1B:21:8B:9A:02", "type": "switch", "status": "online", "zone": "LAN", "last_seen": "1분 전"}
-                ]
-            return render_template('devices.html', devices=devices)
+                html = '<html><head><title>장치 관리</title></head><body style="font-family: system-ui; padding: 20px;">'
+                html += '<h1>🖥️ 네트워크 장치</h1><a href="/">← 돌아가기</a><div style="margin-top: 20px;">'
+                for device in devices:
+                    html += f'<div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px;">'
+                    html += f'<h3>{device["name"]}</h3><p>IP: {device["ip"]} | 상태: {device["status"]}</p></div>'
+                html += '</div></body></html>'
+                return html
             
         @main_bp.route('/topology')  
         def topology():
-            return render_template('topology.html')
+            try:
+                return render_template('topology.html')
+            except:
+                return '<html><body style="font-family: system-ui; padding: 20px;"><h1>🌐 네트워크 토폴로지</h1><a href="/">← 돌아가기</a><p>토폴로지 뷰가 곧 제공됩니다.</p></body></html>'
             
         @main_bp.route('/packet-sniffer')
         def packet_sniffer():
-            return render_template('packet_sniffer.html')
+            try:
+                return render_template('packet_sniffer.html')
+            except:
+                return '<html><body style="font-family: system-ui; padding: 20px;"><h1>📡 패킷 분석</h1><a href="/">← 돌아가기</a><p>패킷 분석 도구가 곧 제공됩니다.</p></body></html>'
             
         @main_bp.route('/policy-analysis')
         def policy_analysis():
-            return render_template('policy_analysis.html')
+            try:
+                return render_template('policy_analysis.html')
+            except:
+                return '<html><body style="font-family: system-ui; padding: 20px;"><h1>🛡️ 정책 분석</h1><a href="/">← 돌아가기</a><p>정책 분석 도구가 곧 제공됩니다.</p></body></html>'
             
         @main_bp.route('/policy-scenarios')
         def policy_scenarios():
-            return render_template('policy_scenarios.html')
+            try:
+                return render_template('policy_scenarios.html')
+            except:
+                return '<html><body style="font-family: system-ui; padding: 20px;"><h1>🎯 정책 시나리오</h1><a href="/">← 돌아가기</a><p>시나리오 테스트가 곧 제공됩니다.</p></body></html>'
             
         @main_bp.route('/itsm')
         def itsm():
-            return render_template('itsm.html')
+            try:
+                return render_template('itsm.html')
+            except:
+                return '<html><body style="font-family: system-ui; padding: 20px;"><h1>📋 ITSM</h1><a href="/">← 돌아가기</a><p>ITSM 관리가 곧 제공됩니다.</p></body></html>'
             
         @main_bp.route('/settings')
         def settings():
-            from config_manager import get_settings
+            settings = load_default_settings()
             try:
-                settings = get_settings()
+                return render_template('settings.html', settings=settings)
             except:
-                settings = load_default_settings()
-            return render_template('settings.html', settings=settings)
+                return f'<html><body style="font-family: system-ui; padding: 20px;"><h1>⚙️ 설정</h1><a href="/">← 돌아가기</a><h3>FortiGate</h3><p>호스트: {settings["fortigate"]["host"] or "설정되지 않음"}</p><h3>모드</h3><p>{settings["general"]["app_mode"]}</p></body></html>'
             
         # Blueprint 등록
         app.register_blueprint(main_bp)

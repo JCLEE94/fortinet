@@ -30,9 +30,22 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
           - |
+            echo "🚀 Starting FortiGate Nextrade..."
+            
+            # Create necessary directories
             mkdir -p /app/templates /app/static
-            cp /app/templates/* /app/templates/ 2>/dev/null || true
+            
+            # Debug: List mounted files
+            echo "📁 Available files in /app:"
+            ls -la /app/
+            
+            # Copy templates if they exist as separate files
+            find /app -name "*.html" -exec cp {} /app/templates/ \; 2>/dev/null || true
+            
+            # Make start script executable
             chmod +x /app/start.sh
+            
+            # Start the application
             /app/start.sh
         volumeMounts:
         - name: app-code
