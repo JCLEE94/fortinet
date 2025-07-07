@@ -138,12 +138,11 @@ jobs:
         else
           DEPLOY_TYPE="STABLE"
         fi
-        git commit --allow-empty -m "${DEPLOY_TYPE} Deploy: ${{ needs.build.outputs.deployment-tag }}
-
-📦 ConfigMap-based deployment
-👤 Actor: ${{ github.actor }}
-📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}
-🔗 Build: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        git commit --allow-empty -m "${DEPLOY_TYPE} Deploy: ${{ needs.build.outputs.deployment-tag }}" \
+          -m "📦 ConfigMap-based deployment" \
+          -m "👤 Actor: ${{ github.actor }}" \
+          -m "📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}" \
+          -m "🔗 Build: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         
         git push origin HEAD:${{ github.ref_name }}
 
