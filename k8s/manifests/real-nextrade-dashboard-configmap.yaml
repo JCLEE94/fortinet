@@ -92,6 +92,34 @@ data:
         def dashboard():
             return render_template_string(DASHBOARD_TEMPLATE)
             
+        @app.route('/devices')
+        def devices():
+            return render_template_string(DEVICES_TEMPLATE)
+            
+        @app.route('/topology')  
+        def topology():
+            return render_template_string(TOPOLOGY_TEMPLATE)
+            
+        @app.route('/packet-sniffer')
+        def packet_sniffer():
+            return render_template_string(PACKET_TEMPLATE)
+            
+        @app.route('/policy-analysis')
+        def policy_analysis():
+            return render_template_string(POLICY_TEMPLATE)
+            
+        @app.route('/policy-scenarios')
+        def policy_scenarios():
+            return render_template_string(SCENARIOS_TEMPLATE)
+            
+        @app.route('/itsm')
+        def itsm():
+            return render_template_string(ITSM_TEMPLATE)
+            
+        @app.route('/settings')
+        def settings():
+            return render_template_string(SETTINGS_TEMPLATE)
+            
         @app.route('/api/health')
         def health():
             return jsonify({
@@ -882,42 +910,42 @@ data:
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/devices" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-server"></i></span>
                             <span class="nav-text">장치 관리</span>
                         </a>
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/topology" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-project-diagram"></i></span>
                             <span class="nav-text">네트워크 맵</span>
                         </a>
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/policy-analysis" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-shield-alt"></i></span>
                             <span class="nav-text">보안</span>
                         </a>
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/packet-sniffer" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
                             <span class="nav-text">성능</span>
                         </a>
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/itsm" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-file-alt"></i></span>
                             <span class="nav-text">로그</span>
                         </a>
                     </div>
                     
                     <div class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="/settings" class="nav-link">
                             <span class="nav-icon"><i class="fas fa-cog"></i></span>
                             <span class="nav-text">설정</span>
                         </a>
@@ -1612,6 +1640,118 @@ data:
 
             console.log('Real Nextrade Dashboard loaded successfully');
         </script>
+    </body>
+    </html>
+    '''
+
+    DEVICES_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>장치 관리 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-server"></i> 장치 관리</h1>
+        <p>네트워크 장치 관리 및 모니터링</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    TOPOLOGY_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>네트워크 맵 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-project-diagram"></i> 네트워크 토폴로지</h1>
+        <p>네트워크 구성도 및 연결 상태</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    PACKET_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>패킷 분석 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-network-wired"></i> 패킷 분석</h1>
+        <p>실시간 패킷 캡처 및 분석</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    POLICY_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>정책 분석 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-shield-alt"></i> 보안 정책 분석</h1>
+        <p>방화벽 정책 및 보안 규칙 분석</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    SCENARIOS_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>정책 시나리오 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-sitemap"></i> 정책 시나리오</h1>
+        <p>보안 정책 시뮬레이션 및 테스트</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    ITSM_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>ITSM - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-clipboard-list"></i> ITSM 관리</h1>
+        <p>IT 서비스 관리 및 티켓 처리</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
+    </body>
+    </html>
+    '''
+
+    SETTINGS_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <title>설정 - Nextrade</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    </head>
+    <body style="font-family: system-ui; margin: 0; padding: 20px; background: #f8fafc;">
+        <h1><i class="fas fa-cog"></i> 시스템 설정</h1>
+        <p>애플리케이션 설정 및 환경 구성</p>
+        <a href="/" style="color: #E50038; text-decoration: none;">← 대시보드로 돌아가기</a>
     </body>
     </html>
     '''
