@@ -15,11 +15,26 @@ data:
     # Create the real FortiGate application structure
     cat > /tmp/app.py << 'EOF'
     import os
-    from flask import Flask, render_template_string, jsonify, request
+    from flask import Flask, render_template_string, jsonify, request, redirect, url_for
     from flask_cors import CORS
+    import datetime
+    import json
     
     app = Flask(__name__)
     CORS(app)
+    
+    # Mock data for demonstration
+    mock_devices = [
+        {"name": "FW-01", "ip": "192.168.1.1", "status": "online", "cpu": 25, "memory": 45},
+        {"name": "FW-02", "ip": "192.168.1.2", "status": "online", "cpu": 30, "memory": 52},
+        {"name": "FW-03", "ip": "192.168.1.3", "status": "offline", "cpu": 0, "memory": 0},
+    ]
+    
+    mock_policies = [
+        {"id": 1, "name": "Allow HTTP", "action": "allow", "enabled": True},
+        {"id": 2, "name": "Block Malware", "action": "deny", "enabled": True},
+        {"id": 3, "name": "VPN Access", "action": "allow", "enabled": True},
+    ]
     
     # Main dashboard template
     DASHBOARD_HTML = '''
@@ -189,6 +204,91 @@ data:
         </div>
         
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function loadPage(page) {
+                // Remove active class from all nav links
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                event.target.closest('.nav-link').classList.add('active');
+                
+                // Load different content based on page
+                const mainContent = document.querySelector('.main-content');
+                
+                if (page === 'devices') {
+                    fetch('/api/devices')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.querySelector('.main-content').innerHTML = `
+                                <h2>네트워크 장비 관리</h2>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table class="table">
+                                            <thead>
+                                                <tr><th>장비명</th><th>IP</th><th>상태</th><th>CPU</th><th>메모리</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.map(device => `
+                                                    <tr>
+                                                        <td>${device.name}</td>
+                                                        <td>${device.ip}</td>
+                                                        <td><span class="badge bg-${device.status === 'online' ? 'success' : 'danger'}">${device.status}</span></td>
+                                                        <td>${device.cpu}%</td>
+                                                        <td>${device.memory}%</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                } else if (page === 'policies') {
+                    fetch('/api/policies')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.querySelector('.main-content').innerHTML = `
+                                <h2>보안 정책 관리</h2>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <table class="table">
+                                            <thead>
+                                                <tr><th>정책명</th><th>액션</th><th>상태</th><th>관리</th></tr>
+                                            </thead>
+                                            <tbody>
+                                                ${data.map(policy => `
+                                                    <tr>
+                                                        <td>${policy.name}</td>
+                                                        <td><span class="badge bg-${policy.action === 'allow' ? 'success' : 'warning'}">${policy.action}</span></td>
+                                                        <td><span class="badge bg-${policy.enabled ? 'primary' : 'secondary'}">${policy.enabled ? '활성' : '비활성'}</span></td>
+                                                        <td><button class="btn btn-sm btn-primary" onclick="togglePolicy(${policy.id})">토글</button></td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                } else {
+                    // Default dashboard reload
+                    location.reload();
+                }
+                
+                return false;
+            }
+            
+            function togglePolicy(policyId) {
+                fetch('/api/policies/' + policyId + '/toggle', {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('정책 상태가 변경되었습니다: ' + data.message);
+                        loadPage('policies');
+                    });
+            }
+        </script>
     </body>
     </html>
     '''
@@ -220,6 +320,25 @@ data:
             "alerts": 12,
             "traffic": "1.2GB"
         })
+        
+    @app.route('/api/devices')
+    def get_devices():
+        return jsonify(mock_devices)
+        
+    @app.route('/api/policies')
+    def get_policies():
+        return jsonify(mock_policies)
+        
+    @app.route('/api/policies/<int:policy_id>/toggle', methods=['POST'])
+    def toggle_policy(policy_id):
+        for policy in mock_policies:
+            if policy['id'] == policy_id:
+                policy['enabled'] = not policy['enabled']
+                return jsonify({
+                    "success": True,
+                    "message": f"정책 '{policy['name']}'이 {'활성화' if policy['enabled'] else '비활성화'}되었습니다"
+                })
+        return jsonify({"success": False, "message": "정책을 찾을 수 없습니다"}), 404
     
     if __name__ == '__main__':
         print("🔥 Starting FortiGate Nextrade - Network Management Platform")
