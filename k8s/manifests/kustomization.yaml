@@ -9,7 +9,7 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - original-app-configmap.yaml
+  - fortigate-dashboard-configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml

@@ -21,7 +21,7 @@ spec:
       volumes:
       - name: app-code
         configMap:
-          name: fortinet-original-app
+          name: fortinet-dashboard-app
           defaultMode: 0755
       containers:
       - name: fortinet
