@@ -37,7 +37,7 @@ jobs:
   test:
     name: 🧪 Test
     runs-on: ubuntu-latest
-    if: ${{ !inputs.skip_tests }}
+    if: ${{ github.event_name != 'workflow_dispatch' || !github.event.inputs.skip_tests }}
     
     steps:
     - name: 📥 Checkout
@@ -88,7 +88,7 @@ jobs:
     - name: 🔧 Set Variables
       id: vars
       run: |
-        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.skip_tests }}" = "true" ]; then
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
           TAG="emergency-${GITHUB_SHA::7}"
         else
           TAG="${GITHUB_SHA::7}"
@@ -133,12 +133,12 @@ jobs:
         fi
         
         # Always commit to trigger ArgoCD even if no config changes
-        DEPLOY_TYPE=${{ inputs.skip_tests == true && 'EMERGENCY' || 'STABLE' }}
+        DEPLOY_TYPE=${{ github.event.inputs.skip_tests == 'true' && 'EMERGENCY' || 'STABLE' }}
         git commit --allow-empty -m "${DEPLOY_TYPE} Deploy: ${{ needs.build.outputs.deployment-tag }}
 
 📦 ConfigMap-based deployment
 👤 Actor: ${{ github.actor }}
-📝 Reason: ${{ inputs.reason || github.event.head_commit.message }}
+📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}
 🔗 Build: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         
         git push origin HEAD:${{ github.ref_name }}
@@ -210,7 +210,7 @@ jobs:
           STATUS="❌ FAILED"
         fi
         
-        DEPLOY_TYPE=${{ inputs.skip_tests == true && '🚨 EMERGENCY' || '🚀 STABLE' }}
+        DEPLOY_TYPE=${{ github.event.inputs.skip_tests == 'true' && '🚨 EMERGENCY' || '🚀 STABLE' }}
         
         echo "## ${DEPLOY_TYPE} Deployment ${STATUS}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
