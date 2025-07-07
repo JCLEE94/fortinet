@@ -1565,25 +1565,24 @@ data:
             }
 
             function downloadReport(data) {
-                const reportContent = `
-Nextrade 네트워크 보안 리포트
-생성일: ${data.date}
-
-=== 네트워크 통계 ===
-총 장치 수: ${data.stats.totalDevices}
-가동률: ${data.stats.uptime}
-보안 이벤트: ${data.stats.securityEvents}건
-트래픽 볼륨: ${data.stats.trafficVolume}
-
-=== 보안 요약 ===
-- 방화벽 상태: 정상
-- 침입 탐지: 3건의 의심 활동
-- 취약점: 없음
-
-이 리포트는 Nextrade 네트워크 모니터에서 자동 생성되었습니다.
-                `;
+                const reportContent = [
+                    'Nextrade 네트워크 보안 리포트',
+                    '생성일: ' + data.date,
+                    '',
+                    '=== 네트워크 통계 ===',
+                    '총 장치 수: ' + data.stats.totalDevices,
+                    '가동률: ' + data.stats.uptime,
+                    '보안 이벤트: ' + data.stats.securityEvents + '건'
+                ].join('\n');
                 
-                const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+                // 나머지 리포트 내용 추가
+                const fullReport = reportContent + '\n트래픽 볼륨: ' + data.stats.trafficVolume + 
+                    '\n\n=== 보안 요약 ===\n- 방화벽 상태: 정상' +
+                    '\n- 침입 탐지: 3건의 의심 활동' +
+                    '\n- 취약점: 없음' +
+                    '\n\n이 리포트는 Nextrade 네트워크 모니터에서 자동 생성되었습니다.';
+                
+                const blob = new Blob([fullReport], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
