@@ -52,8 +52,14 @@ jobs:
     - name: 📥 Checkout
       uses: actions/checkout@v4
       
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+      
     # Python 테스트
-    - name: 🐍 Python Tests
+    - name: 🧪 Python Tests
       if: matrix.task == 'test'
       run: |
         python -m pip install --upgrade pip

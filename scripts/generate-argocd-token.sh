@@ -26,7 +26,7 @@ fi
 
 # 3. 새 토큰 생성
 echo "3️⃣ 새 API 토큰 생성..."
-TOKEN=$(argocd account generate-token --account admin --grpc-web --name fortinet-ci)
+TOKEN=$(argocd account generate-token --grpc-web)
 
 if [ -z "$TOKEN" ]; then
     echo "❌ 토큰 생성 실패!"
