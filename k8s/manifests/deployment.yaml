@@ -20,6 +20,8 @@ spec:
       annotations:
         deployment.kubernetes.io/revision: "2"
     spec:
+      imagePullSecrets:
+      - name: registry-credentials
       containers:
       - name: fortinet
         image: registry.jclee.me/fortinet:latest
