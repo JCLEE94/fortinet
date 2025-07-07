@@ -12,7 +12,6 @@ resources:
   - real-nextrade-dashboard-configmap.yaml
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
 
 images:
   - name: python
