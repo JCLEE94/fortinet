@@ -57,9 +57,12 @@ jobs:
         
     - name: 🧪 Run Tests
       run: |
+        # Add project root to Python path for imports
+        export PYTHONPATH="$PWD:$PYTHONPATH"
         cd src
         python -c "
 import sys
+sys.path.insert(0, '..')
 try:
     import web_app
     print('✅ Import test passed')
@@ -68,7 +71,8 @@ except Exception as e:
     sys.exit(1)
 "
         if [ -f "../tests/test_imports.py" ]; then
-          python -m pytest ../tests/test_imports.py -v || echo "Test warnings detected"
+          cd ..
+          python -m pytest tests/test_imports.py -v || echo "Test warnings detected"
         fi
 
   # Build Job (ConfigMap mode - no Docker build needed)
