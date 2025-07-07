@@ -9,12 +9,12 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - full-app-configmap.yaml
+  - registry-secret.yaml
   - deployment.yaml
   - service.yaml
 
 images:
-  - name: fortinet
+  - name: registry.jclee.me/fortinet
     newTag: latest
 
 labels:
