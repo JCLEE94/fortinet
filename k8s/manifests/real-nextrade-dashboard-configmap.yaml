@@ -241,7 +241,7 @@ data:
     sys.modules['api_clients'] = MockModule()
     sys.modules['config_manager'] = MockModule()
 
-  templates/base.html: |
+  templates-base.html: |
     <!DOCTYPE html>
     <html lang="ko">
     <head>
@@ -276,7 +276,7 @@ data:
     </body>
     </html>
 
-  templates/dashboard.html: |
+  templates-dashboard.html: |
     {% extends "base.html" %}
     {% block title %}대시보드 - Nextrade{% endblock %}
     {% block content %}
@@ -304,7 +304,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/devices.html: |
+  templates-devices.html: |
     {% extends "base.html" %}
     {% block title %}장치 관리 - Nextrade{% endblock %}
     {% block content %}
@@ -334,7 +334,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/topology.html: |
+  templates-topology.html: |
     {% extends "base.html" %}
     {% block title %}네트워크 토폴로지 - Nextrade{% endblock %}
     {% block content %}
@@ -348,7 +348,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/packet_sniffer.html: |
+  templates-packet_sniffer.html: |
     {% extends "base.html" %}
     {% block title %}패킷 분석 - Nextrade{% endblock %}
     {% block content %}
@@ -362,7 +362,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/policy_analysis.html: |
+  templates-policy_analysis.html: |
     {% extends "base.html" %}
     {% block title %}정책 분석 - Nextrade{% endblock %}
     {% block content %}
@@ -376,7 +376,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/policy_scenarios.html: |
+  templates-policy_scenarios.html: |
     {% extends "base.html" %}
     {% block title %}정책 시나리오 - Nextrade{% endblock %}
     {% block content %}
@@ -390,7 +390,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/itsm.html: |
+  templates-itsm.html: |
     {% extends "base.html" %}
     {% block title %}ITSM - Nextrade{% endblock %}
     {% block content %}
@@ -404,7 +404,7 @@ data:
     </div>
     {% endblock %}
 
-  templates/settings.html: |
+  templates-settings.html: |
     {% extends "base.html" %}
     {% block title %}설정 - Nextrade{% endblock %}
     {% block content %}
