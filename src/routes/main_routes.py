@@ -9,6 +9,13 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
+    """홈페이지 - 원래 Nextrade 대시보드로 리다이렉트"""
+    from flask import redirect, url_for
+    return redirect(url_for('main.dashboard'))
+
+@main_bp.route('/policy-analysis')
+def policy_analysis():
+    """FortiGate 정책 분석 페이지 (기존 index.html)"""
     return render_template('index.html')
 
 @main_bp.route('/batch')
