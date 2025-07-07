@@ -1,0 +1,735 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fortinet-nextrade-original
+  namespace: fortinet
+  labels:
+    app: fortinet
+    component: nextrade-app
+data:
+  start.sh: |
+    #!/bin/bash
+    echo "🚀 Starting Nextrade Network Monitor..."
+    cd /app
+    
+    # Install required packages
+    pip install Flask requests redis loguru python-socketio flask-socketio
+    
+    # Copy source code structure
+    mkdir -p templates static/css static/img/nextrade static/js
+    
+    # Start the application
+    python main.py --web
+    
+  main.py: |
+    import argparse
+    import sys
+    import os
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).parent))
+
+    def main():
+        parser = argparse.ArgumentParser(description='Nextrade Network Monitor')
+        parser.add_argument('--web', action='store_true', help='Start web application')
+        args = parser.parse_args()
+        
+        if args.web:
+            from web_app import create_app
+            app = create_app()
+            port = int(os.getenv('WEB_APP_PORT', 7777))
+            host = os.getenv('WEB_APP_HOST', '0.0.0.0')
+            print(f"🌐 Starting Nextrade Network Monitor on {host}:{port}")
+            app.run(host=host, port=port, debug=False)
+
+    if __name__ == '__main__':
+        main()
+        
+  web_app.py: |
+    from flask import Flask, render_template_string, jsonify, request
+    import os
+    import datetime
+
+    def create_app():
+        app = Flask(__name__)
+        
+        @app.route('/')
+        def dashboard():
+            return render_template_string(DASHBOARD_TEMPLATE)
+            
+        @app.route('/dashboard')
+        def dashboard_page():
+            return render_template_string(DASHBOARD_TEMPLATE)
+            
+        @app.route('/api/health')
+        def health():
+            return jsonify({
+                "status": "healthy",
+                "service": "Nextrade Network Monitor",
+                "version": "2.9.0",
+                "environment": os.getenv('APP_MODE', 'production'),
+                "timestamp": datetime.datetime.now().isoformat()
+            })
+            
+        @app.route('/api/dashboard/stats')
+        def dashboard_stats():
+            return jsonify({
+                "total_devices": 24,
+                "uptime": "99.8%",
+                "network_traffic": "2.4 Gbps",
+                "response_time": "12ms",
+                "trend_device_increase": 12,
+                "trend_uptime_increase": 0.2,
+                "trend_traffic_decrease": 8,
+                "trend_response_improvement": 15
+            })
+            
+        return app
+
+    DASHBOARD_TEMPLATE = '''
+    <!DOCTYPE html>
+    <html lang="ko" data-theme="light">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>네트워크 대시보드 - Nextrade Network Monitor</title>
+        
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#0a0e27">
+        
+        <!-- FontAwesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                color: #333;
+            }
+
+            .app-container {
+                display: flex;
+                min-height: 100vh;
+            }
+
+            /* Sidebar */
+            .sidebar {
+                width: 280px;
+                background: rgba(10, 14, 39, 0.95);
+                backdrop-filter: blur(20px);
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                position: fixed;
+                height: 100vh;
+                overflow-y: auto;
+                z-index: 1000;
+            }
+
+            .sidebar-header {
+                padding: 2rem 1.5rem;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                text-align: center;
+            }
+
+            .logo img {
+                max-width: 150px;
+                height: auto;
+                filter: brightness(0) invert(1);
+            }
+
+            .logo {
+                color: white;
+                font-size: 1.5rem;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .nav-menu {
+                padding: 1rem 0;
+            }
+
+            .nav-item {
+                margin-bottom: 0.5rem;
+            }
+
+            .nav-link {
+                display: flex;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+                transition: all 0.3s ease;
+                border-left: 3px solid transparent;
+            }
+
+            .nav-link:hover,
+            .nav-link.active {
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                border-left-color: #667eea;
+                transform: translateX(5px);
+            }
+
+            .nav-icon {
+                width: 20px;
+                margin-right: 1rem;
+                text-align: center;
+            }
+
+            /* Main Content */
+            .main-content {
+                flex: 1;
+                margin-left: 280px;
+                padding: 2rem;
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(10px);
+                min-height: 100vh;
+            }
+
+            /* Page Header */
+            .page-header {
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+                padding: 2rem;
+                border-radius: 15px;
+                margin-bottom: 2rem;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .page-title {
+                color: white;
+                font-size: 2.5rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+            }
+
+            .page-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 1.1rem;
+                margin-bottom: 0;
+            }
+
+            /* Grid System */
+            .grid {
+                display: grid;
+                gap: 1.5rem;
+            }
+
+            .grid-cols-4 {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+
+            .grid-cols-3 {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+
+            .grid-cols-2 {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            }
+
+            /* Stat Cards */
+            .stat-card {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 1.5rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+            }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+
+            .stat-icon {
+                width: 50px;
+                height: 50px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1rem;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                font-size: 1.2rem;
+            }
+
+            .stat-icon-success {
+                background: linear-gradient(135deg, #28a745, #20c997);
+            }
+
+            .stat-icon-info {
+                background: linear-gradient(135deg, #17a2b8, #6f42c1);
+            }
+
+            .stat-icon-warning {
+                background: linear-gradient(135deg, #ffc107, #fd7e14);
+            }
+
+            .stat-value {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #2c3e50;
+                margin-bottom: 0.5rem;
+                line-height: 1;
+            }
+
+            .stat-label {
+                color: #6c757d;
+                font-size: 0.9rem;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.5rem;
+            }
+
+            .stat-trend {
+                font-size: 0.85rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+            }
+
+            .trend-up {
+                color: #28a745;
+            }
+
+            .trend-down {
+                color: #dc3545;
+            }
+
+            /* Chart Container */
+            .chart-container {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 1.5rem;
+                border-radius: 15px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                margin-bottom: 2rem;
+            }
+
+            .chart-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            /* Responsive Design */
+            @media (max-width: 1024px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease;
+                }
+
+                .main-content {
+                    margin-left: 0;
+                }
+
+                .grid-cols-4 {
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                }
+            }
+
+            @media (max-width: 768px) {
+                .main-content {
+                    padding: 1rem;
+                }
+
+                .page-header {
+                    padding: 1.5rem;
+                    text-align: center;
+                }
+
+                .page-title {
+                    font-size: 2rem;
+                }
+
+                .grid-cols-4,
+                .grid-cols-3,
+                .grid-cols-2 {
+                    grid-template-columns: 1fr;
+                }
+
+                .stat-card {
+                    padding: 1.25rem;
+                }
+            }
+
+            /* Loading Animation */
+            .loading {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f3f3;
+                border-top: 3px solid #667eea;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            /* FortiManager Integration Section */
+            .fortimanager-section {
+                background: rgba(255, 255, 255, 0.95);
+                padding: 2rem;
+                border-radius: 15px;
+                margin-bottom: 2rem;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.3);
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .fortimanager-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .fortimanager-card {
+                background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+                padding: 1.5rem;
+                border-radius: 12px;
+                border-left: 4px solid #667eea;
+                transition: all 0.3s ease;
+            }
+
+            .fortimanager-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            }
+
+            .fortimanager-status {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .status-indicator {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #28a745;
+            }
+
+            .status-indicator.warning {
+                background: #ffc107;
+            }
+
+            .status-indicator.error {
+                background: #dc3545;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <i class="fas fa-network-wired"></i>
+                        <span>Nextrade</span>
+                    </div>
+                </div>
+                
+                <nav class="nav-menu">
+                    <div class="nav-item">
+                        <a href="/" class="nav-link active">
+                            <span class="nav-icon"><i class="fas fa-th-large"></i></span>
+                            <span class="nav-text">대시보드</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-server"></i></span>
+                            <span class="nav-text">장치 관리</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-project-diagram"></i></span>
+                            <span class="nav-text">네트워크 맵</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-shield-alt"></i></span>
+                            <span class="nav-text">보안</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
+                            <span class="nav-text">성능</span>
+                        </a>
+                    </div>
+                    
+                    <div class="nav-item">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon"><i class="fas fa-cog"></i></span>
+                            <span class="nav-text">설정</span>
+                        </a>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">네트워크 대시보드</h1>
+                    <p class="page-subtitle">실시간 네트워크 상태 및 성능 모니터링</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-4">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-server fa-lg"></i>
+                        </div>
+                        <div class="stat-value" id="active-devices">24</div>
+                        <div class="stat-label">활성 장치</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 12%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-success">
+                            <i class="fas fa-globe fa-lg"></i>
+                        </div>
+                        <div class="stat-value" id="uptime">99.8%</div>
+                        <div class="stat-label">가동률</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 0.2%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-info">
+                            <i class="fas fa-exchange-alt fa-lg"></i>
+                        </div>
+                        <div class="stat-value" id="network-traffic">2.4 Gbps</div>
+                        <div class="stat-label">네트워크 트래픽</div>
+                        <div class="stat-trend trend-down">
+                            <i class="fas fa-arrow-down"></i> 8%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-warning">
+                            <i class="fas fa-clock fa-lg"></i>
+                        </div>
+                        <div class="stat-value" id="response-time">12ms</div>
+                        <div class="stat-label">응답 시간</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 15%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FortiManager Integration -->
+                <div class="fortimanager-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-shield-alt"></i>
+                        FortiManager 통합 상태
+                    </h2>
+                    
+                    <div class="fortimanager-grid">
+                        <div class="fortimanager-card">
+                            <div class="fortimanager-status">
+                                <div class="status-indicator"></div>
+                                <strong>FortiManager 연결</strong>
+                            </div>
+                            <div>API 연결 상태: 정상</div>
+                            <div>마지막 동기화: 5분 전</div>
+                        </div>
+                        
+                        <div class="fortimanager-card">
+                            <div class="fortimanager-status">
+                                <div class="status-indicator"></div>
+                                <strong>보안 정책</strong>
+                            </div>
+                            <div>활성 정책: 152개</div>
+                            <div>비활성 정책: 8개</div>
+                        </div>
+                        
+                        <div class="fortimanager-card">
+                            <div class="fortimanager-status">
+                                <div class="status-indicator warning"></div>
+                                <strong>장치 상태</strong>
+                            </div>
+                            <div>온라인: 23개</div>
+                            <div>오프라인: 1개</div>
+                        </div>
+                        
+                        <div class="fortimanager-card">
+                            <div class="fortimanager-status">
+                                <div class="status-indicator"></div>
+                                <strong>로그 수집</strong>
+                            </div>
+                            <div>오늘 수집된 로그: 125,432개</div>
+                            <div>저장 용량: 78% 사용</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Performance Charts -->
+                <div class="grid grid-cols-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-area"></i>
+                            네트워크 트래픽
+                        </h3>
+                        <canvas id="trafficChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">
+                            <i class="fas fa-chart-line"></i>
+                            응답 시간
+                        </h3>
+                        <canvas id="responseChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Chart.js -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
+        <script>
+            // Chart configurations
+            const chartConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                }
+            };
+
+            // Traffic Chart
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                    datasets: [{
+                        label: '인바운드 트래픽',
+                        data: [1.2, 0.8, 2.1, 2.8, 3.2, 2.5, 1.8],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: '아웃바운드 트래픽',
+                        data: [0.9, 0.6, 1.8, 2.2, 2.7, 2.1, 1.5],
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: chartConfig
+            });
+
+            // Response Time Chart
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['월', '화', '수', '목', '금', '토', '일'],
+                    datasets: [{
+                        label: '평균 응답 시간 (ms)',
+                        data: [15, 12, 18, 14, 11, 16, 13],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 1
+                    }]
+                },
+                options: chartConfig
+            });
+
+            // Load stats periodically
+            function loadStats() {
+                fetch('/api/dashboard/stats')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('active-devices').textContent = data.total_devices;
+                        document.getElementById('uptime').textContent = data.uptime;
+                        document.getElementById('network-traffic').textContent = data.network_traffic;
+                        document.getElementById('response-time').textContent = data.response_time;
+                    })
+                    .catch(error => console.error('Error loading stats:', error));
+            }
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', function() {
+                loadStats();
+                setInterval(loadStats, 30000); // Refresh every 30 seconds
+            });
+        </script>
+    </body>
+    </html>
+    '''
