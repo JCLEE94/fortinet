@@ -18,6 +18,8 @@ spec:
         app: fortinet
         component: backend
     spec:
+      imagePullSecrets:
+      - name: registry-credentials
       containers:
       - name: fortinet
         image: registry.jclee.me/fortinet:latest
