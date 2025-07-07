@@ -9,16 +9,14 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - app-configmap.yaml
-  - real-app-configmap.yaml
   - original-app-configmap.yaml
   - deployment.yaml
   - service.yaml
   - ingress.yaml
 
 images:
-  - name: python
-    newTag: 3.11-slim
+  - name: registry.jclee.me/fortinet
+    newTag: latest
 
 labels:
   - includeSelectors: true

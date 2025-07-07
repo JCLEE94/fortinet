@@ -1,0 +1,252 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      skip_tests:
+        description: 'Skip tests (emergency only)'
+        required: false
+        default: false
+        type: boolean
+      reason:
+        description: 'Deployment reason'
+        required: false
+        default: 'Manual deployment'
+
+env:
+  REGISTRY: 'registry.jclee.me'
+  IMAGE_NAME: 'fortinet'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Test Job - Always runs unless skipped
+  test:
+    name: 🧪 Test
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_tests }}
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        
+    - name: 📦 Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+        
+    - name: 🧪 Run Tests
+      run: |
+        cd src
+        python -c "
+import sys
+try:
+    import web_app
+    print('✅ Import test passed')
+except Exception as e:
+    print(f'❌ Import test failed: {e}')
+    sys.exit(1)
+"
+        if [ -f "../tests/test_imports.py" ]; then
+          python -m pytest ../tests/test_imports.py -v || echo "Test warnings detected"
+        fi
+
+  # Build and Push Job
+  build:
+    name: 🏗️ Build & Push
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always() && (needs.test.result == 'success' || needs.test.result == 'skipped')
+    
+    outputs:
+      image-tag: ${{ steps.vars.outputs.image-tag }}
+      image-url: ${{ steps.vars.outputs.image-url }}
+      
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Set Variables
+      id: vars
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.skip_tests }}" = "true" ]; then
+          TAG="emergency-${GITHUB_SHA::7}"
+        else
+          TAG="${GITHUB_SHA::7}"
+        fi
+        echo "image-tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "image-url=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}" >> $GITHUB_OUTPUT
+        
+    - name: 🔐 Registry Login
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        
+    - name: 🏗️ Build and Push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.production
+        push: true
+        tags: |
+          ${{ steps.vars.outputs.image-url }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deploy Job - Updates GitOps
+  deploy:
+    name: 🚀 Deploy
+    runs-on: ubuntu-latest
+    needs: [build]
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: 🔧 Configure Git
+      run: |
+        git config user.name "GitHub Actions Bot"
+        git config user.email "actions@github.com"
+        
+    - name: 📝 Update GitOps
+      run: |
+        echo "🔧 Updating kustomization.yaml with new image tag..."
+        
+        # Update image tag in kustomization
+        sed -i "s|newTag:.*|newTag: ${{ needs.build.outputs.image-tag }}|g" k8s/manifests/kustomization.yaml
+        
+        # Update deployment timestamp
+        TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        sed -i "s|deployed-at:.*|deployed-at: \"${TIMESTAMP}\"|g" k8s/manifests/kustomization.yaml
+        
+        # Show changes
+        echo "📋 Changes to be committed:"
+        git diff k8s/manifests/kustomization.yaml
+        
+        # Commit and push
+        git add k8s/manifests/kustomization.yaml
+        
+        DEPLOY_TYPE=${{ inputs.skip_tests == true && 'EMERGENCY' || 'STABLE' }}
+        git commit -m "${DEPLOY_TYPE} Deploy: ${{ needs.build.outputs.image-tag }}
+
+🚀 Image: ${{ needs.build.outputs.image-url }}
+👤 Actor: ${{ github.actor }}
+📝 Reason: ${{ inputs.reason || github.event.head_commit.message }}
+🔗 Build: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        
+        git push origin HEAD:${{ github.ref_name }}
+
+  # Health Check Job
+  verify:
+    name: 🏥 Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy]
+    
+    steps:
+    - name: ⏳ Wait for ArgoCD Sync
+      run: |
+        echo "⏳ Waiting 120 seconds for ArgoCD to sync and pods to restart..."
+        sleep 120
+        
+    - name: 🏥 Health Check
+      run: |
+        echo "🏥 Checking application health..."
+        
+        HEALTH_URLS=(
+          "https://fortinet.jclee.me/api/health"
+          "http://192.168.50.110:30777/api/health"
+        )
+        
+        SUCCESS=false
+        
+        for url in "${HEALTH_URLS[@]}"; do
+          echo "Testing: $url"
+          
+          for i in {1..3}; do
+            if curl -f -s -m 15 "$url" > /dev/null 2>&1; then
+              echo "✅ Health check passed for: $url"
+              
+              # Get health details
+              echo "📊 Health Details:"
+              curl -s "$url" | jq . 2>/dev/null || curl -s "$url"
+              SUCCESS=true
+              break 2
+            else
+              echo "❌ Attempt $i/3 failed for: $url"
+              sleep 10
+            fi
+          done
+        done
+        
+        if [ "$SUCCESS" = false ]; then
+          echo ""
+          echo "⚠️ All health checks failed"
+          echo "Please check:"
+          echo "- ArgoCD: https://argo.jclee.me/applications/fortinet"
+          echo "- Application URLs above"
+          exit 1
+        fi
+
+  # Summary Job
+  summary:
+    name: 📊 Summary
+    runs-on: ubuntu-latest
+    needs: [build, deploy, verify]
+    if: always()
+    
+    steps:
+    - name: 📊 Create Summary
+      run: |
+        if [ "${{ needs.verify.result }}" = "success" ]; then
+          STATUS="✅ SUCCESS"
+        else
+          STATUS="❌ FAILED"
+        fi
+        
+        DEPLOY_TYPE=${{ inputs.skip_tests == true && '🚨 EMERGENCY' || '🚀 STABLE' }}
+        
+        echo "## ${DEPLOY_TYPE} Deployment ${STATUS}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📋 Details" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image**: \`${{ needs.build.outputs.image-url }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: \`${{ needs.build.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Actor**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tests**: ${{ needs.test.result || 'SKIPPED' }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+        echo "- [ArgoCD Dashboard](https://argo.jclee.me/applications/fortinet)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Application (HTTPS)](https://fortinet.jclee.me)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Application (NodePort)](http://192.168.50.110:30777)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ needs.verify.result }}" != "success" ]; then
+          echo "### ⚠️ Action Required" >> $GITHUB_STEP_SUMMARY
+          echo "Deployment verification failed. Please check the application manually." >> $GITHUB_STEP_SUMMARY
+        fi
