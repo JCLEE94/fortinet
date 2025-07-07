@@ -13,8 +13,8 @@ resources:
   - service.yaml
 
 images:
-  - name: python
-    newTag: 3.11-slim
+  - name: fortinet
+    newTag: latest
 
 labels:
   - includeSelectors: true

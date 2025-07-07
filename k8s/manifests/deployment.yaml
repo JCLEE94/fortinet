@@ -22,27 +22,8 @@ spec:
     spec:
       containers:
       - name: fortinet
-        image: python:3.11-slim
+        image: fortinet:latest
         imagePullPolicy: IfNotPresent
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            echo "🚀 Starting FortiGate Nextrade with full features..."
-            
-            # Install dependencies
-            apt-get update && apt-get install -y git
-            
-            # Clone repository
-            git clone https://github.com/JCLEE94/fortinet.git /tmp/fortinet
-            
-            # Copy everything to /app
-            cp -r /tmp/fortinet/* /app/
-            
-            # Install Python dependencies
-            cd /app && pip install -r requirements.txt
-            
-            # Start application
-            cd /app/src && python main.py --web
         ports:
         - containerPort: 7777
           name: http
