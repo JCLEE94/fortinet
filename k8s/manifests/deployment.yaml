@@ -32,7 +32,7 @@ spec:
           protocol: TCP
         env:
         - name: APP_MODE
-          value: "production"
+          value: "test"
         - name: WEB_APP_PORT
           value: "7777"
         - name: WEB_APP_HOST
