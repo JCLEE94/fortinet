@@ -69,16 +69,16 @@ data:
                         FortiGate Nextrade
                     </h4>
                     <nav class="nav flex-column">
-                        <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt me-2"></i>대시보드</a>
-                        <a class="nav-link" href="#"><i class="fas fa-network-wired me-2"></i>네트워크 모니터링</a>
-                        <a class="nav-link" href="#"><i class="fas fa-shield-alt me-2"></i>정책 관리</a>
-                        <a class="nav-link" href="#"><i class="fas fa-project-diagram me-2"></i>토폴로지</a>
-                        <a class="nav-link" href="#"><i class="fas fa-chart-line me-2"></i>분석</a>
-                        <a class="nav-link" href="#"><i class="fas fa-exclamation-triangle me-2"></i>위협 탐지</a>
-                        <a class="nav-link" href="#"><i class="fas fa-cogs me-2"></i>FortiManager</a>
-                        <a class="nav-link" href="#"><i class="fas fa-tools me-2"></i>ITSM 연동</a>
-                        <a class="nav-link" href="#"><i class="fas fa-file-alt me-2"></i>로그 관리</a>
-                        <a class="nav-link" href="#"><i class="fas fa-cog me-2"></i>설정</a>
+                        <a class="nav-link active" href="#" onclick="showDashboard()"><i class="fas fa-tachometer-alt me-2"></i>대시보드</a>
+                        <a class="nav-link" href="#" onclick="showDevices()"><i class="fas fa-network-wired me-2"></i>네트워크 모니터링</a>
+                        <a class="nav-link" href="#" onclick="showPolicies()"><i class="fas fa-shield-alt me-2"></i>정책 관리</a>
+                        <a class="nav-link" href="#" onclick="showTopology()"><i class="fas fa-project-diagram me-2"></i>토폴로지</a>
+                        <a class="nav-link" href="#" onclick="showAnalytics()"><i class="fas fa-chart-line me-2"></i>분석</a>
+                        <a class="nav-link" href="#" onclick="showThreats()"><i class="fas fa-exclamation-triangle me-2"></i>위협 탐지</a>
+                        <a class="nav-link" href="#" onclick="showFortiManager()"><i class="fas fa-cogs me-2"></i>FortiManager</a>
+                        <a class="nav-link" href="#" onclick="showITSM()"><i class="fas fa-tools me-2"></i>ITSM 연동</a>
+                        <a class="nav-link" href="#" onclick="showLogs()"><i class="fas fa-file-alt me-2"></i>로그 관리</a>
+                        <a class="nav-link" href="#" onclick="showSettings()"><i class="fas fa-cog me-2"></i>설정</a>
                     </nav>
                 </div>
                 
