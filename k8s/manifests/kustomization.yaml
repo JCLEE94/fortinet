@@ -9,13 +9,12 @@ resources:
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
-  - registry-secret.yaml
   - deployment.yaml
   - service.yaml
 
 images:
-  - name: registry.jclee.me/fortinet
-    newTag: latest
+  - name: python
+    newTag: 3.11-slim
 
 labels:
   - includeSelectors: true

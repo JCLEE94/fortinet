@@ -20,12 +20,30 @@ spec:
       annotations:
         deployment.kubernetes.io/revision: "2"
     spec:
-      imagePullSecrets:
-      - name: registry-credentials
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest
-        imagePullPolicy: Always
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            echo "🚀 Starting FortiGate Nextrade with full features..."
+            
+            # Install dependencies
+            apt-get update && apt-get install -y git
+            
+            # Clone repository
+            git clone https://github.com/JCLEE94/fortinet.git /tmp/src
+            
+            # Copy source code
+            cp -r /tmp/src/src/* /app/
+            cp /tmp/src/requirements.txt /app/
+            
+            # Install Python dependencies
+            pip install -r /app/requirements.txt
+            
+            # Start application
+            cd /app && python main.py --web
         ports:
         - containerPort: 7777
           name: http
