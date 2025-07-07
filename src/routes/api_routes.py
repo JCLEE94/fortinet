@@ -562,26 +562,50 @@ def get_devices():
         # API 매니저 가져오기
         api_manager = get_api_manager()
         
-        # No FortiManager service enabled - 프로덕션 모드에서만 체크
+        # No FortiManager service enabled - Mock 데이터 반환
         if not unified_settings.is_service_enabled('fortimanager'):
             # 기본 Mock 데이터 반환 (서비스 비활성화 상태)
+            mock_devices = [
+                {
+                    'id': 'demo_fg_001',
+                    'name': 'Demo FortiGate-001',
+                    'type': 'firewall',
+                    'ip_address': '192.168.1.100',
+                    'mac_address': '00:09:0F:AA:01:01',
+                    'serial_number': 'DEMO001',
+                    'firmware_version': 'v7.2.4',
+                    'adom': 'root',
+                    'status': 'online',
+                    'last_seen': '2025-07-07 22:30:00',
+                    'model': 'FortiGate Demo',
+                    'zone': 'WAN',
+                    'is_dummy': True,
+                    'dummy_info': 'FortiManager 서비스 미설정 - 데모 데이터'
+                },
+                {
+                    'id': 'demo_client_001',
+                    'name': 'Demo Workstation',
+                    'type': 'client',
+                    'ip_address': '192.168.10.100',
+                    'mac_address': '00:1B:21:AA:BB:CC',
+                    'status': 'online',
+                    'last_seen': '2025-07-07 22:29:00',
+                    'zone': 'LAN',
+                    'is_dummy': True,
+                    'dummy_info': 'FortiManager 서비스 미설정 - 데모 데이터'
+                }
+            ]
+            
             return {
                 'success': True,
                 'devices': {
-                    'fortigate_devices': [{
-                        'id': 'service_disabled',
-                        'name': 'FortiManager 서비스 비활성화됨',
-                        'type': 'firewall',
-                        'ip_address': 'N/A',
-                        'status': 'offline',
-                        'last_seen': 'N/A',
-                        'zone': 'N/A'
-                    }],
-                    'connected_devices': []
+                    'fortigate_devices': [d for d in mock_devices if d['type'] == 'firewall'],
+                    'connected_devices': [d for d in mock_devices if d['type'] in ['client', 'server']]
                 },
-                'data_source': 'disabled',
-                'total_devices': 1,
-                'message': 'FortiManager 서비스가 비활성화되어 있습니다.'
+                'data_source': 'demo',
+                'total_devices': len(mock_devices),
+                'message': 'FortiManager 서비스가 비활성화되어 있어 데모 데이터를 표시합니다.',
+                'app_mode': app_mode
             }
         
         # 실제 장비 연결 시도
