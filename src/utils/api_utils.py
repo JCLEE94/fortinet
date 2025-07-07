@@ -388,6 +388,16 @@ def format_api_response(success: bool, data: Any = None,
     return response
 
 
+# ========== Missing Functions (for backward compatibility) ==========
+
+def is_test_mode() -> bool:
+    """Test mode is always False - production only"""
+    return False
+
+def get_dummy_generator():
+    """Dummy generator not used in production"""
+    return None
+
 # ========== Export All ==========
 
 __all__ = [
@@ -402,5 +412,7 @@ __all__ = [
     'optimize_response',
     'handle_api_error',
     'validate_api_response',
-    'format_api_response'
+    'format_api_response',
+    'is_test_mode',
+    'get_dummy_generator'
 ]

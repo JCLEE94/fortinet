@@ -96,7 +96,7 @@
                             <label for="fortimanager_hostname" class="form-label">FortiManager 호스트 주소:</label>
                             <input type="text" class="form-control" id="fortimanager_hostname" name="fortimanager_hostname" 
                                    placeholder="예: 192.168.1.10 또는 fortimanager.example.com" 
-                                   value="{{ config.get('fortimanager', {}).get('hostname', 'hjsim-1034-453947.fortidemo.fortinet.com') }}">
+                                   value="{{ config.get('fortimanager', {}).get('hostname', '') }}">
                         </div>
                         
                         <div class="mb-3">
@@ -157,7 +157,7 @@
                                     <i class="fas fa-user me-2"></i>FortiManager 사용자 이름:
                                 </label>
                                 <input type="text" class="form-control" id="fortimanager_username" name="fortimanager_username" 
-                                       placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', 'hjsim') }}">
+                                       placeholder="관리자 계정" value="{{ config.get('fortimanager', {}).get('username', '') }}">
                             </div>
                             
                             <div class="mb-3">
@@ -166,7 +166,7 @@
                                 </label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="fortimanager_password" name="fortimanager_password" 
-                                           placeholder="관리자 비밀번호" value="{{ config.get('fortimanager', {}).get('password', 'SecurityFabric') }}">
+                                           placeholder="관리자 비밀번호" value="{{ config.get('fortimanager', {}).get('password', '') }}">
                                     <button class="btn btn-outline-secondary" type="button" id="toggle-password-visibility">
                                         <i class="fas fa-eye"></i>
                                     </button>
