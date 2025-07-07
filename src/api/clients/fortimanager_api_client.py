@@ -71,6 +71,38 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         # API client extensions
         self._extensions = {}
     
+    def build_json_rpc_request(self, method: str, url: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Build JSON-RPC request payload for FortiManager API
+        
+        Args:
+            method (str): RPC method (exec, get, set, etc.)
+            url (str): API URL path
+            data (dict): Request data payload
+            
+        Returns:
+            dict: JSON-RPC request payload
+        """
+        payload = {
+            "id": int(time.time()),
+            "method": method,
+            "params": [
+                {
+                    "url": url
+                }
+            ]
+        }
+        
+        # Add session if available
+        if hasattr(self, 'session_id') and self.session_id:
+            payload["session"] = self.session_id
+            
+        # Add data payload if provided
+        if data:
+            payload["params"][0]["data"] = data
+            
+        return payload
+    
     def login(self):
         """
         Login to FortiManager API with username/password
