@@ -18,7 +18,7 @@ NC='\033[0m'
 # Configuration
 DOMAIN="jclee.me"
 SUBDOMAIN="fortinet"
-CF_API_TOKEN="19OuO8pBp83XDkJsUf2TRmDPKd6ZySIXrGJbh5Uk"
+CF_API_TOKEN="5jAteBmuobDeS6ssH1UtMOrh5yQjClD-57ljpUtJ"
 TUNNEL_TOKEN="eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdC0yZXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9"
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"

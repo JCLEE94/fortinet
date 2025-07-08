@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Cloudflare Configuration
-CF_API_TOKEN="19OuO8pBp83XDkJsUf2TRmDPKd6ZySIXrGJbh5Uk"
+CF_API_TOKEN="5jAteBmuobDeS6ssH1UtMOrh5yQjClD-57ljpUtJ"
 CF_API_URL="https://api.cloudflare.com/client/v4"
 CF_TUNNEL_TOKEN="eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdE1tVXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9"
 
@@ -274,6 +274,8 @@ setup_complete() {
     
     # 4. Create DNS record
     # For Cloudflare Tunnel, we need to point to the tunnel
+    # Using the tunnel ID from the token
+    local tunnel_id="a8d9c67f-586a-cdd1-5eeb-cc65ca3aa5bb"
     local tunnel_cname="${tunnel_id}.cfargotunnel.com"
     create_dns_record "$zone_id" "$SUBDOMAIN" "$tunnel_cname"
     
