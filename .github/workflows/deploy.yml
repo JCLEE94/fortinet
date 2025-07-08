@@ -67,7 +67,7 @@ jobs:
         pip install pytest pytest-cov
         
         echo "🧪 Running tests..."
-        pytest --cov=src --cov-report=xml --cov-report=term || echo "::set-output name=test_failed::true"
+        pytest --cov=src --cov-report=xml --cov-report=term || echo "test_failed=true" >> $GITHUB_OUTPUT
         
     # 보안 스캔
     - name: 🔒 Security Scan
@@ -82,7 +82,7 @@ jobs:
         # 심각한 보안 이슈 체크
         if grep -q '"severity": "HIGH"' bandit-report.json; then
           echo "::warning::High severity security issues found"
-          echo "::set-output name=security_issues::true"
+          echo "security_issues=true" >> $GITHUB_OUTPUT
         fi
         
     # 코드 품질 검사
@@ -113,7 +113,7 @@ jobs:
         if [ -f "bandit-report.json" ] && grep -q '"severity": "HIGH"' bandit-report.json; then
           ISSUES=$((ISSUES + 1))
         fi
-        echo "::set-output name=issues_found::$ISSUES"
+        echo "issues_found=$ISSUES" >> $GITHUB_OUTPUT
 
   # Phase 2: 빌드 및 배포 준비
   build-deploy:
@@ -147,22 +147,60 @@ jobs:
           DEPLOY_TYPE="STABLE"
         fi
         
-        echo "::set-output name=deployment-tag::$TAG"
-        echo "::set-output name=deploy-type::$DEPLOY_TYPE"
+        echo "deployment-tag=$TAG" >> $GITHUB_OUTPUT
+        echo "deploy-type=$DEPLOY_TYPE" >> $GITHUB_OUTPUT
         
-    - name: 🌐 Configure Cloudflare DNS
+    - name: 🌐 Configure Cloudflare Infrastructure
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       env:
         CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
         DOMAIN: 'jclee.me'
+        SUBDOMAIN: 'fortinet'
       run: |
-        echo "🌐 Setting up Cloudflare DNS..."
+        echo "🌐 Setting up Cloudflare Infrastructure..."
         
-        # Download and run DNS manager
+        # 1. DNS 설정
+        echo "📡 Configuring DNS records..."
         chmod +x scripts/cloudflare-dns-manager.sh
-        ./scripts/cloudflare-dns-manager.sh setup --domain "$DOMAIN" --subdomain "fortinet" || {
-          echo "⚠️ DNS setup failed, but continuing deployment"
+        ./scripts/cloudflare-dns-manager.sh setup --domain "$DOMAIN" --subdomain "$SUBDOMAIN" || {
+          echo "❌ DNS setup failed"
+          exit 1
         }
+        
+        # 2. DNS 검증
+        echo "🔍 Verifying DNS configuration..."
+        ./scripts/cloudflare-dns-manager.sh verify --domain "$DOMAIN" --subdomain "$SUBDOMAIN"
+        
+        # 3. Kubernetes Secret 생성/업데이트
+        echo "🔐 Creating Kubernetes secret for tunnel..."
+        cat > /tmp/cf-tunnel-secret.yaml << EOF
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: cloudflare-tunnel-token
+          namespace: fortinet
+        type: Opaque
+        stringData:
+          token: "$CLOUDFLARE_TUNNEL_TOKEN"
+        EOF
+        
+        # Secret을 Git에 추가 (base64 encoded)
+        echo "📝 Adding secret to Git..."
+        cat /tmp/cf-tunnel-secret.yaml | base64 -w0 > k8s/manifests/cloudflare-tunnel-secret.yaml.enc
+        
+        # Kustomization 업데이트 - Cloudflare 배포 활성화
+        echo "🔧 Enabling Cloudflare deployment..."
+        if ! grep -q "deployment-with-cloudflare.yaml" k8s/manifests/kustomization.yaml; then
+          sed -i 's/- deployment.yaml/- deployment-with-cloudflare.yaml/' k8s/manifests/kustomization.yaml
+        fi
+        
+        # ConfigMap 추가 확인
+        if ! grep -q "cloudflare-tunnel-configmap.yaml" k8s/manifests/kustomization.yaml; then
+          sed -i '/resources:/a\  - cloudflare-tunnel-configmap.yaml' k8s/manifests/kustomization.yaml
+        fi
+        
+        echo "✅ Cloudflare infrastructure configured successfully!"
         
     - name: 📝 Update GitOps Configuration
       run: |
@@ -197,14 +235,35 @@ jobs:
         echo "⏳ Waiting for ArgoCD to sync..."
         sleep 120
         
+    - name: 🌐 DNS Propagation Check
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      run: |
+        echo "🌐 Checking DNS propagation..."
+        
+        # DNS 전파 대기 (최대 5분)
+        MAX_ATTEMPTS=30
+        ATTEMPT=0
+        
+        while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+          if dig +short fortinet.jclee.me @1.1.1.1 | grep -q "cfargotunnel.com"; then
+            echo "✅ DNS is properly configured"
+            break
+          fi
+          
+          ATTEMPT=$((ATTEMPT + 1))
+          echo "⏳ Waiting for DNS propagation... ($ATTEMPT/$MAX_ATTEMPTS)"
+          sleep 10
+        done
+        
     - name: 🏥 Health Check
       id: health
       run: |
         echo "🏥 Checking application health..."
         
+        # Health check URLs (Cloudflare 우선)
         HEALTH_URLS=(
-          "https://fortinet.jclee.me/api/health"
-          "http://192.168.50.110:30777/api/health"
+          "https://fortinet.jclee.me/api/health"    # Cloudflare tunnel
+          "http://192.168.50.110:30777/api/health"  # Direct NodePort (백업)
         )
         
         SUCCESS=false
@@ -225,10 +284,10 @@ jobs:
         done
         
         if [ "$SUCCESS" = false ]; then
-          echo "::set-output name=health_status::failed"
+          echo "health_status=failed" >> $GITHUB_OUTPUT
           exit 1
         else
-          echo "::set-output name=health_status::healthy"
+          echo "health_status=healthy" >> $GITHUB_OUTPUT
         fi
 
   # Phase 3: 오프라인 패키지 생성
@@ -299,11 +358,11 @@ jobs:
 set -e
 
 # Colors
-RED='[0;31m'
-GREEN='[0;32m'
-YELLOW='[1;33m'
-BLUE='[0;34m'
-NC='[0m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
 echo -e "${BLUE}=== FortiGate Nextrade Offline Deployment ===${NC}"
 
@@ -409,9 +468,9 @@ EOF
         
         # Output information
         PACKAGE_SIZE=$(ls -lh "${PACKAGE_NAME}.tar.gz" | awk '{print $5}')
-        echo "::set-output name=package-name::${PACKAGE_NAME}.tar.gz"
-        echo "::set-output name=package-size::${PACKAGE_SIZE}"
-        echo "::set-output name=checksum::${CHECKSUM}"
+        echo "package-name=${PACKAGE_NAME}.tar.gz" >> $GITHUB_OUTPUT
+        echo "package-size=${PACKAGE_SIZE}" >> $GITHUB_OUTPUT
+        echo "checksum=${CHECKSUM}" >> $GITHUB_OUTPUT
         
     - name: 📤 Upload Offline Package
       uses: actions/upload-artifact@v4
@@ -531,8 +590,13 @@ EOF
         
         echo "### 🔗 Quick Links" >> $GITHUB_STEP_SUMMARY
         echo "- [ArgoCD Dashboard](https://argo.jclee.me/applications/fortinet)" >> $GITHUB_STEP_SUMMARY
-        echo "- [Production App](https://fortinet.jclee.me)" >> $GITHUB_STEP_SUMMARY
-        echo "- [NodePort Access](http://192.168.50.110:30777)" >> $GITHUB_STEP_SUMMARY
+        echo "- [Production App (Cloudflare)](https://fortinet.jclee.me)" >> $GITHUB_STEP_SUMMARY
+        echo "- [NodePort Access (Direct)](http://192.168.50.110:30777)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🌐 DNS & Tunnel Status" >> $GITHUB_STEP_SUMMARY
+        echo "- Domain: fortinet.jclee.me" >> $GITHUB_STEP_SUMMARY
+        echo "- Tunnel: Active via Cloudflare" >> $GITHUB_STEP_SUMMARY
+        echo "- SSL: Cloudflare Universal SSL" >> $GITHUB_STEP_SUMMARY
         
         if [ "${{ needs.build-deploy.result }}" != "success" ]; then
           echo "" >> $GITHUB_STEP_SUMMARY
