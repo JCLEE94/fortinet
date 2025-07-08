@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-tunnel-token
+  namespace: fortinet
+type: Opaque
+stringData:
+  # Replace CLOUDFLARE_TUNNEL_TOKEN_PLACEHOLDER with your actual token
+  # The token will be automatically base64 encoded by Kubernetes
+  token: "CLOUDFLARE_TUNNEL_TOKEN_PLACEHOLDER"

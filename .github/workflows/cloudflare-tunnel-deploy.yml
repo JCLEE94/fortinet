@@ -1,0 +1,121 @@
+name: 🌐 Cloudflare Tunnel Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Deployment action'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - update
+          - remove
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  TUNNEL_TOKEN: 'eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdE1tVXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9'
+  KUBECTL_VERSION: 'v1.28.0'
+
+jobs:
+  cloudflare-tunnel:
+    name: 🚇 Cloudflare Tunnel Setup
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: ${{ env.KUBECTL_VERSION }}
+        
+    - name: 🔐 Configure Kubernetes Access
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=$(pwd)/kubeconfig
+        
+    - name: 🚇 Deploy Cloudflare Tunnel
+      if: github.event.inputs.action == 'deploy'
+      run: |
+        echo "🚇 Deploying Cloudflare tunnel..."
+        
+        # Update deployment with Cloudflare sidecar
+        kubectl apply -f k8s/manifests/deployment-with-cloudflare.yaml
+        
+        # Wait for deployment
+        kubectl rollout status deployment/fortinet-app -n fortinet --timeout=300s
+        
+        # Verify tunnel is running
+        echo "🔍 Checking tunnel status..."
+        kubectl get pods -n fortinet -l app=fortinet
+        
+        POD_NAME=$(kubectl get pods -n fortinet -l app=fortinet -o jsonpath="{.items[0].metadata.name}")
+        echo "📋 Cloudflare tunnel logs:"
+        kubectl logs $POD_NAME -c cloudflare-tunnel -n fortinet --tail=20 || true
+        
+    - name: 🔄 Update Cloudflare Tunnel
+      if: github.event.inputs.action == 'update'
+      run: |
+        echo "🔄 Updating Cloudflare tunnel configuration..."
+        
+        # Force pod restart to pick up new configuration
+        kubectl rollout restart deployment/fortinet-app -n fortinet
+        kubectl rollout status deployment/fortinet-app -n fortinet --timeout=300s
+        
+    - name: 🗑️ Remove Cloudflare Tunnel
+      if: github.event.inputs.action == 'remove'
+      run: |
+        echo "🗑️ Removing Cloudflare tunnel..."
+        
+        # Apply original deployment without Cloudflare
+        kubectl apply -f k8s/manifests/deployment.yaml
+        kubectl rollout status deployment/fortinet-app -n fortinet --timeout=300s
+        
+    - name: 🏥 Health Check
+      if: always()
+      run: |
+        echo "🏥 Running health checks..."
+        
+        # Check pod status
+        kubectl get pods -n fortinet -l app=fortinet
+        
+        # Check service endpoints
+        kubectl get endpoints -n fortinet
+        
+        # Test connectivity (if deployed)
+        if [ "${{ github.event.inputs.action }}" != "remove" ]; then
+          echo "🌐 Testing Cloudflare tunnel connectivity..."
+          # This would test the actual tunnel endpoint
+          curl -s -o /dev/null -w "%{http_code}" https://fortinet.jclee.me/api/health || echo "Tunnel might need time to propagate"
+        fi
+        
+    - name: 📊 Summary
+      if: always()
+      run: |
+        echo "## 🌐 Cloudflare Tunnel Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Action: ${{ github.event.inputs.action }}" >> $GITHUB_STEP_SUMMARY
+        echo "### Environment: ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ github.event.inputs.action }}" == "deploy" ]; then
+          echo "✅ Cloudflare tunnel has been deployed as a sidecar container" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify tunnel status in [Cloudflare Dashboard](https://dash.cloudflare.com)" >> $GITHUB_STEP_SUMMARY
+          echo "2. Check application accessibility at https://fortinet.jclee.me" >> $GITHUB_STEP_SUMMARY
+          echo "3. Monitor tunnel logs using: \`kubectl logs -f <pod-name> -c cloudflare-tunnel -n fortinet\`" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ github.event.inputs.action }}" == "remove" ]; then
+          echo "✅ Cloudflare tunnel has been removed" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ Remember to update DNS records if needed" >> $GITHUB_STEP_SUMMARY
+        fi

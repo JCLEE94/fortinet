@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-tunnel-config
+  namespace: fortinet
+data:
+  config.yaml: |
+    tunnel: fortinet-tunnel
+    credentials-file: /etc/cloudflared/creds/credentials.json
+    ingress:
+      - hostname: fortinet.jclee.me
+        service: http://localhost:7777
+      - service: http_status:404
