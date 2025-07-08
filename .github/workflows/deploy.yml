@@ -268,10 +268,10 @@ jobs:
       run: |
         echo "🏥 Checking application health..."
         
-        # Health check URLs (Cloudflare 우선)
+        # Health check URLs (Direct HTTP 우선)
         HEALTH_URLS=(
-          "https://fortinet.jclee.me/api/health"    # Cloudflare tunnel
-          "http://192.168.50.110:30777/api/health"  # Direct NodePort (백업)
+          "http://fortinet.jclee.me:30777/api/health"   # Direct HTTP with port
+          "http://192.168.50.110:30777/api/health"      # Direct NodePort (백업)
         )
         
         SUCCESS=false
