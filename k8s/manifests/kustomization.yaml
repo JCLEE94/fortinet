@@ -4,13 +4,14 @@ kind: Kustomization
 namespace: fortinet
 
 resources:
+  - cloudflare-tunnel-configmap.yaml
   - namespace.yaml
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
   - registry-secret-generated.yaml
-  - deployment.yaml
+  - deployment-with-cloudflare.yaml
   - service.yaml
 
 images:
@@ -25,6 +26,6 @@ labels:
       managed-by: argocd
 
 commonAnnotations:
-  app.kubernetes.io/version: "7531061"
+  app.kubernetes.io/version: "02ee642"
   deployed-by: "argocd-fix"
-  deployed-at: "2025-07-07T15:17:30Z"
+  deployed-at: "2025-07-08T10:29:58Z"
