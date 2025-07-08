@@ -16,9 +16,19 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Cloudflare Configuration
-CF_API_TOKEN="5jAteBmuobDeS6ssH1UtMOrh5yQjClD-57ljpUtJ"
+CF_API_TOKEN="${CF_API_TOKEN:-}"
 CF_API_URL="https://api.cloudflare.com/client/v4"
-CF_TUNNEL_TOKEN="eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdE1tVXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9"
+CF_TUNNEL_TOKEN="${CLOUDFLARE_TUNNEL_TOKEN:-}"
+
+# Check if required environment variables are set
+check_env_vars() {
+    if [ -z "$CF_API_TOKEN" ]; then
+        echo -e "${RED}Error: CF_API_TOKEN environment variable is not set${NC}"
+        echo "Set it using: export CF_API_TOKEN='your-api-token'"
+        echo "Or add to GitHub Secrets as CF_API_TOKEN"
+        exit 1
+    fi
+}
 
 # Default values
 DOMAIN=""
@@ -289,6 +299,9 @@ setup_complete() {
     echo -e "2. Wait 1-2 minutes for DNS propagation"
     echo -e "3. Access your application at: ${CYAN}https://$SUBDOMAIN.$DOMAIN${NC}"
 }
+
+# Check environment variables before execution
+check_env_vars
 
 # Main execution
 case $COMMAND in

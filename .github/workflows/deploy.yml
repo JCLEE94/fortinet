@@ -153,7 +153,7 @@ jobs:
     - name: 🌐 Configure Cloudflare DNS
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       env:
-        CF_API_TOKEN: '5jAteBmuobDeS6ssH1UtMOrh5yQjClD-57ljpUtJ'
+        CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         DOMAIN: 'jclee.me'
       run: |
         echo "🌐 Setting up Cloudflare DNS..."

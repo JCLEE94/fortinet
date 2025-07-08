@@ -19,7 +19,7 @@ SECRET_NAME="cloudflare-tunnel-token"
 TEMPLATE_FILE="k8s/templates/cloudflare-tunnel-token.yaml.template"
 
 # Default token (이미 설정됨)
-DEFAULT_TOKEN="eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdE1tVXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9"
+DEFAULT_TOKEN="${CLOUDFLARE_TUNNEL_TOKEN:-}"
 
 # Parse command line arguments
 USE_TOKEN=false

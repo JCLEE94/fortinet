@@ -16,10 +16,21 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 # Configuration
-DOMAIN="jclee.me"
-SUBDOMAIN="fortinet"
-CF_API_TOKEN="5jAteBmuobDeS6ssH1UtMOrh5yQjClD-57ljpUtJ"
-TUNNEL_TOKEN="eyJhIjoiYThkOWM2N2Y1ODZhY2RkMTVlZWJjYzY1Y2EzYWE1YmIiLCJ0IjoiOGVhNzg5MDYtMWEwNS00NGZiLWExYmItZTUxMjE3MmNiNWFiIiwicyI6Ill6RXlZVEUwWWpRdC0yZXlNUzAwWmpRMExXSTVaR0V0WkdNM09UY3pOV1ExT1RGbSJ9"
+DOMAIN="${DOMAIN:-jclee.me}"
+SUBDOMAIN="${SUBDOMAIN:-fortinet}"
+CF_API_TOKEN="${CF_API_TOKEN:-}"
+TUNNEL_TOKEN="${CLOUDFLARE_TUNNEL_TOKEN:-}"
+
+# Check required environment variables
+if [ -z "$CF_API_TOKEN" ]; then
+    echo -e "${RED}Error: CF_API_TOKEN environment variable is not set${NC}"
+    exit 1
+fi
+
+if [ -z "$TUNNEL_TOKEN" ]; then
+    echo -e "${RED}Error: CLOUDFLARE_TUNNEL_TOKEN environment variable is not set${NC}"
+    exit 1
+fi
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║        FortiGate Cloudflare Complete Deployment           ║${NC}"
