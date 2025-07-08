@@ -150,6 +150,20 @@ jobs:
         echo "::set-output name=deployment-tag::$TAG"
         echo "::set-output name=deploy-type::$DEPLOY_TYPE"
         
+    - name: 🌐 Configure Cloudflare DNS
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      env:
+        CF_API_TOKEN: '19OuO8pBp83XDkJsUf2TRmDPKd6ZySIXrGJbh5Uk'
+        DOMAIN: 'jclee.me'
+      run: |
+        echo "🌐 Setting up Cloudflare DNS..."
+        
+        # Download and run DNS manager
+        chmod +x scripts/cloudflare-dns-manager.sh
+        ./scripts/cloudflare-dns-manager.sh setup --domain "$DOMAIN" --subdomain "fortinet" || {
+          echo "⚠️ DNS setup failed, but continuing deployment"
+        }
+        
     - name: 📝 Update GitOps Configuration
       run: |
         echo "📝 Updating GitOps configuration..."
