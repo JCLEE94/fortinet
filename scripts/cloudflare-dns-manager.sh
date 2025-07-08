@@ -34,7 +34,8 @@ check_env_vars() {
 DOMAIN=""
 SUBDOMAIN="fortinet"
 TUNNEL_NAME="fortinet-tunnel"
-RECORD_TYPE="CNAME"
+RECORD_TYPE="A"
+TARGET_IP="192.168.50.110"
 
 # Function to display usage
 usage() {
@@ -178,11 +179,21 @@ create_dns_record() {
     if [ -n "$record_id" ]; then
         echo -e "${YELLOW}DNS record already exists. Updating...${NC}"
         # Update existing record
-        local data="{\"type\":\"$RECORD_TYPE\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        # For A records, use the target IP directly
+        if [ "$RECORD_TYPE" = "A" ]; then
+            local data="{\"type\":\"A\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        else
+            local data="{\"type\":\"$RECORD_TYPE\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        fi
         cf_api PUT "zones/$zone_id/dns_records/$record_id" "$data" > /dev/null
     else
         # Create new record
-        local data="{\"type\":\"$RECORD_TYPE\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        # For A records, use the target IP directly
+        if [ "$RECORD_TYPE" = "A" ]; then
+            local data="{\"type\":\"A\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        else
+            local data="{\"type\":\"$RECORD_TYPE\",\"name\":\"$name\",\"content\":\"$target\",\"proxied\":true}"
+        fi
         cf_api POST "zones/$zone_id/dns_records" "$data" > /dev/null
     fi
     
@@ -283,11 +294,9 @@ setup_complete() {
     fi
     
     # 4. Create DNS record
-    # For Cloudflare Tunnel, we need to point to the tunnel
-    # Using the tunnel ID from the token
-    local tunnel_id="a8d9c67f-586a-cdd1-5eeb-cc65ca3aa5bb"
-    local tunnel_cname="${tunnel_id}.cfargotunnel.com"
-    create_dns_record "$zone_id" "$SUBDOMAIN" "$tunnel_cname"
+    # For HTTPS through Cloudflare proxy, we create an A record
+    # pointing to the NodePort service IP with proxy enabled
+    create_dns_record "$zone_id" "$SUBDOMAIN" "$TARGET_IP"
     
     # 5. Show summary
     echo -e "\n${GREEN}=== Setup Complete ===${NC}"
@@ -319,8 +328,8 @@ case $COMMAND in
         fi
         zone_id=$(get_zone_id "$DOMAIN")
         if [ -n "$zone_id" ]; then
-            # Default to tunnel CNAME
-            create_dns_record "$zone_id" "$SUBDOMAIN" "fortinet-tunnel.cfargotunnel.com"
+            # Create A record with proxy enabled for HTTPS
+            create_dns_record "$zone_id" "$SUBDOMAIN" "$TARGET_IP"
         fi
         ;;
     list-zones)
