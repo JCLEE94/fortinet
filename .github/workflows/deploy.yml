@@ -210,33 +210,57 @@ jobs:
         
         echo "✅ Cloudflare infrastructure configured successfully!"
         
-    - name: 📝 Update GitOps Configuration
-      run: |
-        echo "📝 Updating GitOps configuration..."
-        
-        # 타임스탬프 업데이트
-        TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-        sed -i "s|deployed-at:.*|deployed-at: \"${TIMESTAMP}\"|g" k8s/manifests/kustomization.yaml
-        
-        # 버전 태그 업데이트
-        sed -i "s|app.kubernetes.io/version:.*|app.kubernetes.io/version: \"${{ steps.prepare.outputs.deployment-tag }}\"|g" k8s/manifests/kustomization.yaml
-        
-        # 변경사항 확인
-        git diff k8s/manifests/kustomization.yaml || echo "No changes needed"
-        
     - name: 🚀 Deploy to ArgoCD
       run: |
         echo "🚀 Triggering ArgoCD deployment..."
         
-        # Git 커밋 및 푸시
-        git add k8s/manifests/
-        git commit --allow-empty -m "${{ steps.prepare.outputs.deploy-type }} Deploy: ${{ steps.prepare.outputs.deployment-tag }}" \
-          -m "📦 ConfigMap-based deployment" \
-          -m "👤 Actor: ${{ github.actor }}" \
-          -m "📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}" \
-          -m "🔗 Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        # Git 커밋 및 푸시 with retry logic
+        MAX_RETRIES=3
+        RETRY_COUNT=0
         
-        git push origin HEAD:${{ github.ref_name }}
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+          echo "📡 Fetching latest changes (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+          git fetch origin ${{ github.ref_name }}
+          
+          # Reset to latest origin state
+          git reset --hard origin/${{ github.ref_name }}
+          
+          # Re-apply our changes
+          echo "📝 Updating GitOps configuration..."
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          sed -i "s|deployed-at:.*|deployed-at: \"${TIMESTAMP}\"|g" k8s/manifests/kustomization.yaml
+          sed -i "s|app.kubernetes.io/version:.*|app.kubernetes.io/version: \"${{ steps.prepare.outputs.deployment-tag }}\"|g" k8s/manifests/kustomization.yaml
+          
+          # Add and commit changes
+          git add k8s/manifests/
+          if git diff --cached --quiet; then
+            echo "✅ No changes to commit"
+            break
+          fi
+          
+          git commit -m "${{ steps.prepare.outputs.deploy-type }} Deploy: ${{ steps.prepare.outputs.deployment-tag }}" \
+            -m "📦 ConfigMap-based deployment" \
+            -m "👤 Actor: ${{ github.actor }}" \
+            -m "📝 Reason: ${{ github.event.inputs.reason || github.event.head_commit.message }}" \
+            -m "🔗 Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          
+          # Try to push
+          if git push origin HEAD:${{ github.ref_name }}; then
+            echo "✅ Successfully pushed changes"
+            break
+          else
+            echo "❌ Push failed, retrying..."
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              sleep $((RETRY_COUNT * 5))  # Exponential backoff
+            fi
+          fi
+        done
+        
+        if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+          echo "💥 Failed to push after $MAX_RETRIES attempts"
+          exit 1
+        fi
         
     - name: ⏳ Wait for ArgoCD Sync
       run: |
