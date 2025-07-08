@@ -4,14 +4,14 @@ kind: Kustomization
 namespace: fortinet
 
 resources:
-  - cloudflare-proxy-configmap.yaml
+  - cloudflare-tunnel-configmap.yaml
   - namespace.yaml
   - persistent-volumes.yaml
   - pvc.yaml
   - redis.yaml
   - configmap.yaml
   - registry-secret-generated.yaml
-  - deployment.yaml
+  - deployment-with-cloudflare.yaml
   - service.yaml
 
 images:

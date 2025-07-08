@@ -34,8 +34,8 @@ check_env_vars() {
 DOMAIN=""
 SUBDOMAIN="fortinet"
 TUNNEL_NAME="fortinet-tunnel"
-RECORD_TYPE="A"
-TARGET_IP="192.168.50.110"
+RECORD_TYPE="CNAME"
+TUNNEL_ID="8ea78906-1a05-44fb-a1bb-e512172cb5ab"
 
 # Function to display usage
 usage() {
@@ -294,9 +294,9 @@ setup_complete() {
     fi
     
     # 4. Create DNS record
-    # For HTTPS through Cloudflare proxy, we create an A record
-    # pointing to the NodePort service IP with proxy enabled
-    create_dns_record "$zone_id" "$SUBDOMAIN" "$TARGET_IP"
+    # For Cloudflare Tunnel, we need to point to the tunnel
+    local tunnel_cname="${TUNNEL_ID}.cfargotunnel.com"
+    create_dns_record "$zone_id" "$SUBDOMAIN" "$tunnel_cname"
     
     # 5. Show summary
     echo -e "\n${GREEN}=== Setup Complete ===${NC}"
@@ -328,8 +328,9 @@ case $COMMAND in
         fi
         zone_id=$(get_zone_id "$DOMAIN")
         if [ -n "$zone_id" ]; then
-            # Create A record with proxy enabled for HTTPS
-            create_dns_record "$zone_id" "$SUBDOMAIN" "$TARGET_IP"
+            # Create CNAME record for Cloudflare Tunnel
+            local tunnel_cname="${TUNNEL_ID}.cfargotunnel.com"
+            create_dns_record "$zone_id" "$SUBDOMAIN" "$tunnel_cname"
         fi
         ;;
     list-zones)
