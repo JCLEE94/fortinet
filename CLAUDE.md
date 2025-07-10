@@ -230,25 +230,38 @@ anomalies = await hub.analytics_engine.detect_anomalies()
 
 ## CI/CD Pipeline
 
-### ArgoCD GitOps Workflow
+### CI/CD Workflow with Private Registry
 The pipeline runs on push to main/master/develop branches:
 
-1. **Claude Analysis**: AI-powered code analysis and optimization suggestions (beta)
-2. **Test Stage**: Runs pytest with coverage
-3. **Build Stage**: Creates Docker image
-4. **Push Stage**: Pushes to registry.jclee.me
-5. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
-6. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
+1. **Test Stage**: Runs pytest with coverage
+2. **Build Stage**: Creates Docker image using Docker Build Action
+3. **Push Stage**: Pushes to registry.jclee.me (no authentication required)
+4. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
+5. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
 
-Note: Claude analysis failures do not block the pipeline - tests and deployment continue regardless.
+The workflow is configured for insecure registry access for simplicity in closed environments.
 
-### Required GitHub Secrets
+### Registry Configuration
+The registry is configured without authentication for ease of use in closed environments:
+
+```yaml
+# Already included in k8s/manifests/registry-noauth-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registry-credentials
+  namespace: fortinet
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "registry.jclee.me": {}
+      }
+    }
 ```
-REGISTRY_USERNAME    # Private registry username (qws9411)
-REGISTRY_PASSWORD    # Private registry password
-ARGOCD_AUTH_TOKEN    # ArgoCD API authentication token
-ARGOCD_PASSWORD      # ArgoCD admin password
-```
+
+Note: No GitHub secrets required - registry access is open!
 
 ### ArgoCD Application Management
 

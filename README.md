@@ -1,7 +1,7 @@
-# FortiGate Nextrade - CICD Pipeline Test
+# FortiGate Nextrade
 
-[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/main-cicd.yml)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://hub.docker.com/)
+[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml)
+[![Registry](https://img.shields.io/badge/registry.jclee.me-ready-blue.svg)](https://registry.jclee.me)
 [![License](https://img.shields.io/badge/license-proprietary-red.svg)](LICENSE)
 
 FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니터링 및 분석 플랫폼입니다. 폐쇄망(오프라인) 환경에서 완전히 동작하도록 설계되었습니다.
@@ -20,11 +20,10 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 
 ## 📋 시스템 요구사항
 
-### 프로덕션 환경 (ArgoCD)
+### 프로덕션 환경
 - **Kubernetes**: 1.20+ 클러스터
 - **ArgoCD**: 2.8+ 설치됨
-- **Docker Registry**: registry.jclee.me 접근 가능
-- **ArgoCD CLI**: 로컬 관리용
+- **Docker Registry**: registry.jclee.me (인증 불필요)
 
 ### 로컬 개발 환경
 - **OS**: Linux (Ubuntu 18.04+, CentOS 7+) 또는 Windows 10+
@@ -35,19 +34,13 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 
 ## 🚀 빠른 시작
 
-### 최초 배포 (프로덕션)
+### 배포
 ```bash
-# 1. 레포지토리 클론
-git clone https://github.com/JCLEE94/fortinet.git
-cd fortinet
+# 간단한 배포
+./scripts/deploy-simple.sh
 
-# 2. 최초 배포 스크립트 실행 (모든 설정 자동화)
-./scripts/initial-deploy.sh
-
-# 스크립트가 자동으로 수행하는 작업:
-# - ArgoCD 서버 연결 및 인증
-# - GitHub Repository 등록
-# - ArgoCD 애플리케이션 생성
+# 또는 Git push로 자동 배포
+git push origin main
 # - 초기 동기화 및 배포
 # - 헬스체크 및 상태 확인
 

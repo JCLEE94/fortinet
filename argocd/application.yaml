@@ -3,25 +3,17 @@ kind: Application
 metadata:
   name: fortinet
   namespace: argocd
-  labels:
-    app.kubernetes.io/name: fortinet
-    app.kubernetes.io/part-of: fortinet-stack
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  
   source:
-    repoURL: https://github.com/JCLEE94/fortinet.git
+    repoURL: https://github.com/JCLEE94/fortinet
     targetRevision: HEAD
     path: k8s/manifests
-  
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
-  
   syncPolicy:
     automated:
       prune: true
@@ -30,12 +22,9 @@ spec:
     syncOptions:
     - CreateNamespace=true
     - PrunePropagationPolicy=foreground
-    - PruneLast=true
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-  
-  revisionHistoryLimit: 10
