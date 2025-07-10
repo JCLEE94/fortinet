@@ -16,7 +16,7 @@ resources:
 images:
   - name: registry.jclee.me/fortinet
     newName: registry.jclee.me/fortinet
-    newTag: latest
+    newTag: latest # This will be automatically updated by ArgoCD Image Updater
 
 labels:
   - includeSelectors: true

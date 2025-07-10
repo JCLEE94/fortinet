@@ -3,10 +3,23 @@ kind: Application
 metadata:
   name: fortinet
   namespace: argocd
+  annotations:
+    # ArgoCD Image Updater 설정
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:~latest
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[a-f0-9]{40}$
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: image-updates
+    # 배포 완료 후 webhook 트리거
+    argocd-image-updater.argoproj.io/fortinet.post-update-hook: |
+      curl -X POST https://api.github.com/repos/JCLEE94/fortinet/actions/workflows/offline-tar.yml/dispatches \
+      -H "Authorization: token $GITHUB_TOKEN" \
+      -H "Accept: application/vnd.github.v3+json" \
+      -d '{"ref":"master","inputs":{"image_tag":"{{.Image.Tag}}"}}'
 spec:
   project: default
   source:
-    repoURL: https://github.com/JCLEE94/fortinet.git
+    repoURL: https://github.com/JCLEE94/fortinet
     targetRevision: HEAD
     path: k8s/manifests
   destination:
@@ -16,5 +29,16 @@ spec:
     automated:
       prune: true
       selfHeal: true
+      allowEmpty: false
     syncOptions:
     - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  # Health check for deployment completion
+  health:
+    enabled: true

@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline with ArgoCD Image Updater
 
 on:
   push:
@@ -141,71 +141,17 @@ jobs:
         }
         echo "✅ Image successfully pushed"
     
-    - name: Update Kubernetes manifests
-      run: |
-        echo "📝 Updating Kubernetes manifests..."
-        
-        # Check if manifests directory exists
-        if [ ! -d "k8s/manifests" ]; then
-          echo "❌ k8s/manifests directory not found"
-          exit 1
-        fi
-        
-        cd k8s/manifests
-        
-        # Update kustomization.yaml
-        if [ -f "kustomization.yaml" ]; then
-          sed -i "s|newTag: .*|newTag: ${{ github.sha }}|" kustomization.yaml
-          echo "✅ Updated kustomization.yaml with tag: ${{ github.sha }}"
-        else
-          echo "❌ kustomization.yaml not found"
-          exit 1
-        fi
+    # ArgoCD Image Updater will handle manifest updates
+    # No need to manually update kustomization.yaml
     
-    - name: Commit and push changes
+    - name: Notify ArgoCD Image Updater
       run: |
-        echo "🚀 Committing manifest changes..."
+        echo "📝 Image pushed to registry with tag: ${{ github.sha }}"
+        echo "🔄 ArgoCD Image Updater will automatically detect and update the deployment"
+        echo "📊 Registry URL: https://registry.jclee.me/v2/${{ env.IMAGE_NAME }}/tags/list"
         
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        
-        cd k8s/manifests
-        git add kustomization.yaml
-        
-        if git diff --staged --quiet; then
-          echo "ℹ️ No changes to commit"
-          exit 0
-        fi
-        
-        git commit -m "🚀 deploy: update image to ${{ github.sha }}"
-        
-        # Push with enhanced retry logic
-        echo "📤 Pushing changes with retry logic..."
-        for i in {1..5}; do
-          echo "Attempt $i/5..."
-          
-          # Pull latest changes
-          git fetch origin
-          git rebase origin/$(git branch --show-current) || {
-            echo "⚠️ Rebase conflict, trying merge"
-            git rebase --abort
-            git merge origin/$(git branch --show-current)
-          }
-          
-          # Try to push
-          if git push origin HEAD; then
-            echo "✅ Successfully pushed changes"
-            break
-          else
-            echo "❌ Push failed, retrying in $((i * 2)) seconds..."
-            sleep $((i * 2))
-            
-            if [ $i -eq 5 ]; then
-              echo "❌ Failed to push after 5 attempts"
-              exit 1
-            fi
-          fi
-        done
+        # Create a deployment marker for offline tar generation
+        echo "${{ github.sha }}" > /tmp/deployment-tag.txt
   
   notify:
     name: Deployment Notification
