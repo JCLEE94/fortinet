@@ -7,23 +7,28 @@ This document describes the streamlined CI/CD pipeline setup for FortiGate Nextr
 The CI/CD pipeline uses:
 - **GitHub Actions** for automated building and testing
 - **Private Registry (registry.jclee.me)** for Docker image storage (no auth required)
-- **ArgoCD** for GitOps-based Kubernetes deployments
+- **ArgoCD Image Updater** for automatic deployment on new images
+- **Offline TAR Generation** for air-gapped environment deployments
 
 ## Pipeline Architecture
 
 ### 1. GitHub Actions Workflow
 - File: `.github/workflows/build-deploy.yml`
-- Triggers: Push to main/master/develop branches
+- Triggers: Push to main/master branches
 - Stages:
   1. **Test**: Run pytest suite with coverage
   2. **Build**: Build Docker image and push to registry.jclee.me
-  3. **Update**: Update Kubernetes manifests with new image tag
-  4. **Deploy**: Commit changes for ArgoCD to sync
+  3. **Notify**: Image Updater automatically detects new images
 
-### 2. ArgoCD GitOps
-- Monitors Git repository for changes (polls every 3 minutes)
-- Detects updates to `k8s/manifests/kustomization.yaml`
-- Automatically deploys changes to Kubernetes cluster
+### 2. ArgoCD Image Updater
+- Monitors registry for new images
+- Automatically updates deployments without manual manifest changes
+- Triggers offline TAR generation on deployment completion
+
+### 3. Offline Package Generation
+- File: `.github/workflows/offline-tar.yml`
+- Triggers: After deployment completion
+- Creates self-contained packages for air-gapped environments
 
 ## Deployment Process
 
@@ -38,8 +43,8 @@ The CI/CD pipeline uses:
    - GitHub Actions automatically runs
    - Builds and tests the application
    - Creates Docker image and pushes to registry.jclee.me
-   - Updates Kubernetes manifests
-   - ArgoCD detects changes and deploys
+   - ArgoCD Image Updater detects new image and deploys
+   - Offline TAR package is generated after deployment
 
 3. **Monitor Progress**
    - GitHub Actions: https://github.com/YOUR_USERNAME/fortinet/actions
@@ -47,6 +52,16 @@ The CI/CD pipeline uses:
    - Application: https://fortinet.jclee.me
 
 ## Setup
+
+### ArgoCD Image Updater Installation
+```bash
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
+```
+
+### Apply Configuration
+```bash
+./scripts/apply-argocd-image-updater.sh
+```
 
 ### Registry Configuration
 The private registry at registry.jclee.me is configured without authentication for ease of use in closed environments.

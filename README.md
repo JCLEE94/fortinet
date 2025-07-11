@@ -2,6 +2,7 @@
 
 [![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml)
 [![Registry](https://img.shields.io/badge/registry.jclee.me-ready-blue.svg)](https://registry.jclee.me)
+[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/JCLEE94/fortinet/releases/tag/v2.0.0)
 [![License](https://img.shields.io/badge/license-proprietary-red.svg)](LICENSE)
 
 FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니터링 및 분석 플랫폼입니다. 폐쇄망(오프라인) 환경에서 완전히 동작하도록 설계되었습니다.
@@ -14,8 +15,9 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 - **ITSM 연동**: 방화벽 정책 요청 및 티켓 관리
 - **FortiManager Hub**: AI 기반 정책 오케스트레이션 및 컴플라이언스 자동화
 - **Docker 지원**: 컨테이너 오케스트레이션을 통한 간편한 배포
-- **ArgoCD GitOps**: 쿠버네티스 환경에서 자동화된 배포
-- **CI/CD 파이프라인**: GitHub Actions + ArgoCD를 통한 완전 자동화
+- **ArgoCD GitOps**: ArgoCD Image Updater를 통한 완전 자동화된 배포
+- **CI/CD 파이프라인**: GitHub Actions + ArgoCD Image Updater 통합
+- **오프라인 배포**: 배포 완료 시 자동으로 오프라인 TAR 패키지 생성
 - **로그 관리**: 실시간 로그 스트리밍 및 분석
 
 ## 📋 시스템 요구사항
@@ -23,6 +25,7 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 ### 프로덕션 환경
 - **Kubernetes**: 1.20+ 클러스터
 - **ArgoCD**: 2.8+ 설치됨
+- **ArgoCD Image Updater**: 0.12+ (자동 배포용)
 - **Docker Registry**: registry.jclee.me (인증 불필요)
 
 ### 로컬 개발 환경
@@ -156,13 +159,13 @@ APP_MODE=test python src/main.py --web
 
 ## 🚢 배포
 
-### ArgoCD GitOps 자동 배포
+### ArgoCD Image Updater 자동 배포
 마스터 브랜치에 푸시하면 자동으로:
 1. **테스트 실행**: pytest, 코드 품질 검사
-2. **Docker 빌드**: Multi-stage 프로덕션 이미지
+2. **Docker 빌드**: Multi-stage 프로덕션 이미지  
 3. **Registry 푸시**: registry.jclee.me/fortinet
-4. **GitOps 업데이트**: kustomization.yaml 이미지 태그 수정 후 Git에 커밋
-5. **ArgoCD Pull**: ArgoCD가 Git 변경사항을 감지하여 자동 배포 (3분마다 폴링)
+4. **ArgoCD Image Updater**: 새 이미지 자동 감지 및 배포
+5. **오프라인 TAR 생성**: 배포 완료 후 자동으로 오프라인 패키지 생성
 
 ### 수동 배포 및 관리
 ```bash

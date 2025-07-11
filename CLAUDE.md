@@ -21,7 +21,7 @@ Key differentiators:
 - **Database**: Redis (cache) + JSON file storage (persistence)
 - **Container**: Docker/Podman with multi-stage builds
 - **Orchestration**: Kubernetes + ArgoCD GitOps
-- **CI/CD**: GitHub Actions → registry.jclee.me → ArgoCD → Kubernetes
+- **CI/CD**: GitHub Actions → registry.jclee.me → ArgoCD Image Updater → Kubernetes
 - **Monitoring**: Real-time SSE (Server-Sent Events) for log streaming
 
 ### Key Architecture Patterns
@@ -230,16 +230,22 @@ anomalies = await hub.analytics_engine.detect_anomalies()
 
 ## CI/CD Pipeline
 
-### CI/CD Workflow with Private Registry
-The pipeline runs on push to main/master/develop branches:
+### ArgoCD Image Updater Workflow
+The pipeline uses ArgoCD Image Updater for automated deployments:
 
 1. **Test Stage**: Runs pytest with coverage
-2. **Build Stage**: Creates Docker image using Docker Build Action
+2. **Build Stage**: Creates Docker image using Docker Buildx
 3. **Push Stage**: Pushes to registry.jclee.me (no authentication required)
-4. **GitOps Stage**: Updates kustomization.yaml with new image tag and commits to Git
-5. **ArgoCD Pull**: ArgoCD polls Git repository (every 3 minutes) and auto-deploys changes
+4. **ArgoCD Image Updater**: Automatically detects new images and updates deployments
+5. **Offline TAR Generation**: Automatically creates offline packages after deployment completion
 
 The workflow is configured for insecure registry access for simplicity in closed environments.
+
+### Key Features
+- **No Manual Manifest Updates**: ArgoCD Image Updater handles all manifest changes
+- **Automatic Deployment**: New images are deployed without manual intervention
+- **Offline Package Creation**: Deployment completion triggers automatic offline TAR generation
+- **Enhanced Stability**: Retry logic, error handling, and comprehensive monitoring
 
 ### Registry Configuration
 The registry is configured without authentication for ease of use in closed environments:
@@ -272,13 +278,16 @@ argocd login argo.jclee.me --username admin --password bingogo1 --insecure --grp
 
 # 2. Check status
 argocd app list                    # All applications
-argocd app get fortinet-primary    # Primary cluster
+argocd app get fortinet            # Application status
 
-# 3. Manual sync (emergency deployment)
-argocd app sync fortinet-primary --prune
+# 3. Apply Image Updater configuration
+./scripts/apply-argocd-image-updater.sh
 
-# 4. Web dashboard
-# https://argo.jclee.me/applications/fortinet-primary
+# 4. Monitor Image Updater
+kubectl -n argocd logs -l app.kubernetes.io/name=argocd-image-updater -f
+
+# 5. Web dashboard
+# https://argo.jclee.me/applications/fortinet
 ```
 
 #### Direct Kubernetes Deployment (Emergency)
