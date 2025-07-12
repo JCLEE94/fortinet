@@ -76,7 +76,30 @@ def settings():
 
 @main_bp.route('/monitoring')
 def monitoring():
-    return render_template('dashboard.html')
+    """모니터링 페이지"""
+    from src.mock.data_generator import DummyDataGenerator
+    from src.config.dashboard_defaults import get_dashboard_config, generate_mock_alerts
+    
+    # 모니터링용 더미 데이터 생성
+    dummy_generator = DummyDataGenerator()
+    dashboard_config = get_dashboard_config()
+    
+    data = {
+        'stats': dummy_generator.generate_dashboard_stats(),
+        'devices': dummy_generator.generate_devices(
+            dashboard_config['device_list']['top_devices_limit'] * 2
+        ),
+        'events': dummy_generator.generate_security_events(
+            dashboard_config['security_events']['max_events_display']
+        ),
+        'alerts': generate_mock_alerts(dashboard_config['stats']['active_alerts']),
+        'monitoring': dummy_generator.generate_monitoring_data()
+    }
+    
+    # 대시보드 설정도 템플릿에 전달 (중요!)
+    data['config'] = dashboard_config
+    
+    return render_template('dashboard.html', data=data)
 
 @main_bp.route('/text-overflow-test')
 def text_overflow_test():

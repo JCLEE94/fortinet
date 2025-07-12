@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.1] - 2025-07-12
+
+### Added
+- **Mock Data Generator Module**
+  - Created comprehensive `src/mock/data_generator.py` for testing without hardware
+  - Added DummyDataGenerator class with dashboard stats, devices, security events
+  - Implemented mock policy analysis and network topology generation
+  - Added monitoring data generation for real-time dashboard simulation
+
+### Fixed
+- **Critical Syntax Errors**
+  - Fixed invalid `secrets.randbelow()` usage in packet sniffer module
+  - Corrected IP address generation in MockDataGenerator
+  - Resolved packet size and port generation syntax issues
+
+- **Dashboard and Monitoring Issues**
+  - Fixed missing `src.mock.data_generator` module import errors
+  - Resolved "data is undefined" template errors in monitoring page
+  - Corrected dashboard template data structure requirements
+  - Fixed monitoring page configuration to use proper template
+
+- **Application Stability**
+  - Restored full dashboard functionality with mock data
+  - Fixed all core web pages (dashboard, monitoring, policy-analysis, settings)
+  - Verified API endpoints operational status
+  - Ensured proper error handling and fallback mechanisms
+
+### Improved
+- **Testing and Development**
+  - Enhanced mock data quality for realistic testing scenarios
+  - Improved error messages and debugging information
+  - Better integration between mock data and dashboard components
+  - Streamlined development workflow with working mock system
+
 ## [2.0.0] - 2025-07-11
 
 ### Added

@@ -275,8 +275,8 @@ class MockDataGenerator:
             protocol = secrets.choice(protocols)
         
         # 일반적인 IP 주소 패턴
-        src_ip = f"192.168.{secrets.randbelow(1, 255[1] - 1, 255[0] + 1) + 1, 255[0]}.{secrets.randbelow(1, 254[1] - 1, 254[0] + 1) + 1, 254[0]}"
-        dst_ip = f"10.{secrets.randbelow(1, 255[1] - 1, 255[0] + 1) + 1, 255[0]}.{secrets.randbelow(1, 255[1] - 1, 255[0] + 1) + 1, 255[0]}.{secrets.randbelow(1, 254[1] - 1, 254[0] + 1) + 1, 254[0]}"
+        src_ip = f"192.168.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 254)}"
+        dst_ip = f"10.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 254)}"
         
         # 포트 선택
         if protocol == 'TCP':
@@ -286,11 +286,11 @@ class MockDataGenerator:
         else:  # ICMP
             common_ports = [0]
         
-        src_port = secrets.choice(common_ports + [secrets.randbelow(1024, 65535[1] - 1024, 65535[0] + 1) + 1024, 65535[0]])
+        src_port = secrets.choice(common_ports + [secrets.randbelow(1024, 65535)])
         dst_port = secrets.choice(common_ports)
         
         # 패킷 크기
-        size = secrets.randbelow(64, 1500[1] - 64, 1500[0] + 1) + 64, 1500[0]
+        size = secrets.randbelow(64, 1500)
         
         # 가짜 페이로드
         payload_samples = {
