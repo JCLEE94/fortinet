@@ -23,11 +23,9 @@ class TestAPIClients(unittest.TestCase):
     
     def test_base_api_client_import(self):
         """Test base API client import"""
-        from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-        from utils.api_common import JsonRpcMixin
+        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
         self.assertTrue(BaseApiClient)
         self.assertTrue(RealtimeMonitoringMixin)
-        self.assertTrue(JsonRpcMixin)
     
     def test_fortigate_client_creation(self):
         """Test FortiGate API client creation"""
@@ -43,8 +41,8 @@ class TestAPIClients(unittest.TestCase):
             
             # 모듈 캐시에서 제거하여 완전히 새로 로드
             modules_to_reload = [
-                'api.clients.base_api_client',
-                'api.clients.fortigate_api_client'
+                'src.api.clients.base_api_client',
+                'src.api.clients.fortigate_api_client'
             ]
             
             for module_name in modules_to_reload:
@@ -52,7 +50,7 @@ class TestAPIClients(unittest.TestCase):
                     importlib.reload(sys.modules[module_name])
                     
             # 이제 클라이언트 생성
-            from api.clients.fortigate_api_client import FortiGateAPIClient
+            from src.api.clients.fortigate_api_client import FortiGateAPIClient
             
             client = FortiGateAPIClient(host="192.168.1.1", api_token="test-token")
             self.assertIsNotNone(client)
@@ -68,14 +66,14 @@ class TestAPIClients(unittest.TestCase):
     
     def test_fortimanager_client_creation(self):
         """Test FortiManager API client creation"""
-        from api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
         client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
         self.assertIsNotNone(client)
         self.assertEqual(client.host, "192.168.1.2")
     
     def test_faz_client_creation(self):
         """Test FortiAnalyzer client creation"""
-        from api.clients.faz_client import FAZClient
+        from src.api.clients.faz_client import FAZClient
         client = FAZClient(host="192.168.1.3", api_token="test-token")
         self.assertIsNotNone(client)
         self.assertEqual(client.host, "192.168.1.3")
@@ -126,7 +124,7 @@ class TestFortiManagerAdvanced(unittest.TestCase):
         """Test advanced hub creation"""
         import asyncio
         from fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
         
         # Set up event loop for async components
         loop = asyncio.new_event_loop()

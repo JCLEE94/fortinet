@@ -183,10 +183,10 @@ def test_api_client_structure():
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
     
-    from src.api.clients.base_api_client import BaseAPIClient
+    from src.api.clients.base_api_client import BaseApiClient
     
     # 기본 API 클라이언트 생성
-    client = BaseAPIClient()
+    client = BaseApiClient()
     
     # 필수 속성 확인
     assert_ok(hasattr(client, 'session'), "API client should have session")

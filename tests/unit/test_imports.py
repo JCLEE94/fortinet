@@ -14,53 +14,52 @@ def test_imports():
     
     # API clients
     try:
-        from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-        from utils.api_common import JsonRpcMixin
+        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
         print("✅ base_api_client imported successfully")
     except Exception as e:
         print(f"❌ base_api_client import failed: {e}")
     
     try:
-        from api.clients.fortigate_api_client import FortiGateAPIClient
+        from src.api.clients.fortigate_api_client import FortiGateAPIClient
         print("✅ fortigate_api_client imported successfully")
     except Exception as e:
         print(f"❌ fortigate_api_client import failed: {e}")
     
     try:
-        from api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
         print("✅ fortimanager_api_client imported successfully")
     except Exception as e:
         print(f"❌ fortimanager_api_client import failed: {e}")
     
     try:
-        from api.clients.faz_client import FAZClient
+        from src.api.clients.faz_client import FAZClient
         print("✅ faz_client imported successfully")
     except Exception as e:
         print(f"❌ faz_client import failed: {e}")
     
     # FortiManager advanced modules
     try:
-        from fortimanager.advanced_hub import FortiManagerAdvancedHub
+        from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
         print("✅ fortimanager.advanced_hub imported successfully")
     except Exception as e:
         print(f"❌ fortimanager.advanced_hub import failed: {e}")
     
     # Monitoring modules
     try:
-        from monitoring.base import MonitoringBase
+        from src.monitoring.base import MonitoringBase
         print("✅ monitoring.base imported successfully")
     except Exception as e:
         print(f"❌ monitoring.base import failed: {e}")
     
     try:
-        from monitoring.manager import UnifiedMonitoringManager
+        from src.monitoring.manager import UnifiedMonitoringManager
         print("✅ monitoring.manager imported successfully")
     except Exception as e:
         print(f"❌ monitoring.manager import failed: {e}")
     
     # API integration
     try:
-        from api.integration.api_integration import APIIntegrationManager
+        from src.api.integration.api_integration import APIIntegrationManager
         print("✅ api.integration.api_integration imported successfully")
     except Exception as e:
         print(f"❌ api.integration.api_integration import failed: {e}")

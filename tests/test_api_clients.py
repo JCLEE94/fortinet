@@ -15,11 +15,10 @@ from unittest.mock import patch, MagicMock, PropertyMock
 import json
 from datetime import datetime
 
-from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from api.clients.fortigate_api_client import FortiGateAPIClient
-from api.clients.fortimanager_api_client import FortiManagerAPIClient
-from api.clients.faz_client import FAZClient
-from utils.api_common import JsonRpcMixin
+from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+from src.api.clients.fortigate_api_client import FortiGateAPIClient
+from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from src.api.clients.faz_client import FAZClient
 
 
 class TestBaseApiClient(unittest.TestCase):

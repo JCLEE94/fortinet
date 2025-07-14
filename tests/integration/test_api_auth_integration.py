@@ -22,7 +22,7 @@ from urllib3.util.retry import Retry
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.utils.integration_test_framework import test_framework
-from src.api.clients.base_api_client import BaseAPIClient
+from src.api.clients.base_api_client import BaseApiClient
 from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 from src.api.clients.fortigate_api_client import FortiGateAPIClient
 from src.core.connection_pool import ConnectionPoolManager
@@ -104,10 +104,10 @@ auth_tester = APIAuthIntegrationTester()
 
 @test_framework.test("base_api_client_session_initialization")
 def test_base_client_session():
-    """BaseAPIClient 세션 초기화 및 설정 검증"""
+    """BaseApiClient 세션 초기화 및 설정 검증"""
     
     # 기본 클라이언트 초기화
-    client = BaseAPIClient()
+    client = BaseApiClient()
     
     # 세션이 올바르게 초기화되었는지 확인
     test_framework.assert_ok(hasattr(client, 'session'), "Client should have session attribute")
@@ -337,7 +337,7 @@ def test_session_timeout_retry():
     for i, (timeout_config, retry_config) in enumerate(zip(timeout_configs, retry_configs)):
         try:
             # 클라이언트 생성 (실제 연결 없이 설정만 테스트)
-            client = BaseAPIClient()
+            client = BaseApiClient()
             
             # 타임아웃 설정 검증
             connect_timeout = timeout_config['connect_timeout']
