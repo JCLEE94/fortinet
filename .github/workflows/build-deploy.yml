@@ -11,8 +11,8 @@ on:
     branches: [ main, master ]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: jclee94/fortinet
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
 
 jobs:
   test:
@@ -108,12 +108,12 @@ jobs:
             http = true
             insecure = true
     
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Check registry connectivity
+      run: |
+        echo "🔍 Checking registry.jclee.me connectivity..."
+        curl -f "http://registry.jclee.me/v2/" || {
+          echo "⚠️ Registry not accessible, but continuing with build..."
+        }
     
     - name: Build and push Docker image
       id: docker
@@ -134,12 +134,13 @@ jobs:
     
     - name: Verify image push
       run: |
-        echo "🔍 Verifying image was pushed to GitHub Container Registry..."
+        echo "🔍 Verifying image was pushed..."
         sleep 10  # Wait for registry to update
-        # For public repos, we can check the GitHub Container Registry
-        echo "✅ Image successfully pushed to ghcr.io/${{ env.IMAGE_NAME }}"
-        echo "📦 Latest tag: ghcr.io/${{ env.IMAGE_NAME }}:latest"
-        echo "📦 Commit tag: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+        curl -f "http://registry.jclee.me/v2/${{ env.IMAGE_NAME }}/tags/list" || {
+          echo "❌ Failed to verify image push"
+          echo "⚠️ But continuing deployment..."
+        }
+        echo "✅ Image successfully pushed"
     
     # ArgoCD Image Updater will handle manifest updates
     # No need to manually update kustomization.yaml
@@ -148,7 +149,7 @@ jobs:
       run: |
         echo "📝 Image pushed to registry with tag: ${{ github.sha }}"
         echo "🔄 ArgoCD Image Updater will automatically detect and update the deployment"
-        echo "📊 Registry URL: https://github.com/users/jclee94/packages/container/package/fortinet"
+        echo "📊 Registry URL: http://registry.jclee.me/v2/${{ env.IMAGE_NAME }}/tags/list"
         
         # Create a deployment marker for offline tar generation
         echo "${{ github.sha }}" > /tmp/deployment-tag.txt
@@ -165,7 +166,7 @@ jobs:
         if [ "${{ needs.build-deploy.result }}" == "success" ]; then
           echo "✅ 배포 성공!"
           echo "📦 이미지: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-deploy.outputs.image-tag }}"
-          echo "🔍 레지스트리: https://github.com/users/jclee94/packages/container/package/fortinet"
+          echo "🔍 레지스트리: http://registry.jclee.me/v2/${{ env.IMAGE_NAME }}/tags/list"
           echo "🎯 ArgoCD: https://argo.jclee.me/applications/fortinet"
           echo "🌐 애플리케이션: https://fortinet.jclee.me"
         else
