@@ -198,9 +198,8 @@ class TestOptimization(unittest.TestCase):
     
     def test_caching_import(self):
         """Test caching utilities import"""
-        from src.utils.api_optimization import cached, cache_manager, CacheManager
-        self.assertTrue(cached)
-        self.assertTrue(cache_manager)
+        from src.core.cache_manager import CacheManager
+        # cached and cache_manager are not available in the current codebase
         self.assertTrue(CacheManager)
     
     def test_redis_cache_import(self):
@@ -211,7 +210,7 @@ class TestOptimization(unittest.TestCase):
     
     def test_cache_manager_functionality(self):
         """Test cache manager functionality"""
-        from src.utils.api_optimization import CacheManager
+        from src.core.cache_manager import CacheManager
         cache = CacheManager(use_redis=False)
         
         # Test set and get

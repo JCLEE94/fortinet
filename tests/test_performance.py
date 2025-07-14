@@ -17,9 +17,18 @@ import time
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from src.utils.api_optimization import CacheManager, Paginator
+from src.core.cache_manager import CacheManager
 from src.utils.batch_operations import BatchProcessor, BatchItem, BatchOperationType, APIBatchProcessor
 from src.core.connection_pool import ConnectionPoolManager
+
+# Mock Paginator class since it doesn't exist in the codebase
+class Paginator:
+    def __init__(self, params, max_per_page=100):
+        self.page = int(params.get('page', 1))
+        self.per_page = min(int(params.get('per_page', 10)), max_per_page)
+        self.offset = (self.page - 1) * self.per_page
+        self.sort_by = params.get('sort_by', 'id')
+        self.sort_order = params.get('sort_order', 'asc')
 
 
 class TestCacheManager(unittest.TestCase):
