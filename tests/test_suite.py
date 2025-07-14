@@ -198,20 +198,20 @@ class TestOptimization(unittest.TestCase):
     
     def test_caching_import(self):
         """Test caching utilities import"""
-        from utils.api_optimization import cached, cache_manager, CacheManager
+        from src.utils.api_optimization import cached, cache_manager, CacheManager
         self.assertTrue(cached)
         self.assertTrue(cache_manager)
         self.assertTrue(CacheManager)
     
     def test_redis_cache_import(self):
         """Test Redis cache import"""
-        from utils.redis_cache import redis_cache, redis_cached
+        from src.utils.redis_cache import redis_cache, redis_cached
         self.assertTrue(redis_cache)
         self.assertTrue(redis_cached)
     
     def test_cache_manager_functionality(self):
         """Test cache manager functionality"""
-        from utils.api_optimization import CacheManager
+        from src.utils.api_optimization import CacheManager
         cache = CacheManager(use_redis=False)
         
         # Test set and get

@@ -17,9 +17,9 @@ import time
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from utils.api_optimization import CacheManager, Paginator
-from utils.batch_operations import BatchProcessor, BatchItem, BatchOperationType, APIBatchProcessor
-from core.connection_pool import ConnectionPoolManager
+from src.utils.api_optimization import CacheManager, Paginator
+from src.utils.batch_operations import BatchProcessor, BatchItem, BatchOperationType, APIBatchProcessor
+from src.core.connection_pool import ConnectionPoolManager
 
 
 class TestCacheManager(unittest.TestCase):
@@ -83,7 +83,7 @@ class TestCacheManager(unittest.TestCase):
         small_cache_manager = UnifiedCacheManager(small_config)
         
         # CacheManager 래퍼 생성
-        from utils.api_optimization import CacheManager
+        from src.utils.api_optimization import CacheManager
         small_cache = CacheManager(use_redis=False)
         small_cache.cache_manager = small_cache_manager
         
@@ -446,7 +446,7 @@ class TestIntegrationPerformance(unittest.TestCase):
     def test_cached_api_endpoint(self, mock_session_class):
         """캐시된 API 엔드포인트 성능 테스트"""
         from flask import Flask, jsonify
-        from utils.api_optimization import cached
+        from src.utils.api_optimization import cached
         
         app = Flask(__name__)
         call_count = 0
