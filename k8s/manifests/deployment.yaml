@@ -24,7 +24,7 @@ spec:
       - name: registry-credentials
       containers:
       - name: fortinet
-        image: registry.jclee.me/fortinet:latest
+        image: ghcr.io/jclee94/fortinet:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 7777
