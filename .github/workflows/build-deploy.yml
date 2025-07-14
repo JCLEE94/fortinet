@@ -11,8 +11,8 @@ on:
     branches: [ main, master ]
 
 env:
-  REGISTRY: registry.jclee.me
-  IMAGE_NAME: fortinet
+  REGISTRY: ghcr.io
+  IMAGE_NAME: jclee94/fortinet
 
 jobs:
   test:
@@ -108,11 +108,12 @@ jobs:
             http = true
             insecure = true
     
-    - name: Test registry connectivity
-      run: |
-        echo "🔍 Testing registry connectivity..."
-        # Registry requires auth, skipping connectivity test
-        echo "⚠️ Registry may require authentication, proceeding with push"
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Build and push Docker image
       id: docker
