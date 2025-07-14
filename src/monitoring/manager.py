@@ -16,7 +16,7 @@ from threading import RLock
 from .base import MonitoringBase, get_all_monitors, register_monitor, unregister_monitor
 from .config import get_config_manager, MonitoringConfig
 from src.utils.performance_optimizer import LRUCache, profile, measure_time
-from src.config.hardcoded_values import CONFIG
+from src.config.unified_settings import CONFIG
 
 
 logger = logging.getLogger(__name__)
