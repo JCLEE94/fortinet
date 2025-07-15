@@ -64,6 +64,7 @@ backups/
 *.env
 .env.*
 *secret*
+!helm/fortinet/templates/secrets*.yaml
 *password*
 data/config.json
 data/git_log_config.json
