@@ -1,0 +1,21 @@
+{{- if .Values.nodePortService.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fortinet-nextrade.fullname" . }}-nodeport
+  labels:
+    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    service-type: nodeport
+spec:
+  type: {{ .Values.nodePortService.type }}
+  ports:
+    - port: {{ .Values.nodePortService.port }}
+      targetPort: {{ .Values.nodePortService.targetPort }}
+      protocol: TCP
+      name: http
+      {{- if .Values.nodePortService.nodePort }}
+      nodePort: {{ .Values.nodePortService.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "fortinet-nextrade.selectorLabels" . | nindent 4 }}
+{{- end }}

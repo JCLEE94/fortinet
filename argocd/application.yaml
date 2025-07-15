@@ -3,6 +3,20 @@ kind: Application
 metadata:
   name: fortinet
   namespace: argocd
+  annotations:
+    # ArgoCD Image Updater configuration
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:latest
+    argocd-image-updater.argoproj.io/write-back-method: kustomization
+    argocd-image-updater.argoproj.io/write-back-target: kustomization
+    argocd-image-updater.argoproj.io/kustomize-images: registry.jclee.me/fortinet
+    # Registry configuration
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[a-f0-9]{7,40}$|^latest$
+    argocd-image-updater.argoproj.io/fortinet.platforms: linux/amd64
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    # Sync options
+    argocd-image-updater.argoproj.io/git-branch: master
+    argocd-image-updater.argoproj.io/git-author: ArgoCD Image Updater <noreply@argocd.io>
+    argocd-image-updater.argoproj.io/git-message: "build: update FortiGate Nextrade image to {{range .Updated}}{{.NewTag}}{{end}}"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

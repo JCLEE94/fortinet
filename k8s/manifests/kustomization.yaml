@@ -12,6 +12,7 @@ resources:
   - registry-noauth-secret.yaml
   - deployment.yaml
   - service.yaml
+  - ingress.yaml
 
 images:
   - name: registry.jclee.me/fortinet
