@@ -176,22 +176,23 @@ jobs:
       run: |
         echo "📦 Packaging Helm Chart..."
         
-        # Debug: List template files
-        echo "📁 Template files:"
-        ls -la helm/${{ env.CHART_NAME }}/templates/
-        
         # Add bitnami repository to ensure Redis chart is available
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo update
         helm dependency update helm/${{ env.CHART_NAME }}
-        helm package helm/${{ env.CHART_NAME }}
+        
+        # Ensure all template files are included
+        cd helm/${{ env.CHART_NAME }}
+        helm package .
+        cd ../..
         
         CHART_FILE="${{ env.CHART_NAME }}-${{ steps.version.outputs.chart-version }}.tgz"
+        mv helm/${{ env.CHART_NAME }}/$CHART_FILE .
         echo "chart-file=$CHART_FILE" >> $GITHUB_ENV
         
         # Verify secret files are included
         echo "🔍 Verifying chart contents..."
-        tar -tzf "$CHART_FILE" | grep -E "(secret|registry)" || echo "⚠️ Warning: No secret files found in chart"
+        tar -tzf "$CHART_FILE" | grep -E "(secret|registry)" && echo "✅ Secret files found" || echo "❌ ERROR: No secret files in chart!"
         
         echo "✅ Chart packaged: $CHART_FILE"
     
