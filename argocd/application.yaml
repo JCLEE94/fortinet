@@ -22,7 +22,7 @@ spec:
   project: default
   source:
     repoURL: https://charts.jclee.me
-    targetRevision: 1.0.0
+    targetRevision: "*"
     chart: fortinet-nextrade
     helm:
       valueFiles:
