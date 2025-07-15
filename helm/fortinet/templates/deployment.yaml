@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fortinet-nextrade.fullname" . }}
+  name: {{ include "fortinet.fullname" . }}
   labels:
-    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    {{- include "fortinet.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "fortinet-nextrade.selectorLabels" . | nindent 6 }}
+      {{- include "fortinet.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,13 +18,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "fortinet-nextrade.selectorLabels" . | nindent 8 }}
+        {{- include "fortinet.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "fortinet-nextrade.serviceAccountName" . }}
+      serviceAccountName: {{ include "fortinet.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -52,7 +52,7 @@ spec:
             - name: FORTIMANAGER_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "fortinet-nextrade.fullname" . }}-secrets
+                  name: {{ include "fortinet.fullname" . }}-secrets
                   key: fortimanager-api-key
                   optional: true
             {{- end }}
@@ -62,7 +62,7 @@ spec:
             - name: FORTIGATE_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "fortinet-nextrade.fullname" . }}-secrets
+                  name: {{ include "fortinet.fullname" . }}-secrets
                   key: fortigate-api-key
                   optional: true
             {{- end }}
@@ -72,7 +72,7 @@ spec:
             - name: ITSM_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "fortinet-nextrade.fullname" . }}-secrets
+                  name: {{ include "fortinet.fullname" . }}-secrets
                   key: itsm-api-key
                   optional: true
             {{- end }}
@@ -119,10 +119,10 @@ spec:
         {{- if .Values.persistence.enabled }}
         - name: data
           persistentVolumeClaim:
-            claimName: {{ include "fortinet-nextrade.fullname" . }}-data
+            claimName: {{ include "fortinet.fullname" . }}-data
         - name: logs
           persistentVolumeClaim:
-            claimName: {{ include "fortinet-nextrade.fullname" . }}-logs
+            claimName: {{ include "fortinet.fullname" . }}-logs
         {{- else }}
         - name: data
           emptyDir: {}
@@ -132,6 +132,6 @@ spec:
         {{- if .Values.scripts.enabled }}
         - name: scripts
           configMap:
-            name: {{ include "fortinet-nextrade.fullname" . }}-scripts
+            name: {{ include "fortinet.fullname" . }}-scripts
             defaultMode: 0755
         {{- end }}

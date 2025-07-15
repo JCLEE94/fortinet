@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fortinet-nextrade.fullname" . }}
+  name: {{ include "fortinet.fullname" . }}
   labels:
-    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    {{- include "fortinet.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    {{- include "fortinet-nextrade.selectorLabels" . | nindent 4 }}
+    {{- include "fortinet.selectorLabels" . | nindent 4 }}

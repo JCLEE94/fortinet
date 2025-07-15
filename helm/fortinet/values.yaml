@@ -1,4 +1,4 @@
-# Default values for fortinet-nextrade.
+# Default values for fortinet.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -159,5 +159,5 @@ extraEnvVars: []
 registryCredentials:
   create: true
   registry: registry.jclee.me
-  username: admin
-  password: bingogo1
+  username: ""  # Set via helm install or values override
+  password: ""  # Set via helm install or values override

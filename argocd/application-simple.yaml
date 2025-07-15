@@ -4,25 +4,25 @@ metadata:
   name: fortinet
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater - 자동으로 최신 이미지 감지 및 업데이트
+    # ArgoCD Image Updater configuration
     argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:latest
     argocd-image-updater.argoproj.io/write-back-method: argocd
     argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
     argocd-image-updater.argoproj.io/fortinet.helm.image-name: image.repository
     argocd-image-updater.argoproj.io/fortinet.helm.image-tag: image.tag
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
     repoURL: https://charts.jclee.me
-    targetRevision: "*"  # 최신 차트 버전 자동 사용
+    targetRevision: "*"
     chart: fortinet
     helm:
-      # values 파일은 차트에 포함된 기본값 사용
-      # 필요한 경우만 파라미터로 오버라이드
+      # 환경에 따라 다른 values 파일 사용
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml  # 프로덕션 환경용
+      # 런타임에 오버라이드할 파라미터만 지정
       parameters:
-        # 필수 레지스트리 인증 정보만 여기에 지정
         - name: registryCredentials.username
           value: admin
         - name: registryCredentials.password

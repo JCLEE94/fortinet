@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "fortinet-nextrade.fullname" . }}-data
+  name: {{ include "fortinet.fullname" . }}-data
   labels:
-    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    {{- include "fortinet.labels" . | nindent 4 }}
     app.kubernetes.io/component: data
 spec:
   accessModes:
@@ -19,9 +19,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "fortinet-nextrade.fullname" . }}-logs
+  name: {{ include "fortinet.fullname" . }}-logs
   labels:
-    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    {{- include "fortinet.labels" . | nindent 4 }}
     app.kubernetes.io/component: logs
 spec:
   accessModes:

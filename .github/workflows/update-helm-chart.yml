@@ -14,7 +14,7 @@ on:
 env:
   REGISTRY: registry.jclee.me
   IMAGE_NAME: fortinet
-  CHART_NAME: fortinet-nextrade
+  CHART_NAME: fortinet
 
 jobs:
   test:

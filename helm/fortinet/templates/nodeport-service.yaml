@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fortinet-nextrade.fullname" . }}-nodeport
+  name: {{ include "fortinet.fullname" . }}-nodeport
   labels:
-    {{- include "fortinet-nextrade.labels" . | nindent 4 }}
+    {{- include "fortinet.labels" . | nindent 4 }}
     service-type: nodeport
 spec:
   type: {{ .Values.nodePortService.type }}
@@ -17,5 +17,5 @@ spec:
       nodePort: {{ .Values.nodePortService.nodePort }}
       {{- end }}
   selector:
-    {{- include "fortinet-nextrade.selectorLabels" . | nindent 4 }}
+    {{- include "fortinet.selectorLabels" . | nindent 4 }}
 {{- end }}
