@@ -175,6 +175,9 @@ jobs:
     - name: Package Helm Chart
       run: |
         echo "📦 Packaging Helm Chart..."
+        # Add bitnami repository to ensure Redis chart is available
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
         helm dependency update helm/${{ env.CHART_NAME }}
         helm package helm/${{ env.CHART_NAME }}
         
