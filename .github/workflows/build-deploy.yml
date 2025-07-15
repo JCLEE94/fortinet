@@ -141,7 +141,6 @@ jobs:
         cache-to: type=gha,mode=max
         provenance: false
         platforms: linux/amd64
-        allow: network.host,security.insecure
       env:
         BUILDX_NO_DEFAULT_ATTESTATIONS: 1
     
