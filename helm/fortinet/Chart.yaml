@@ -23,8 +23,8 @@ maintainers:
   - name: JC Lee
     email: jclee@example.com
 
-dependencies:
-  - name: redis
-    version: "21.2.10"
-    repository: "https://charts.bitnami.com/bitnami"
-    condition: redis.enabled
+# dependencies:
+#   - name: redis
+#     version: "^21.2.0"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: redis.enabled
