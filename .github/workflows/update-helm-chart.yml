@@ -199,6 +199,7 @@ jobs:
     - name: Login to ChartMuseum
       run: |
         echo "🔐 Logging into ChartMuseum..."
+        helm repo remove chartmuseum || true
         helm repo add chartmuseum ${{ secrets.CHARTMUSEUM_URL }} \
           --username ${{ secrets.CHARTMUSEUM_USERNAME }} \
           --password ${{ secrets.CHARTMUSEUM_PASSWORD }}
