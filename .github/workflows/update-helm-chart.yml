@@ -129,8 +129,8 @@ jobs:
       uses: docker/login-action@v3
       with:
         registry: registry.jclee.me
-        username: admin
-        password: bingogo1
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
     
     - name: Build and push Docker image
       id: docker
@@ -186,17 +186,17 @@ jobs:
     - name: Login to ChartMuseum
       run: |
         echo "🔐 Logging into ChartMuseum..."
-        helm repo add chartmuseum https://charts.jclee.me \
-          --username admin \
-          --password bingogo1
+        helm repo add chartmuseum ${{ secrets.CHARTMUSEUM_URL }} \
+          --username ${{ secrets.CHARTMUSEUM_USERNAME }} \
+          --password ${{ secrets.CHARTMUSEUM_PASSWORD }}
         helm repo update
     
     - name: Upload to ChartMuseum
       run: |
         echo "📤 Uploading to ChartMuseum..."
-        curl -u admin:bingogo1 \
+        curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
           --data-binary "@${{ env.chart-file }}" \
-          https://charts.jclee.me/api/charts
+          ${{ secrets.CHARTMUSEUM_URL }}/api/charts
         
         echo "✅ Chart uploaded to ChartMuseum"
     
