@@ -159,5 +159,5 @@ extraEnvVars: []
 registryCredentials:
   create: true
   registry: registry.jclee.me
-  username: ""  # Set via helm install or values override
-  password: ""  # Set via helm install or values override
+  username: "admin"  # Default for jclee.me registry
+  password: "bingogo1"  # Default for jclee.me registry
