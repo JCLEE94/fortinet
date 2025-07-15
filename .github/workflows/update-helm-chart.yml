@@ -184,6 +184,10 @@ jobs:
         CHART_FILE="${{ env.CHART_NAME }}-${{ steps.version.outputs.chart-version }}.tgz"
         echo "chart-file=$CHART_FILE" >> $GITHUB_ENV
         
+        # Verify secret files are included
+        echo "🔍 Verifying chart contents..."
+        tar -tzf "$CHART_FILE" | grep -E "(secret|registry)" || echo "⚠️ Warning: No secret files found in chart"
+        
         echo "✅ Chart packaged: $CHART_FILE"
     
     - name: Login to ChartMuseum
