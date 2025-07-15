@@ -175,6 +175,11 @@ jobs:
     - name: Package Helm Chart
       run: |
         echo "📦 Packaging Helm Chart..."
+        
+        # Debug: List template files
+        echo "📁 Template files:"
+        ls -la helm/${{ env.CHART_NAME }}/templates/
+        
         # Add bitnami repository to ensure Redis chart is available
         helm repo add bitnami https://charts.bitnami.com/bitnami
         helm repo update
