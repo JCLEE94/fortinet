@@ -4,27 +4,54 @@ metadata:
   name: fortinet
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater configuration
+    # ArgoCD Image Updater configuration for Helm Chart
     argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:latest
-    argocd-image-updater.argoproj.io/write-back-method: kustomization
-    argocd-image-updater.argoproj.io/write-back-target: kustomization
-    argocd-image-updater.argoproj.io/kustomize-images: registry.jclee.me/fortinet
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/write-back-target: ""
     # Registry configuration
     argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[a-f0-9]{7,40}$|^latest$
     argocd-image-updater.argoproj.io/fortinet.platforms: linux/amd64
     argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
-    # Sync options
-    argocd-image-updater.argoproj.io/git-branch: master
-    argocd-image-updater.argoproj.io/git-author: ArgoCD Image Updater <noreply@argocd.io>
-    argocd-image-updater.argoproj.io/git-message: "build: update FortiGate Nextrade image to {{range .Updated}}{{.NewTag}}{{end}}"
+    argocd-image-updater.argoproj.io/fortinet.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/fortinet.helm.image-tag: image.tag
+    # Helm specific configuration
+    argocd-image-updater.argoproj.io/fortinet.helm.image-spec: registry.jclee.me/fortinet:latest
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/JCLEE94/fortinet
-    targetRevision: HEAD
-    path: k8s/manifests
+    repoURL: https://charts.jclee.me
+    targetRevision: 1.0.0
+    chart: fortinet-nextrade
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: fortinet.appMode
+          value: production
+        - name: image.tag
+          value: latest
+        - name: ingress.hosts[0].host
+          value: fortinet.jclee.me
+        - name: nodePortService.enabled
+          value: "true"
+        - name: nodePortService.nodePort
+          value: "30777"
+        - name: redis.enabled
+          value: "true"
+        - name: persistence.enabled
+          value: "true"
+        - name: persistence.storageClass
+          value: local-path
+        - name: registryCredentials.create
+          value: "true"
+        - name: registryCredentials.registry
+          value: registry.jclee.me
+        - name: registryCredentials.username
+          value: admin
+        - name: registryCredentials.password
+          value: bingogo1
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
