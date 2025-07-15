@@ -27,6 +27,9 @@ spec:
           value: admin
         - name: registryCredentials.password
           value: bingogo1
+        # 스토리지 클래스 수정
+        - name: persistence.storageClass
+          value: standard
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
