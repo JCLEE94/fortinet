@@ -24,10 +24,10 @@ spec:
       - name: registry-credentials
       containers:
       - name: fortinet
-        image: nginx:alpine
+        image: registry.jclee.me/fortinet:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - containerPort: 7777
           name: http
           protocol: TCP
         env:
@@ -46,17 +46,17 @@ spec:
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 30
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 20
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3

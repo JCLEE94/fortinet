@@ -13,7 +13,7 @@ spec:
     component: backend
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 7777
     protocol: TCP
     name: http
 ---
@@ -32,7 +32,7 @@ spec:
     component: backend
   ports:
   - port: 80
-    targetPort: 80
+    targetPort: 7777
     nodePort: 30777
     protocol: TCP
     name: http
