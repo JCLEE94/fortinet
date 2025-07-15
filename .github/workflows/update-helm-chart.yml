@@ -7,9 +7,9 @@ on:
       - '**.md'
       - 'docs/**'
       - '.gitignore'
-      - 'helm/**'
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
 
 env:
   REGISTRY: registry.jclee.me
