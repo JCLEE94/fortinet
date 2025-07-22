@@ -26,7 +26,7 @@ spec:
   source:
     repoURL: https://github.com/JCLEE94/fortinet
     targetRevision: HEAD
-    path: k8s/manifests
+    path: k8s/overlays/production
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
@@ -44,6 +44,3 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-  # Health check for deployment completion
-  health:
-    enabled: true
