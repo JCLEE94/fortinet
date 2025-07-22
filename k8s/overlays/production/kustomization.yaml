@@ -10,5 +10,7 @@ images:
 - name: registry.jclee.me/fortinet
   newTag: latest
 
-commonLabels:
-  environment: production
+labels:
+- includeSelectors: true
+  pairs:
+    environment: production

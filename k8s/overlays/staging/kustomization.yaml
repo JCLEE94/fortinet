@@ -6,15 +6,20 @@ namespace: fortinet-staging
 resources:
 - ../../manifests
 
-patchesStrategicMerge:
-- namespace-patch.yaml
-- service-patch.yaml
+patches:
+- target:
+    kind: Service
+    name: fortinet-nodeport
+  patch: |-
+    - op: replace
+      path: /spec/ports/0/nodePort
+      value: 30881
 
 images:
 - name: registry.jclee.me/fortinet
   newTag: staging-latest
 
-commonLabels:
-  environment: staging
-
-namePrefix: staging-
+labels:
+- includeSelectors: true
+  pairs:
+    environment: staging

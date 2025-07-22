@@ -122,15 +122,15 @@ deploy_argocd_applications() {
     
     # Production (기존 유지)
     log_info "Applying production ArgoCD application..."
-    kubectl apply -f ../argocd/fortinet-app.yaml
+    kubectl apply -f argocd/fortinet-app.yaml
     
     # Staging
     log_info "Applying staging ArgoCD application..."
-    kubectl apply -f ../argocd/fortinet-staging.yaml
+    kubectl apply -f argocd/fortinet-staging.yaml
     
     # Development
     log_info "Applying development ArgoCD application..."
-    kubectl apply -f ../argocd/fortinet-development.yaml
+    kubectl apply -f argocd/fortinet-development.yaml
     
     log_success "All ArgoCD applications deployed"
 }
@@ -144,6 +144,18 @@ create_services() {
         nodeport=${ENV_NODEPORTS[$env]}
         
         log_info "Creating service for environment: $env (NodePort: $nodeport)"
+        
+        # Check if service already exists or if NodePort is already in use
+        if kubectl get service fortinet-service -n "$namespace" >/dev/null 2>&1; then
+            log_warning "Service already exists in $namespace namespace, skipping creation"
+            continue
+        fi
+        
+        # Check if NodePort is already allocated
+        if kubectl get svc -A -o jsonpath='{.items[*].spec.ports[*].nodePort}' | grep -q "$nodeport"; then
+            log_warning "NodePort $nodeport already in use, skipping service creation for $env"
+            continue
+        fi
         
         cat <<EOF | kubectl apply -f -
 apiVersion: v1

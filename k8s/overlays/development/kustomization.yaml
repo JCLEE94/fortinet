@@ -6,15 +6,20 @@ namespace: fortinet-dev
 resources:
 - ../../manifests
 
-patchesStrategicMerge:
-- namespace-patch.yaml
-- service-patch.yaml
+patches:
+- target:
+    kind: Service
+    name: fortinet-nodeport
+  patch: |-
+    - op: replace
+      path: /spec/ports/0/nodePort
+      value: 30880
 
 images:
 - name: registry.jclee.me/fortinet
   newTag: dev-latest
 
-commonLabels:
-  environment: development
-
-namePrefix: dev-
+labels:
+- includeSelectors: true
+  pairs:
+    environment: development
