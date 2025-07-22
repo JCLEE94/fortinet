@@ -4,18 +4,23 @@ metadata:
   name: fortinet
   namespace: argocd
   annotations:
-    # ArgoCD Image Updater 설정
+    # ArgoCD Image Updater - Production Environment
     argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:~latest
     argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
-    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[a-f0-9]{40}$
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^(latest|v?\d+\.\d+\.\d+.*|production-latest|master-.*)$
+    argocd-image-updater.argoproj.io/fortinet.pull-secret: fortinet/registry-credentials
     argocd-image-updater.argoproj.io/write-back-method: git
     argocd-image-updater.argoproj.io/git-branch: image-updates
-    # 배포 완료 후 webhook 트리거
+    # Enhanced monitoring and sync settings
+    argocd-image-updater.argoproj.io/fortinet.platforms: linux/amd64
+    argocd-image-updater.argoproj.io/fortinet.ignore-tags: regexp:^(dev-.*|staging-.*)$
+    # Post-deployment hooks
     argocd-image-updater.argoproj.io/fortinet.post-update-hook: |
+      echo "🚀 Production deployment completed"
       curl -X POST https://api.github.com/repos/JCLEE94/fortinet/actions/workflows/offline-tar.yml/dispatches \
-      -H "Authorization: token $GITHUB_TOKEN" \
+      -H "Authorization: Bearer $GITHUB_TOKEN" \
       -H "Accept: application/vnd.github.v3+json" \
-      -d '{"ref":"master","inputs":{"image_tag":"{{.Image.Tag}}"}}'
+      -d '{"ref":"master","inputs":{"image_tag":"{{.Image.Tag}}","chart_version":"{{.Image.Tag}}"}}'
 spec:
   project: default
   source:

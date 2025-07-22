@@ -1,11 +1,30 @@
-# FortiGate Nextrade
+# FortiGate Nextrade - Parallel CI/CD Pipeline
 
-[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/build-deploy.yml)
-[![Registry](https://img.shields.io/badge/registry.jclee.me-ready-blue.svg)](https://registry.jclee.me)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](https://github.com/JCLEE94/fortinet/releases/tag/v2.0.0)
+[![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/ci-parallel.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/ci-parallel.yml)
+[![Manual Deploy](https://img.shields.io/badge/deploy-manual-blue.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/deploy-manual.yml)
+[![Registry](https://img.shields.io/badge/registry.jclee.me-ready-green.svg)](https://registry.jclee.me)
+[![Version](https://img.shields.io/badge/version-2.0.0-brightgreen.svg)](https://github.com/JCLEE94/fortinet/releases/tag/v2.0.0)
 [![License](https://img.shields.io/badge/license-proprietary-red.svg)](LICENSE)
 
-FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니터링 및 분석 플랫폼입니다. 폐쇄망(오프라인) 환경에서 완전히 동작하도록 설계되었습니다.
+FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니터링 및 분석 플랫폼입니다. **병렬 CI/CD 파이프라인**으로 업그레이드되어 다중 환경 배포와 향상된 자동화를 지원합니다.
+
+## ✨ 새로운 병렬 파이프라인 기능
+
+### 🔄 병렬 처리
+- **테스트 & 린트**: 동시 실행으로 빠른 피드백
+- **다중 환경**: 개발, 스테이징, 프로덕션 병렬 배포
+- **빌드 최적화**: 캐싱을 활용한 병렬 Docker 빌드
+
+### 🎯 환경 지원
+- **Production**: `https://fortinet.jclee.me` (Port: 30777)
+- **Staging**: `https://fortinet-staging.jclee.me` (Port: 30779)  
+- **Development**: `https://fortinet-development.jclee.me` (Port: 30778)
+
+### 🛠 향상된 기능
+- **자동 이미지 업데이트**: ArgoCD Image Updater with 환경별 태그
+- **보안 스캔**: Trivy 이미지 취약점 검사, Bandit 코드 보안
+- **헬스 체크**: 배포 후 자동 검증
+- **수동 배포**: 커스텀 파라미터로 온디맨드 배포
 
 ## 🚀 주요 기능
 
@@ -14,9 +33,9 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 - **토폴로지 시각화**: 네트워크 구조 시각화
 - **ITSM 연동**: 방화벽 정책 요청 및 티켓 관리
 - **FortiManager Hub**: AI 기반 정책 오케스트레이션 및 컴플라이언스 자동화
-- **Docker 지원**: 컨테이너 오케스트레이션을 통한 간편한 배포
-- **ArgoCD GitOps**: ArgoCD Image Updater를 통한 완전 자동화된 배포
-- **CI/CD 파이프라인**: GitHub Actions + ArgoCD Image Updater 통합
+- **병렬 CI/CD**: GitHub Actions 병렬 파이프라인
+- **GitOps 배포**: ArgoCD 다중 환경 자동 배포
+- **보안 강화**: 이미지 스캔, 코드 보안 검사
 - **오프라인 배포**: 배포 완료 시 자동으로 오프라인 TAR 패키지 생성
 - **로그 관리**: 실시간 로그 스트리밍 및 분석
 
@@ -37,19 +56,53 @@ FortiGate 방화벽과 FortiManager를 위한 종합적인 네트워크 모니�
 
 ## 🚀 빠른 시작
 
-### 배포
+### 1. 다중 환경 설정
 ```bash
-# 간단한 배포
-./scripts/deploy-simple.sh
+# 모든 환경 설정 (development, staging, production)
+./scripts/setup-multi-env.sh
 
-# 또는 Git push로 자동 배포
-git push origin main
-# - 초기 동기화 및 배포
-# - 헬스체크 및 상태 확인
+# 파이프라인 구성 검증
+./scripts/validate-pipeline.sh
+```
 
-# 3. 배포 확인
-# ArgoCD: https://argo.jclee.me/applications/fortinet
-# 애플리케이션: https://fortinet.jclee.me/api/health
+### 2. 애플리케이션 배포
+
+#### 자동 배포 (GitOps)
+```bash
+# master/main 푸시 → 프로덕션 배포
+git push origin master
+
+# develop 푸시 → 개발 환경 배포
+git push origin develop
+
+# staging 푸시 → 스테이징 배포
+git push origin staging
+```
+
+#### 수동 배포
+```bash
+# 특정 환경에 배포
+./scripts/deploy-parallel.sh production
+
+# 여러 환경에 병렬 배포
+./scripts/deploy-parallel.sh staging development
+
+# 모든 환경에 헬스 체크와 함께 배포
+./scripts/deploy-parallel.sh all --check --wait
+
+# 특정 이미지 태그로 배포
+./scripts/deploy-parallel.sh production --tag v2.0.20240722 --force
+```
+
+#### GitHub Actions 수동 배포
+```bash
+# GitHub CLI 사용
+gh workflow run deploy-manual.yml \
+  -f environment=production \
+  -f image_tag=latest \
+  -f skip_build=false
+
+# GitHub 웹 UI: Actions → Manual Deployment → Run workflow
 ```
 
 ### 로컬 개발 환경

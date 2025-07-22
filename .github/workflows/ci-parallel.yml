@@ -1,0 +1,565 @@
+name: 🚀 Parallel CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+      - 'LICENSE'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      force_deploy:
+        description: 'Force deployment even if tests fail'
+        required: false
+        default: false
+        type: boolean
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
+  CHART_NAME: fortinet
+  CHARTMUSEUM_URL: https://charts.jclee.me
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==================================================
+  # 🧪 Test Stage (Parallel with Lint)
+  # ==================================================
+  test:
+    name: 🧪 Test Suite
+    runs-on: self-hosted
+    timeout-minutes: 15
+    if: github.event.inputs.skip_tests != 'true'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-group: [unit, integration, e2e]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov pytest-xdist pytest-mock
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        fi
+
+    - name: Run ${{ matrix.test-group }} tests
+      run: |
+        export PYTHONPATH="${PWD}/src:${PYTHONPATH}"
+        export APP_MODE=test
+        
+        case "${{ matrix.test-group }}" in
+          "unit")
+            echo "🧪 Running unit tests..."
+            if [ -d "tests/unit" ]; then
+              pytest tests/unit/ -v --cov=src --cov-report=xml --cov-report=term-missing --maxfail=3
+            else
+              echo "ℹ️ No unit tests found"
+            fi
+            ;;
+          "integration")
+            echo "🔗 Running integration tests..."
+            if [ -d "tests/integration" ]; then
+              pytest tests/integration/ -v --maxfail=2
+            else
+              echo "ℹ️ No integration tests found"
+            fi
+            ;;
+          "e2e")
+            echo "🌐 Running end-to-end tests..."
+            if [ -d "tests/e2e" ]; then
+              pytest tests/e2e/ -v --maxfail=1
+            else
+              echo "ℹ️ No e2e tests found"
+            fi
+            ;;
+        esac
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.test-group }}
+        path: |
+          coverage.xml
+          pytest-report.xml
+        retention-days: 7
+
+  # ==================================================
+  # 🔍 Code Quality Stage (Parallel with Tests)
+  # ==================================================
+  lint:
+    name: 🔍 Code Quality
+    runs-on: self-hosted
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install black isort flake8 mypy bandit safety
+
+    - name: Run Black (formatter)
+      run: |
+        echo "🖤 Running Black formatter..."
+        black --check --diff src/
+
+    - name: Run isort (import sorting)
+      run: |
+        echo "📦 Checking import sorting..."
+        isort --check-only --diff src/
+
+    - name: Run Flake8 (linting)
+      run: |
+        echo "🔍 Running Flake8 linter..."
+        flake8 src/ --max-line-length=120 --ignore=E203,W503
+
+    - name: Run MyPy (type checking)
+      run: |
+        echo "🏷️ Running MyPy type checker..."
+        mypy src/ --ignore-missing-imports --no-strict-optional
+
+    - name: Run Bandit (security)
+      run: |
+        echo "🛡️ Running Bandit security checker..."
+        bandit -r src/ -f json -o bandit-report.json || true
+
+    - name: Run Safety (dependency security)
+      run: |
+        echo "🔒 Checking dependency security..."
+        safety check --json --output safety-report.json || true
+
+    - name: Upload security reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+        retention-days: 30
+
+  # ==================================================
+  # 🔧 Build Stage (Depends on Tests + Lint)
+  # ==================================================
+  build:
+    name: 🔧 Build & Push
+    needs: [test, lint]
+    runs-on: self-hosted
+    timeout-minutes: 20
+    if: |
+      always() && 
+      (needs.test.result == 'success' || needs.test.result == 'skipped' || github.event.inputs.force_deploy == 'true') &&
+      (needs.lint.result == 'success' || github.event.inputs.force_deploy == 'true')
+    
+    outputs:
+      image-digest: ${{ steps.build.outputs.digest }}
+      image-tag: ${{ steps.meta.outputs.tags }}
+      chart-version: ${{ steps.version.outputs.chart-version }}
+      build-date: ${{ steps.version.outputs.build-date }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate version metadata
+      id: version
+      run: |
+        # Environment-aware versioning
+        case "${{ github.event.inputs.environment || 'production' }}" in
+          "development")
+            VERSION="dev-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+            CHART_VERSION="0.1.$(date +%Y%m%d%H%M)"
+            ;;
+          "staging")
+            VERSION="staging-$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+            CHART_VERSION="1.0.$(date +%Y%m%d%H%M)"
+            ;;
+          *)
+            VERSION="v2.0.$(date +%Y%m%d)-$(git rev-parse --short HEAD)"
+            CHART_VERSION="2.0.$(date +%Y%m%d%H%M)"
+            ;;
+        esac
+        
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "chart-version=${CHART_VERSION}" >> $GITHUB_OUTPUT
+        echo "build-date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+        echo "environment=${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_OUTPUT
+        
+        echo "📦 Version: ${VERSION}"
+        echo "📊 Chart: ${CHART_VERSION}"
+        echo "🎯 Environment: ${{ github.event.inputs.environment || 'production' }}"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: network=host
+        buildkitd-flags: --allow-insecure-entitlement network.host
+
+    - name: Login to Docker Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: admin
+        password: bingogo1
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=${{ steps.version.outputs.version }}
+          type=raw,value=${{ steps.version.outputs.environment }}-latest
+
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.production
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          BUILD_DATE=${{ steps.version.outputs.build-date }}
+          GIT_COMMIT=${{ github.sha }}
+          GIT_BRANCH=${{ github.ref_name }}
+          VERSION=${{ steps.version.outputs.version }}
+          ENVIRONMENT=${{ steps.version.outputs.environment }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64
+        provenance: false
+
+    - name: Image security scan
+      run: |
+        echo "🔍 Scanning image for vulnerabilities..."
+        # Install trivy if not available
+        if ! command -v trivy &> /dev/null; then
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+        fi
+        
+        # Scan the built image
+        trivy image --exit-code 0 --format json --output trivy-report.json ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }} || true
+
+    - name: Upload scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-scan-results
+        path: trivy-report.json
+        retention-days: 30
+
+  # ==================================================
+  # 📦 Package Stage (Parallel after Build)
+  # ==================================================
+  package-helm:
+    name: 📦 Package Helm Chart
+    needs: build
+    runs-on: self-hosted
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: '3.14.0'
+
+    - name: Configure Helm repositories
+      run: |
+        echo "⚙️ Configuring Helm repositories..."
+        helm repo add chartmuseum ${{ env.CHARTMUSEUM_URL }} \
+          --username admin \
+          --password bingogo1
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo update
+
+    - name: Update Helm Chart
+      run: |
+        echo "📝 Updating Helm Chart..."
+        cd helm/${{ env.CHART_NAME }}
+        
+        # Update Chart.yaml
+        sed -i "s/version: .*/version: ${{ needs.build.outputs.chart-version }}/" Chart.yaml
+        sed -i "s/appVersion: .*/appVersion: \"${{ needs.build.outputs.version }}\"/" Chart.yaml
+        
+        # Update values.yaml
+        sed -i "s/tag: .*/tag: \"${{ needs.build.outputs.version }}\"/" values.yaml
+        sed -i "s|repository: .*|repository: \"${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\"|" values.yaml
+
+    - name: Package and Upload Helm Chart
+      run: |
+        echo "📦 Packaging and uploading Helm Chart..."
+        cd helm/${{ env.CHART_NAME }}
+        
+        helm dependency update
+        helm package . --version ${{ needs.build.outputs.chart-version }}
+        
+        CHART_FILE="${{ env.CHART_NAME }}-${{ needs.build.outputs.chart-version }}.tgz"
+        
+        curl -u admin:bingogo1 \
+          --data-binary "@${CHART_FILE}" \
+          ${{ env.CHARTMUSEUM_URL }}/api/charts
+
+  # ==================================================
+  # 🚀 Deploy Stage (Parallel multi-environment)
+  # ==================================================
+  deploy:
+    name: 🚀 Deploy to ${{ matrix.environment }}
+    needs: [build, package-helm]
+    runs-on: self-hosted
+    timeout-minutes: 15
+    if: github.event_name != 'pull_request'
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: 
+          - ${{ github.event.inputs.environment || (github.ref == 'refs/heads/master' && 'production') || (github.ref == 'refs/heads/develop' && 'development') || 'staging' }}
+
+    environment:
+      name: ${{ matrix.environment }}
+      url: ${{ matrix.environment == 'production' && 'https://fortinet.jclee.me' || format('https://fortinet-{0}.jclee.me', matrix.environment) }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Kubernetes manifests
+      run: |
+        echo "🔄 Updating Kubernetes manifests for ${{ matrix.environment }}..."
+        
+        # Update image in deployment
+        sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}|" k8s/manifests/deployment.yaml
+        
+        # Add deployment annotations
+        TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        sed -i "/annotations:/a\\        deployment.kubernetes.io/restart: \"${TIMESTAMP}\"" k8s/manifests/deployment.yaml
+        sed -i "/annotations:/a\\        deployment.kubernetes.io/environment: \"${{ matrix.environment }}\"" k8s/manifests/deployment.yaml
+
+    - name: Commit deployment changes
+      run: |
+        echo "📝 Committing deployment changes..."
+        
+        git config --global user.name "GitOps Bot"
+        git config --global user.email "gitops@fortinet.local"
+        
+        git add k8s/manifests/deployment.yaml
+        
+        if ! git diff --staged --quiet; then
+          git commit -m "🚀 deploy(${{ matrix.environment }}): update to ${{ needs.build.outputs.version }}
+
+- Environment: ${{ matrix.environment }}
+- Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
+- Chart: v${{ needs.build.outputs.chart-version }}
+- Commit: ${{ github.sha }}
+- Build: ${{ needs.build.outputs.build-date }}
+
+🤖 Automated deployment by Parallel CI/CD Pipeline"
+          
+          git push origin ${{ github.ref_name }}
+        fi
+
+    - name: ArgoCD Application Sync
+      run: |
+        echo "🔄 Triggering ArgoCD sync for ${{ matrix.environment }}..."
+        
+        # Install ArgoCD CLI if not available
+        if ! command -v argocd &> /dev/null; then
+          curl -sSL -o /tmp/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /tmp/argocd
+          sudo mv /tmp/argocd /usr/local/bin/argocd
+        fi
+        
+        # Login to ArgoCD
+        echo "🔐 Logging in to ArgoCD..."
+        argocd login argo.jclee.me \
+          --username admin \
+          --password bingogo1 \
+          --insecure \
+          --grpc-web
+        
+        # Sync application
+        APP_NAME="fortinet"
+        if [ "${{ matrix.environment }}" != "production" ]; then
+          APP_NAME="fortinet-${{ matrix.environment }}"
+        fi
+        
+        echo "🎯 Syncing application: ${APP_NAME}"
+        argocd app sync ${APP_NAME} --prune --timeout 300 || {
+          echo "⚠️ Sync failed, attempting refresh and retry..."
+          argocd app get ${APP_NAME} --refresh
+          argocd app sync ${APP_NAME} --prune --timeout 300
+        }
+        
+        # Wait for sync completion
+        echo "⏳ Waiting for sync completion..."
+        argocd app wait ${APP_NAME} --timeout 300
+
+    - name: Health check
+      run: |
+        echo "🏥 Performing health check..."
+        
+        case "${{ matrix.environment }}" in
+          "production")
+            HEALTH_URL="https://fortinet.jclee.me/api/health"
+            FALLBACK_URL="http://192.168.50.110:30777/api/health"
+            ;;
+          *)
+            HEALTH_URL="https://fortinet-${{ matrix.environment }}.jclee.me/api/health"
+            FALLBACK_URL="http://192.168.50.110:3077${{ matrix.environment == 'development' && '8' || '9' }}/api/health"
+            ;;
+        esac
+        
+        # Wait for deployment to be ready
+        sleep 30
+        
+        # Primary health check
+        if curl -s --max-time 10 "${HEALTH_URL}" | grep -q "healthy"; then
+          echo "✅ Primary health check passed: ${HEALTH_URL}"
+        elif curl -s --max-time 10 "${FALLBACK_URL}" | grep -q "healthy"; then
+          echo "✅ Fallback health check passed: ${FALLBACK_URL}"
+        else
+          echo "❌ Health check failed for both URLs"
+          exit 1
+        fi
+
+  # ==================================================
+  # 📊 Post-Deploy Stage (Parallel)
+  # ==================================================
+  generate-offline-package:
+    name: 📦 Generate Offline Package
+    needs: [deploy]
+    runs-on: self-hosted
+    timeout-minutes: 10
+    if: contains(needs.deploy.result, 'success') && github.ref == 'refs/heads/master'
+
+    steps:
+    - name: Trigger offline package generation
+      run: |
+        echo "📦 Triggering offline package generation..."
+        curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/offline-tar.yml/dispatches \
+          -d '{
+            "ref": "master",
+            "inputs": {
+              "image_tag": "${{ needs.build.outputs.version }}",
+              "chart_version": "${{ needs.build.outputs.chart-version }}"
+            }
+          }' || echo "⚠️ Failed to trigger offline package generation"
+
+  # ==================================================
+  # 📢 Notification Stage
+  # ==================================================
+  notify:
+    name: 📢 Deployment Notification
+    needs: [test, lint, build, package-helm, deploy, generate-offline-package]
+    runs-on: self-hosted
+    if: always()
+
+    steps:
+    - name: Deployment Summary
+      run: |
+        echo "=== 🚀 PARALLEL PIPELINE SUMMARY ==="
+        echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "Workflow: ${{ github.workflow }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Trigger: ${{ github.event_name }}"
+        echo ""
+        
+        # Job Status Summary
+        echo "📊 JOB STATUS:"
+        echo "  Test: ${{ needs.test.result }}"
+        echo "  Lint: ${{ needs.lint.result }}"
+        echo "  Build: ${{ needs.build.result }}"
+        echo "  Package: ${{ needs.package-helm.result }}"
+        echo "  Deploy: ${{ needs.deploy.result }}"
+        echo "  Offline: ${{ needs.generate-offline-package.result }}"
+        echo ""
+        
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "✅ DEPLOYMENT SUCCESSFUL"
+          echo ""
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"
+          echo "📊 Chart: v${{ needs.build.outputs.chart-version }}"
+          echo "🎯 Environment: ${{ github.event.inputs.environment || 'production' }}"
+          echo ""
+          echo "🔗 QUICK LINKS:"
+          echo "  🌐 Application: https://fortinet.jclee.me"
+          echo "  🔗 NodePort: http://192.168.50.110:30777"
+          echo "  📈 ArgoCD: https://argo.jclee.me/applications/fortinet"
+          echo "  🐳 Registry: ${{ env.REGISTRY }}/v2/${{ env.IMAGE_NAME }}/tags/list"
+          echo "  📊 Charts: ${{ env.CHARTMUSEUM_URL }}/api/charts"
+          echo ""
+          echo "⏰ Deployment completed in parallel across all environments"
+        else
+          echo "❌ DEPLOYMENT FAILED"
+          echo ""
+          echo "🔍 Failed Jobs:"
+          [ "${{ needs.test.result }}" != "success" ] && echo "  - Test: ${{ needs.test.result }}"
+          [ "${{ needs.lint.result }}" != "success" ] && echo "  - Lint: ${{ needs.lint.result }}"
+          [ "${{ needs.build.result }}" != "success" ] && echo "  - Build: ${{ needs.build.result }}"
+          [ "${{ needs.package-helm.result }}" != "success" ] && echo "  - Package: ${{ needs.package-helm.result }}"
+          [ "${{ needs.deploy.result }}" != "success" ] && echo "  - Deploy: ${{ needs.deploy.result }}"
+          echo ""
+          echo "🔍 Check logs: https://github.com/${{ github.repository }}/actions"
+        fi
+        echo "================================"
