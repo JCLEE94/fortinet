@@ -334,10 +334,10 @@ jobs:
         
         # Update Chart.yaml
         sed -i "s/version: .*/version: ${{ needs.build.outputs.chart-version }}/" Chart.yaml
-        sed -i "s/appVersion: .*/appVersion: \"${{ needs.build.outputs.version }}\"/" Chart.yaml
+        sed -i "s/appVersion: .*/appVersion: \"${{ needs.build.outputs.chart-version }}\"/" Chart.yaml
         
         # Update values.yaml
-        sed -i "s/tag: .*/tag: \"${{ needs.build.outputs.version }}\"/" values.yaml
+        sed -i "s/tag: .*/tag: \"latest\"/" values.yaml
         sed -i "s|repository: .*|repository: \"${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}\"|" values.yaml
 
     - name: Package and Upload Helm Chart
@@ -385,7 +385,7 @@ jobs:
         echo "🔄 Updating Kubernetes manifests for ${{ matrix.environment }}..."
         
         # Update image in deployment
-        sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}|" k8s/manifests/deployment.yaml
+        sed -i "s|image: .*|image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest|" k8s/manifests/deployment.yaml
         
         # Add deployment annotations
         TIMESTAMP=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -402,10 +402,10 @@ jobs:
         git add k8s/manifests/deployment.yaml
         
         if ! git diff --staged --quiet; then
-          git commit -m "🚀 deploy(${{ matrix.environment }}): update to ${{ needs.build.outputs.version }}
+          git commit -m "🚀 deploy(${{ matrix.environment }}): update to latest
 
 - Environment: ${{ matrix.environment }}
-- Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
+- Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 - Chart: v${{ needs.build.outputs.chart-version }}
 - Commit: ${{ github.sha }}
 - Build: ${{ needs.build.outputs.build-date }}
@@ -500,7 +500,7 @@ jobs:
           -d '{
             "ref": "master",
             "inputs": {
-              "image_tag": "${{ needs.build.outputs.version }}",
+              "image_tag": "latest",
               "chart_version": "${{ needs.build.outputs.chart-version }}"
             }
           }' || echo "⚠️ Failed to trigger offline package generation"
@@ -538,7 +538,7 @@ jobs:
         if [ "${{ needs.deploy.result }}" == "success" ]; then
           echo "✅ DEPLOYMENT SUCCESSFUL"
           echo ""
-          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"
+          echo "📦 Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
           echo "📊 Chart: v${{ needs.build.outputs.chart-version }}"
           echo "🎯 Environment: ${{ github.event.inputs.environment || 'production' }}"
           echo ""
