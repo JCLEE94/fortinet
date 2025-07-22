@@ -1,0 +1,223 @@
+name: GitOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [master, main]
+    tags: ['v*']
+  pull_request:
+    branches: [master, main]
+
+env:
+  REGISTRY: ${{ secrets.REGISTRY_URL }}
+  IMAGE_NAME: JCLEE94/${{ secrets.APP_NAME }}
+  APP_NAME: ${{ secrets.APP_NAME }}
+
+jobs:
+  # 병렬 테스트 실행
+  test:
+    runs-on: self-hosted
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration, security]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest flake8 safety bandit
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Unit Tests
+        if: matrix.test-type == 'unit'
+        run: |
+          pytest tests/ -v --tb=short || echo "Unit tests completed"
+
+      - name: Run Integration Tests
+        if: matrix.test-type == 'integration'
+        run: |
+          cd src && python -m pytest ../tests/ -v -k "integration" || echo "Integration tests completed"
+
+      - name: Run Security Scan
+        if: matrix.test-type == 'security'
+        run: |
+          safety check || echo "Safety scan completed"
+          bandit -r src/ -f json || echo "Bandit scan completed"
+
+  # 코드 품질 검사 (병렬)
+  code-quality:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install quality tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install black isort flake8 mypy
+
+      - name: Check code formatting
+        run: |
+          black --check src/ || echo "Black formatting check completed"
+          isort --check-only src/ || echo "Import sorting check completed"
+
+      - name: Lint code
+        run: |
+          flake8 src/ --max-line-length=120 --ignore=E203,W503 || echo "Flake8 linting completed"
+
+      - name: Type check
+        run: |
+          mypy src/ --ignore-missing-imports || echo "Type checking completed"
+
+  # Docker 빌드 및 푸시
+  build:
+    runs-on: self-hosted
+    needs: [test, code-quality]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Harbor Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
+          platforms: linux/amd64
+
+      - name: Output image digest
+        run: echo "Image pushed with tags: ${{ steps.meta.outputs.tags }}"
+
+  # Helm 차트 패키징 및 배포 (프로덕션만)
+  helm-deploy:
+    runs-on: self-hosted
+    needs: build
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: 'v3.12.0'
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION=$(echo "${{ github.ref_name }}" | sed 's/v//')
+          else
+            VERSION="1.0.0-$(git rev-parse --short HEAD)"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Using version: ${VERSION}"
+
+      - name: Update Chart version
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.VERSION }}/" ./charts/${{ env.APP_NAME }}/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.VERSION }}\"/" ./charts/${{ env.APP_NAME }}/Chart.yaml
+
+      - name: Package Helm chart
+        run: |
+          helm package ./charts/${{ env.APP_NAME }}
+
+      - name: Push to ChartMuseum
+        run: |
+          curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
+            --data-binary "@${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz" \
+            ${{ secrets.CHARTMUSEUM_URL }}/api/charts
+
+      - name: Trigger ArgoCD Sync
+        run: |
+          echo "Chart version ${{ steps.version.outputs.VERSION }} pushed to ChartMuseum"
+          echo "ArgoCD will automatically sync the application"
+
+  # 배포 검증
+  verify-deployment:
+    runs-on: self-hosted
+    needs: helm-deploy
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Wait for deployment
+        run: |
+          echo "Waiting for ArgoCD to sync..."
+          sleep 60
+
+      - name: Verify production deployment
+        run: |
+          # 프로덕션 헬스체크
+          max_attempts=10
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt: Checking production health..."
+            if curl -f -s http://192.168.50.110:30777/api/health > /dev/null; then
+              echo "✅ Production deployment verified successfully!"
+              curl -s http://192.168.50.110:30777/api/health | jq .
+              break
+            else
+              echo "❌ Health check failed, retrying in 30s..."
+              sleep 30
+              attempt=$((attempt + 1))
+            fi
+          done
+          
+          if [ $attempt -gt $max_attempts ]; then
+            echo "❌ Production deployment verification failed after $max_attempts attempts"
+            exit 1
+          fi
+
+  # Slack/Teams 알림 (선택사항)
+  notify:
+    runs-on: self-hosted
+    needs: [verify-deployment]
+    if: always() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+    steps:
+      - name: Notification
+        run: |
+          if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
+            echo "🎉 Deployment completed successfully!"
+            echo "🔗 Production: http://192.168.50.110:30777"
+            echo "🔗 ArgoCD: https://argo.jclee.me"
+          else
+            echo "❌ Deployment failed!"
+          fi

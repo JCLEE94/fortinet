@@ -1,0 +1,82 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet-gitops
+  namespace: argocd
+  annotations:
+    # ArgoCD Image Updater 설정
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/JCLEE94/fortinet
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/fortinet.pull-secret: pullsecret:argocd/harbor-registry
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/fortinet.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/fortinet.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/fortinet.platforms: linux/amd64
+    argocd-image-updater.argoproj.io/fortinet.ignore-tags: regexp:^(buildcache)$
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jclee.me
+    chart: fortinet
+    targetRevision: "*"
+    helm:
+      values: |
+        image:
+          repository: registry.jclee.me/JCLEE94/fortinet
+          tag: latest
+          pullPolicy: Always
+        
+        imagePullSecrets:
+          - name: harbor-registry
+        
+        service:
+          type: NodePort
+          port: 80
+          targetPort: 7777
+          nodePort: 30778
+        
+        ingress:
+          enabled: true
+          hosts:
+            - host: fortinet.jclee.me
+              paths:
+                - path: /
+                  pathType: Prefix
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        env:
+          APP_MODE: production
+          OFFLINE_MODE: "false"
+          WEB_APP_PORT: "7777"
+          WEB_APP_HOST: "0.0.0.0"
+        
+        secretName: fortinet-secret
+        
+        persistence:
+          enabled: true
+          size: 2Gi
+        
+        redis:
+          enabled: true
+          persistence:
+            enabled: true
+            size: 1Gi
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true

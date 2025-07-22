@@ -1,0 +1,232 @@
+name: Generate Offline TAR
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Docker image tag to package'
+        required: true
+        type: string
+  # ArgoCD webhook으로 트리거
+  repository_dispatch:
+    types: [deployment-completed]
+
+env:
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
+
+jobs:
+  check-deployment:
+    name: Check ArgoCD Deployment Status
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_ready: ${{ steps.check.outputs.ready }}
+      image_tag: ${{ steps.check.outputs.tag }}
+    
+    steps:
+    - name: Check ArgoCD deployment status
+      id: check
+      run: |
+        IMAGE_TAG="${{ github.event.inputs.image_tag || github.event.client_payload.image_tag }}"
+        echo "🔍 Checking deployment status for image tag: $IMAGE_TAG"
+        
+        # ArgoCD API를 통한 배포 상태 확인
+        DEPLOYMENT_STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+          https://argo.jclee.me/api/v1/applications/fortinet | \
+          jq -r '.status.sync.status' || echo "Unknown")
+        
+        HEALTH_STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+          https://argo.jclee.me/api/v1/applications/fortinet | \
+          jq -r '.status.health.status' || echo "Unknown")
+        
+        echo "📊 Sync Status: $DEPLOYMENT_STATUS"
+        echo "🏥 Health Status: $HEALTH_STATUS"
+        
+        if [[ "$DEPLOYMENT_STATUS" == "Synced" && "$HEALTH_STATUS" == "Healthy" ]]; then
+          echo "✅ Deployment is ready"
+          echo "ready=true" >> $GITHUB_OUTPUT
+          echo "tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+        else
+          echo "⏳ Deployment not ready yet"
+          echo "ready=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+  generate-offline-tar:
+    name: Generate Offline TAR Package
+    needs: check-deployment
+    if: needs.check-deployment.outputs.deployment_ready == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: network=host
+        config-inline: |
+          [registry."registry.jclee.me"]
+            http = true
+            insecure = true
+    
+    - name: Pull deployed image
+      run: |
+        IMAGE_TAG="${{ needs.check-deployment.outputs.image_tag }}"
+        echo "📥 Pulling image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG"
+        
+        docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+        docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG fortinet:offline
+    
+    - name: Export Kubernetes manifests
+      run: |
+        echo "📋 Preparing Kubernetes manifests for offline deployment"
+        
+        # Create offline directory
+        mkdir -p offline-package/k8s
+        
+        # Copy manifests
+        cp -r k8s/manifests/* offline-package/k8s/
+        
+        # Update image references for offline use
+        cd offline-package/k8s
+        sed -i "s|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:.*|fortinet:offline|g" *.yaml
+        
+        # Remove registry secret (not needed for offline)
+        rm -f registry-noauth-secret.yaml || true
+        
+        # Update kustomization.yaml
+        sed -i '/registry-noauth-secret.yaml/d' kustomization.yaml
+        sed -i "s|newTag: .*|newTag: offline|" kustomization.yaml
+    
+    - name: Create offline deployment script
+      run: |
+        cat > offline-package/deploy-offline.sh << 'EOF'
+        #!/bin/bash
+        # Offline deployment script for FortiGate Nextrade
+        
+        set -e
+        
+        echo "🚀 FortiGate Nextrade Offline Deployment"
+        echo "========================================"
+        
+        # Check if Docker/Podman is available
+        if command -v docker &> /dev/null; then
+            CONTAINER_RUNTIME="docker"
+        elif command -v podman &> /dev/null; then
+            CONTAINER_RUNTIME="podman"
+        else
+            echo "❌ Neither Docker nor Podman found. Please install one of them."
+            exit 1
+        fi
+        
+        echo "📦 Loading Docker image..."
+        $CONTAINER_RUNTIME load < fortinet-offline.tar
+        
+        # Check if kubectl is available
+        if command -v kubectl &> /dev/null; then
+            echo "☸️  Deploying to Kubernetes..."
+            kubectl apply -k k8s/
+            echo "✅ Kubernetes deployment completed"
+        else
+            echo "🐳 Running with $CONTAINER_RUNTIME..."
+            $CONTAINER_RUNTIME run -d \
+              --name fortinet-app \
+              -p 7777:7777 \
+              -v $(pwd)/data:/app/data \
+              -v $(pwd)/logs:/app/logs \
+              -e APP_MODE=production \
+              -e OFFLINE_MODE=true \
+              fortinet:offline
+            echo "✅ Container started on port 7777"
+        fi
+        
+        echo ""
+        echo "🎉 Deployment completed!"
+        echo "Access the application at: http://localhost:7777"
+        EOF
+        
+        chmod +x offline-package/deploy-offline.sh
+    
+    - name: Create offline package
+      run: |
+        echo "📦 Creating offline TAR package..."
+        
+        # Save Docker image
+        docker save fortinet:offline -o offline-package/fortinet-offline.tar
+        
+        # Create README
+        cat > offline-package/README.md << EOF
+        # FortiGate Nextrade Offline Package
+        
+        ## Contents
+        - fortinet-offline.tar: Docker image
+        - k8s/: Kubernetes manifests
+        - deploy-offline.sh: Deployment script
+        
+        ## Deployment
+        
+        ### Option 1: Kubernetes
+        \`\`\`bash
+        ./deploy-offline.sh
+        \`\`\`
+        
+        ### Option 2: Docker/Podman only
+        \`\`\`bash
+        docker load < fortinet-offline.tar
+        docker run -d --name fortinet-app -p 7777:7777 fortinet:offline
+        \`\`\`
+        
+        ## Version Info
+        - Image Tag: ${{ needs.check-deployment.outputs.image_tag }}
+        - Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        - Git Commit: $(git rev-parse --short HEAD)
+        EOF
+        
+        # Create final TAR
+        FILENAME="fortinet-offline-$(date +%Y%m%d-%H%M%S).tar.gz"
+        tar -czf $FILENAME offline-package/
+        
+        echo "✅ Offline package created: $FILENAME"
+        echo "📊 Package size: $(du -h $FILENAME | cut -f1)"
+        
+        # Save filename for upload
+        echo "filename=$FILENAME" >> $GITHUB_ENV
+    
+    - name: Upload offline package
+      uses: actions/upload-artifact@v4
+      with:
+        name: fortinet-offline-${{ needs.check-deployment.outputs.image_tag }}
+        path: ${{ env.filename }}
+        retention-days: 30
+    
+    - name: Create GitHub Release (optional)
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: offline-${{ needs.check-deployment.outputs.image_tag }}
+        name: Offline Package - ${{ needs.check-deployment.outputs.image_tag }}
+        body: |
+          ## 🚀 Offline Deployment Package
+          
+          This package contains everything needed to deploy FortiGate Nextrade in an offline environment.
+          
+          ### 📦 Package Contents
+          - Docker image (fortinet:offline)
+          - Kubernetes manifests
+          - Deployment scripts
+          
+          ### 🔧 Deployment Instructions
+          1. Download the package
+          2. Extract: `tar -xzf fortinet-offline-*.tar.gz`
+          3. Deploy: `cd offline-package && ./deploy-offline.sh`
+          
+          ### 📋 Version Information
+          - Image Tag: `${{ needs.check-deployment.outputs.image_tag }}`
+          - Build Date: `$(date -u)`
+        files: ${{ env.filename }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

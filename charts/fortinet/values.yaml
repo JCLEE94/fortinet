@@ -1,0 +1,110 @@
+# Default values for fortinet
+replicaCount: 2
+
+image:
+  repository: registry.jclee.me/JCLEE94/fortinet
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets:
+  - name: harbor-registry
+
+nameOverride: ""
+fullnameOverride: ""
+
+# Service configuration
+service:
+  type: NodePort
+  port: 80
+  targetPort: 7777
+  nodePort: 30777
+
+# Ingress configuration
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: fortinet.jclee.me
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+# Environment variables
+env:
+  APP_MODE: production
+  OFFLINE_MODE: "false"
+  WEB_APP_PORT: "7777"
+  WEB_APP_HOST: "0.0.0.0"
+
+# Application secrets (created separately)
+secretName: fortinet-secret
+
+# Probes
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 7777
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 7777
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Affinity
+affinity: {}
+
+# Persistence for data storage
+persistence:
+  enabled: true
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 2Gi
+  mountPath: /app/data
+
+# Redis configuration
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
