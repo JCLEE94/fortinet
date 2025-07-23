@@ -4,90 +4,76 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FortiGate Nextrade is a comprehensive network monitoring and analysis platform that integrates with FortiGate firewalls, FortiManager, and ITSM systems. Designed for closed network (offline) environments, it provides real-time monitoring, policy analysis, network topology visualization, and automated firewall policy management.
+FortiGate Nextrade is a comprehensive network monitoring and analysis platform that integrates with FortiGate firewalls, FortiManager, and ITSM systems. Designed for closed network (offline) environments.
 
-Key differentiators:
-- **Mock FortiGate** subsystem for hardware-free development and testing
-- **FortiManager Advanced Hub** with AI-driven policy orchestration and compliance automation
-- **Offline-first design** with comprehensive fallback mechanisms
-- **ArgoCD GitOps** deployment with multi-cluster support
-- **GitHub Actions CI/CD** with automated deployment via Docker registry
+**Key Features:**
+- Mock FortiGate subsystem for hardware-free development
+- FortiManager Advanced Hub with AI-driven policy orchestration
+- Offline-first design with comprehensive fallback mechanisms
+- GitOps CI/CD with Helm charts, Harbor Registry, ChartMuseum, and ArgoCD
 
-## Architecture Overview
+## Architecture
 
-### Core Technology Stack
+### Technology Stack
 - **Backend**: Flask + Blueprint architecture (Python 3.11)
-- **Frontend**: Bootstrap 5 + Vanilla JS (no React/Vue dependencies)
-- **Database**: Redis (cache) + JSON file storage (persistence)
-- **Container**: Docker/Podman with multi-stage builds
+- **Frontend**: Bootstrap 5 + Vanilla JS (no React/Vue)
+- **Database**: Redis (cache) + JSON file storage
+- **Container**: Docker with multi-stage builds
 - **Orchestration**: Kubernetes + ArgoCD GitOps
-- **CI/CD**: GitHub Actions → registry.jclee.me → ArgoCD Image Updater → Kubernetes
-- **Monitoring**: Real-time SSE (Server-Sent Events) for log streaming
+- **CI/CD**: GitHub Actions (self-hosted runners) → Harbor Registry → ChartMuseum → ArgoCD
+- **Ingress**: Traefik (not NGINX)
 
-### Key Architecture Patterns
+### Critical Patterns
 
-#### 1. Flask Blueprint Modular Architecture
-```python
-# src/web_app.py - Factory pattern
-def create_app():
-    app = Flask(__name__)
-    # Blueprint registration
-    app.register_blueprint(main_bp)        # Main pages
-    app.register_blueprint(api_bp)         # REST APIs
-    app.register_blueprint(fortimanager_bp) # FortiManager integration
-    app.register_blueprint(itsm_bp)        # ITSM integration
-    app.register_blueprint(logs_bp)        # Log management
-    return app
-```
-
-#### 2. API Client Session Management
+#### 1. API Client Session Management
 **CRITICAL**: All API clients MUST initialize a requests session:
 ```python
 class SomeAPIClient(BaseAPIClient):
     def __init__(self):
-        super().__init__()
-        self.session = requests.Session()  # REQUIRED!
-        self.session.verify = self.verify_ssl
+        super().__init__()  # REQUIRED - handles session initialization
+```
+
+#### 2. Blueprint URL Namespacing
+Templates MUST use blueprint namespaces:
+```html
+{{ url_for('main.dashboard') }}      <!-- Correct -->
+{{ url_for('dashboard') }}            <!-- Wrong -->
 ```
 
 #### 3. Configuration Hierarchy
-Priority order (highest to lowest):
-1. `data/config.json` - Runtime configuration
+1. `data/config.json` - Runtime configuration (highest priority)
 2. Environment variables
 3. `src/config/unified_settings.py` - Default values
 
-#### 4. Mock System for Testing
+#### 4. Mock System Activation
 ```python
-# Automatic mock activation
+# Automatic when APP_MODE=test
 if os.getenv('APP_MODE', 'production').lower() == 'test':
-    # Uses mock_fortigate for all operations
+    # Uses mock_fortigate and Postman-based mock server
 ```
 
 ## Development Commands
 
 ### Local Development
 ```bash
-# Run application (Flask development server)
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
 cd src && python main.py --web
 
-# Run with specific environment
+# Run with mock mode
 APP_MODE=test python src/main.py --web
-APP_MODE=production python src/main.py --web
 
-# Run tests
-pytest tests/ -v                                    # All tests
-pytest tests/test_api_clients.py -v                # Single test file
-pytest tests/test_api_clients.py::TestBaseApiClient -v  # Single test class
-pytest --cov=src --cov-report=html -v             # With coverage
+# Run specific test categories
+pytest -m "unit" -v                        # Unit tests only
+pytest -m "integration" -v                 # Integration tests only
+pytest -m "not slow" -v                    # Skip slow tests
+pytest tests/manual/ -v                    # Manual testing suite (26 files)
+pytest --cov=src --cov-report=html -v      # With coverage
 
-# Code quality checks
-black src/                          # Format code
-isort src/                          # Sort imports
-flake8 src/ --max-line-length=120  # Lint
-mypy src/ --ignore-missing-imports  # Type check
-
-# Quick quality check (run all at once)
-black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503 && mypy src/ --ignore-missing-imports
+# Code quality
+black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503
 ```
 
 ### Docker Development
@@ -95,439 +81,176 @@ black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503
 # Build production image
 docker build -f Dockerfile.production -t fortigate-nextrade:latest .
 
-# Run container with test mode
+# Run with mock mode
 docker run -d --name fortigate-nextrade \
   -p 7777:7777 \
-  -v $(pwd)/data:/app/data \
-  -v $(pwd)/logs:/app/logs \
   -e APP_MODE=test \
   -e OFFLINE_MODE=true \
   fortigate-nextrade:latest
-
-# View container logs
-docker logs -f fortigate-nextrade
-
-# Docker Compose operations
-./scripts/docker-start.sh  # Start with Docker Compose
-./scripts/docker-stop.sh   # Stop containers
 ```
 
-### ArgoCD GitOps Deployment
+### Deployment & Monitoring
 ```bash
-# Deploy to production (automatic on push to master/main)
-git add -A
-git commit -m "feat: your feature description"
-git push origin master
+# Check deployment status
+curl http://192.168.50.110:30779/api/health  # Current NodePort
+curl http://fortinet.jclee.me/api/health     # Domain (needs /etc/hosts entry)
 
 # Monitor ArgoCD deployment
-argocd app get fortinet-primary    # Primary cluster
-argocd app list                    # All applications
+argocd app get fortinet
+argocd app sync fortinet
 
-# Check deployment status
-curl https://fortinet.jclee.me/api/health
-
-# Validate CI/CD configuration
-./scripts/validate-cicd.sh all
+# Check pods
+kubectl get pods -n fortinet
+kubectl logs -l app=fortinet -n fortinet -f
 ```
 
-### Manual Deployment Scripts
+## Testing Framework
+
+### Custom Rust-Style Inline Testing
+```python
+from src.utils.integration_test_framework import test_framework
+
+@test_framework.test("Test description")
+def test_something():
+    with test_framework.test_app() as (app, client):
+        response = client.get('/')
+        test_framework.assert_eq(response.status_code, 200)
+```
+
+### Master Integration Test Suite
 ```bash
-# Initial deployment to production (first time)
-./scripts/initial-deploy.sh
-
-# Multi-cluster deployment setup
-./scripts/setup-multi-cluster-simple.sh
-
-# Add new cluster (when 192.168.50.110 is ready)
-./scripts/add-cluster.sh
-
-# Deploy manually to production
-./scripts/manual-deploy.sh
+python src/utils/test_master_integration_suite.py
+# Features: Phase-based execution, parallel testing, comprehensive results
 ```
 
-## Critical Implementation Details
-
-### 1. Blueprint URL Namespacing
-Templates MUST use blueprint namespaces:
-```html
-<!-- Correct -->
-{{ url_for('main.dashboard') }}
-{{ url_for('api.get_settings') }}
-{{ url_for('logs.logs_management') }}
-
-<!-- Wrong -->
-{{ url_for('dashboard') }}
-```
-
-### 2. Error Handling Pattern
-```python
-try:
-    result = api_client.method()
-except FortiManagerAPIException as e:
-    logger.error(f"FortiManager error: {e}")
-    return jsonify({"error": str(e)}), 500
-```
-
-### 3. Security Decorators
-```python
-@rate_limit(max_requests=30, window=60)  # Rate limiting
-@csrf_protect                            # CSRF protection
-@admin_required                          # Authentication
-def protected_endpoint():
-    pass
-```
-
-### 4. Caching Pattern
-```python
-from src.utils.unified_cache_manager import get_cache_manager
-
-cache_manager = get_cache_manager()
-cache_manager.set('key', data, ttl=300)  # 5 minutes
-data = cache_manager.get('key')
-```
-
-### 5. Logging Pattern
-```python
-from src.utils.unified_logger import get_logger
-
-logger = get_logger(__name__)
-logger.info("Operation successful")
-logger.error(f"Operation failed: {error}")
-```
+### Test Categories (pytest.ini markers)
+- `slow`: Long-running tests
+- `integration`: Integration tests
+- `unit`: Unit tests
+- `fortimanager`: FortiManager-specific tests
+- `monitoring`: Monitoring system tests
 
 ## FortiManager Advanced Hub
 
-The FortiManager integration includes four advanced modules:
-
-### 1. Policy Orchestration Engine
+Four specialized modules accessible via:
 ```python
 hub = FortiManagerAdvancedHub(api_client)
-result = await hub.policy_orchestrator.apply_template(
-    "zero_trust_access", 
-    parameters={...}
-)
 ```
 
-### 2. Compliance Automation
-```python
-violations = await hub.compliance_framework.check_compliance(
-    devices=["FW-01"], 
-    frameworks=["PCI-DSS", "HIPAA", "ISO27001"]
-)
-```
-
-### 3. Security Fabric Integration
-```python
-threats = await hub.security_fabric.detect_threats()
-response = await hub.security_fabric.coordinate_response(threats)
-```
-
-### 4. Advanced Analytics
-```python
-trends = await hub.analytics_engine.analyze_trends_async()
-anomalies = await hub.analytics_engine.detect_anomalies()
-```
+1. **Policy Orchestration**: `hub.policy_orchestrator`
+2. **Compliance Automation**: `hub.compliance_framework`
+3. **Security Fabric**: `hub.security_fabric`
+4. **Advanced Analytics**: `hub.analytics_engine`
 
 ## CI/CD Pipeline
 
-### ArgoCD Image Updater Workflow
-The pipeline uses ArgoCD Image Updater for automated deployments:
+### GitHub Actions Workflow (gitops-pipeline.yml)
+1. **Test Stage**: pytest, flake8, safety, bandit (parallel)
+2. **Build Stage**: Docker buildx → Harbor Registry
+3. **Helm Deploy**: Package → ChartMuseum upload → ArgoCD sync
+4. **Verify Stage**: Health checks on NodePort 30779
 
-1. **Test Stage**: Runs pytest with coverage
-2. **Build Stage**: Creates Docker image using Docker Buildx
-3. **Push Stage**: Pushes to registry.jclee.me (no authentication required)
-4. **ArgoCD Image Updater**: Automatically detects new images and updates deployments
-5. **Offline TAR Generation**: Automatically creates offline packages after deployment completion
+### Required GitHub Secrets
+- `REGISTRY_URL`: registry.jclee.me
+- `REGISTRY_USERNAME`, `REGISTRY_PASSWORD`
+- `CHARTMUSEUM_URL`: https://charts.jclee.me
+- `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`
+- `APP_NAME`: fortinet
 
-The workflow is configured for insecure registry access for simplicity in closed environments.
-
-### Key Features
-- **No Manual Manifest Updates**: ArgoCD Image Updater handles all manifest changes
-- **Automatic Deployment**: New images are deployed without manual intervention
-- **Offline Package Creation**: Deployment completion triggers automatic offline TAR generation
-- **Enhanced Stability**: Retry logic, error handling, and comprehensive monitoring
-
-### Registry Configuration
-The registry is configured without authentication for ease of use in closed environments:
-
-```yaml
-# Already included in k8s/manifests/registry-noauth-secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: registry-credentials
-  namespace: fortinet
-type: kubernetes.io/dockerconfigjson
-stringData:
-  .dockerconfigjson: |
-    {
-      "auths": {
-        "registry.jclee.me": {}
-      }
-    }
-```
-
-Note: No GitHub secrets required - registry access is open!
-
-### ArgoCD Application Management
-
-#### Quick Sync Commands
-```bash
-# 1. Login (once)
-argocd login argo.jclee.me --username admin --password bingogo1 --insecure --grpc-web
-
-# 2. Check status
-argocd app list                    # All applications
-argocd app get fortinet            # Application status
-
-# 3. Apply Image Updater configuration
-./scripts/apply-argocd-image-updater.sh
-
-# 4. Monitor Image Updater
-kubectl -n argocd logs -l app.kubernetes.io/name=argocd-image-updater -f
-
-# 5. Web dashboard
-# https://argo.jclee.me/applications/fortinet
-```
-
-#### Direct Kubernetes Deployment (Emergency)
-```bash
-# Bypass ArgoCD
-kubectl apply -k k8s/manifests/
-
-# Update image directly
-kubectl set image deployment/fortinet-app fortinet=registry.jclee.me/fortinet:new-tag -n fortinet
-```
-
-## Testing Guidelines
-
-### Mock FortiGate Testing
-```bash
-# Enable test mode (uses mock data)
-export APP_MODE=test
-
-# Test packet analysis
-curl -X POST http://localhost:7777/api/fortimanager/analyze-packet-path \
-  -H "Content-Type: application/json" \
-  -d '{"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 80, "protocol": "tcp"}'
-
-# Test health endpoint
-curl http://localhost:7777/api/health
-```
-
-### Running Test Suite
-```bash
-# Unit tests
-pytest tests/unit/ -v
-
-# Integration tests
-pytest tests/integration/ -v
-
-# All tests with coverage
-pytest --cov=src --cov-report=html --cov-report=term-missing
-
-# Run tests with markers
-pytest -m "unit" -v         # Unit tests only
-pytest -m "integration" -v  # Integration tests only
-pytest -m "not slow" -v     # Skip slow tests
-
-# CI/CD integration tests
-pytest tests/integration/ -v --cov=src/cicd
-
-# Run inline tests (Rust style)
-python src/cicd/pipeline_coordinator.py -v
-python src/cicd/argocd_client.py -v
-python src/cicd/gitops_manager.py -v
-python src/cicd/docker_registry.py -v
-```
-
-### CI/CD Pipeline Testing Architecture
-
-The CI/CD pipeline has been refactored into testable modules in `src/cicd/`:
-- **PipelineCoordinator**: Manages pipeline decisions and flow control
-- **ArgoCDClient**: ArgoCD operations with authentication fallback
-- **GitOpsManager**: Git operations for GitOps workflow
-- **DockerRegistryClient**: Docker registry operations
-
-Each module includes inline tests that can be run directly.
-
-## Multi-Cluster Deployment
-
-### Current Status
-- **Cluster**: kubernetes.default.svc ✅ Active
-  - Application: fortinet
-  - Replicas: 3
-
-### Multi-Cluster Setup
-```bash
-# When secondary cluster is ready:
-./scripts/add-cluster.sh             # Register cluster with ArgoCD
-./scripts/setup-multi-cluster-simple.sh  # Create multi-cluster apps
-
-# Monitor both clusters
-argocd app list
-argocd cluster list
-```
-
-For detailed multi-cluster setup, see `docs/multi-cluster-setup.md`.
-
-## Common Issues & Solutions
-
-### Port 7777 Already in Use
-```bash
-# Linux/Mac
-sudo lsof -ti:7777 | xargs kill -9
-
-# Docker containers
-docker ps --filter "publish=7777" -q | xargs docker stop
-```
-
-### Flask Development Server Warning
-The application currently uses Flask development server in production due to a Gunicorn configuration issue. This is tracked for resolution but doesn't affect functionality.
-
-### Redis Connection Failed
-This is a warning, not an error. The system falls back to memory cache when Redis is unavailable.
-
-### Docker Build Failures
-```bash
-export DOCKER_BUILDKIT=0
-docker build -f Dockerfile.production -t fortigate-nextrade:latest .
-```
-
-### Production URL Not Accessible
-If https://fortinet.jclee.me is not accessible but NodePort (e.g., http://192.168.50.110:30777) works:
-
-1. **Trigger deployment**: 
-   ```bash
-   git commit --allow-empty -m "chore: trigger deployment"
-   git push origin master
-   ```
-
-2. **Manual deployment**:
-   ```bash
-   ./scripts/manual-deploy.sh
-   ```
-
-3. **Direct ArgoCD sync**:
-   ```bash
-   argocd app sync fortinet --prune
-   ```
-
-4. **Check NGINX proxy configuration** - ensure it points to the correct backend port (7777)
+### Current Deployment
+- **Active NodePort**: 30779
+- **Domain**: http://fortinet.jclee.me (HTTP only, TLS issues)
+- **DNS Fix**: Add `192.168.50.110 fortinet.jclee.me` to `/etc/hosts`
 
 ## Project Structure
-
 ```
 fortinet/
-├── src/
-│   ├── main.py                 # Entry point with CLI args
-│   ├── web_app.py             # Flask application factory
-│   ├── routes/                # Blueprint routes
-│   ├── api/clients/          # External API clients
-│   ├── modules/              # Core business logic
-│   ├── fortimanager/         # Advanced FortiManager features
-│   ├── cicd/                 # CI/CD testable modules (if exists)
-│   ├── utils/                # Utilities (logging, caching, security)
-│   ├── config/               # Configuration management
-│   ├── templates/            # Jinja2 HTML templates
-│   └── static/               # CSS, JS, images
-├── tests/                    # Test suite
-├── docs/                    # Documentation
-├── scripts/                # Utility scripts
-├── k8s/
-│   ├── manifests/          # Kubernetes deployment manifests
-│   └── overlays/           # Environment-specific configurations
-├── argocd/                  # ArgoCD application definitions
-├── .github/workflows/      # GitHub Actions CI/CD
-└── Dockerfile.production   # Production Docker image
+├── src/                # 139 Python files
+│   ├── web_app.py     # Flask factory (8 blueprints)
+│   ├── routes/        # Blueprint routes
+│   ├── api/clients/   # External API clients (4)
+│   ├── fortimanager/  # Advanced features (5 modules)
+│   ├── itsm/          # ITSM integration (7 modules)
+│   ├── utils/         # Utilities (17 modules)
+│   └── templates/     # Jinja2 templates (20)
+├── tests/             # 62 test files
+│   ├── unit/          # Unit tests
+│   ├── integration/   # Integration tests (70+ endpoints)
+│   └── manual/        # Manual test suite (26 files)
+├── charts/fortinet/   # Helm chart (Traefik ingress)
+├── .github/workflows/ # CI/CD (self-hosted runners)
+└── requirements.txt   # Python dependencies
 ```
+
+## Key API Endpoints
+
+### Core
+- `GET /api/health` - Health check
+- `GET/POST /api/settings` - Settings management
+
+### FortiManager
+- `POST /api/fortimanager/analyze-packet-path` - Packet path analysis
+- `GET /api/fortimanager/devices` - List devices
+- `POST /api/fortimanager/policies` - Get policies
+
+### Logs
+- `GET /api/logs/stream` - Real-time log streaming (SSE)
+- `GET /api/logs/container` - Container logs
 
 ## Environment Variables
 
 ### Core Settings
 - `APP_MODE`: `production` | `test` | `development`
-- `OFFLINE_MODE`: `true` | `false` (for closed networks)
+- `OFFLINE_MODE`: `true` | `false`
 - `WEB_APP_PORT`: Default `7777`
-- `WEB_APP_HOST`: Default `0.0.0.0`
-
-### Feature Flags
-- `DISABLE_SOCKETIO`: Disable WebSocket support
-- `DISABLE_EXTERNAL_CALLS`: Block all external API calls
-- `REDIS_ENABLED`: Enable/disable Redis cache
 
 ### API Configuration
-- `FORTIMANAGER_HOST`: FortiManager server address
-- `FORTIMANAGER_API_KEY`: API authentication key
-- `FORTIGATE_HOST`: FortiGate device address
-- `FORTIGATE_API_KEY`: API authentication key
+- `FORTIMANAGER_HOST`, `FORTIMANAGER_API_KEY`
+- `FORTIGATE_HOST`, `FORTIGATE_API_KEY`
 
-## API Endpoints
+## Common Issues & Solutions
 
-### Core APIs
-- `GET /api/health` - Health check
-- `GET /api/settings` - Get current settings
-- `POST /api/settings` - Update settings
+### Port 7777 in Use
+```bash
+sudo lsof -ti:7777 | xargs kill -9
+```
 
-### FortiManager APIs
-- `POST /api/fortimanager/analyze-packet-path` - Analyze firewall path
-- `GET /api/fortimanager/devices` - List managed devices
-- `POST /api/fortimanager/policies` - Get firewall policies
-- `GET /api/fortimanager/adom/list` - List ADOMs
-- `POST /api/fortimanager/policy-packages` - Get policy packages
+### Domain Access Issues
+1. Check DNS: `nslookup fortinet.jclee.me`
+2. Add to hosts: `echo "192.168.50.110 fortinet.jclee.me" | sudo tee -a /etc/hosts`
+3. Verify ingress: `kubectl get ingress fortinet -n fortinet`
 
-### Log Management APIs
-- `GET /api/logs/container` - Get Docker container logs
-- `GET /api/logs/application` - Get application logs
-- `GET /api/logs/stream` - Real-time log streaming (SSE)
-- `POST /api/logs/search` - Search logs
-- `GET /api/logs/stats` - Log statistics
+### ArgoCD Sync Issues
+```bash
+# Create image pull secret
+kubectl create secret docker-registry harbor-registry \
+  --docker-server=registry.jclee.me \
+  --docker-username=admin \
+  --docker-password=bingogo1 \
+  -n fortinet
 
-## Important Notes
+# Force sync
+argocd app sync fortinet --prune
+```
 
-### Session Management
-Every API client MUST properly initialize and maintain a requests session. This is critical for connection pooling and performance. The base class handles this, but if overriding `__init__`, always call `super().__init__()`.
+## Development Guidelines
 
-### Template Routing
-Always use blueprint namespaces in templates to avoid 404 errors.
+### Do's
+- Always use `APP_MODE=test` for local development
+- Use blueprint namespaces in templates
+- Call `super().__init__()` when extending API clients
+- Run tests before committing: `pytest tests/ -v`
+- Use existing patterns for error handling, caching, and logging
 
-### Mock Mode Activation
-The mock system activates automatically when `APP_MODE=test`. This allows full testing without FortiGate hardware.
-
-### FortiManager Authentication
-The client tries multiple auth methods in order:
-1. Bearer token
-2. X-API-Key (usually works for demos)
-3. Session-based
-
-Check `logs/web_app.log` for which method succeeded.
-
-### Production Deployment Flow
-1. Code pushed to GitHub
-2. GitHub Actions builds and tests
-3. Docker image pushed to registry.jclee.me
-4. GitHub Actions updates kustomization.yaml with new image tag
-5. ArgoCD polls Git repository and detects changes
-6. ArgoCD automatically deploys to all configured clusters
-7. Available at https://fortinet.jclee.me
-
-### ArgoCD Application Structure
-- **fortinet**: Main application ✅
-- **blacklist**: IP blacklist management system (separate namespace)
-
-Each application has independent deployment cycles and can target different clusters.
-
-## Development Best Practices
-
-### When Making Changes
-1. **Test in mock mode first**: Always use `APP_MODE=test` for local development
-2. **Check blueprint namespacing**: Ensure all Flask routes use proper namespace (e.g., `main.dashboard`)
-3. **Session management**: All API clients must initialize `requests.Session()`
-4. **Use existing patterns**: Check similar code before implementing new features
-5. **Run tests before committing**: `pytest tests/ -v`
-6. **Verify deployment**: After pushing, monitor GitHub Actions and ArgoCD
-
-### Common Pitfalls to Avoid
-- Don't forget to call `super().__init__()` when extending API clients
-- Don't use hardcoded URLs - use environment variables or config
-- Don't skip error handling - use the established patterns
+### Don'ts
+- Don't hardcode URLs - use environment variables
 - Don't bypass the mock system when `APP_MODE=test`
+- Don't forget session management in API clients
+- Don't use uppercase in Docker image names (use lowercase)
+
+### Current State Notes
+- Package management uses `requirements.txt` (not pyproject.toml)
+- Ingress controller is Traefik (not NGINX)
+- TLS is currently disabled due to certificate issues
+- GitHub Actions uses self-hosted runners
+- Harbor Registry image path: `registry.jclee.me/fortinet` (not jclee94/fortinet)

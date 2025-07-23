@@ -2,46 +2,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fortinet.fullname" . }}-redis
+  name: {{ .Chart.Name }}-redis
   labels:
-    {{- include "fortinet.labels" . | nindent 4 }}
-    app.kubernetes.io/component: redis
+    app: {{ .Chart.Name }}-redis
 spec:
   replicas: 1
   selector:
     matchLabels:
-      {{- include "fortinet.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: redis
+      app: {{ .Chart.Name }}-redis
   template:
     metadata:
       labels:
-        {{- include "fortinet.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: redis
+        app: {{ .Chart.Name }}-redis
     spec:
       containers:
-        - name: redis
-          image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
-          imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
-          ports:
-            - name: redis
-              containerPort: 6379
-              protocol: TCP
-          resources:
-            limits:
-              cpu: 200m
-              memory: 256Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
-          {{- if .Values.redis.persistence.enabled }}
-          volumeMounts:
-            - name: redis-data
-              mountPath: /data
-          {{- end }}
-      {{- if .Values.redis.persistence.enabled }}
-      volumes:
-        - name: redis-data
-          persistentVolumeClaim:
-            claimName: {{ include "fortinet.fullname" . }}-redis-data
-      {{- end }}
+      - name: redis
+        image: {{ .Values.redis.image }}
+        ports:
+        - containerPort: {{ .Values.redis.service.port }}
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
 {{- end }}

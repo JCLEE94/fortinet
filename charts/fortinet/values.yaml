@@ -1,30 +1,23 @@
-# Default values for fortinet
-replicaCount: 2
+replicaCount: 1
 
 image:
-  repository: registry.jclee.me/JCLEE94/fortinet
+  repository: registry.jclee.me/fortinet
   pullPolicy: Always
   tag: "latest"
 
 imagePullSecrets:
   - name: harbor-registry
 
-nameOverride: ""
-fullnameOverride: ""
-
-# Service configuration
 service:
   type: NodePort
   port: 80
   targetPort: 7777
-  nodePort: 30777
+  nodePort: 30779  # New port for GitOps deployment
 
-# Ingress configuration
 ingress:
   enabled: true
-  className: ""
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  className: traefik
+  annotations: {}
   hosts:
     - host: fortinet.jclee.me
       paths:
@@ -32,79 +25,48 @@ ingress:
           pathType: Prefix
   tls: []
 
-# Resource limits and requests
 resources:
   limits:
-    cpu: 1000m
-    memory: 1Gi
-  requests:
     cpu: 500m
     memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
-# Autoscaling
-autoscaling:
-  enabled: false
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 80
-
-# Environment variables
 env:
-  APP_MODE: production
-  OFFLINE_MODE: "false"
+  APP_MODE: "production"
   WEB_APP_PORT: "7777"
   WEB_APP_HOST: "0.0.0.0"
+  OFFLINE_MODE: "false"
+  REDIS_ENABLED: "true"
 
-# Application secrets (created separately)
-secretName: fortinet-secret
-
-# Probes
-livenessProbe:
-  httpGet:
-    path: /api/health
-    port: 7777
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /api/health
-    port: 7777
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-# Node selector
-nodeSelector: {}
-
-# Tolerations
-tolerations: []
-
-# Affinity
-affinity: {}
-
-# Persistence for data storage
 persistence:
-  enabled: true
-  storageClass: ""
+  enabled: false
+  storageClass: "nfs-client"
   accessMode: ReadWriteOnce
-  size: 2Gi
-  mountPath: /app/data
+  size: 5Gi
+  paths:
+    - name: data
+      mountPath: /app/data
+      subPath: data
+    - name: logs
+      mountPath: /app/logs
+      subPath: logs
 
-# Redis configuration
 redis:
-  enabled: true
-  image:
-    repository: redis
-    tag: "7-alpine"
-    pullPolicy: IfNotPresent
+  enabled: false
+  image: redis:7-alpine
   service:
     port: 6379
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClass: ""
-    accessMode: ReadWriteOnce
+
+probes:
+  liveness:
+    path: /api/health
+    port: 7777
+    initialDelaySeconds: 60
+    periodSeconds: 30
+  readiness:
+    path: /api/health
+    port: 7777
+    initialDelaySeconds: 10
+    periodSeconds: 10

@@ -1,20 +1,14 @@
 apiVersion: v2
 name: fortinet
-description: FortiGate Nextrade Helm chart for Kubernetes
+description: FortiGate Nextrade - Network Monitoring and Analysis Platform
 type: application
-version: 1.0.0
+version: 1.0.6
 appVersion: "1.0.0"
-
-maintainers:
-  - name: JCLEE94
-    email: jclee94@users.noreply.github.com
-
 keywords:
-  - fortinet
   - fortigate
-  - monitoring
-  - network-security
-
-home: https://github.com/JCLEE94/fortinet
-sources:
-  - https://github.com/JCLEE94/fortinet
+  - fortimanager
+  - network-monitoring
+  - security
+maintainers:
+  - name: JCLEE
+    email: admin@jclee.me
