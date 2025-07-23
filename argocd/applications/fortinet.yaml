@@ -12,7 +12,7 @@ spec:
   project: default
   source:
     repoURL: https://charts.jclee.me
-    targetRevision: "*"
+    targetRevision: "*"  # Always use latest version
     chart: fortinet
     helm:
       releaseName: fortinet
@@ -53,6 +53,16 @@ spec:
           OFFLINE_MODE: "false"
           WEB_APP_PORT: "7777"
           FLASK_ENV: production
+          
+          # FortiGate Configuration - MUST SET THESE!
+          FORTIGATE_HOST: "192.168.50.99"  # CHANGE THIS to your FortiGate IP
+          FORTIGATE_USERNAME: "admin"
+          FORTIGATE_PASSWORD: "fortinet123"  # CHANGE THIS to your password
+          
+          # FortiManager Configuration - MUST SET THESE!
+          FORTIMANAGER_HOST: "192.168.50.100"  # CHANGE THIS to your FortiManager IP
+          FORTIMANAGER_USERNAME: "admin"
+          FORTIMANAGER_PASSWORD: "fortinet123"  # CHANGE THIS to your password
         
         redis:
           enabled: true

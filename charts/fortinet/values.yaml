@@ -38,10 +38,31 @@ env:
   WEB_APP_PORT: "7777"
   WEB_APP_HOST: "0.0.0.0"
   OFFLINE_MODE: "false"
+  
+  # FortiGate Configuration - CHANGE THESE VALUES!
+  FORTIGATE_HOST: ""  # e.g., "192.168.1.99" or "fortigate.example.com"
+  FORTIGATE_USERNAME: "admin"
+  FORTIGATE_PASSWORD: ""  # Set your FortiGate password
+  FORTIGATE_PORT: "443"
+  FORTIGATE_VERIFY_SSL: "false"
+  FORTIGATE_TIMEOUT: "30"
+  
+  # FortiManager Configuration - CHANGE THESE VALUES!
+  FORTIMANAGER_HOST: ""  # e.g., "192.168.1.100" or "fortimanager.example.com"
+  FORTIMANAGER_USERNAME: "admin"
+  FORTIMANAGER_PASSWORD: ""  # Set your FortiManager password
+  FORTIMANAGER_PORT: "443"
+  FORTIMANAGER_VERIFY_SSL: "false"
+  FORTIMANAGER_TIMEOUT: "30"
+  FORTIMANAGER_DEFAULT_ADOM: "root"
+  
+  # ITSM Configuration (Optional)
+  ITSM_BASE_URL: ""  # e.g., "https://itsm.example.com"
+  ITSM_API_TOKEN: ""
   REDIS_ENABLED: "true"
 
 persistence:
-  enabled: false
+  enabled: true
   storageClass: "nfs-client"
   accessMode: ReadWriteOnce
   size: 5Gi
