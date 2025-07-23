@@ -27,7 +27,7 @@ spec:
         service:
           type: NodePort
           port: 7777
-          nodePort: 30779
+          nodePort: 30777
         
         ingress:
           enabled: true

@@ -22,6 +22,8 @@ spec:
       parameters:
         - name: image.tag
           value: latest
+        - name: service.nodePort
+          value: "30777"
   
   destination:
     server: https://kubernetes.default.svc
