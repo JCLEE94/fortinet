@@ -38,14 +38,14 @@
                             <div class="form-group">
                                 <label for="src_ip" class="form-label">출발지 IP 주소</label>
                                 <input type="text" class="form-control" id="src_ip" name="src_ip" 
-                                       placeholder="예: 192.168.1.100" required>
+                                       placeholder="예: {{ example_src_ip }}" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="dst_ip" class="form-label">목적지 IP 주소</label>
                                 <input type="text" class="form-control" id="dst_ip" name="dst_ip" 
-                                       placeholder="예: 8.8.8.8" required>
+                                       placeholder="예: {{ example_dst_ip }}" required>
                             </div>
                         </div>
                     </div>
@@ -143,8 +143,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Quick test button
     document.getElementById('quick-test').addEventListener('click', function() {
-        document.getElementById('src_ip').value = '192.168.1.100';
-        document.getElementById('dst_ip').value = '8.8.8.8';
+        document.getElementById('src_ip').value = '{{ example_src_ip }}';
+        document.getElementById('dst_ip').value = '{{ example_dst_ip }}';
         document.getElementById('dst_port').value = '80';
         document.getElementById('protocol').value = 'TCP';
         document.getElementById('analysis_type').value = 'both';

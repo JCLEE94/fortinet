@@ -587,7 +587,7 @@ document.addEventListener('input', function(event) {
     if (field.name === 'source_ip' || field.name === 'destination_ip') {
         if (field.value && !isValidIP(field.value) && !field.value.toLowerCase().includes('any')) {
             field.classList.add('invalid');
-            field.title = '올바른 IP 주소 형식을 입력하세요 (예: 192.168.1.100 또는 192.168.1.0/24)';
+            field.title = '올바른 IP 주소 형식을 입력하세요 (예: 10.0.0.100 또는 10.0.0.0/24)';
         } else {
             field.classList.remove('invalid');
             field.title = '';

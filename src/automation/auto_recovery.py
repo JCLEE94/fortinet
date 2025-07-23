@@ -296,7 +296,7 @@ class AutoRecoveryEngine:
                 try:
                     # Redis 캐시 정리 시도
                     import redis
-                    r = redis.Redis(host='localhost', port=6379, db=0)
+                    r = redis.Redis(host=os.getenv('REDIS_HOST', 'redis-server'), port=int(os.getenv('REDIS_PORT', '6379')), db=0)
                     r.flushall()
                 except:
                     pass

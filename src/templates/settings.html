@@ -95,7 +95,7 @@
                         <div class="mb-3">
                             <label for="fortimanager_hostname" class="form-label">FortiManager 호스트 주소:</label>
                             <input type="text" class="form-control" id="fortimanager_hostname" name="fortimanager_hostname" 
-                                   placeholder="예: 192.168.1.10 또는 fortimanager.example.com" 
+                                   placeholder="예: 10.0.0.10 또는 fortimanager.example.com" 
                                    value="{{ config.get('fortimanager', {}).get('hostname', '') }}">
                         </div>
                         
@@ -302,7 +302,7 @@
                         <div class="mb-3">
                             <label for="redis_host" class="form-label">Redis 서버 주소</label>
                             <input type="text" class="form-control" id="redis_host" name="redis_host" 
-                                   placeholder="localhost" value="localhost">
+                                   placeholder="redis-server" value="redis-server">
                         </div>
                     </div>
                     <div class="col-md-6">

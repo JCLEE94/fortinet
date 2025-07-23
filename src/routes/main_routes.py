@@ -16,11 +16,18 @@ def index():
 @main_bp.route('/policy-analysis')
 def policy_analysis():
     """FortiGate 정책 분석 페이지 (기존 index.html)"""
-    return render_template('index.html')
+    return render_template('index.html',
+                         example_src_ip=os.getenv('EXAMPLE_SRC_IP', '10.0.0.100'),
+                         example_dst_ip=os.getenv('EXAMPLE_DST_IP', '8.8.8.8'))
 
 @main_bp.route('/batch')
 def batch():
-    return render_template('batch.html')
+    batch_examples = [
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC1', '10.10.1.10'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST1', '10.20.0.15'), 'port': '443', 'protocol': 'tcp'},
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC2', '10.10.2.20'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST2', '172.20.5.30'), 'port': '80', 'protocol': 'tcp'},
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC3', '10.20.0.5'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST3', '8.8.8.8'), 'port': '53', 'protocol': 'udp'}
+    ]
+    return render_template('batch.html', batch_examples=batch_examples)
 
 @main_bp.route('/topology')
 def topology():
@@ -219,11 +226,21 @@ def about():
 @main_bp.route('/policy-scenarios')
 def policy_scenarios():
     """정책 분석 시나리오 페이지"""
-    return render_template('policy_scenarios.html')
+    return render_template('policy_scenarios.html',
+                         example_src_ip=os.getenv('EXAMPLE_SRC_IP', '10.0.0.100'),
+                         example_dst_ip=os.getenv('EXAMPLE_DST_IP', '10.20.0.50'))
 
 @main_bp.route('/help')
 def help():
-    return render_template('help.html')
+    batch_examples = [
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC1', '10.10.1.10'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST1', '10.20.0.15'), 'port': '443', 'protocol': 'tcp'},
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC2', '10.10.2.20'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST2', '172.20.5.30'), 'port': '80', 'protocol': 'tcp'},
+        {'src_ip': os.getenv('BATCH_EXAMPLE_SRC3', '10.20.0.5'), 'dst_ip': os.getenv('BATCH_EXAMPLE_DST3', '8.8.8.8'), 'port': '53', 'protocol': 'udp'}
+    ]
+    return render_template('help.html', 
+                         batch_examples=batch_examples,
+                         example_src_ip=os.getenv('EXAMPLE_SRC_IP', '10.0.0.100'),
+                         example_dst_ip=os.getenv('EXAMPLE_DST_IP', '10.20.0.15'))
 
 @main_bp.route('/offline.html')
 def offline():

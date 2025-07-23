@@ -166,7 +166,7 @@ if __name__ == "__main__":
         print(f"   {event['type']} - {event['severity']} - {event['source_ip']}")
     
     print("\n✅ Policy Analysis:")
-    analysis = generator.generate_policy_analysis_result("192.168.1.100", "10.0.1.50", 80)
+    analysis = generator.generate_policy_analysis_result(os.getenv('TEST_SRC_IP', "10.10.1.100"), os.getenv('TEST_DST_IP', "10.20.1.50"), 80)
     print(f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}")
     
     print("\n✅ All mock data generators working correctly!")

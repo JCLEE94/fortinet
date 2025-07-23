@@ -105,8 +105,8 @@
                             <li>
                                 <strong>트래픽 정보 입력:</strong>
                                 <ul>
-                                    <li><strong>출발지 IP/네트워크:</strong> 트래픽의 시작점 IP 주소 (예: 192.168.1.10)</li>
-                                    <li><strong>목적지 IP/네트워크:</strong> 트래픽의 도착점 IP 주소 (예: 10.0.0.15)</li>
+                                    <li><strong>출발지 IP/네트워크:</strong> 트래픽의 시작점 IP 주소 (예: {{ example_src_ip }})</li>
+                                    <li><strong>목적지 IP/네트워크:</strong> 트래픽의 도착점 IP 주소 (예: {{ example_dst_ip }})</li>
                                     <li><strong>포트 번호:</strong> 통신에 사용되는 포트 번호 (예: 443)</li>
                                     <li><strong>프로토콜:</strong> 사용 프로토콜 선택 (TCP, UDP, ICMP)</li>
                                 </ul>
@@ -205,24 +205,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for example in batch_examples %}
                                     <tr>
-                                        <td>192.168.1.10</td>
-                                        <td>10.0.0.15</td>
-                                        <td>443</td>
-                                        <td>tcp</td>
+                                        <td>{{ example.src_ip }}</td>
+                                        <td>{{ example.dst_ip }}</td>
+                                        <td>{{ example.port }}</td>
+                                        <td>{{ example.protocol }}</td>
                                     </tr>
-                                    <tr>
-                                        <td>192.168.2.20</td>
-                                        <td>172.16.5.30</td>
-                                        <td>80</td>
-                                        <td>tcp</td>
-                                    </tr>
-                                    <tr>
-                                        <td>10.0.0.5</td>
-                                        <td>8.8.8.8</td>
-                                        <td>53</td>
-                                        <td>udp</td>
-                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>

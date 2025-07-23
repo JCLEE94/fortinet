@@ -61,24 +61,14 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% for example in batch_examples %}
                     <tr>
-                        <td>192.168.1.10</td>
-                        <td>10.0.0.15</td>
-                        <td>443</td>
-                        <td>tcp</td>
+                        <td>{{ example.src_ip }}</td>
+                        <td>{{ example.dst_ip }}</td>
+                        <td>{{ example.port }}</td>
+                        <td>{{ example.protocol }}</td>
                     </tr>
-                    <tr>
-                        <td>192.168.2.20</td>
-                        <td>172.16.5.30</td>
-                        <td>80</td>
-                        <td>tcp</td>
-                    </tr>
-                    <tr>
-                        <td>10.0.0.5</td>
-                        <td>8.8.8.8</td>
-                        <td>53</td>
-                        <td>udp</td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             

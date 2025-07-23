@@ -48,7 +48,7 @@ env:
   FORTIGATE_TIMEOUT: "30"
   
   # FortiManager Configuration - CHANGE THESE VALUES!
-  FORTIMANAGER_HOST: ""  # e.g., "192.168.1.100" or "fortimanager.example.com"
+  FORTIMANAGER_HOST: ""  # e.g., "10.0.1.100" or "fortimanager.example.com"
   FORTIMANAGER_USERNAME: "admin"
   FORTIMANAGER_PASSWORD: ""  # Set your FortiManager password
   FORTIMANAGER_PORT: "443"
@@ -60,6 +60,28 @@ env:
   ITSM_BASE_URL: ""  # e.g., "https://itsm.example.com"
   ITSM_API_TOKEN: ""
   REDIS_ENABLED: "true"
+  
+  # Example IPs for UI (no hardcoding)
+  EXAMPLE_SRC_IP: "10.0.0.100"
+  EXAMPLE_DST_IP: "10.20.0.50"
+  BATCH_EXAMPLE_SRC1: "10.10.1.10"
+  BATCH_EXAMPLE_DST1: "10.20.0.15"
+  BATCH_EXAMPLE_SRC2: "10.10.2.20"
+  BATCH_EXAMPLE_DST2: "172.20.5.30"
+  BATCH_EXAMPLE_SRC3: "10.20.0.5"
+  BATCH_EXAMPLE_DST3: "8.8.8.8"
+  EXAMPLE_FW1_IP: "10.0.1.1"
+  EXAMPLE_FW2_IP: "10.0.2.1"
+  EXAMPLE_FW3_IP: "10.0.3.1"
+  
+  # Redis Configuration
+  REDIS_HOST: "redis-server"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  
+  # Test IPs for mock data
+  TEST_SRC_IP: "10.10.1.100"
+  TEST_DST_IP: "10.20.1.50"
 
 persistence:
   enabled: true
