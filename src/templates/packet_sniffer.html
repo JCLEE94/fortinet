@@ -313,9 +313,9 @@
                                     <label for="firewall-select">방화벽 선택</label>
                                     <select class="form-control" id="firewall-select" required>
                                             <option value="" selected disabled>방화벽을 선택하세요</option>
-                                            <option value="firewall1">방화벽-01 (192.168.1.1)</option>
-                                            <option value="firewall2">방화벽-02 (192.168.2.1)</option>
-                                            <option value="firewall3">방화벽-03 (192.168.3.1)</option>
+                                            {% for device in devices %}
+                                            <option value="{{ device.id }}">{{ device.name }} ({{ device.ip }})</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                     
@@ -357,7 +357,7 @@
                                         <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="src-ip">출발지 IP</label>
-                                                <input type="text" class="form-control" id="src-ip" placeholder="예: 192.168.1.10">
+                                                <input type="text" class="form-control" id="src-ip" placeholder="예: {{ example_filters.src_ip }}">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -399,13 +399,13 @@
                                             </span>
                                         </label>
                                         <div class="input-group mb-2">
-                                            <textarea class="form-control" id="filter-expression" rows="2" placeholder="예: host 192.168.1.10 and tcp port 80"></textarea>
+                                            <textarea class="form-control" id="filter-expression" rows="2" placeholder="예: host {{ example_filters.src_ip }} and tcp port 80"></textarea>
                                             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                 <i class="fas fa-list me-1"></i>필터 예시
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end" id="filter-examples">
                                                 <li><h6 class="dropdown-header">일반 필터</h6></li>
-                                                <li><a class="dropdown-item filter-template" href="#" data-filter="host 192.168.1.1">특정 호스트</a></li>
+                                                <li><a class="dropdown-item filter-template" href="#" data-filter="host {{ example_filters.host }}">특정 호스트</a></li>
                                                 <li><a class="dropdown-item filter-template" href="#" data-filter="port 80">HTTP 트래픽</a></li>
                                                 <li><a class="dropdown-item filter-template" href="#" data-filter="port 443">HTTPS 트래픽</a></li>
                                                 <li><a class="dropdown-item filter-template" href="#" data-filter="port 53">DNS 트래픽</a></li>
@@ -413,7 +413,7 @@
                                                 <li><h6 class="dropdown-header">고급 필터</h6></li>
                                                 <li><a class="dropdown-item filter-template" href="#" data-filter="tcp[13] & 2 != 0">TCP SYN 패킷</a></li>
                                                 <li><a class="dropdown-item filter-template" href="#" data-filter="tcp[13] & 1 != 0">TCP FIN 패킷</a></li>
-                                                <li><a class="dropdown-item filter-template" href="#" data-filter="host 192.168.1.1 and host 192.168.1.2">호스트 간 통신</a></li>
+                                                <li><a class="dropdown-item filter-template" href="#" data-filter="{{ example_filters.host_to_host }}">호스트 간 통신</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -617,7 +617,7 @@
                                                 <div class="col-md-4">
                                                     <div class="form-group">
                                                         <label for="src-ip-filter" class="form-label">출발지 IP</label>
-                                                        <input type="text" class="form-control form-control-sm" id="src-ip-filter" placeholder="예: 192.168.1.10">
+                                                        <input type="text" class="form-control form-control-sm" id="src-ip-filter" placeholder="예: {{ example_filters.src_ip }}">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-4">
@@ -1049,7 +1049,7 @@
                             <tbody>
                                 <tr>
                                     <td><code>host &lt;IP&gt;</code></td>
-                                    <td><code>host 192.168.1.1</code></td>
+                                    <td><code>host {{ example_filters.host }}</code></td>
                                     <td>특정 IP 주소와 관련된 패킷 (출발지 또는 목적지)</td>
                                 </tr>
                                 <tr>
@@ -1059,7 +1059,7 @@
                                 </tr>
                                 <tr>
                                     <td><code>src &lt;IP&gt;</code></td>
-                                    <td><code>src 192.168.1.1</code></td>
+                                    <td><code>src {{ example_filters.host }}</code></td>
                                     <td>특정 출발지 IP와 관련된 패킷</td>
                                 </tr>
                                 <tr>

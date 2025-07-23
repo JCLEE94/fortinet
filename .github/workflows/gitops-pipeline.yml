@@ -11,6 +11,12 @@ env:
   REGISTRY: ${{ secrets.REGISTRY_URL }}
   IMAGE_NAME: fortinet
   APP_NAME: ${{ secrets.APP_NAME }}
+  DEPLOYMENT_HOST: ${{ secrets.DEPLOYMENT_HOST || '192.168.50.110' }}
+  DEPLOYMENT_PORT: ${{ secrets.DEPLOYMENT_PORT || '30777' }}
+  PRODUCTION_URL: ${{ secrets.PRODUCTION_URL || 'http://fortinet.jclee.me' }}
+  ARGOCD_URL: ${{ secrets.ARGOCD_URL || 'https://argo.jclee.me' }}
+  HARBOR_URL: ${{ secrets.HARBOR_URL || 'https://registry.jclee.me' }}
+  CHARTMUSEUM_URL: ${{ secrets.CHARTMUSEUM_URL || 'https://charts.jclee.me' }}
 
 jobs:
   # 테스트 단계
@@ -147,9 +153,9 @@ jobs:
           attempt=1
           while [ $attempt -le $max_attempts ]; do
             echo "Attempt $attempt: Checking deployment health..."
-            if curl -f -s http://192.168.50.110:30777/api/health > /dev/null; then
+            if curl -f -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health > /dev/null; then
               echo "✅ Deployment verified successfully!"
-              curl -s http://192.168.50.110:30777/api/health | jq . || curl -s http://192.168.50.110:30777/api/health
+              curl -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health | jq . || curl -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health
               break
             else
               echo "❌ Health check failed, retrying in 30s..."
@@ -173,11 +179,11 @@ jobs:
         run: |
           if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
             echo "🎉 GitOps Pipeline completed successfully!"
-            echo "🔗 Production: http://192.168.50.110:30777"
-            echo "🔗 Domain: http://fortinet.jclee.me" 
-            echo "🔗 ArgoCD Dashboard: https://argo.jclee.me"
-            echo "🔗 Harbor Registry: https://registry.jclee.me"
-            echo "🔗 ChartMuseum: https://charts.jclee.me"
+            echo "🔗 Production: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}"
+            echo "🔗 Domain: ${{ env.PRODUCTION_URL }}" 
+            echo "🔗 ArgoCD Dashboard: ${{ env.ARGOCD_URL }}"
+            echo "🔗 Harbor Registry: ${{ env.HARBOR_URL }}"
+            echo "🔗 ChartMuseum: ${{ env.CHARTMUSEUM_URL }}"
           else
             echo "❌ GitOps Pipeline failed!"
             echo "🔍 Check ArgoCD dashboard for details"

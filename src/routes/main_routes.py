@@ -67,7 +67,23 @@ def devices():
 
 @main_bp.route('/packet_sniffer')
 def packet_sniffer():
-    return render_template('packet_sniffer.html')
+    # 예시 IP와 장치 정보를 환경변수에서 가져오거나 기본값 사용
+    import os
+    example_devices = [
+        {'id': 'firewall1', 'name': '방화벽-01', 'ip': os.getenv('EXAMPLE_FW1_IP', '192.168.1.1')},
+        {'id': 'firewall2', 'name': '방화벽-02', 'ip': os.getenv('EXAMPLE_FW2_IP', '192.168.2.1')},
+        {'id': 'firewall3', 'name': '방화벽-03', 'ip': os.getenv('EXAMPLE_FW3_IP', '192.168.3.1')}
+    ]
+    
+    example_filters = {
+        'host': os.getenv('EXAMPLE_HOST_IP', '192.168.1.1'),
+        'src_ip': os.getenv('EXAMPLE_SRC_IP', '192.168.1.10'),
+        'host_to_host': f"host {os.getenv('EXAMPLE_HOST1_IP', '192.168.1.1')} and host {os.getenv('EXAMPLE_HOST2_IP', '192.168.1.2')}"
+    }
+    
+    return render_template('packet_sniffer.html', 
+                         devices=example_devices,
+                         example_filters=example_filters)
 
 @main_bp.route('/settings')
 def settings():
