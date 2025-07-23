@@ -41,21 +41,16 @@ FROM base as system-deps
 
 # Install system dependencies in single layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Build essentials
     build-essential \
     gcc \
     g++ \
-    # Network tools
     curl \
     wget \
     netcat-openbsd \
     iputils-ping \
-    # System utilities
     procps \
     htop \
-    # Security tools
     ca-certificates \
-    # Cleanup
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/* \

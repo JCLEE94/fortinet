@@ -147,9 +147,9 @@ jobs:
           attempt=1
           while [ $attempt -le $max_attempts ]; do
             echo "Attempt $attempt: Checking deployment health..."
-            if curl -f -s http://192.168.50.110:30779/api/health > /dev/null; then
+            if curl -f -s http://192.168.50.110:30777/api/health > /dev/null; then
               echo "✅ Deployment verified successfully!"
-              curl -s http://192.168.50.110:30779/api/health | jq . || curl -s http://192.168.50.110:30779/api/health
+              curl -s http://192.168.50.110:30777/api/health | jq . || curl -s http://192.168.50.110:30777/api/health
               break
             else
               echo "❌ Health check failed, retrying in 30s..."
@@ -173,7 +173,7 @@ jobs:
         run: |
           if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
             echo "🎉 GitOps Pipeline completed successfully!"
-            echo "🔗 Production: http://192.168.50.110:30779"
+            echo "🔗 Production: http://192.168.50.110:30777"
             echo "🔗 Domain: http://fortinet.jclee.me" 
             echo "🔗 ArgoCD Dashboard: https://argo.jclee.me"
             echo "🔗 Harbor Registry: https://registry.jclee.me"
