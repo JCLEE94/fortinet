@@ -84,6 +84,8 @@ spec:
       prune: true
       selfHeal: true
       allowEmpty: false
+    refresh:
+      interval: "5m"  # Check for new versions every 5 minutes
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground

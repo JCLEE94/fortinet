@@ -129,7 +129,7 @@ jobs:
         run: |
           curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
             --data-binary "@${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz" \
-            ${{ secrets.CHARTMUSEUM_URL }}/api/charts
+            https://charts.jclee.me/api/charts
 
       - name: Trigger ArgoCD Sync
         run: |

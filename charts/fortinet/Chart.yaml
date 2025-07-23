@@ -2,7 +2,7 @@ apiVersion: v2
 name: fortinet
 description: FortiGate Nextrade - Network Monitoring and Analysis Platform
 type: application
-version: 1.0.9
+version: 1.0.10
 appVersion: "1.0.0"
 keywords:
   - fortigate
