@@ -127,7 +127,9 @@ jobs:
 
       - name: Push to ChartMuseum
         run: |
-          curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
+          echo "Uploading ${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz to ChartMuseum..."
+          ls -la ${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz
+          curl -v -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
             --data-binary "@${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz" \
             https://charts.jclee.me/api/charts
 
