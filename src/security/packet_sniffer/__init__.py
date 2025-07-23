@@ -5,15 +5,10 @@
 """
 
 from .base_sniffer import BaseSniffer
-from .session_manager import SessionManager
-from .packet_capturer import PacketCapturer
 from .device_manager import DeviceManager
+from .packet_capturer import PacketCapturer
+from .session_manager import SessionManager
 
-__all__ = [
-    'BaseSniffer',
-    'SessionManager', 
-    'PacketCapturer',
-    'DeviceManager'
-]
+__all__ = ["BaseSniffer", "SessionManager", "PacketCapturer", "DeviceManager"]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

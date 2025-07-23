@@ -8,16 +8,17 @@ Note: policy_routes는 fortimanager_routes.py로 통합되었습니다.
 """
 
 from flask import Blueprint
-from .device_routes import device_bp
+
 from .analytics_routes import analytics_bp
 from .compliance_routes import compliance_bp
+from .device_routes import device_bp
 
 # 메인 FortiManager Blueprint 생성
-fortimanager_bp = Blueprint('fortimanager', __name__, url_prefix='/api/fortimanager')
+fortimanager_bp = Blueprint("fortimanager", __name__, url_prefix="/api/fortimanager")
 
 # 서브 블루프린트 등록
 fortimanager_bp.register_blueprint(device_bp)
 fortimanager_bp.register_blueprint(analytics_bp)
 fortimanager_bp.register_blueprint(compliance_bp)
 
-__all__ = ['fortimanager_bp']
+__all__ = ["fortimanager_bp"]

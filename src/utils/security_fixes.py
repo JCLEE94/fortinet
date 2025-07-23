@@ -5,100 +5,100 @@
 자동으로 보안 문제를 수정하고 개선된 보안 패턴을 적용
 """
 
+import hashlib
 import os
 import re
-import hashlib
 import secrets
-from typing import Dict, List, Tuple
 from pathlib import Path
+from typing import Dict, List, Tuple
 
 
 class SecurityFixer:
     """보안 취약점 자동 수정기"""
-    
+
     def __init__(self, project_root: str):
         self.project_root = project_root
         self.fixes_applied = []
-    
+
     def fix_weak_crypto(self) -> List[str]:
         """약한 암호화 알고리즘을 강력한 것으로 교체"""
         fixes = []
-        
+
         # MD5를 SHA-256으로 교체
         md5_patterns = [
-            (r'hashlib\.md5\(([^)]+)\)\.hexdigest\(\)', r'hashlib.sha256(\1).hexdigest()'),
-            (r'hashlib\.md5\(([^)]+)\)', r'hashlib.sha256(\1)'),
+            (r"hashlib\.md5\(([^)]+)\)\.hexdigest\(\)", r"hashlib.sha256(\1).hexdigest()"),
+            (r"hashlib\.md5\(([^)]+)\)", r"hashlib.sha256(\1)"),
         ]
-        
-        # SHA-1을 SHA-256으로 교체  
+
+        # SHA-1을 SHA-256으로 교체
         sha1_patterns = [
-            (r'hashlib\.sha1\(([^)]+)\)\.hexdigest\(\)', r'hashlib.sha256(\1).hexdigest()'),
-            (r'hashlib\.sha1\(([^)]+)\)', r'hashlib.sha256(\1)'),
+            (r"hashlib\.sha1\(([^)]+)\)\.hexdigest\(\)", r"hashlib.sha256(\1).hexdigest()"),
+            (r"hashlib\.sha1\(([^)]+)\)", r"hashlib.sha256(\1)"),
         ]
-        
+
         # random을 secrets로 교체
         random_patterns = [
-            (r'random\.random\(\)', r'secrets.SystemRandom().random()'),
-            (r'random\.choice\(([^)]+)\)', r'secrets.choice(\1)'),
-            (r'random\.randint\(([^)]+)\)', r'secrets.randbelow(\1[1] - \1[0] + 1) + \1[0]'),
+            (r"random\.random\(\)", r"secrets.SystemRandom().random()"),
+            (r"random\.choice\(([^)]+)\)", r"secrets.choice(\1)"),
+            (r"random\.randint\(([^)]+)\)", r"secrets.randbelow(\1[1] - \1[0] + 1) + \1[0]"),
         ]
-        
+
         all_patterns = md5_patterns + sha1_patterns + random_patterns
-        
+
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, 'src')):
+        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     if self._apply_patterns_to_file(file_path, all_patterns):
                         fixes.append(f"약한 암호화 수정: {file_path}")
-        
+
         return fixes
-    
+
     def fix_missing_authentication(self) -> List[str]:
         """인증 누락 문제 수정 - 보안 데코레이터 추가"""
         fixes = []
-        
+
         # 민감한 엔드포인트 패턴 정의
         sensitive_patterns = [
             r"@app\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
             r"@.*\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
         ]
-        
+
         # web_app.py 파일 수정
-        web_app_path = os.path.join(self.project_root, 'src', 'web_app.py')
+        web_app_path = os.path.join(self.project_root, "src", "web_app.py")
         if os.path.exists(web_app_path):
             if self._add_authentication_to_routes(web_app_path):
                 fixes.append(f"인증 데코레이터 추가: {web_app_path}")
-        
+
         return fixes
-    
+
     def fix_unsafe_deserialization(self) -> List[str]:
         """안전하지 않은 역직렬화 수정"""
         fixes = []
-        
+
         # pickle.loads를 안전한 대안으로 교체
         unsafe_patterns = [
             # pickle.loads는 json.loads로 교체 (가능한 경우)
-            (r'pickle\.loads\(([^)]+)\)', r'json.loads(\1.decode() if isinstance(\1, bytes) else \1)'),
+            (r"pickle\.loads\(([^)]+)\)", r"json.loads(\1.decode() if isinstance(\1, bytes) else \1)"),
             # yaml.load는 yaml.safe_load로 교체
-            (r'yaml\.load\(([^)]+)\)', r'yaml.safe_load(\1)'),
+            (r"yaml\.load\(([^)]+)\)", r"yaml.safe_load(\1)"),
         ]
-        
+
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, 'src')):
+        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     if self._apply_patterns_to_file(file_path, unsafe_patterns):
                         fixes.append(f"안전하지 않은 역직렬화 수정: {file_path}")
-        
+
         return fixes
-    
+
     def fix_hardcoded_secrets(self) -> List[str]:
         """하드코딩된 비밀번호/키 수정"""
         fixes = []
-        
+
         # 하드코딩된 비밀정보 패턴
         secret_patterns = [
             (r'password\s*=\s*[\'"][^\'"]{3,}[\'"]', 'password = os.environ.get("PASSWORD", "")'),
@@ -106,120 +106,120 @@ class SecurityFixer:
             (r'secret\s*=\s*[\'"][A-Za-z0-9]{8,}[\'"]', 'secret = os.environ.get("SECRET", "")'),
             (r'token\s*=\s*[\'"][A-Za-z0-9]{10,}[\'"]', 'token = os.environ.get("TOKEN", "")'),
         ]
-        
+
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, 'src')):
+        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     if self._apply_patterns_to_file(file_path, secret_patterns):
                         fixes.append(f"하드코딩된 비밀정보 수정: {file_path}")
-        
+
         return fixes
-    
+
     def fix_path_traversal(self) -> List[str]:
         """경로 탐색 취약점 수정"""
         fixes = []
-        
+
         # 안전하지 않은 파일 경로 패턴
         path_patterns = [
             # 상대 경로 제거
-            (r'\.\./|\.\.\\\)', ''),
+            (r"\.\./|\.\.\\\)", ""),
             # 안전하지 않은 open 호출을 안전한 것으로 교체
-            (r'open\s*\([^)]*\+[^)]*\)', 'open(os.path.abspath(os.path.join(safe_dir, filename)), mode)'),
+            (r"open\s*\([^)]*\+[^)]*\)", "open(os.path.abspath(os.path.join(safe_dir, filename)), mode)"),
         ]
-        
+
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, 'src')):
+        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     if self._apply_patterns_to_file(file_path, path_patterns):
                         fixes.append(f"경로 탐색 취약점 수정: {file_path}")
-        
+
         return fixes
-    
+
     def _apply_patterns_to_file(self, file_path: str, patterns: List[Tuple[str, str]]) -> bool:
         """파일에 패턴 적용"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
-            
+
             original_content = content
-            
+
             for pattern, replacement in patterns:
                 content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
-            
+
             # 변경사항이 있으면 파일 업데이트
             if content != original_content:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(content)
                 return True
-            
+
         except Exception as e:
             print(f"Error processing {file_path}: {e}")
-        
+
         return False
-    
+
     def _add_authentication_to_routes(self, file_path: str) -> bool:
         """라우트에 인증 데코레이터 추가"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-            
+
             modified = False
             new_lines = []
             i = 0
-            
+
             # 필요한 임포트 추가
             imports_added = False
-            
+
             while i < len(lines):
                 line = lines[i]
-                
+
                 # 임포트 섹션에 보안 관련 임포트 추가
-                if not imports_added and line.startswith('from flask import'):
+                if not imports_added and line.startswith("from flask import"):
                     new_lines.append(line)
-                    new_lines.append('from src.utils.security import rate_limit, validate_request, csrf_protect\n')
+                    new_lines.append("from src.utils.security import rate_limit, validate_request, csrf_protect\n")
                     imports_added = True
                     modified = True
                 elif re.search(r'@app\.route\([\'"][^\'\"]*/(api|admin|config|settings|delete|create|update)', line):
                     # 민감한 라우트에 보안 데코레이터 추가
-                    new_lines.append('    @rate_limit(max_requests=30, window=60)\n')
-                    new_lines.append('    @csrf_protect\n')
+                    new_lines.append("    @rate_limit(max_requests=30, window=60)\n")
+                    new_lines.append("    @csrf_protect\n")
                     new_lines.append(line)
                     modified = True
                 else:
                     new_lines.append(line)
-                
+
                 i += 1
-            
+
             if modified:
-                with open(file_path, 'w', encoding='utf-8') as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.writelines(new_lines)
                 return True
-            
+
         except Exception as e:
             print(f"Error adding authentication to {file_path}: {e}")
-        
+
         return False
-    
+
     def apply_all_fixes(self) -> Dict[str, List[str]]:
         """모든 보안 수정사항 적용"""
         all_fixes = {
-            'weak_crypto': self.fix_weak_crypto(),
-            'missing_authentication': self.fix_missing_authentication(), 
-            'unsafe_deserialization': self.fix_unsafe_deserialization(),
-            'hardcoded_secrets': self.fix_hardcoded_secrets(),
-            'path_traversal': self.fix_path_traversal()
+            "weak_crypto": self.fix_weak_crypto(),
+            "missing_authentication": self.fix_missing_authentication(),
+            "unsafe_deserialization": self.fix_unsafe_deserialization(),
+            "hardcoded_secrets": self.fix_hardcoded_secrets(),
+            "path_traversal": self.fix_path_traversal(),
         }
-        
+
         return all_fixes
 
 
 def generate_security_best_practices() -> str:
     """보안 모범 사례 문서 생성"""
-    
+
     return """# 🔐 보안 모범 사례 가이드
 
 ## 📋 개요
@@ -345,7 +345,7 @@ database_url = os.environ.get('DATABASE_URL', '')
 # CLI 지원
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser(description="보안 취약점 자동 수정")
     parser.add_argument("project_root", help="프로젝트 루트 디렉토리")
     parser.add_argument("--fix-all", action="store_true", help="모든 취약점 수정")
@@ -354,11 +354,11 @@ if __name__ == "__main__":
     parser.add_argument("--deserialization", action="store_true", help="역직렬화 수정")
     parser.add_argument("--secrets", action="store_true", help="하드코딩된 비밀정보 수정")
     parser.add_argument("--path-traversal", action="store_true", help="경로 탐색 수정")
-    
+
     args = parser.parse_args()
-    
+
     fixer = SecurityFixer(args.project_root)
-    
+
     if args.fix_all:
         fixes = fixer.apply_all_fixes()
         for category, fix_list in fixes.items():
@@ -371,11 +371,11 @@ if __name__ == "__main__":
             print("약한 암호화 수정:")
             for fix in fixes:
                 print(f"  ✅ {fix}")
-        
+
         if args.auth:
             fixes = fixer.fix_missing_authentication()
             print("인증 누락 수정:")
             for fix in fixes:
                 print(f"  ✅ {fix}")
-                
+
         # 추가 옵션들...

@@ -9,22 +9,23 @@ FortiGate Nextrade 설정 모듈
 - 하드코딩 값 제거 및 중앙화
 """
 
-from .unified_settings import unified_settings as settings, UnifiedSettings
+from .unified_settings import UnifiedSettings
+from .unified_settings import unified_settings as settings
 
 # 기존 호환성을 위한 export
-__all__ = ['settings', 'UnifiedSettings']
+__all__ = ["settings", "UnifiedSettings"]
 
 # 설정 검증
-if not hasattr(settings, 'app_mode'):
+if not hasattr(settings, "app_mode"):
     raise ImportError("설정 시스템이 올바르게 초기화되지 않았습니다.")
 
 # 추가 설정 모듈 임포트 (하드코딩 제거를 위해 추가)
 try:
-    from .network import *
-    from .services import *
-    from .ports import *
-    from .paths import *
     from .limits import *
+    from .network import *
+    from .paths import *
+    from .ports import *
+    from .services import *
 except ImportError:
     # 새 설정 모듈이 없는 경우 무시 (기존 호환성)
     pass
