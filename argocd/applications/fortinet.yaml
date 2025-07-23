@@ -6,8 +6,9 @@ metadata:
   annotations:
     argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet
     argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
-    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^[0-9]+\.[0-9]+\.[0-9]+$
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^(master|main|latest|v?[0-9]+\.[0-9]+\.[0-9]+).*$
     argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
 spec:
   project: default
   source:
@@ -84,8 +85,6 @@ spec:
       prune: true
       selfHeal: true
       allowEmpty: false
-    refresh:
-      interval: "5m"  # Check for new versions every 5 minutes
     syncOptions:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
