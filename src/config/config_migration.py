@@ -29,7 +29,11 @@ class ConfigMigration:
 
         self.backup_dir.mkdir(exist_ok=True)
 
-        files_to_backup = [self.legacy_settings_file, self.old_config_file, self.default_config_file]
+        files_to_backup = [
+            self.legacy_settings_file,
+            self.old_config_file,
+            self.default_config_file,
+        ]
 
         for file_path in files_to_backup:
             if file_path.exists():
@@ -89,7 +93,9 @@ class ConfigMigration:
         ]
 
         old_import = "from src.config.settings import settings"
-        new_import = "from src.config.unified_settings import unified_settings as settings"
+        new_import = (
+            "from src.config.unified_settings import unified_settings as settings"
+        )
 
         for file_path in files_to_update:
             if file_path.exists():
@@ -118,14 +124,24 @@ class ConfigMigration:
                     "fortianalyzer": settings.is_service_enabled("fortianalyzer"),
                     "redis": settings.redis.enabled,
                 },
-                "webapp_config": {"port": settings.webapp.port, "debug": settings.webapp.debug},
+                "webapp_config": {
+                    "port": settings.webapp.port,
+                    "debug": settings.webapp.debug,
+                },
             },
             "configuration_priorities": {
                 "1": "환경변수 (.env)",
                 "2": "JSON 설정 파일 (data/config.json)",
                 "3": "기본값 (코드에 정의된 기본값)",
             },
-            "migration_benefits": ["설정 우선순위 명확화", "중복 설정 제거", "일관된 필드명 사용", "환경별 설정 전환 자동화", "설정 유효성 검증", "타입 안전성 보장"],
+            "migration_benefits": [
+                "설정 우선순위 명확화",
+                "중복 설정 제거",
+                "일관된 필드명 사용",
+                "환경별 설정 전환 자동화",
+                "설정 유효성 검증",
+                "타입 안전성 보장",
+            ],
         }
 
         return report
@@ -154,7 +170,9 @@ class ConfigMigration:
         print(f"📁 백업 디렉토리: {self.backup_dir}")
         print(f"🔧 현재 모드: {report['current_settings']['app_mode']}")
         print(f"🌐 웹앱 포트: {report['current_settings']['webapp_config']['port']}")
-        print(f"📊 활성화된 서비스: {list(k for k, v in report['current_settings']['enabled_services'].items() if v)}")
+        print(
+            f"📊 활성화된 서비스: {list(k for k, v in report['current_settings']['enabled_services'].items() if v)}"
+        )
 
         return True
 

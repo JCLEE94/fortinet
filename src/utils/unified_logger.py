@@ -51,8 +51,12 @@ class BasicLoggerStrategy(LoggerStrategy):
             logger.removeHandler(handler)
 
         # Create formatters
-        console_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        console_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        file_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
         # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
@@ -79,7 +83,9 @@ class BasicLoggerStrategy(LoggerStrategy):
 
         except Exception as e:
             # If file logging fails, log to console
-            logger.warning(f"Log file setup failed (console logging still active): {str(e)}")
+            logger.warning(
+                f"Log file setup failed (console logging still active): {str(e)}"
+            )
 
 
 class AdvancedLoggerStrategy(LoggerStrategy):
@@ -92,7 +98,9 @@ class AdvancedLoggerStrategy(LoggerStrategy):
             logger.removeHandler(handler)
 
         # Create formatters
-        standard_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        standard_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         json_formatter = StructuredFormatter()
 
         # Console handler
@@ -117,7 +125,10 @@ class AdvancedLoggerStrategy(LoggerStrategy):
             # JSON structured log file
             json_log_file = os.path.join(self.log_dir, f"{self.name}_structured.json")
             json_handler = logging.handlers.RotatingFileHandler(
-                json_log_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
+                json_log_file,
+                maxBytes=10 * 1024 * 1024,
+                backupCount=5,
+                encoding="utf-8",
             )
             json_handler.setLevel(logging.DEBUG)
             json_handler.setFormatter(json_formatter)
@@ -138,20 +149,30 @@ class AdvancedLoggerStrategy(LoggerStrategy):
             # Troubleshooting log - shared across all loggers
             troubleshoot_file = os.path.join(self.log_dir, "troubleshooting.log")
             troubleshoot_handler = logging.handlers.RotatingFileHandler(
-                troubleshoot_file, maxBytes=20 * 1024 * 1024, backupCount=2, encoding="utf-8"
+                troubleshoot_file,
+                maxBytes=20 * 1024 * 1024,
+                backupCount=2,
+                encoding="utf-8",
             )
             troubleshoot_handler.setLevel(logging.INFO)
             troubleshoot_handler.setFormatter(json_formatter)
             logger.addHandler(troubleshoot_handler)
 
             # Fix permissions if needed
-            for file_path in [log_file, json_log_file, error_log_file, troubleshoot_file]:
+            for file_path in [
+                log_file,
+                json_log_file,
+                error_log_file,
+                troubleshoot_file,
+            ]:
                 if os.path.exists(file_path):
                     os.chmod(file_path, 0o666)
 
         except Exception as e:
             # If file logging fails, log to console
-            logger.warning(f"Advanced log file setup failed (console logging still active): {str(e)}")
+            logger.warning(
+                f"Advanced log file setup failed (console logging still active): {str(e)}"
+            )
 
 
 class StructuredFormatter(logging.Formatter):
@@ -181,7 +202,13 @@ class StructuredFormatter(logging.Formatter):
             log_data["exception"] = {"type": "None", "message": "", "traceback": ""}
 
         # Add context information if available
-        for attr in ["context", "fortimanager", "fortigate", "api_request", "api_response"]:
+        for attr in [
+            "context",
+            "fortimanager",
+            "fortigate",
+            "api_request",
+            "api_response",
+        ]:
             if hasattr(record, attr):
                 log_data[attr] = getattr(record, attr)
 
@@ -203,7 +230,11 @@ class LoggerRegistry:
         return cls._instance
 
     def get_logger(
-        self, name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None
+        self,
+        name: str,
+        strategy: str = "basic",
+        log_dir: str = None,
+        log_level: str = None,
     ) -> "UnifiedLogger":
         """Get or create a logger instance"""
         if name not in self._loggers:
@@ -222,7 +253,13 @@ class LoggerRegistry:
 class UnifiedLogger:
     """Unified logger with support for multiple logging strategies"""
 
-    def __init__(self, name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None):
+    def __init__(
+        self,
+        name: str,
+        strategy: str = "basic",
+        log_dir: str = None,
+        log_level: str = None,
+    ):
         """
         Initialize a new logger instance
 
@@ -262,7 +299,9 @@ class UnifiedLogger:
 
         self.strategy.setup(self.logger)
 
-    def log_with_context(self, level: int, msg: str, context: Dict[str, Any] = None, **kwargs):
+    def log_with_context(
+        self, level: int, msg: str, context: Dict[str, Any] = None, **kwargs
+    ):
         """Log a message with additional context"""
         extra = kwargs.get("extra", {})
         if context:
@@ -270,17 +309,30 @@ class UnifiedLogger:
         self.logger.log(level, msg, extra=extra, **kwargs)
 
     # Specialized logging methods for API clients
-    def log_api_request(self, method: str, url: str, data: Any = None, headers: Dict = None):
+    def log_api_request(
+        self, method: str, url: str, data: Any = None, headers: Dict = None
+    ):
         """Log an API request"""
         extra = {
-            "api_request": {"method": method, "url": url, "data": data, "headers": self._sanitize_headers(headers)}
+            "api_request": {
+                "method": method,
+                "url": url,
+                "data": data,
+                "headers": self._sanitize_headers(headers),
+            }
         }
         self.logger.info(f"API Request: {method} {url}", extra=extra)
 
-    def log_api_response(self, status_code: int, response_data: Any = None, error: Any = None):
+    def log_api_response(
+        self, status_code: int, response_data: Any = None, error: Any = None
+    ):
         """Log an API response"""
         extra = {
-            "api_response": {"status_code": status_code, "data": response_data, "error": str(error) if error else None}
+            "api_response": {
+                "status_code": status_code,
+                "data": response_data,
+                "error": str(error) if error else None,
+            }
         }
 
         if error or (status_code >= 400):
@@ -289,30 +341,60 @@ class UnifiedLogger:
             self.logger.info(f"API Response: {status_code}", extra=extra)
 
     def log_fortigate_connection(
-        self, host: str, status: str, error: Optional[str] = None, context: Optional[Dict[str, Any]] = None
+        self,
+        host: str,
+        status: str,
+        error: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
     ):
         """Log FortiGate connection status"""
-        extra = {"fortigate": {"host": host, "status": status, "error": error, "context": context}}
+        extra = {
+            "fortigate": {
+                "host": host,
+                "status": status,
+                "error": error,
+                "context": context,
+            }
+        }
 
         if status == "connected":
             self.logger.info(f"FortiGate connected: {host}", extra=extra)
         else:
-            self.logger.error(f"FortiGate connection failed: {host} - {error}", extra=extra)
+            self.logger.error(
+                f"FortiGate connection failed: {host} - {error}", extra=extra
+            )
 
     def log_fortimanager_connection(
-        self, host: str, status: str, error: Optional[str] = None, context: Optional[Dict[str, Any]] = None
+        self,
+        host: str,
+        status: str,
+        error: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
     ):
         """Log FortiManager connection status"""
-        extra = {"fortimanager": {"host": host, "status": status, "error": error, "context": context}}
+        extra = {
+            "fortimanager": {
+                "host": host,
+                "status": status,
+                "error": error,
+                "context": context,
+            }
+        }
 
         if status == "connected":
             self.logger.info(f"FortiManager connected: {host}", extra=extra)
         else:
-            self.logger.error(f"FortiManager connection failed: {host} - {error}", extra=extra)
+            self.logger.error(
+                f"FortiManager connection failed: {host} - {error}", extra=extra
+            )
 
-    def log_troubleshooting(self, issue: str, context: Dict[str, Any], resolution: Optional[str] = None):
+    def log_troubleshooting(
+        self, issue: str, context: Dict[str, Any], resolution: Optional[str] = None
+    ):
         """Log troubleshooting information"""
-        extra = {"context": {"issue": issue, "details": context, "resolution": resolution}}
+        extra = {
+            "context": {"issue": issue, "details": context, "resolution": resolution}
+        }
         self.logger.info(f"Troubleshooting: {issue}", extra=extra)
 
     def log_environment_check(self):
@@ -392,7 +474,9 @@ class UnifiedLogger:
 
 
 # Global functions for backward compatibility
-def get_logger(name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None) -> UnifiedLogger:
+def get_logger(
+    name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None
+) -> UnifiedLogger:
     """Get a logger instance (compatible with existing code)"""
     return LoggerRegistry().get_logger(name, strategy, log_dir, log_level)
 
@@ -402,7 +486,9 @@ def setup_logger(name: str, log_level: str = None) -> UnifiedLogger:
     return get_logger(name, "basic", None, log_level)
 
 
-def get_advanced_logger(name: str, log_dir: str = None, log_level: str = None) -> UnifiedLogger:
+def get_advanced_logger(
+    name: str, log_dir: str = None, log_level: str = None
+) -> UnifiedLogger:
     """Get an advanced logger (compatible with existing code)"""
     return get_logger(name, "advanced", log_dir, log_level)
 

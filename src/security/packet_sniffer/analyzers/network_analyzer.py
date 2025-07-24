@@ -19,10 +19,29 @@ class NetworkAnalyzer:
     """네트워크 프로토콜 분석기"""
 
     # IP 프로토콜 번호
-    IP_PROTOCOLS = {1: "ICMP", 6: "TCP", 17: "UDP", 41: "IPv6", 47: "GRE", 50: "ESP", 51: "AH", 89: "OSPF", 132: "SCTP"}
+    IP_PROTOCOLS = {
+        1: "ICMP",
+        6: "TCP",
+        17: "UDP",
+        41: "IPv6",
+        47: "GRE",
+        50: "ESP",
+        51: "AH",
+        89: "OSPF",
+        132: "SCTP",
+    }
 
     # TCP 플래그
-    TCP_FLAGS = {0x01: "FIN", 0x02: "SYN", 0x04: "RST", 0x08: "PSH", 0x10: "ACK", 0x20: "URG", 0x40: "ECE", 0x80: "CWR"}
+    TCP_FLAGS = {
+        0x01: "FIN",
+        0x02: "SYN",
+        0x04: "RST",
+        0x08: "PSH",
+        0x10: "ACK",
+        0x20: "URG",
+        0x40: "ECE",
+        0x80: "CWR",
+    }
 
     # ICMP 타입
     ICMP_TYPES = {
@@ -76,7 +95,9 @@ class NetworkAnalyzer:
         self.flow_stats = defaultdict(lambda: {"packets": 0, "bytes": 0})  # 플로우 통계
         self.port_stats = defaultdict(int)  # 포트 사용 통계
 
-    def analyze(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         네트워크 패킷 분석
 
@@ -101,7 +122,9 @@ class NetworkAnalyzer:
             ip_info = self._analyze_ip_layer(packet_data, packet_info)
             if ip_info:
                 analysis["ip_layer"] = ip_info
-                analysis["protocol_stack"].append(f"IP/{ip_info.get('version', 'unknown')}")
+                analysis["protocol_stack"].append(
+                    f"IP/{ip_info.get('version', 'unknown')}"
+                )
 
             # 전송 계층 분석
             protocol = packet_info.get("protocol")
@@ -110,7 +133,9 @@ class NetworkAnalyzer:
                 if tcp_analysis:
                     analysis["tcp_layer"] = tcp_analysis
                     analysis["protocol_stack"].append("TCP")
-                    analysis["connection_state"] = tcp_analysis.get("connection_state", {})
+                    analysis["connection_state"] = tcp_analysis.get(
+                        "connection_state", {}
+                    )
 
             elif protocol == "UDP":
                 udp_analysis = self._analyze_udp(packet_data, packet_info)
@@ -140,9 +165,14 @@ class NetworkAnalyzer:
 
         except Exception as e:
             logger.error(f"네트워크 분석 오류: {e}")
-            return {"error": str(e), "timestamp": packet_info.get("timestamp", datetime.now().isoformat())}
+            return {
+                "error": str(e),
+                "timestamp": packet_info.get("timestamp", datetime.now().isoformat()),
+            }
 
-    def _analyze_ip_layer(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_ip_layer(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """IP 계층 분석"""
         try:
             if len(packet_data) < 20:
@@ -165,7 +195,9 @@ class NetworkAnalyzer:
             logger.error(f"IP 계층 분석 오류: {e}")
             return None
 
-    def _analyze_ipv4(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_ipv4(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """IPv4 헤더 분석"""
         try:
             if len(packet_data) < 20:
@@ -228,7 +260,9 @@ class NetworkAnalyzer:
             logger.error(f"IPv4 분석 오류: {e}")
             return {"version": 4, "error": str(e)}
 
-    def _analyze_ipv6(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_ipv6(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """IPv6 헤더 분석"""
         try:
             if len(packet_data) < 40:
@@ -255,7 +289,9 @@ class NetworkAnalyzer:
                 "flow_label": flow_label,
                 "payload_length": payload_length,
                 "next_header": next_header,
-                "next_header_name": self.IP_PROTOCOLS.get(next_header, f"unknown_{next_header}"),
+                "next_header_name": self.IP_PROTOCOLS.get(
+                    next_header, f"unknown_{next_header}"
+                ),
                 "hop_limit": hop_limit,
                 "src_ip": src_ip,
                 "dst_ip": dst_ip,
@@ -281,14 +317,20 @@ class NetworkAnalyzer:
                     break
 
                 opt_type = options_data[offset]
-                opt_length = options_data[offset + 1] if offset + 1 < len(options_data) else 0
+                opt_length = (
+                    options_data[offset + 1] if offset + 1 < len(options_data) else 0
+                )
 
                 if opt_length < 2 or offset + opt_length > len(options_data):
                     break
 
                 opt_data = options_data[offset + 2 : offset + opt_length]
 
-                option = {"type": opt_type, "length": opt_length, "data": opt_data.hex() if opt_data else ""}
+                option = {
+                    "type": opt_type,
+                    "length": opt_length,
+                    "data": opt_data.hex() if opt_data else "",
+                }
 
                 # 알려진 옵션 타입 해석
                 if opt_type == 7:  # Record Route
@@ -305,11 +347,15 @@ class NetworkAnalyzer:
 
         return options
 
-    def _analyze_tcp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_tcp(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """TCP 세그먼트 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            ip_header_length = (
+                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            )
             tcp_start = ip_header_length
 
             if len(packet_data) < tcp_start + 20:
@@ -400,7 +446,11 @@ class NetworkAnalyzer:
 
                 opt_data = options_data[offset + 2 : offset + opt_length]
 
-                option = {"type": opt_type, "length": opt_length, "data": opt_data.hex() if opt_data else ""}
+                option = {
+                    "type": opt_type,
+                    "length": opt_length,
+                    "data": opt_data.hex() if opt_data else "",
+                }
 
                 # 알려진 TCP 옵션 해석
                 if opt_type == 2:  # Maximum Segment Size
@@ -426,7 +476,9 @@ class NetworkAnalyzer:
 
         return options
 
-    def _track_tcp_connection(self, tcp_info: Dict[str, Any], packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _track_tcp_connection(
+        self, tcp_info: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """TCP 연결 상태 추적"""
         try:
             src_ip = packet_info.get("src_ip")
@@ -482,18 +534,24 @@ class NetworkAnalyzer:
                 "direction": direction,
                 "packets": connection["packets"],
                 "bytes": connection["bytes"],
-                "duration": self._calculate_duration(connection["start_time"], packet_info.get("timestamp")),
+                "duration": self._calculate_duration(
+                    connection["start_time"], packet_info.get("timestamp")
+                ),
             }
 
         except Exception as e:
             logger.error(f"TCP 연결 추적 오류: {e}")
             return {"state": "ERROR", "error": str(e)}
 
-    def _analyze_udp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_udp(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """UDP 데이터그램 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            ip_header_length = (
+                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            )
             udp_start = ip_header_length
 
             if len(packet_data) < udp_start + 8:
@@ -528,11 +586,15 @@ class NetworkAnalyzer:
             logger.error(f"UDP 분석 오류: {e}")
             return None
 
-    def _analyze_icmp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_icmp(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """ICMP 메시지 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            ip_header_length = (
+                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
+            )
             icmp_start = ip_header_length
 
             if len(packet_data) < icmp_start + 8:
@@ -638,19 +700,32 @@ class NetworkAnalyzer:
         """현재 통계 반환"""
         try:
             # 상위 플로우
-            top_flows = sorted([(k, v) for k, v in self.flow_stats.items()], key=lambda x: x[1]["bytes"], reverse=True)[
-                :10
-            ]
+            top_flows = sorted(
+                [(k, v) for k, v in self.flow_stats.items()],
+                key=lambda x: x[1]["bytes"],
+                reverse=True,
+            )[:10]
 
             # 상위 포트
-            top_ports = sorted([(k, v) for k, v in self.port_stats.items()], key=lambda x: x[1], reverse=True)[:10]
+            top_ports = sorted(
+                [(k, v) for k, v in self.port_stats.items()],
+                key=lambda x: x[1],
+                reverse=True,
+            )[:10]
 
             return {
                 "total_flows": len(self.flow_stats),
                 "total_connections": len(self.connections),
-                "top_flows": [{"flow": f[0], "packets": f[1]["packets"], "bytes": f[1]["bytes"]} for f in top_flows],
+                "top_flows": [
+                    {"flow": f[0], "packets": f[1]["packets"], "bytes": f[1]["bytes"]}
+                    for f in top_flows
+                ],
                 "top_ports": [
-                    {"port": p[0], "service": self.WELL_KNOWN_PORTS.get(p[0], "unknown"), "count": p[1]}
+                    {
+                        "port": p[0],
+                        "service": self.WELL_KNOWN_PORTS.get(p[0], "unknown"),
+                        "count": p[1],
+                    }
                     for p in top_ports
                 ],
             }
@@ -659,7 +734,9 @@ class NetworkAnalyzer:
             logger.error(f"통계 생성 오류: {e}")
             return {}
 
-    def _detect_anomalies(self, analysis: Dict[str, Any], packet_info: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _detect_anomalies(
+        self, analysis: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """네트워크 이상 징후 검사"""
         anomalies = []
 
@@ -675,13 +752,34 @@ class NetworkAnalyzer:
             # TTL 이상
             ttl = ip_layer.get("ttl", 64)
             if ttl < 5:
-                anomalies.append({"type": "low_ttl", "description": f"비정상적으로 낮은 TTL 값: {ttl}", "severity": "medium"})
+                anomalies.append(
+                    {
+                        "type": "low_ttl",
+                        "description": f"비정상적으로 낮은 TTL 값: {ttl}",
+                        "severity": "medium",
+                    }
+                )
             elif ttl > 200:
-                anomalies.append({"type": "high_ttl", "description": f"비정상적으로 높은 TTL 값: {ttl}", "severity": "low"})
+                anomalies.append(
+                    {
+                        "type": "high_ttl",
+                        "description": f"비정상적으로 높은 TTL 값: {ttl}",
+                        "severity": "low",
+                    }
+                )
 
             # 프래그먼트 이상
-            if ip_layer.get("flags", {}).get("more_fragments") and ip_layer.get("fragment_offset", 0) == 0:
-                anomalies.append({"type": "fragment_anomaly", "description": "의심스러운 IP 프래그먼트 패턴", "severity": "medium"})
+            if (
+                ip_layer.get("flags", {}).get("more_fragments")
+                and ip_layer.get("fragment_offset", 0) == 0
+            ):
+                anomalies.append(
+                    {
+                        "type": "fragment_anomaly",
+                        "description": "의심스러운 IP 프래그먼트 패턴",
+                        "severity": "medium",
+                    }
+                )
 
         except Exception as e:
             logger.error(f"이상 징후 검사 오류: {e}")
@@ -698,13 +796,23 @@ class NetworkAnalyzer:
             for option in options:
                 if option.get("name") in ["Strict Source Route", "Loose Source Route"]:
                     issues.append(
-                        {"type": "source_routing", "description": "Source routing 옵션 감지", "severity": "medium"}
+                        {
+                            "type": "source_routing",
+                            "description": "Source routing 옵션 감지",
+                            "severity": "medium",
+                        }
                     )
 
             # 의심스러운 TOS 값
             tos = ipv4_info.get("type_of_service", 0)
             if tos > 0:
-                issues.append({"type": "tos_manipulation", "description": f"비표준 TOS 값: {tos}", "severity": "low"})
+                issues.append(
+                    {
+                        "type": "tos_manipulation",
+                        "description": f"비표준 TOS 값: {tos}",
+                        "severity": "low",
+                    }
+                )
 
         except Exception as e:
             logger.error(f"IPv4 보안 검사 오류: {e}")
@@ -721,21 +829,39 @@ class NetworkAnalyzer:
             # 비정상적인 플래그 조합
             if "SYN" in flags and "FIN" in flags:
                 anomalies.append(
-                    {"type": "tcp_flag_anomaly", "description": "SYN과 FIN 플래그가 동시에 설정됨", "severity": "high"}
+                    {
+                        "type": "tcp_flag_anomaly",
+                        "description": "SYN과 FIN 플래그가 동시에 설정됨",
+                        "severity": "high",
+                    }
                 )
 
             if "RST" in flags and ("SYN" in flags or "FIN" in flags):
                 anomalies.append(
-                    {"type": "tcp_flag_anomaly", "description": "RST와 다른 플래그가 동시에 설정됨", "severity": "medium"}
+                    {
+                        "type": "tcp_flag_anomaly",
+                        "description": "RST와 다른 플래그가 동시에 설정됨",
+                        "severity": "medium",
+                    }
                 )
 
             # 윈도우 크기 이상
             window_size = tcp_info.get("window_size", 0)
             if window_size == 0 and "RST" not in flags:
-                anomalies.append({"type": "zero_window", "description": "윈도우 크기가 0", "severity": "medium"})
+                anomalies.append(
+                    {
+                        "type": "zero_window",
+                        "description": "윈도우 크기가 0",
+                        "severity": "medium",
+                    }
+                )
             elif window_size > 65535:
                 anomalies.append(
-                    {"type": "large_window", "description": f"비정상적으로 큰 윈도우 크기: {window_size}", "severity": "low"}
+                    {
+                        "type": "large_window",
+                        "description": f"비정상적으로 큰 윈도우 크기: {window_size}",
+                        "severity": "low",
+                    }
                 )
 
             # 포트 스캔 탐지
@@ -745,7 +871,11 @@ class NetworkAnalyzer:
             if src_port and dst_port:
                 if src_port == dst_port:
                     anomalies.append(
-                        {"type": "same_port", "description": f"송신 포트와 수신 포트가 동일: {src_port}", "severity": "medium"}
+                        {
+                            "type": "same_port",
+                            "description": f"송신 포트와 수신 포트가 동일: {src_port}",
+                            "severity": "medium",
+                        }
                     )
 
         except Exception as e:
@@ -764,7 +894,11 @@ class NetworkAnalyzer:
 
             if length < 8:
                 anomalies.append(
-                    {"type": "invalid_udp_length", "description": f"잘못된 UDP 길이: {length}", "severity": "high"}
+                    {
+                        "type": "invalid_udp_length",
+                        "description": f"잘못된 UDP 길이: {length}",
+                        "severity": "high",
+                    }
                 )
 
             # 포트 0 사용
@@ -772,14 +906,22 @@ class NetworkAnalyzer:
             dst_port = udp_info.get("dst_port")
 
             if src_port == 0 or dst_port == 0:
-                anomalies.append({"type": "port_zero", "description": "포트 0 사용", "severity": "medium"})
+                anomalies.append(
+                    {
+                        "type": "port_zero",
+                        "description": "포트 0 사용",
+                        "severity": "medium",
+                    }
+                )
 
         except Exception as e:
             logger.error(f"UDP 이상 징후 검사 오류: {e}")
 
         return anomalies
 
-    def _check_icmp_anomalies(self, icmp_info: Dict[str, Any], packet_info: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_icmp_anomalies(
+        self, icmp_info: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """ICMP 이상 징후 검사"""
         anomalies = []
 
@@ -799,7 +941,13 @@ class NetworkAnalyzer:
 
             # ICMP 터널링 의심
             if icmp_type in [8, 0] and payload_size > 100:
-                anomalies.append({"type": "possible_icmp_tunnel", "description": "ICMP 터널링 의심", "severity": "medium"})
+                anomalies.append(
+                    {
+                        "type": "possible_icmp_tunnel",
+                        "description": "ICMP 터널링 의심",
+                        "severity": "medium",
+                    }
+                )
 
         except Exception as e:
             logger.error(f"ICMP 이상 징후 검사 오류: {e}")

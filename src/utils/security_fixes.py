@@ -26,13 +26,19 @@ class SecurityFixer:
 
         # MD5를 SHA-256으로 교체
         md5_patterns = [
-            (r"hashlib\.md5\(([^)]+)\)\.hexdigest\(\)", r"hashlib.sha256(\1).hexdigest()"),
+            (
+                r"hashlib\.md5\(([^)]+)\)\.hexdigest\(\)",
+                r"hashlib.sha256(\1).hexdigest()",
+            ),
             (r"hashlib\.md5\(([^)]+)\)", r"hashlib.sha256(\1)"),
         ]
 
         # SHA-1을 SHA-256으로 교체
         sha1_patterns = [
-            (r"hashlib\.sha1\(([^)]+)\)\.hexdigest\(\)", r"hashlib.sha256(\1).hexdigest()"),
+            (
+                r"hashlib\.sha1\(([^)]+)\)\.hexdigest\(\)",
+                r"hashlib.sha256(\1).hexdigest()",
+            ),
             (r"hashlib\.sha1\(([^)]+)\)", r"hashlib.sha256(\1)"),
         ]
 
@@ -40,7 +46,10 @@ class SecurityFixer:
         random_patterns = [
             (r"random\.random\(\)", r"secrets.SystemRandom().random()"),
             (r"random\.choice\(([^)]+)\)", r"secrets.choice(\1)"),
-            (r"random\.randint\(([^)]+)\)", r"secrets.randbelow(\1[1] - \1[0] + 1) + \1[0]"),
+            (
+                r"random\.randint\(([^)]+)\)",
+                r"secrets.randbelow(\1[1] - \1[0] + 1) + \1[0]",
+            ),
         ]
 
         all_patterns = md5_patterns + sha1_patterns + random_patterns
@@ -80,7 +89,10 @@ class SecurityFixer:
         # pickle.loads를 안전한 대안으로 교체
         unsafe_patterns = [
             # pickle.loads는 json.loads로 교체 (가능한 경우)
-            (r"pickle\.loads\(([^)]+)\)", r"json.loads(\1.decode() if isinstance(\1, bytes) else \1)"),
+            (
+                r"pickle\.loads\(([^)]+)\)",
+                r"json.loads(\1.decode() if isinstance(\1, bytes) else \1)",
+            ),
             # yaml.load는 yaml.safe_load로 교체
             (r"yaml\.load\(([^)]+)\)", r"yaml.safe_load(\1)"),
         ]
@@ -101,10 +113,22 @@ class SecurityFixer:
 
         # 하드코딩된 비밀정보 패턴
         secret_patterns = [
-            (r'password\s*=\s*[\'"][^\'"]{3,}[\'"]', 'password = os.environ.get("PASSWORD", "")'),
-            (r'api_key\s*=\s*[\'"][A-Za-z0-9]{10,}[\'"]', 'api_key = os.environ.get("API_KEY", "")'),
-            (r'secret\s*=\s*[\'"][A-Za-z0-9]{8,}[\'"]', 'secret = os.environ.get("SECRET", "")'),
-            (r'token\s*=\s*[\'"][A-Za-z0-9]{10,}[\'"]', 'token = os.environ.get("TOKEN", "")'),
+            (
+                r'password\s*=\s*[\'"][^\'"]{3,}[\'"]',
+                'password = os.environ.get("PASSWORD", "")',
+            ),
+            (
+                r'api_key\s*=\s*[\'"][A-Za-z0-9]{10,}[\'"]',
+                'api_key = os.environ.get("API_KEY", "")',
+            ),
+            (
+                r'secret\s*=\s*[\'"][A-Za-z0-9]{8,}[\'"]',
+                'secret = os.environ.get("SECRET", "")',
+            ),
+            (
+                r'token\s*=\s*[\'"][A-Za-z0-9]{10,}[\'"]',
+                'token = os.environ.get("TOKEN", "")',
+            ),
         ]
 
         # src 디렉토리의 모든 Python 파일 처리
@@ -126,7 +150,10 @@ class SecurityFixer:
             # 상대 경로 제거
             (r"\.\./|\.\.\\\)", ""),
             # 안전하지 않은 open 호출을 안전한 것으로 교체
-            (r"open\s*\([^)]*\+[^)]*\)", "open(os.path.abspath(os.path.join(safe_dir, filename)), mode)"),
+            (
+                r"open\s*\([^)]*\+[^)]*\)",
+                "open(os.path.abspath(os.path.join(safe_dir, filename)), mode)",
+            ),
         ]
 
         # src 디렉토리의 모든 Python 파일 처리
@@ -139,7 +166,9 @@ class SecurityFixer:
 
         return fixes
 
-    def _apply_patterns_to_file(self, file_path: str, patterns: List[Tuple[str, str]]) -> bool:
+    def _apply_patterns_to_file(
+        self, file_path: str, patterns: List[Tuple[str, str]]
+    ) -> bool:
         """파일에 패턴 적용"""
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -180,10 +209,15 @@ class SecurityFixer:
                 # 임포트 섹션에 보안 관련 임포트 추가
                 if not imports_added and line.startswith("from flask import"):
                     new_lines.append(line)
-                    new_lines.append("from src.utils.security import rate_limit, validate_request, csrf_protect\n")
+                    new_lines.append(
+                        "from src.utils.security import rate_limit, validate_request, csrf_protect\n"
+                    )
                     imports_added = True
                     modified = True
-                elif re.search(r'@app\.route\([\'"][^\'\"]*/(api|admin|config|settings|delete|create|update)', line):
+                elif re.search(
+                    r'@app\.route\([\'"][^\'\"]*/(api|admin|config|settings|delete|create|update)',
+                    line,
+                ):
                     # 민감한 라우트에 보안 데코레이터 추가
                     new_lines.append("    @rate_limit(max_requests=30, window=60)\n")
                     new_lines.append("    @csrf_protect\n")

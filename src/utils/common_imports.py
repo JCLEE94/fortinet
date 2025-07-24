@@ -9,7 +9,6 @@ import asyncio
 import datetime
 import json
 import logging
-
 # 표준 라이브러리 임포트
 import os
 import sys
@@ -27,14 +26,14 @@ try:
 
     import redis
     import requests
-    from flask import Blueprint, Flask, jsonify, render_template, request, session
+    from flask import (Blueprint, Flask, jsonify, render_template, request,
+                       session)
 except ImportError as e:
     # 선택적 의존성 - 일부 모듈이 없어도 동작하도록
     pass
 
 from src.utils.security import rate_limit
 from src.utils.unified_cache_manager import cached
-
 # 프로젝트 공통 유틸리티 임포트
 from src.utils.unified_logger import setup_logger
 
@@ -102,9 +101,13 @@ def validate_required_fields(required_fields: List[str]):
             if request.is_json:
                 data = request.get_json()
                 if data:
-                    missing_fields = [field for field in required_fields if field not in data]
+                    missing_fields = [
+                        field for field in required_fields if field not in data
+                    ]
                     if missing_fields:
-                        raise ValidationException(f"Missing required fields: {missing_fields}")
+                        raise ValidationException(
+                            f"Missing required fields: {missing_fields}"
+                        )
             return func(*args, **kwargs)
 
         return wrapper
@@ -163,14 +166,27 @@ def is_valid_network(network_str: str) -> bool:
 def format_error_response(error_message: str, status_code: int = 500):
     """표준화된 오류 응답 생성"""
     return (
-        jsonify({"error": error_message, "timestamp": get_current_timestamp(), "status_code": status_code}),
+        jsonify(
+            {
+                "error": error_message,
+                "timestamp": get_current_timestamp(),
+                "status_code": status_code,
+            }
+        ),
         status_code,
     )
 
 
 def format_success_response(data: Any, message: str = "Success"):
     """표준화된 성공 응답 생성"""
-    return jsonify({"success": True, "message": message, "data": data, "timestamp": get_current_timestamp()})
+    return jsonify(
+        {
+            "success": True,
+            "message": message,
+            "data": data,
+            "timestamp": get_current_timestamp(),
+        }
+    )
 
 
 # 환경 변수 헬퍼
@@ -185,7 +201,9 @@ def get_env_int(key: str, default: int = 0) -> int:
     return safe_int(os.getenv(key), default)
 
 
-def get_env_list(key: str, separator: str = ",", default: List[str] = None) -> List[str]:
+def get_env_list(
+    key: str, separator: str = ",", default: List[str] = None
+) -> List[str]:
     """환경 변수를 리스트로 변환"""
     if default is None:
         default = []

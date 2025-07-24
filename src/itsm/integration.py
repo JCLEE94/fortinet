@@ -54,7 +54,9 @@ class ITSMIntegration:
         if itsm_base_url is None:
             itsm_base_url = EXTERNAL_SERVICES["itsm"]
 
-    def analyze_firewall_requirement(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_firewall_requirement(
+        self, request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         방화벽 정책 요청을 분석하여 어느 방화벽에 적용해야 할지 결정
 
@@ -86,10 +88,14 @@ class ITSMIntegration:
             dst_zone = self._determine_network_zone(dst_ip)
 
             # 방화벽 선택 로직
-            recommended_firewalls = self._select_appropriate_firewalls(src_zone, dst_zone, port, protocol)
+            recommended_firewalls = self._select_appropriate_firewalls(
+                src_zone, dst_zone, port, protocol
+            )
 
             # 정책 분석
-            policy_analysis = self._analyze_policy_requirements(request_data, src_zone, dst_zone)
+            policy_analysis = self._analyze_policy_requirements(
+                request_data, src_zone, dst_zone
+            )
 
             result = {
                 "source_zone": src_zone,
@@ -97,8 +103,12 @@ class ITSMIntegration:
                 "recommended_firewalls": recommended_firewalls,
                 "policy_analysis": policy_analysis,
                 "risk_level": self._assess_risk_level(request_data, src_zone, dst_zone),
-                "approval_required": self._check_approval_requirements(request_data, src_zone, dst_zone),
-                "implementation_steps": self._generate_implementation_steps(recommended_firewalls, request_data),
+                "approval_required": self._check_approval_requirements(
+                    request_data, src_zone, dst_zone
+                ),
+                "implementation_steps": self._generate_implementation_steps(
+                    recommended_firewalls, request_data
+                ),
             }
 
             logger.info(f"방화벽 요청 분석 완료: {src_ip}({src_zone}) -> {dst_ip}({dst_zone})")
@@ -161,10 +171,30 @@ class ITSMIntegration:
 
         # 방화벽 정의 (기존 더미 데이터의 4개 방화벽 사용)
         firewalls = {
-            "FW-01": {"name": "FortiGate-HQ-01", "location": "본사", "zones": ["internal"], "priority": 1},
-            "FW-02": {"name": "FortiGate-DMZ-01", "location": "DMZ", "zones": ["dmz"], "priority": 2},
-            "FW-03": {"name": "FortiGate-WAN-01", "location": "외부연결", "zones": ["external"], "priority": 3},
-            "FW-04": {"name": "FortiGate-Branch-01", "location": "지사", "zones": ["branch"], "priority": 4},
+            "FW-01": {
+                "name": "FortiGate-HQ-01",
+                "location": "본사",
+                "zones": ["internal"],
+                "priority": 1,
+            },
+            "FW-02": {
+                "name": "FortiGate-DMZ-01",
+                "location": "DMZ",
+                "zones": ["dmz"],
+                "priority": 2,
+            },
+            "FW-03": {
+                "name": "FortiGate-WAN-01",
+                "location": "외부연결",
+                "zones": ["external"],
+                "priority": 3,
+            },
+            "FW-04": {
+                "name": "FortiGate-Branch-01",
+                "location": "지사",
+                "zones": ["branch"],
+                "priority": 4,
+            },
         }
 
         # 존 간 트래픽 경로 분석
@@ -286,10 +316,18 @@ class ITSMIntegration:
 
         analysis = {
             "policy_type": self._determine_policy_type(src_zone, dst_zone, port),
-            "security_implications": self._assess_security_implications(src_zone, dst_zone, port, protocol),
-            "recommended_restrictions": self._suggest_restrictions(request_data, src_zone, dst_zone),
-            "monitoring_requirements": self._determine_monitoring_needs(src_zone, dst_zone, port),
-            "compliance_check": self._check_compliance_requirements(src_zone, dst_zone, port, service),
+            "security_implications": self._assess_security_implications(
+                src_zone, dst_zone, port, protocol
+            ),
+            "recommended_restrictions": self._suggest_restrictions(
+                request_data, src_zone, dst_zone
+            ),
+            "monitoring_requirements": self._determine_monitoring_needs(
+                src_zone, dst_zone, port
+            ),
+            "compliance_check": self._check_compliance_requirements(
+                src_zone, dst_zone, port, service
+            ),
         }
 
         return analysis
@@ -307,7 +345,9 @@ class ITSMIntegration:
         else:
             return "inter_zone"
 
-    def _assess_security_implications(self, src_zone: str, dst_zone: str, port: int, protocol: str) -> List[str]:
+    def _assess_security_implications(
+        self, src_zone: str, dst_zone: str, port: int, protocol: str
+    ) -> List[str]:
         """보안 영향 평가"""
         implications = []
 
@@ -325,7 +365,9 @@ class ITSMIntegration:
 
         return implications
 
-    def _suggest_restrictions(self, request_data: Dict[str, Any], src_zone: str, dst_zone: str) -> List[str]:
+    def _suggest_restrictions(
+        self, request_data: Dict[str, Any], src_zone: str, dst_zone: str
+    ) -> List[str]:
         """권장 제한 사항"""
         restrictions = []
 
@@ -346,9 +388,15 @@ class ITSMIntegration:
 
         return restrictions
 
-    def _determine_monitoring_needs(self, src_zone: str, dst_zone: str, port: int) -> Dict[str, Any]:
+    def _determine_monitoring_needs(
+        self, src_zone: str, dst_zone: str, port: int
+    ) -> Dict[str, Any]:
         """모니터링 요구사항 결정"""
-        monitoring = {"log_level": "standard", "alert_conditions": [], "reporting_frequency": "weekly"}
+        monitoring = {
+            "log_level": "standard",
+            "alert_conditions": [],
+            "reporting_frequency": "weekly",
+        }
 
         if dst_zone == "external":
             monitoring["log_level"] = "detailed"
@@ -361,9 +409,15 @@ class ITSMIntegration:
 
         return monitoring
 
-    def _check_compliance_requirements(self, src_zone: str, dst_zone: str, port: int, service: str) -> Dict[str, Any]:
+    def _check_compliance_requirements(
+        self, src_zone: str, dst_zone: str, port: int, service: str
+    ) -> Dict[str, Any]:
         """컴플라이언스 요구사항 확인"""
-        compliance = {"required_approvals": [], "documentation_needs": [], "audit_requirements": []}
+        compliance = {
+            "required_approvals": [],
+            "documentation_needs": [],
+            "audit_requirements": [],
+        }
 
         if dst_zone == "external":
             compliance["required_approvals"].append("보안팀 승인")
@@ -375,7 +429,9 @@ class ITSMIntegration:
 
         return compliance
 
-    def _assess_risk_level(self, request_data: Dict[str, Any], src_zone: str, dst_zone: str) -> str:
+    def _assess_risk_level(
+        self, request_data: Dict[str, Any], src_zone: str, dst_zone: str
+    ) -> str:
         """위험 수준 평가"""
         risk_score = 0
 
@@ -411,7 +467,11 @@ class ITSMIntegration:
         self, request_data: Dict[str, Any], src_zone: str, dst_zone: str
     ) -> Dict[str, Any]:
         """승인 요구사항 확인"""
-        approvals = {"required": False, "approval_levels": [], "estimated_time": "1-2 business days"}
+        approvals = {
+            "required": False,
+            "approval_levels": [],
+            "estimated_time": "1-2 business days",
+        }
 
         risk_level = self._assess_risk_level(request_data, src_zone, dst_zone)
 
@@ -441,13 +501,17 @@ class ITSMIntegration:
                 "description": self._generate_step_description(firewall, request_data),
                 "estimated_time": "15-30 minutes",
                 "required_permissions": ["방화벽 관리자 권한"],
-                "rollback_procedure": self._generate_rollback_procedure(firewall, request_data),
+                "rollback_procedure": self._generate_rollback_procedure(
+                    firewall, request_data
+                ),
             }
             steps.append(step)
 
         return steps
 
-    def _generate_step_description(self, firewall: Dict[str, Any], request_data: Dict[str, Any]) -> str:
+    def _generate_step_description(
+        self, firewall: Dict[str, Any], request_data: Dict[str, Any]
+    ) -> str:
         """단계별 설명 생성"""
         action = firewall["action"]
         fw_name = firewall["firewall_name"]
@@ -467,12 +531,16 @@ class ITSMIntegration:
         else:
             return f"{fw_name}에서 방화벽 정책 설정"
 
-    def _generate_rollback_procedure(self, firewall: Dict[str, Any], request_data: Dict[str, Any]) -> str:
+    def _generate_rollback_procedure(
+        self, firewall: Dict[str, Any], request_data: Dict[str, Any]
+    ) -> str:
         """롤백 절차 생성"""
         fw_name = firewall["firewall_name"]
         return f"{fw_name}에서 추가된 정책 ID를 확인 후 해당 정책 삭제"
 
-    def create_itsm_ticket(self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create_itsm_ticket(
+        self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         ITSM 시스템에 방화벽 정책 요청 티켓 생성
 
@@ -487,15 +555,21 @@ class ITSMIntegration:
             # ITSM 티켓 데이터 구성
             ticket_data = {
                 "title": f"방화벽 정책 요청: {request_data.get('source_ip')} -> {request_data.get('destination_ip')}",
-                "description": self._generate_ticket_description(analysis_result, request_data),
+                "description": self._generate_ticket_description(
+                    analysis_result, request_data
+                ),
                 "category": "방화벽 허용요청",
-                "priority": self._map_risk_to_priority(analysis_result.get("risk_level", "Medium")),
+                "priority": self._map_risk_to_priority(
+                    analysis_result.get("risk_level", "Medium")
+                ),
                 "requester": request_data.get("requester", ""),
                 "department": request_data.get("department", ""),
                 "requested_date": datetime.now().isoformat(),
                 "firewall_details": analysis_result.get("recommended_firewalls", []),
                 "implementation_steps": analysis_result.get("implementation_steps", []),
-                "approval_required": analysis_result.get("approval_required", {}).get("required", False),
+                "approval_required": analysis_result.get("approval_required", {}).get(
+                    "required", False
+                ),
             }
 
             # 실제 ITSM API 호출은 여기서 구현
@@ -508,9 +582,9 @@ class ITSMIntegration:
                 "status": "created",
                 "message": "ITSM 티켓이 성공적으로 생성되었습니다.",
                 "ticket_url": f"{self.itsm_base_url}/ticket/{ticket_id}",
-                "estimated_completion": analysis_result.get("approval_required", {}).get(
-                    "estimated_time", "1-2 business days"
-                ),
+                "estimated_completion": analysis_result.get(
+                    "approval_required", {}
+                ).get("estimated_time", "1-2 business days"),
             }
 
             logger.info(f"ITSM 티켓 생성 완료: {ticket_id}")
@@ -520,7 +594,9 @@ class ITSMIntegration:
             logger.error(f"ITSM 티켓 생성 오류: {str(e)}")
             return {"success": False, "error": str(e), "message": "ITSM 티켓 생성에 실패했습니다."}
 
-    def _generate_ticket_description(self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]) -> str:
+    def _generate_ticket_description(
+        self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]
+    ) -> str:
         """티켓 설명 생성"""
         description = f"""
 방화벽 정책 추가 요청
@@ -550,18 +626,31 @@ class ITSMIntegration:
 == 보안 고려사항 ==
 """
 
-        for implication in analysis_result.get("policy_analysis", {}).get("security_implications", []):
+        for implication in analysis_result.get("policy_analysis", {}).get(
+            "security_implications", []
+        ):
             description += f"- {implication}\n"
 
         return description
 
     def _map_risk_to_priority(self, risk_level: str) -> str:
         """위험 수준을 ITSM 우선순위로 매핑"""
-        mapping = {"Low": "4급(Low)", "Medium": "3급(Medium)", "High": "2급(High)", "Critical": "1급(Critical)"}
+        mapping = {
+            "Low": "4급(Low)",
+            "Medium": "3급(Medium)",
+            "High": "2급(High)",
+            "Critical": "1급(Critical)",
+        }
         return mapping.get(risk_level, "3급(Medium)")
 
     def get_firewall_recommendations(
-        self, src_ip: str, dst_ip: str, port: int = 80, protocol: str = "tcp", service: str = "", description: str = ""
+        self,
+        src_ip: str,
+        dst_ip: str,
+        port: int = 80,
+        protocol: str = "tcp",
+        service: str = "",
+        description: str = "",
     ) -> Dict[str, Any]:
         """
         간편한 방화벽 추천 API

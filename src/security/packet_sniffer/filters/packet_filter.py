@@ -75,7 +75,7 @@ class FilterRule:
                     network = ipaddress.ip_network(self.value, strict=False)
                     ip = ipaddress.ip_address(field_value)
                     result = ip in network
-                except:
+                except Exception:
                     result = False
             else:
                 logger.warning(f"알 수 없는 연산자: {self.operator}")
@@ -109,10 +109,17 @@ class PacketFilter:
         """패킷 필터 초기화"""
         self.rules = []
         self.default_action = "allow"  # allow, deny
-        self.statistics = {"total_packets": 0, "allowed_packets": 0, "denied_packets": 0, "filtered_packets": 0}
+        self.statistics = {
+            "total_packets": 0,
+            "allowed_packets": 0,
+            "denied_packets": 0,
+            "filtered_packets": 0,
+        }
         self.callbacks = []
 
-    def add_rule(self, field: str, operator: str, value: Any, action: str = "allow") -> FilterRule:
+    def add_rule(
+        self, field: str, operator: str, value: Any, action: str = "allow"
+    ) -> FilterRule:
         """
         필터 규칙 추가
 
@@ -166,7 +173,12 @@ class PacketFilter:
         try:
             self.statistics["total_packets"] += 1
 
-            result = {"action": self.default_action, "matched_rules": [], "packet_info": packet_info, "filtered": False}
+            result = {
+                "action": self.default_action,
+                "matched_rules": [],
+                "packet_info": packet_info,
+                "filtered": False,
+            }
 
             # 모든 규칙에 대해 매칭 검사
             for rule in self.rules:
@@ -188,7 +200,12 @@ class PacketFilter:
 
                         # 콜백 호출
                         self._notify_callbacks(
-                            "rule_matched", {"rule": rule.to_dict(), "packet_info": packet_info, "action": rule.action}
+                            "rule_matched",
+                            {
+                                "rule": rule.to_dict(),
+                                "packet_info": packet_info,
+                                "action": rule.action,
+                            },
                         )
 
             # 매칭되는 규칙이 없는 경우 기본 액션 적용
@@ -364,7 +381,12 @@ class PacketFilter:
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"total_packets": 0, "allowed_packets": 0, "denied_packets": 0, "filtered_packets": 0}
+        self.statistics = {
+            "total_packets": 0,
+            "allowed_packets": 0,
+            "denied_packets": 0,
+            "filtered_packets": 0,
+        }
 
         for rule in self.rules:
             rule.match_count = 0
@@ -382,7 +404,10 @@ class PacketFilter:
 
             for rule_data in rules_data:
                 self.add_rule(
-                    rule_data["field"], rule_data["operator"], rule_data["value"], rule_data.get("action", "allow")
+                    rule_data["field"],
+                    rule_data["operator"],
+                    rule_data["value"],
+                    rule_data.get("action", "allow"),
                 )
 
             logger.info(f"{len(rules_data)}개의 필터 규칙 가져오기 완료")

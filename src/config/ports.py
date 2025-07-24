@@ -66,7 +66,15 @@ STANDARD_PORTS: Dict[str, int] = {
 # 프로토콜별 포트 매핑
 PROTOCOL_PORTS: Dict[str, Dict[str, int]] = {
     "web": {"http": 80, "https": 443, "http_alt": 8080, "https_alt": 8443},
-    "mail": {"smtp": 25, "smtp_submission": 587, "smtp_tls": 465, "pop3": 110, "pop3s": 995, "imap": 143, "imaps": 993},
+    "mail": {
+        "smtp": 25,
+        "smtp_submission": 587,
+        "smtp_tls": 465,
+        "pop3": 110,
+        "pop3s": 995,
+        "imap": 143,
+        "imaps": 993,
+    },
     "file_transfer": {"ftp": 21, "ftp_data": 20, "ftps": 990, "sftp": 22, "tftp": 69},
     "remote_access": {"ssh": 22, "telnet": 23, "rdp": 3389, "vnc": 5900},
     "database": {
@@ -77,7 +85,14 @@ PROTOCOL_PORTS: Dict[str, Dict[str, int]] = {
         "cassandra": 9042,
         "elasticsearch": 9200,
     },
-    "monitoring": {"snmp": 161, "snmp_trap": 162, "syslog": 514, "prometheus": 9090, "grafana": 3000, "zabbix": 10051},
+    "monitoring": {
+        "snmp": 161,
+        "snmp_trap": 162,
+        "syslog": 514,
+        "prometheus": 9090,
+        "grafana": 3000,
+        "zabbix": 10051,
+    },
 }
 
 
@@ -92,7 +107,12 @@ def get_service_port(service_name: str) -> int:
         포트 번호
     """
     # 우선순위: SERVICE_PORTS > FORTIGATE_PORTS > STANDARD_PORTS
-    return SERVICE_PORTS.get(service_name) or FORTIGATE_PORTS.get(service_name) or STANDARD_PORTS.get(service_name) or 0
+    return (
+        SERVICE_PORTS.get(service_name)
+        or FORTIGATE_PORTS.get(service_name)
+        or STANDARD_PORTS.get(service_name)
+        or 0
+    )
 
 
 def get_protocol_ports(protocol_category: str) -> Dict[str, int]:

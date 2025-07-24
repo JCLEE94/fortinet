@@ -67,7 +67,9 @@ class AuthManager:
         self._credentials_cache: Dict[str, AuthCredentials] = {}
         self._session_timeout = timedelta(hours=8)  # Default 8 hours
 
-    def register_credentials(self, host: str, port: int, credentials: AuthCredentials) -> str:
+    def register_credentials(
+        self, host: str, port: int, credentials: AuthCredentials
+    ) -> str:
         """
         Register authentication credentials for a host.
 
@@ -83,7 +85,9 @@ class AuthManager:
         self._credentials_cache[cred_id] = credentials
         return cred_id
 
-    def authenticate(self, host: str, port: int, auth_type: AuthType, **kwargs) -> Tuple[bool, Optional[AuthSession]]:
+    def authenticate(
+        self, host: str, port: int, auth_type: AuthType, **kwargs
+    ) -> Tuple[bool, Optional[AuthSession]]:
         """
         Perform authentication based on type.
 
@@ -285,11 +289,18 @@ class AuthManager:
             login_url = f"https://{host}:{port}/jsonrpc"
             login_data = {
                 "method": "exec",
-                "params": [{"url": "/sys/login/user", "data": {"user": username, "passwd": password}}],
+                "params": [
+                    {
+                        "url": "/sys/login/user",
+                        "data": {"user": username, "passwd": password},
+                    }
+                ],
                 "id": 1,
             }
 
-            response = requests.post(login_url, json=login_data, verify=False, timeout=30)
+            response = requests.post(
+                login_url, json=login_data, verify=False, timeout=30
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -362,9 +373,20 @@ class AuthManager:
 
         try:
             logout_url = f"https://{session.host}:{session.port}/jsonrpc"
-            logout_data = {"method": "exec", "params": [{"url": "/sys/logout"}], "session": session.token, "id": 1}
+            logout_data = {
+                "method": "exec",
+                "params": [{"url": "/sys/logout"}],
+                "session": session.token,
+                "id": 1,
+            }
 
-            response = requests.post(logout_url, json=logout_data, cookies=session.cookies, verify=False, timeout=10)
+            response = requests.post(
+                logout_url,
+                json=logout_data,
+                cookies=session.cookies,
+                verify=False,
+                timeout=10,
+            )
 
             return response.status_code == 200
 
@@ -390,7 +412,9 @@ class AuthManager:
         """
         timestamp = str(int(time.time() * 1000))
         random_bytes = secrets.token_bytes(16)
-        return hashlib.sha256((timestamp + random_bytes.hex()).encode()).hexdigest()[:32]
+        return hashlib.sha256((timestamp + random_bytes.hex()).encode()).hexdigest()[
+            :32
+        ]
 
     def _generate_credential_id(self, host: str, port: int) -> str:
         """

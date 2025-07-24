@@ -5,7 +5,7 @@ Limits and constants configuration module
 """
 
 import os
-from typing import Dict
+from typing import Any, Dict
 
 # 디스플레이 제한
 DISPLAY_LIMITS: Dict[str, int] = {
@@ -96,7 +96,7 @@ MONITORING_THRESHOLDS: Dict[str, float] = {
 }
 
 # 비즈니스 규칙
-BUSINESS_RULES: Dict[str, any] = {
+BUSINESS_RULES: Dict[str, Any] = {
     "business_hours_start": os.getenv("BUSINESS_HOURS_START", "09:00"),
     "business_hours_end": os.getenv("BUSINESS_HOURS_END", "18:00"),
     "business_timezone": os.getenv("BUSINESS_TIMEZONE", "Asia/Seoul"),
@@ -111,7 +111,7 @@ BUSINESS_RULES: Dict[str, any] = {
 }
 
 # 재시도 설정
-RETRY_CONFIG: Dict[str, any] = {
+RETRY_CONFIG: Dict[str, Any] = {
     "max_retries": int(os.getenv("MAX_RETRIES", "3")),
     "retry_delay": int(os.getenv("RETRY_DELAY", "1")),
     "retry_backoff_factor": float(os.getenv("RETRY_BACKOFF_FACTOR", "2.0")),
@@ -179,7 +179,7 @@ def get_size_limit(limit_type: str) -> int:
     return SIZE_LIMITS.get(limit_type, 0)
 
 
-def format_bytes(bytes_value: int) -> str:
+def format_bytes(bytes_value: float) -> str:
     """
     바이트 값을 사람이 읽기 쉬운 형식으로 변환합니다.
 
@@ -196,7 +196,9 @@ def format_bytes(bytes_value: int) -> str:
     return f"{bytes_value:.1f} PB"
 
 
-def is_within_limit(value: int, limit_type: str, limit_category: str = "SIZE_LIMITS") -> bool:
+def is_within_limit(
+    value: int, limit_type: str, limit_category: str = "SIZE_LIMITS"
+) -> bool:
     """
     값이 제한 내에 있는지 확인합니다.
 

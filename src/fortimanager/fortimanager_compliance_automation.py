@@ -55,7 +55,9 @@ class ComplianceRule:
     check_function: str  # Name of the check function
     remediation_function: Optional[str] = None
     parameters: Dict[str, Any] = field(default_factory=dict)
-    frameworks: List[str] = field(default_factory=list)  # ['PCI-DSS', 'HIPAA', 'ISO27001', etc.]
+    frameworks: List[str] = field(
+        default_factory=list
+    )  # ['PCI-DSS', 'HIPAA', 'ISO27001', etc.]
     enabled: bool = True
     auto_remediate: bool = False
 
@@ -184,7 +186,12 @@ class ComplianceAutomationFramework:
                 severity=ComplianceSeverity.HIGH,
                 check_function="check_password_policy",
                 remediation_function="enforce_password_policy",
-                parameters={"min_length": 12, "complexity": True, "history": 5, "max_age": 90},
+                parameters={
+                    "min_length": 12,
+                    "complexity": True,
+                    "history": 5,
+                    "max_age": 90,
+                },
                 frameworks=["PCI-DSS", "HIPAA", "ISO27001"],
             )
         )
@@ -284,7 +291,11 @@ class ComplianceAutomationFramework:
             return False
 
     async def run_compliance_check(
-        self, devices: List[str], frameworks: List[str] = None, categories: List[str] = None, adom: str = "root"
+        self,
+        devices: List[str],
+        frameworks: List[str] = None,
+        categories: List[str] = None,
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Run compliance checks on specified devices"""
 
@@ -320,30 +331,49 @@ class ComplianceAutomationFramework:
 
         return report
 
-    async def remediate_issues(self, issue_ids: List[str], adom: str = "root") -> Dict[str, Any]:
+    async def remediate_issues(
+        self, issue_ids: List[str], adom: str = "root"
+    ) -> Dict[str, Any]:
         """Manually remediate specific compliance issues"""
 
         results = {"total": len(issue_ids), "successful": 0, "failed": 0, "details": []}
 
         for issue_id in issue_ids:
             # Find the issue in check results
-            issue = next((r for r in self.check_results if f"{r.rule_id}-{r.device}" == issue_id), None)
+            issue = next(
+                (
+                    r
+                    for r in self.check_results
+                    if f"{r.rule_id}-{r.device}" == issue_id
+                ),
+                None,
+            )
 
             if not issue:
                 results["failed"] += 1
-                results["details"].append({"issue_id": issue_id, "success": False, "error": "Issue not found"})
+                results["details"].append(
+                    {"issue_id": issue_id, "success": False, "error": "Issue not found"}
+                )
                 continue
 
             # Get the rule
             rule = self.rules.get(issue.rule_id)
             if not rule or not rule.remediation_function:
                 results["failed"] += 1
-                results["details"].append({"issue_id": issue_id, "success": False, "error": "No remediation available"})
+                results["details"].append(
+                    {
+                        "issue_id": issue_id,
+                        "success": False,
+                        "error": "No remediation available",
+                    }
+                )
                 continue
 
             # Apply remediation
             try:
-                remediation_result = await self._apply_remediation(issue.device, rule, issue, adom)
+                remediation_result = await self._apply_remediation(
+                    issue.device, rule, issue, adom
+                )
 
                 if remediation_result["success"]:
                     results["successful"] += 1
@@ -354,7 +384,9 @@ class ComplianceAutomationFramework:
 
             except Exception as e:
                 results["failed"] += 1
-                results["details"].append({"issue_id": issue_id, "success": False, "error": str(e)})
+                results["details"].append(
+                    {"issue_id": issue_id, "success": False, "error": str(e)}
+                )
 
         return results
 
@@ -419,7 +451,9 @@ class ComplianceAutomationFramework:
             "remediation_history": self._get_remediation_history(hours),
         }
 
-    def export_compliance_report(self, format: str = "json", frameworks: List[str] = None) -> str:
+    def export_compliance_report(
+        self, format: str = "json", frameworks: List[str] = None
+    ) -> str:
         """Export compliance report in specified format"""
 
         report_data = {
@@ -432,7 +466,9 @@ class ComplianceAutomationFramework:
         # Filter results by framework if specified
         for result in self.check_results:
             rule = self.rules.get(result.rule_id)
-            if rule and (not frameworks or any(f in rule.frameworks for f in frameworks)):
+            if rule and (
+                not frameworks or any(f in rule.frameworks for f in frameworks)
+            ):
                 report_data["detailed_results"].append(
                     {
                         "rule": {
@@ -466,7 +502,16 @@ class ComplianceAutomationFramework:
 
             # Header
             writer.writerow(
-                ["Timestamp", "Device", "Rule ID", "Rule Name", "Category", "Severity", "Status", "Message"]
+                [
+                    "Timestamp",
+                    "Device",
+                    "Rule ID",
+                    "Rule Name",
+                    "Category",
+                    "Severity",
+                    "Status",
+                    "Message",
+                ]
             )
 
             # Data
@@ -487,7 +532,9 @@ class ComplianceAutomationFramework:
             return output.getvalue()
 
     # Compliance check functions
-    async def check_any_any_policies(self, device: str, rule: ComplianceRule, adom: str) -> ComplianceCheckResult:
+    async def check_any_any_policies(
+        self, device: str, rule: ComplianceRule, adom: str
+    ) -> ComplianceCheckResult:
         """Check for any-any policies"""
 
         try:
@@ -503,7 +550,12 @@ class ComplianceAutomationFramework:
                     and policy.get("service") == ["ALL"]
                     and policy.get("action") == "accept"
                 ):
-                    any_any_policies.append({"policy_id": policy["policyid"], "name": policy.get("name", "Unnamed")})
+                    any_any_policies.append(
+                        {
+                            "policy_id": policy["policyid"],
+                            "name": policy.get("name", "Unnamed"),
+                        }
+                    )
 
             if any_any_policies:
                 return ComplianceCheckResult(
@@ -534,7 +586,9 @@ class ComplianceAutomationFramework:
                 message=f"Check failed: {str(e)}",
             )
 
-    async def check_ssl_inspection(self, device: str, rule: ComplianceRule, adom: str) -> ComplianceCheckResult:
+    async def check_ssl_inspection(
+        self, device: str, rule: ComplianceRule, adom: str
+    ) -> ComplianceCheckResult:
         """Check SSL inspection configuration"""
 
         try:
@@ -587,7 +641,9 @@ class ComplianceAutomationFramework:
                 message=f"Check failed: {str(e)}",
             )
 
-    async def check_password_policy(self, device: str, rule: ComplianceRule, adom: str) -> ComplianceCheckResult:
+    async def check_password_policy(
+        self, device: str, rule: ComplianceRule, adom: str
+    ) -> ComplianceCheckResult:
         """Check password policy configuration"""
 
         try:
@@ -602,7 +658,9 @@ class ComplianceAutomationFramework:
             min_length = rule.parameters.get("min_length", 12)
             current_length = settings.get("password_min_length", 8)
             if current_length < min_length:
-                issues.append(f"Minimum length {current_length} < required {min_length}")
+                issues.append(
+                    f"Minimum length {current_length} < required {min_length}"
+                )
 
             # Check complexity
             if rule.parameters.get("complexity", True):
@@ -613,7 +671,9 @@ class ComplianceAutomationFramework:
             required_history = rule.parameters.get("history", 5)
             current_history = settings.get("password_history", 0)
             if current_history < required_history:
-                issues.append(f"Password history {current_history} < required {required_history}")
+                issues.append(
+                    f"Password history {current_history} < required {required_history}"
+                )
 
             # Check max age
             max_age = rule.parameters.get("max_age", 90)
@@ -650,7 +710,9 @@ class ComplianceAutomationFramework:
             )
 
     # Remediation functions
-    async def remediate_any_any_policies(self, device: str, issue: ComplianceCheckResult, adom: str) -> Dict[str, Any]:
+    async def remediate_any_any_policies(
+        self, device: str, issue: ComplianceCheckResult, adom: str
+    ) -> Dict[str, Any]:
         """Remediate any-any policies by adding restrictions"""
 
         try:
@@ -661,7 +723,9 @@ class ComplianceAutomationFramework:
                 policy_id = policy_info["policy_id"]
 
                 # Update policy to be more restrictive
-                update = {"comments": f"Modified by compliance automation - {datetime.now().isoformat()}"}
+                update = {
+                    "comments": f"Modified by compliance automation - {datetime.now().isoformat()}"
+                }
 
                 # Could also disable the policy or add specific restrictions
                 # For safety, we'll just add a comment for manual review
@@ -680,9 +744,16 @@ class ComplianceAutomationFramework:
             }
 
         except Exception as e:
-            return {"success": False, "device": device, "rule_id": issue.rule_id, "error": str(e)}
+            return {
+                "success": False,
+                "device": device,
+                "rule_id": issue.rule_id,
+                "error": str(e),
+            }
 
-    async def enable_ssl_inspection(self, device: str, issue: ComplianceCheckResult, adom: str) -> Dict[str, Any]:
+    async def enable_ssl_inspection(
+        self, device: str, issue: ComplianceCheckResult, adom: str
+    ) -> Dict[str, Any]:
         """Enable SSL inspection on web policies"""
 
         try:
@@ -693,7 +764,10 @@ class ComplianceAutomationFramework:
                 policy_id = policy_info["policy_id"]
 
                 # Update policy to enable SSL inspection
-                update = {"ssl-ssh-profile": "deep-inspection", "inspection-mode": "flow"}
+                update = {
+                    "ssl-ssh-profile": "deep-inspection",
+                    "inspection-mode": "flow",
+                }
 
                 result = await asyncio.get_event_loop().run_in_executor(
                     self.executor, self._update_policy, device, policy_id, update, adom
@@ -709,10 +783,17 @@ class ComplianceAutomationFramework:
             }
 
         except Exception as e:
-            return {"success": False, "device": device, "rule_id": issue.rule_id, "error": str(e)}
+            return {
+                "success": False,
+                "device": device,
+                "rule_id": issue.rule_id,
+                "error": str(e),
+            }
 
     # Helper methods
-    def _filter_rules(self, frameworks: List[str] = None, categories: List[str] = None) -> List[ComplianceRule]:
+    def _filter_rules(
+        self, frameworks: List[str] = None, categories: List[str] = None
+    ) -> List[ComplianceRule]:
         """Filter rules based on frameworks and categories"""
 
         filtered_rules = []
@@ -730,7 +811,9 @@ class ComplianceAutomationFramework:
 
         return filtered_rules
 
-    async def _run_single_check(self, device: str, rule: ComplianceRule, adom: str) -> ComplianceCheckResult:
+    async def _run_single_check(
+        self, device: str, rule: ComplianceRule, adom: str
+    ) -> ComplianceCheckResult:
         """Run a single compliance check"""
 
         # Get the check function
@@ -757,7 +840,9 @@ class ComplianceAutomationFramework:
                 message=f"Check failed: {str(e)}",
             )
 
-    def _generate_compliance_report(self, results: List[ComplianceCheckResult]) -> Dict[str, Any]:
+    def _generate_compliance_report(
+        self, results: List[ComplianceCheckResult]
+    ) -> Dict[str, Any]:
         """Generate compliance report from check results"""
 
         report = {
@@ -784,13 +869,21 @@ class ComplianceAutomationFramework:
 
             # By device
             if result.device not in report["by_device"]:
-                report["by_device"][result.device] = {"total": 0, "compliant": 0, "issues": []}
+                report["by_device"][result.device] = {
+                    "total": 0,
+                    "compliant": 0,
+                    "issues": [],
+                }
             report["by_device"][result.device]["total"] += 1
             if result.status == ComplianceStatus.COMPLIANT:
                 report["by_device"][result.device]["compliant"] += 1
             else:
                 report["by_device"][result.device]["issues"].append(
-                    {"rule_id": result.rule_id, "severity": result.severity.value, "message": result.message}
+                    {
+                        "rule_id": result.rule_id,
+                        "severity": result.severity.value,
+                        "message": result.message,
+                    }
                 )
 
             # By rule
@@ -806,7 +899,9 @@ class ComplianceAutomationFramework:
             if result.status == ComplianceStatus.COMPLIANT:
                 report["by_rule"][result.rule_id]["compliant"] += 1
             else:
-                report["by_rule"][result.rule_id]["issues"].append({"device": result.device, "message": result.message})
+                report["by_rule"][result.rule_id]["issues"].append(
+                    {"device": result.device, "message": result.message}
+                )
 
             # Critical and high priority issues
             if result.status != ComplianceStatus.COMPLIANT:
@@ -825,26 +920,36 @@ class ComplianceAutomationFramework:
         # Calculate compliance score
         if report["summary"]["total_checks"] > 0:
             report["compliance_score"] = round(
-                report["summary"]["compliant"] / report["summary"]["total_checks"] * 100, 2
+                report["summary"]["compliant"]
+                / report["summary"]["total_checks"]
+                * 100,
+                2,
             )
         else:
             report["compliance_score"] = 0
 
         return report
 
-    async def _auto_remediate(self, results: List[ComplianceCheckResult], adom: str) -> Dict[str, Any]:
+    async def _auto_remediate(
+        self, results: List[ComplianceCheckResult], adom: str
+    ) -> Dict[str, Any]:
         """Auto-remediate issues where enabled"""
 
         remediation_results = {"total": 0, "successful": 0, "failed": 0, "details": []}
 
         for result in results:
-            if result.status != ComplianceStatus.COMPLIANT and result.remediation_available:
+            if (
+                result.status != ComplianceStatus.COMPLIANT
+                and result.remediation_available
+            ):
                 rule = self.rules.get(result.rule_id)
                 if rule and rule.auto_remediate:
                     remediation_results["total"] += 1
 
                     try:
-                        remediation = await self._apply_remediation(result.device, rule, result, adom)
+                        remediation = await self._apply_remediation(
+                            result.device, rule, result, adom
+                        )
 
                         if remediation["success"]:
                             remediation_results["successful"] += 1
@@ -856,7 +961,12 @@ class ComplianceAutomationFramework:
                     except Exception as e:
                         remediation_results["failed"] += 1
                         remediation_results["details"].append(
-                            {"device": result.device, "rule_id": result.rule_id, "success": False, "error": str(e)}
+                            {
+                                "device": result.device,
+                                "rule_id": result.rule_id,
+                                "success": False,
+                                "error": str(e),
+                            }
                         )
 
         return remediation_results
@@ -881,19 +991,33 @@ class ComplianceAutomationFramework:
 
         # Track remediation
         self.remediation_history.append(
-            {"timestamp": datetime.now(), "device": device, "rule_id": rule.rule_id, "result": result}
+            {
+                "timestamp": datetime.now(),
+                "device": device,
+                "rule_id": rule.rule_id,
+                "result": result,
+            }
         )
 
         return result
 
-    def _update_policy(self, device: str, policy_id: str, updates: Dict, adom: str) -> Dict[str, Any]:
+    def _update_policy(
+        self, device: str, policy_id: str, updates: Dict, adom: str
+    ) -> Dict[str, Any]:
         """Update a firewall policy"""
 
         # This would use the API client to update the policy
         # For now, return a simulated result
-        return {"success": True, "device": device, "policy_id": policy_id, "updates_applied": updates}
+        return {
+            "success": True,
+            "device": device,
+            "policy_id": policy_id,
+            "updates_applied": updates,
+        }
 
-    def _get_recent_issues(self, results: List[ComplianceCheckResult], limit: int) -> List[Dict]:
+    def _get_recent_issues(
+        self, results: List[ComplianceCheckResult], limit: int
+    ) -> List[Dict]:
         """Get recent compliance issues"""
 
         issues = [r for r in results if r.status != ComplianceStatus.COMPLIANT]

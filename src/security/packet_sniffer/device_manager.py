@@ -40,7 +40,9 @@ except ImportError:
         logger = logging.getLogger(name)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             # 사용자 정의 레벨을 표준 레벨로 매핑
@@ -203,7 +205,9 @@ class DeviceManager:
 
             # 루프백 인터페이스 감지
             is_loopback = (
-                interface_name.startswith("lo") or interface_name.startswith("Loopback") or "127.0.0.1" in ip_addresses
+                interface_name.startswith("lo")
+                or interface_name.startswith("Loopback")
+                or "127.0.0.1" in ip_addresses
             )
 
             return NetworkInterface(
@@ -251,7 +255,10 @@ class DeviceManager:
         """기본 인터페이스 추가 (fallback)"""
         default_interfaces = [
             NetworkInterface(
-                name="any", display_name="All Interfaces", description="Capture on all available interfaces", is_up=True
+                name="any",
+                display_name="All Interfaces",
+                description="Capture on all available interfaces",
+                is_up=True,
             ),
             NetworkInterface(
                 name="lo",
@@ -305,7 +312,9 @@ class DeviceManager:
     def get_available_interfaces(self) -> List[Dict[str, Any]]:
         """사용 가능한 네트워크 인터페이스 목록"""
         with self.device_lock:
-            return [interface.to_dict() for interface in self.network_interfaces.values()]
+            return [
+                interface.to_dict() for interface in self.network_interfaces.values()
+            ]
 
     def get_interface_details(self, interface_name: str) -> Optional[Dict[str, Any]]:
         """특정 인터페이스 상세 정보"""
@@ -323,10 +332,12 @@ class DeviceManager:
         """FortiGate API 클라이언트 반환 (지연 초기화)"""
         if self._api_client is None and not self.config.offline_mode:
             try:
-                from src.api.clients.fortigate_api_client import FortiGateAPIClient
+                from src.api.clients.fortigate_api_client import \
+                    FortiGateAPIClient
 
                 self._api_client = FortiGateAPIClient(
-                    host=self.config.fortigate_host, api_token=self.config.fortigate_token
+                    host=self.config.fortigate_host,
+                    api_token=self.config.fortigate_token,
                 )
                 self.logger.info("FortiGate API 클라이언트 초기화됨")
             except Exception as e:
@@ -379,7 +390,10 @@ class DeviceManager:
             else:
                 # 기본 장치 정보
                 device = FortiGateDevice(
-                    host=self.config.fortigate_host, name="FortiGate", status="connected", last_seen=datetime.now()
+                    host=self.config.fortigate_host,
+                    name="FortiGate",
+                    status="connected",
+                    last_seen=datetime.now(),
                 )
 
             return device
@@ -387,7 +401,10 @@ class DeviceManager:
         except Exception as e:
             self.logger.error(f"FortiGate 정보 파싱 실패: {e}")
             return FortiGateDevice(
-                host=self.config.fortigate_host, name="FortiGate", status="error", last_seen=datetime.now()
+                host=self.config.fortigate_host,
+                name="FortiGate",
+                status="error",
+                last_seen=datetime.now(),
             )
 
     def _get_mock_fortigate_devices(self) -> List[Dict[str, Any]]:
@@ -462,9 +479,19 @@ class DeviceManager:
         if self.config.offline_mode or self.config.mock_data:
             # 가짜 인터페이스 반환
             return [
-                {"name": "port1", "ip": "192.168.1.1", "status": "up", "type": "internal"},
+                {
+                    "name": "port1",
+                    "ip": "192.168.1.1",
+                    "status": "up",
+                    "type": "internal",
+                },
                 {"name": "port2", "ip": "10.0.0.1", "status": "up", "type": "internal"},
-                {"name": "wan1", "ip": "203.0.113.1", "status": "up", "type": "external"},
+                {
+                    "name": "wan1",
+                    "ip": "203.0.113.1",
+                    "status": "up",
+                    "type": "external",
+                },
                 {"name": "dmz", "ip": "172.16.0.1", "status": "down", "type": "dmz"},
             ]
 
@@ -482,7 +509,13 @@ class DeviceManager:
 
     def test_device_connectivity(self, host: str) -> Dict[str, Any]:
         """장치 연결성 테스트"""
-        result = {"host": host, "ping": False, "api": False, "response_time": None, "error": None}
+        result = {
+            "host": host,
+            "ping": False,
+            "api": False,
+            "response_time": None,
+            "error": None,
+        }
 
         try:
             # Ping 테스트
@@ -493,7 +526,9 @@ class DeviceManager:
             else:
                 ping_cmd = ["ping", "-c", "1", "-W", "3", host]
 
-            ping_result = subprocess.run(ping_cmd, capture_output=True, timeout=5, text=True)
+            ping_result = subprocess.run(
+                ping_cmd, capture_output=True, timeout=5, text=True
+            )
 
             result["ping"] = ping_result.returncode == 0
             result["response_time"] = round((time.time() - start_time) * 1000, 2)
@@ -521,7 +556,10 @@ class DeviceManager:
 
         self._discovery_stop.clear()
         self._discovery_thread = threading.Thread(
-            target=self._discovery_worker, args=(interval,), daemon=True, name="device_discovery"
+            target=self._discovery_worker,
+            args=(interval,),
+            daemon=True,
+            name="device_discovery",
         )
         self._discovery_thread.start()
         self.logger.info(f"장치 발견 스레드 시작됨 (간격: {interval}초)")
@@ -573,7 +611,7 @@ class DeviceManager:
                         "memory_available": psutil.virtual_memory().available,
                     }
                 )
-            except:
+            except Exception:
                 pass
 
             return system_info

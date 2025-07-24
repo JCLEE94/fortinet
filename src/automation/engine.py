@@ -64,7 +64,9 @@ class AutomationEngine:
         logger.info(f"워크플로우 생성: {name} (ID: {workflow_id})")
         return workflow_id
 
-    def schedule_task(self, task_type: AutomationTask, schedule: str, params: Optional[Dict] = None) -> str:
+    def schedule_task(
+        self, task_type: AutomationTask, schedule: str, params: Optional[Dict] = None
+    ) -> str:
         """작업 스케줄링"""
         task_id = f"task_{datetime.now().timestamp()}_{task_type.value}"
 
@@ -82,7 +84,9 @@ class AutomationEngine:
         logger.info(f"작업 스케줄링: {task_type.value} (ID: {task_id})")
         return task_id
 
-    async def execute_task(self, task_type: AutomationTask, params: Optional[Dict] = None) -> Dict:
+    async def execute_task(
+        self, task_type: AutomationTask, params: Optional[Dict] = None
+    ) -> Dict:
         """작업 실행"""
         task_id = f"task_{datetime.now().timestamp()}"
 
@@ -159,10 +163,18 @@ class AutomationEngine:
             optimizations["rules_consolidated"] = 3
 
             # 성능 최적화
-            optimizations["performance_improvements"] = ["불필요한 로깅 규칙 제거", "자주 사용되는 규칙을 상위로 재배치", "비활성 규칙 비활성화"]
+            optimizations["performance_improvements"] = [
+                "불필요한 로깅 규칙 제거",
+                "자주 사용되는 규칙을 상위로 재배치",
+                "비활성 규칙 비활성화",
+            ]
 
             # 보안 강화
-            optimizations["security_enhancements"] = ["취약한 프로토콜 차단 규칙 추가", "기본 거부 정책 적용", "소스 IP 검증 강화"]
+            optimizations["security_enhancements"] = [
+                "취약한 프로토콜 차단 규칙 추가",
+                "기본 거부 정책 적용",
+                "소스 IP 검증 강화",
+            ]
 
             return {
                 "optimizations": optimizations,
@@ -191,19 +203,25 @@ class AutomationEngine:
             os.makedirs(backup_dir, exist_ok=True)
 
             # 설정 백업
-            config_backup = os.path.join(backup_dir, f"config_{backup_result['backup_id']}.json")
+            config_backup = os.path.join(
+                backup_dir, f"config_{backup_result['backup_id']}.json"
+            )
             # 실제로는 설정을 가져와 저장
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("configuration")
 
             # 정책 백업
-            policy_backup = os.path.join(backup_dir, f"policies_{backup_result['backup_id']}.json")
+            policy_backup = os.path.join(
+                backup_dir, f"policies_{backup_result['backup_id']}.json"
+            )
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("policies")
 
             # 로그 백업
             if params.get("include_logs", False):
-                log_backup = os.path.join(backup_dir, f"logs_{backup_result['backup_id']}.tar.gz")
+                log_backup = os.path.join(
+                    backup_dir, f"logs_{backup_result['backup_id']}.tar.gz"
+                )
                 await asyncio.sleep(2)
                 backup_result["items_backed_up"].append("logs")
 
@@ -266,7 +284,13 @@ class AutomationEngine:
 
             # 이슈 검출
             if health_report["components"]["system_resources"]["cpu_usage"] > 80:
-                health_report["issues"].append({"severity": "warning", "component": "cpu", "message": "CPU 사용률이 높습니다"})
+                health_report["issues"].append(
+                    {
+                        "severity": "warning",
+                        "component": "cpu",
+                        "message": "CPU 사용률이 높습니다",
+                    }
+                )
                 health_report["overall_status"] = "warning"
 
             return health_report
@@ -309,7 +333,10 @@ class AutomationEngine:
                 "total_events": 342,
                 "blocked_attacks": 28,
                 "policy_violations": 15,
-                "top_threats": [{"type": "Port Scan", "count": 12}, {"type": "Brute Force", "count": 8}],
+                "top_threats": [
+                    {"type": "Port Scan", "count": 12},
+                    {"type": "Brute Force", "count": 8},
+                ],
             }
 
             # 시스템 성능
@@ -371,7 +398,9 @@ class AutomationEngine:
                     resolution_results["resolved"].append(issue)
 
                 else:
-                    resolution_results["failed"].append({"issue": issue, "reason": "Unknown issue type"})
+                    resolution_results["failed"].append(
+                        {"issue": issue, "reason": "Unknown issue type"}
+                    )
 
             return resolution_results
 
@@ -383,7 +412,11 @@ class AutomationEngine:
         """시스템 유지보수"""
         logger.info("유지보수 작업 시작")
 
-        maintenance_results = {"tasks_completed": [], "optimizations": [], "cleaned_up": {}}
+        maintenance_results = {
+            "tasks_completed": [],
+            "optimizations": [],
+            "cleaned_up": {},
+        }
 
         try:
             # 로그 정리

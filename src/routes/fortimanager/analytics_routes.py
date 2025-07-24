@@ -10,7 +10,8 @@ import time
 from flask import Blueprint, jsonify, request
 
 from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-from src.utils.api_utils import get_api_manager, get_data_source, get_dummy_generator, is_test_mode
+from src.utils.api_utils import (get_api_manager, get_data_source,
+                                 get_dummy_generator, is_test_mode)
 from src.utils.security import rate_limit
 from src.utils.unified_cache_manager import cached
 from src.utils.unified_logger import setup_logger
@@ -52,7 +53,9 @@ def start_packet_capture():
         if not fm_client:
             return jsonify({"error": "FortiManager client not available"}), 503
 
-        result = fm_client.start_packet_capture(device_id, interface, filter_expr, duration)
+        result = fm_client.start_packet_capture(
+            device_id, interface, filter_expr, duration
+        )
 
         if result:
             return jsonify(
@@ -130,7 +133,9 @@ def get_capture_results(capture_id):
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             capture_results = dummy_generator.generate_capture_results(capture_id)
-            return jsonify({"capture_id": capture_id, "results": capture_results, "mode": "test"})
+            return jsonify(
+                {"capture_id": capture_id, "results": capture_results, "mode": "test"}
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -141,7 +146,9 @@ def get_capture_results(capture_id):
         results = fm_client.get_capture_results(capture_id)
 
         if results:
-            return jsonify({"capture_id": capture_id, "results": results, "mode": "production"})
+            return jsonify(
+                {"capture_id": capture_id, "results": results, "mode": "production"}
+            )
         else:
             return jsonify({"error": "Capture results not found"}), 404
 
@@ -166,8 +173,17 @@ async def analyze_trends():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            trends_data = dummy_generator.generate_trends_analysis(devices, time_range, metrics)
-            return jsonify({"trends": trends_data, "devices": devices, "time_range": time_range, "mode": "test"})
+            trends_data = dummy_generator.generate_trends_analysis(
+                devices, time_range, metrics
+            )
+            return jsonify(
+                {
+                    "trends": trends_data,
+                    "devices": devices,
+                    "time_range": time_range,
+                    "mode": "test",
+                }
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -183,7 +199,14 @@ async def analyze_trends():
             devices=devices, time_range=time_range, metrics=metrics
         )
 
-        return jsonify({"trends": trends_result, "devices": devices, "time_range": time_range, "mode": "production"})
+        return jsonify(
+            {
+                "trends": trends_result,
+                "devices": devices,
+                "time_range": time_range,
+                "mode": "production",
+            }
+        )
 
     except Exception as e:
         logger.error(f"트렌드 분석 중 오류: {str(e)}")
@@ -206,8 +229,17 @@ async def detect_anomalies():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            anomalies = dummy_generator.generate_anomaly_detection(devices, detection_types)
-            return jsonify({"anomalies": anomalies, "devices": devices, "sensitivity": sensitivity, "mode": "test"})
+            anomalies = dummy_generator.generate_anomaly_detection(
+                devices, detection_types
+            )
+            return jsonify(
+                {
+                    "anomalies": anomalies,
+                    "devices": devices,
+                    "sensitivity": sensitivity,
+                    "mode": "test",
+                }
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -224,7 +256,12 @@ async def detect_anomalies():
         )
 
         return jsonify(
-            {"anomalies": anomalies_result, "devices": devices, "sensitivity": sensitivity, "mode": "production"}
+            {
+                "anomalies": anomalies_result,
+                "devices": devices,
+                "sensitivity": sensitivity,
+                "mode": "production",
+            }
         )
 
     except Exception as e:
@@ -248,7 +285,9 @@ async def analyze_capacity():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            capacity_data = dummy_generator.generate_capacity_analysis(devices, forecast_period)
+            capacity_data = dummy_generator.generate_capacity_analysis(
+                devices, forecast_period
+            )
             return jsonify(
                 {
                     "capacity_analysis": capacity_data,
@@ -303,7 +342,14 @@ async def detect_threats():
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             threats = dummy_generator.generate_threat_detection(devices, threat_types)
-            return jsonify({"threats": threats, "devices": devices, "threat_types": threat_types, "mode": "test"})
+            return jsonify(
+                {
+                    "threats": threats,
+                    "devices": devices,
+                    "threat_types": threat_types,
+                    "mode": "test",
+                }
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -320,7 +366,12 @@ async def detect_threats():
         )
 
         return jsonify(
-            {"threats": threats_result, "devices": devices, "threat_types": threat_types, "mode": "production"}
+            {
+                "threats": threats_result,
+                "devices": devices,
+                "threat_types": threat_types,
+                "mode": "production",
+            }
         )
 
     except Exception as e:

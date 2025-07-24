@@ -6,7 +6,8 @@ FortiManager 장치 관리 라우트
 
 from flask import Blueprint, jsonify, request
 
-from src.utils.api_utils import get_api_manager, get_data_source, get_dummy_generator, is_test_mode
+from src.utils.api_utils import (get_api_manager, get_data_source,
+                                 get_dummy_generator, is_test_mode)
 from src.utils.security import rate_limit
 from src.utils.unified_cache_manager import cached
 from src.utils.unified_logger import setup_logger
@@ -35,7 +36,13 @@ def get_fortimanager_status():
         fm_client = api_manager.get_fortimanager_client()
 
         if not fm_client:
-            return jsonify({"status": "not_configured", "mode": "production", "message": "FortiManager not configured"})
+            return jsonify(
+                {
+                    "status": "not_configured",
+                    "mode": "production",
+                    "message": "FortiManager not configured",
+                }
+            )
 
         try:
             if fm_client.login():
@@ -49,10 +56,22 @@ def get_fortimanager_status():
                     }
                 )
             else:
-                return jsonify({"status": "disconnected", "mode": "production", "message": "Authentication failed"})
+                return jsonify(
+                    {
+                        "status": "disconnected",
+                        "mode": "production",
+                        "message": "Authentication failed",
+                    }
+                )
         except Exception as e:
             logger.error(f"FortiManager 연결 확인 중 오류: {str(e)}")
-            return jsonify({"status": "error", "mode": "production", "message": f"Connection error: {str(e)}"})
+            return jsonify(
+                {
+                    "status": "error",
+                    "mode": "production",
+                    "message": f"Connection error: {str(e)}",
+                }
+            )
 
     except Exception as e:
         logger.error(f"FortiManager 상태 조회 중 오류: {str(e)}")
@@ -76,7 +95,13 @@ def get_devices():
             return jsonify({"error": "FortiManager client not available"}), 503
 
         devices = fm_client.get_devices()
-        return jsonify({"devices": devices or [], "total": len(devices) if devices else 0, "mode": "production"})
+        return jsonify(
+            {
+                "devices": devices or [],
+                "total": len(devices) if devices else 0,
+                "mode": "production",
+            }
+        )
 
     except Exception as e:
         logger.error(f"장치 목록 조회 중 오류: {str(e)}")
@@ -118,7 +143,9 @@ def get_device_interfaces(device_id):
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             interfaces = dummy_generator.generate_device_interfaces(device_id)
-            return jsonify({"device_id": device_id, "interfaces": interfaces, "mode": "test"})
+            return jsonify(
+                {"device_id": device_id, "interfaces": interfaces, "mode": "test"}
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -127,7 +154,13 @@ def get_device_interfaces(device_id):
             return jsonify({"error": "FortiManager client not available"}), 503
 
         interfaces = fm_client.get_device_interfaces(device_id)
-        return jsonify({"device_id": device_id, "interfaces": interfaces or [], "mode": "production"})
+        return jsonify(
+            {
+                "device_id": device_id,
+                "interfaces": interfaces or [],
+                "mode": "production",
+            }
+        )
 
     except Exception as e:
         logger.error(f"장치 인터페이스 조회 중 오류 ({device_id}): {str(e)}")
@@ -142,7 +175,9 @@ def get_device_monitoring(device_id):
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             monitoring_data = dummy_generator.generate_monitoring_data(device_id)
-            return jsonify({"device_id": device_id, "monitoring": monitoring_data, "mode": "test"})
+            return jsonify(
+                {"device_id": device_id, "monitoring": monitoring_data, "mode": "test"}
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -151,7 +186,13 @@ def get_device_monitoring(device_id):
             return jsonify({"error": "FortiManager client not available"}), 503
 
         monitoring_data = fm_client.get_device_monitoring(device_id)
-        return jsonify({"device_id": device_id, "monitoring": monitoring_data or {}, "mode": "production"})
+        return jsonify(
+            {
+                "device_id": device_id,
+                "monitoring": monitoring_data or {},
+                "mode": "production",
+            }
+        )
 
     except Exception as e:
         logger.error(f"장치 모니터링 조회 중 오류 ({device_id}): {str(e)}")
@@ -211,8 +252,20 @@ def mock_interfaces():
     return jsonify(
         {
             "interfaces": [
-                {"name": "port1", "ip": "192.168.1.1", "mask": "255.255.255.0", "status": "up", "speed": "1000"},
-                {"name": "port2", "ip": "10.0.0.1", "mask": "255.255.255.0", "status": "up", "speed": "1000"},
+                {
+                    "name": "port1",
+                    "ip": "192.168.1.1",
+                    "mask": "255.255.255.0",
+                    "status": "up",
+                    "speed": "1000",
+                },
+                {
+                    "name": "port2",
+                    "ip": "10.0.0.1",
+                    "mask": "255.255.255.0",
+                    "status": "up",
+                    "speed": "1000",
+                },
             ]
         }
     )

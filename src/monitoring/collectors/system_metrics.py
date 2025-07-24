@@ -47,7 +47,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
         # 임계값 설정
         for name, threshold_config in config.system_metrics.thresholds.items():
-            self.set_threshold(name, threshold_config.warning, threshold_config.critical)
+            self.set_threshold(
+                name, threshold_config.warning, threshold_config.critical
+            )
 
     def _collect_data(self) -> Optional[Dict]:
         """시스템 메트릭 데이터 수집"""
@@ -85,7 +87,11 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             if self.check_threshold("cpu_usage", cpu_usage):
                 violations.append(
-                    {"type": "cpu_usage", "value": cpu_usage, "severity": self.check_threshold("cpu_usage", cpu_usage)}
+                    {
+                        "type": "cpu_usage",
+                        "value": cpu_usage,
+                        "severity": self.check_threshold("cpu_usage", cpu_usage),
+                    }
                 )
 
             if self.check_threshold("memory_usage", memory_usage):
@@ -111,7 +117,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     {
                         "type": "network_error_rate",
                         "value": network_error_rate,
-                        "severity": self.check_threshold("network_error_rate", network_error_rate),
+                        "severity": self.check_threshold(
+                            "network_error_rate", network_error_rate
+                        ),
                     }
                 )
 
@@ -119,9 +127,13 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             # 헬스 상태 업데이트
             if violations:
-                critical_violations = [v for v in violations if v["severity"] == "critical"]
+                critical_violations = [
+                    v for v in violations if v["severity"] == "critical"
+                ]
                 if critical_violations:
-                    self._update_health("critical", {"critical_violations": critical_violations})
+                    self._update_health(
+                        "critical", {"critical_violations": critical_violations}
+                    )
                 else:
                     self._update_health("warning", {"violations": violations})
             else:
@@ -146,7 +158,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                 "architecture": os.uname().machine,
                 "boot_time": boot_time.isoformat(),
                 "uptime_seconds": int(uptime.total_seconds()),
-                "load_average": os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0],
+                "load_average": os.getloadavg()
+                if hasattr(os, "getloadavg")
+                else [0, 0, 0],
             }
         except Exception as e:
             logger.error(f"시스템 정보 수집 실패: {e}")
@@ -191,7 +205,12 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                 "free": memory.free,
                 "cached": getattr(memory, "cached", 0),
                 "buffers": getattr(memory, "buffers", 0),
-                "swap": {"total": swap.total, "used": swap.used, "free": swap.free, "percent": swap.percent},
+                "swap": {
+                    "total": swap.total,
+                    "used": swap.used,
+                    "free": swap.free,
+                    "percent": swap.percent,
+                },
             }
         except Exception as e:
             logger.error(f"메모리 메트릭 수집 실패: {e}")
@@ -229,7 +248,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             result = {
                 "partitions": disk_data,
-                "usage_percent": total_usage / partition_count if partition_count > 0 else 0,
+                "usage_percent": total_usage / partition_count
+                if partition_count > 0
+                else 0,
             }
 
             if disk_io:
@@ -286,7 +307,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             # 네트워크 오류율 계산
             total_packets = net_io.packets_sent + net_io.packets_recv
             total_errors = net_io.errin + net_io.errout
-            result["error_rate"] = (total_errors / total_packets * 100) if total_packets > 0 else 0
+            result["error_rate"] = (
+                (total_errors / total_packets * 100) if total_packets > 0 else 0
+            )
 
             return result
 
@@ -301,7 +324,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             total_processes = 0
             running_processes = 0
 
-            for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent", "status"]):
+            for proc in psutil.process_iter(
+                ["pid", "name", "cpu_percent", "memory_percent", "status"]
+            ):
                 try:
                     pinfo = proc.info
                     total_processes += 1
@@ -317,7 +342,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     continue
 
             # CPU와 메모리 사용량으로 정렬
-            processes.sort(key=lambda x: x["cpu_percent"] + x["memory_percent"], reverse=True)
+            processes.sort(
+                key=lambda x: x["cpu_percent"] + x["memory_percent"], reverse=True
+            )
 
             return {
                 "total_count": total_processes,
@@ -334,7 +361,10 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
         try:
             # 성능 최적화: timeout 10초 → 3초
             result = subprocess.run(
-                ["docker", "stats", "--no-stream", "--format", "json"], capture_output=True, text=True, timeout=3
+                ["docker", "stats", "--no-stream", "--format", "json"],
+                capture_output=True,
+                text=True,
+                timeout=3,
             )
 
             if result.returncode == 0:
@@ -346,9 +376,13 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                             containers.append(
                                 {
                                     "name": container_stats.get("Name", ""),
-                                    "cpu_percent": container_stats.get("CPUPerc", "0%").rstrip("%"),
+                                    "cpu_percent": container_stats.get(
+                                        "CPUPerc", "0%"
+                                    ).rstrip("%"),
                                     "memory_usage": container_stats.get("MemUsage", ""),
-                                    "memory_percent": container_stats.get("MemPerc", "0%").rstrip("%"),
+                                    "memory_percent": container_stats.get(
+                                        "MemPerc", "0%"
+                                    ).rstrip("%"),
                                     "network_io": container_stats.get("NetIO", ""),
                                     "block_io": container_stats.get("BlockIO", ""),
                                 }
@@ -387,7 +421,12 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
         """개별 서비스 상태 확인 (성능 최적화: timeout 단축)"""
         try:
             # 성능 최적화: timeout 5초 → 2초
-            result = subprocess.run(["systemctl", "is-active", service_name], capture_output=True, text=True, timeout=2)
+            result = subprocess.run(
+                ["systemctl", "is-active", service_name],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
 
             status = result.stdout.strip()
 
@@ -402,7 +441,13 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             }
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            return {"status": "unknown", "active": False, "main_pid": "0", "memory": "0", "restart_count": "0"}
+            return {
+                "status": "unknown",
+                "active": False,
+                "main_pid": "0",
+                "memory": "0",
+                "restart_count": "0",
+            }
 
 
 # 전역 인스턴스 생성 함수 (통합 관리자와 연동)

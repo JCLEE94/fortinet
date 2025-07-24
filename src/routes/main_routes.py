@@ -108,9 +108,21 @@ def packet_sniffer():
     import os
 
     example_devices = [
-        {"id": "firewall1", "name": "방화벽-01", "ip": os.getenv("EXAMPLE_FW1_IP", "192.168.1.1")},
-        {"id": "firewall2", "name": "방화벽-02", "ip": os.getenv("EXAMPLE_FW2_IP", "192.168.2.1")},
-        {"id": "firewall3", "name": "방화벽-03", "ip": os.getenv("EXAMPLE_FW3_IP", "192.168.3.1")},
+        {
+            "id": "firewall1",
+            "name": "방화벽-01",
+            "ip": os.getenv("EXAMPLE_FW1_IP", "192.168.1.1"),
+        },
+        {
+            "id": "firewall2",
+            "name": "방화벽-02",
+            "ip": os.getenv("EXAMPLE_FW2_IP", "192.168.2.1"),
+        },
+        {
+            "id": "firewall3",
+            "name": "방화벽-03",
+            "ip": os.getenv("EXAMPLE_FW3_IP", "192.168.3.1"),
+        },
     ]
 
     example_filters = {
@@ -119,7 +131,9 @@ def packet_sniffer():
         "host_to_host": f"host {os.getenv('EXAMPLE_HOST1_IP', '192.168.1.1')} and host {os.getenv('EXAMPLE_HOST2_IP', '192.168.1.2')}",
     }
 
-    return render_template("packet_sniffer.html", devices=example_devices, example_filters=example_filters)
+    return render_template(
+        "packet_sniffer.html", devices=example_devices, example_filters=example_filters
+    )
 
 
 @main_bp.route("/settings")
@@ -131,7 +145,8 @@ def settings():
 @main_bp.route("/monitoring")
 def monitoring():
     """모니터링 페이지"""
-    from src.config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from src.config.dashboard_defaults import (generate_mock_alerts,
+                                               get_dashboard_config)
     from src.mock.data_generator import DummyDataGenerator
 
     # 모니터링용 더미 데이터 생성
@@ -140,8 +155,12 @@ def monitoring():
 
     data = {
         "stats": dummy_generator.generate_dashboard_stats(),
-        "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
-        "events": dummy_generator.generate_security_events(dashboard_config["security_events"]["max_events_display"]),
+        "devices": dummy_generator.generate_devices(
+            dashboard_config["device_list"]["top_devices_limit"] * 2
+        ),
+        "events": dummy_generator.generate_security_events(
+            dashboard_config["security_events"]["max_events_display"]
+        ),
         "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
         "monitoring": dummy_generator.generate_monitoring_data(),
     }
@@ -156,8 +175,12 @@ def monitoring():
 def text_overflow_test():
     # 텍스트 오버플로우 테스트를 위한 샘플 데이터
     sample_data = {
-        "long_text": "This is a very long text that might overflow in certain UI elements. " * 10,
-        "items": [{"name": "Item " + str(i), "description": "Description " * 5} for i in range(1, 11)],
+        "long_text": "This is a very long text that might overflow in certain UI elements. "
+        * 10,
+        "items": [
+            {"name": "Item " + str(i), "description": "Description " * 5}
+            for i in range(1, 11)
+        ],
     }
     return render_template("text_overflow_test.html", **sample_data)
 
@@ -171,7 +194,8 @@ def dashboard_modern():
 def dashboard():
     """대시보드 페이지"""
     from src.api.integration.api_integration import APIIntegrationManager
-    from src.config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from src.config.dashboard_defaults import (generate_mock_alerts,
+                                               get_dashboard_config)
     from src.config.unified_settings import unified_settings
     from src.mock.data_generator import DummyDataGenerator
 
@@ -195,18 +219,24 @@ def dashboard():
                     "network_traffic": dashboard_config["stats"]["network_traffic"],
                     "active_alerts": dashboard_config["stats"]["active_alerts"],
                 },
-                "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
+                "alerts": generate_mock_alerts(
+                    dashboard_config["stats"]["active_alerts"]
+                ),
             }
         else:
             # 연결 실패 시 더미 데이터 사용
             dummy_generator = DummyDataGenerator()
             data = {
                 "stats": dummy_generator.generate_dashboard_stats(),
-                "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
+                "devices": dummy_generator.generate_devices(
+                    dashboard_config["device_list"]["top_devices_limit"] * 2
+                ),
                 "events": dummy_generator.generate_security_events(
                     dashboard_config["security_events"]["max_events_display"]
                 ),
-                "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
+                "alerts": generate_mock_alerts(
+                    dashboard_config["stats"]["active_alerts"]
+                ),
             }
 
     except Exception as e:
@@ -215,7 +245,9 @@ def dashboard():
         dummy_generator = DummyDataGenerator()
         data = {
             "stats": dummy_generator.generate_dashboard_stats(),
-            "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
+            "devices": dummy_generator.generate_devices(
+                dashboard_config["device_list"]["top_devices_limit"] * 2
+            ),
             "events": dummy_generator.generate_security_events(
                 dashboard_config["security_events"]["max_events_display"]
             ),

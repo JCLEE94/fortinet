@@ -17,7 +17,12 @@ from src.config.constants import DEFAULT_PORTS, TRAFFIC_THRESHOLDS
 app = Flask(__name__)
 
 # Mock 데이터 저장소
-mock_data = {"devices": [], "policies": [], "logs": [], "topology": {"nodes": [], "links": []}}
+mock_data = {
+    "devices": [],
+    "policies": [],
+    "logs": [],
+    "topology": {"nodes": [], "links": []},
+}
 
 
 # 초기 데이터 생성
@@ -176,7 +181,13 @@ def get_interfaces():
     interfaces = []
     for i in range(4):
         interfaces.append(
-            {"name": f"port{i+1}", "ip": f"192.168.{i+1}.1/24", "status": "up", "type": "physical", "speed": "1Gbps"}
+            {
+                "name": f"port{i+1}",
+                "ip": f"192.168.{i+1}.1/24",
+                "status": "up",
+                "type": "physical",
+                "speed": "1Gbps",
+            }
         )
     return jsonify({"status": "success", "results": interfaces})
 
@@ -193,17 +204,35 @@ def fortimanager_api():
 
         if "/device/adom/root/device" in url:
             return jsonify(
-                {"id": data["id"], "result": [{"status": {"code": 0, "message": "OK"}, "data": mock_data["devices"]}]}
+                {
+                    "id": data["id"],
+                    "result": [
+                        {
+                            "status": {"code": 0, "message": "OK"},
+                            "data": mock_data["devices"],
+                        }
+                    ],
+                }
             )
         elif "/pm/config/device" in url and "/global/system/interface" in url:
             return jsonify(
                 {
                     "id": data["id"],
-                    "result": [{"status": {"code": 0, "message": "OK"}, "data": get_interfaces()["results"]}],
+                    "result": [
+                        {
+                            "status": {"code": 0, "message": "OK"},
+                            "data": get_interfaces()["results"],
+                        }
+                    ],
                 }
             )
 
-    return jsonify({"id": data.get("id", 1), "result": [{"status": {"code": 0, "message": "OK"}, "data": []}]})
+    return jsonify(
+        {
+            "id": data.get("id", 1),
+            "result": [{"status": {"code": 0, "message": "OK"}, "data": []}],
+        }
+    )
 
 
 # FortiAnalyzer API Endpoints
@@ -217,10 +246,23 @@ def fortianalyzer_api():
 
         if "/logview/adom/root/device" in url:
             return jsonify(
-                {"id": data["id"], "result": [{"status": {"code": 0, "message": "OK"}, "data": mock_data["logs"]}]}
+                {
+                    "id": data["id"],
+                    "result": [
+                        {
+                            "status": {"code": 0, "message": "OK"},
+                            "data": mock_data["logs"],
+                        }
+                    ],
+                }
             )
 
-    return jsonify({"id": data.get("id", 1), "result": [{"status": {"code": 0, "message": "OK"}, "data": []}]})
+    return jsonify(
+        {
+            "id": data.get("id", 1),
+            "result": [{"status": {"code": 0, "message": "OK"}, "data": []}],
+        }
+    )
 
 
 # 네트워크 토폴로지 전용 엔드포인트
@@ -234,10 +276,24 @@ def get_topology():
                 "nodes": mock_data["topology"]["nodes"],
                 "links": mock_data["topology"]["links"],
                 "summary": {
-                    "total_devices": len([n for n in mock_data["topology"]["nodes"] if n["type"] == "firewall"]),
-                    "online_devices": len([n for n in mock_data["topology"]["nodes"] if n["status"] == "online"]),
+                    "total_devices": len(
+                        [
+                            n
+                            for n in mock_data["topology"]["nodes"]
+                            if n["type"] == "firewall"
+                        ]
+                    ),
+                    "online_devices": len(
+                        [
+                            n
+                            for n in mock_data["topology"]["nodes"]
+                            if n["status"] == "online"
+                        ]
+                    ),
                     "total_links": len(mock_data["topology"]["links"]),
-                    "avg_utilization": sum(l["utilization"] for l in mock_data["topology"]["links"])
+                    "avg_utilization": sum(
+                        l["utilization"] for l in mock_data["topology"]["links"]
+                    )
                     / len(mock_data["topology"]["links"]),
                 },
             },
@@ -317,19 +373,35 @@ def policy_analysis():
             "status": "success",
             "data": {
                 "total_policies": len(mock_data["policies"]),
-                "active_policies": len([p for p in mock_data["policies"] if p["status"] == "enable"]),
+                "active_policies": len(
+                    [p for p in mock_data["policies"] if p["status"] == "enable"]
+                ),
                 "unused_policies": [p["policyid"] for p in unused_policies],
                 "duplicate_policies": duplicate_policies,
                 "policy_hits": {
-                    "high": len([p for p in mock_data["policies"] if p["hits"] > TRAFFIC_THRESHOLDS["HIGH"]]),
+                    "high": len(
+                        [
+                            p
+                            for p in mock_data["policies"]
+                            if p["hits"] > TRAFFIC_THRESHOLDS["HIGH"]
+                        ]
+                    ),
                     "medium": len(
                         [
                             p
                             for p in mock_data["policies"]
-                            if TRAFFIC_THRESHOLDS["MEDIUM"] < p["hits"] <= TRAFFIC_THRESHOLDS["HIGH"]
+                            if TRAFFIC_THRESHOLDS["MEDIUM"]
+                            < p["hits"]
+                            <= TRAFFIC_THRESHOLDS["HIGH"]
                         ]
                     ),
-                    "low": len([p for p in mock_data["policies"] if 0 < p["hits"] <= TRAFFIC_THRESHOLDS["MEDIUM"]]),
+                    "low": len(
+                        [
+                            p
+                            for p in mock_data["policies"]
+                            if 0 < p["hits"] <= TRAFFIC_THRESHOLDS["MEDIUM"]
+                        ]
+                    ),
                     "zero": len(unused_policies),
                 },
             },
@@ -341,4 +413,8 @@ if __name__ == "__main__":
     initialize_mock_data()
     import os
 
-    app.run(host="0.0.0.0", port=DEFAULT_PORTS["MOCK_SERVER"], debug=os.getenv("DEBUG", "false").lower() == "true")
+    app.run(
+        host="0.0.0.0",
+        port=DEFAULT_PORTS["MOCK_SERVER"],
+        debug=os.getenv("DEBUG", "false").lower() == "true",
+    )

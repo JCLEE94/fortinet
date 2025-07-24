@@ -103,7 +103,9 @@ class BaseApiClient(ABC):
             self.logger = logging.getLogger(self.logger_name)
             if not self.logger.handlers:
                 handler = logging.StreamHandler()
-                formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                formatter = logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
                 self.logger.setLevel(logging.INFO)
@@ -152,17 +154,23 @@ class BaseApiClient(ABC):
             "username": os.environ.get(f"{prefix}_USERNAME"),
             "password": os.environ.get(f"{prefix}_PASSWORD"),
             "port": os.environ.get(f"{prefix}_PORT"),
-            "verify_ssl": os.environ.get(f"{prefix}_VERIFY_SSL", "false").lower() == "true",
+            "verify_ssl": os.environ.get(f"{prefix}_VERIFY_SSL", "false").lower()
+            == "true",
         }
 
     def _setup_headers(self):
         """Setup default headers based on authentication method"""
         if self.api_token:
-            self.headers = {"Authorization": f"Bearer {self.api_token}", "Content-Type": "application/json"}
+            self.headers = {
+                "Authorization": f"Bearer {self.api_token}",
+                "Content-Type": "application/json",
+            }
         else:
             self.headers = {"Content-Type": "application/json"}
 
-    def _make_request(self, method, url, data=None, params=None, headers=None, timeout=None):
+    def _make_request(
+        self, method, url, data=None, params=None, headers=None, timeout=None
+    ):
         """
         Make an HTTP request with error handling and logging
 
@@ -208,14 +216,21 @@ class BaseApiClient(ABC):
         try:
             # Make the request using session
             response = self.session.request(
-                method=method, url=url, json=data if data else None, params=params, headers=headers, timeout=timeout
+                method=method,
+                url=url,
+                json=data if data else None,
+                params=params,
+                headers=headers,
+                timeout=timeout,
             )
 
             # Log the response
             if response.ok:
                 self.logger.debug(f"API Response: {response.status_code} OK")
             else:
-                self.logger.warning(f"API Response: {response.status_code} {response.reason}")
+                self.logger.warning(
+                    f"API Response: {response.status_code} {response.reason}"
+                )
 
             # Return success flag, response data, and status code
             if response.ok:
@@ -273,7 +288,10 @@ class BaseApiClient(ABC):
                 if isinstance(value, dict):
                     result[key] = _sanitize_dict(value)
                 elif isinstance(value, list):
-                    result[key] = [_sanitize_dict(item) if isinstance(item, dict) else item for item in value]
+                    result[key] = [
+                        _sanitize_dict(item) if isinstance(item, dict) else item
+                        for item in value
+                    ]
                 elif any(sk in key.lower() for sk in sensitive_keys):
                     result[key] = "********"
                 else:
@@ -319,16 +337,22 @@ class BaseApiClient(ABC):
 
         # Try token authentication first if available
         if self.auth_method == "token":
-            self.logger.info(f"Testing {self.__class__.__name__} API connection with token")
+            self.logger.info(
+                f"Testing {self.__class__.__name__} API connection with token"
+            )
 
             # Get the test endpoint for this client type
             test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request("GET", test_url, None, None, self.headers)
+            success, result, status_code = self._make_request(
+                "GET", test_url, None, None, self.headers
+            )
 
             if success:
-                self.logger.info(f"{self.__class__.__name__} API token authentication successful")
+                self.logger.info(
+                    f"{self.__class__.__name__} API token authentication successful"
+                )
                 return True, result
             else:
                 self.logger.warning(
@@ -339,7 +363,10 @@ class BaseApiClient(ABC):
                 if self.username and self.password:
                     return self._test_with_credentials()
                 else:
-                    return False, f"Token authentication failed and no credentials available"
+                    return (
+                        False,
+                        f"Token authentication failed and no credentials available",
+                    )
         else:
             # Direct credential authentication
             return self._test_with_credentials()
@@ -356,12 +383,16 @@ class BaseApiClient(ABC):
             return self.login()
         else:
             # Fallback: try basic auth
-            self.logger.info(f"Testing {self.__class__.__name__} API connection with credentials")
+            self.logger.info(
+                f"Testing {self.__class__.__name__} API connection with credentials"
+            )
 
             # Set up basic auth headers
             import base64
 
-            credentials = base64.b64encode(f"{self.username}:{self.password}".encode()).decode()
+            credentials = base64.b64encode(
+                f"{self.username}:{self.password}".encode()
+            ).decode()
             headers = self.headers.copy()
             headers["Authorization"] = f"Basic {credentials}"
 
@@ -369,13 +400,19 @@ class BaseApiClient(ABC):
             test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request("GET", test_url, None, None, headers)
+            success, result, status_code = self._make_request(
+                "GET", test_url, None, None, headers
+            )
 
             if success:
-                self.logger.info(f"{self.__class__.__name__} credential authentication successful")
+                self.logger.info(
+                    f"{self.__class__.__name__} credential authentication successful"
+                )
                 return True, "Credential authentication successful"
             else:
-                self.logger.error(f"{self.__class__.__name__} credential authentication failed: {status_code}")
+                self.logger.error(
+                    f"{self.__class__.__name__} credential authentication failed: {status_code}"
+                )
                 return False, f"Credential authentication failed: {result}"
 
 
@@ -415,7 +452,9 @@ class RealtimeMonitoringMixin:
         self.connection_error_count = 0
 
         # Start monitoring thread
-        self.monitoring_thread = threading.Thread(target=self._monitoring_loop, args=(interval,), daemon=True)
+        self.monitoring_thread = threading.Thread(
+            target=self._monitoring_loop, args=(interval,), daemon=True
+        )
         self.monitoring_thread.start()
         self.logger.info(f"Real-time monitoring started with {interval}s interval")
 
@@ -462,7 +501,9 @@ class RealtimeMonitoringMixin:
                     self.connection_error_count += 1
                     if self.connection_error_count >= self.max_connection_errors:
                         self.is_connected = False
-                        self.logger.error("Max connection errors reached, marking as disconnected")
+                        self.logger.error(
+                            "Max connection errors reached, marking as disconnected"
+                        )
 
             except Exception as e:
                 self.logger.error(f"Error in monitoring loop: {e}")
@@ -478,7 +519,9 @@ class RealtimeMonitoringMixin:
         Returns:
             dict: Monitoring data or None if error
         """
-        raise NotImplementedError("Classes using RealtimeMonitoringMixin must implement _get_monitoring_data")
+        raise NotImplementedError(
+            "Classes using RealtimeMonitoringMixin must implement _get_monitoring_data"
+        )
 
 
 # API Error Classes

@@ -46,10 +46,18 @@ class PCAPExporter:
         """
         self.snaplen = snaplen
         self.network = network
-        self.statistics = {"exported_files": 0, "exported_packets": 0, "total_bytes": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "exported_packets": 0,
+            "total_bytes": 0,
+            "last_export": None,
+        }
 
     def export_packets(
-        self, packets: List[Dict[str, Any]], output_path: str, include_metadata: bool = False
+        self,
+        packets: List[Dict[str, Any]],
+        output_path: str,
+        include_metadata: bool = False,
     ) -> Dict[str, Any]:
         """
         패킷 목록을 PCAP 파일로 내보내기
@@ -64,7 +72,11 @@ class PCAPExporter:
         """
         try:
             if not packets:
-                return {"success": False, "error": "내보낼 패킷 데이터가 없습니다", "exported_count": 0}
+                return {
+                    "success": False,
+                    "error": "내보낼 패킷 데이터가 없습니다",
+                    "exported_count": 0,
+                }
 
             # 출력 디렉토리 생성
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -140,7 +152,9 @@ class PCAPExporter:
                 }
 
             # 필터링된 패킷 내보내기
-            result = self.export_packets(filtered_packets, output_path, include_metadata=True)
+            result = self.export_packets(
+                filtered_packets, output_path, include_metadata=True
+            )
 
             if result["success"]:
                 result.update(
@@ -157,7 +171,9 @@ class PCAPExporter:
             logger.error(f"필터링된 PCAP 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def export_by_protocol(self, packets: List[Dict[str, Any]], output_dir: str) -> Dict[str, Any]:
+    def export_by_protocol(
+        self, packets: List[Dict[str, Any]], output_dir: str
+    ) -> Dict[str, Any]:
         """
         프로토콜별로 패킷을 분리하여 PCAP 파일 생성
 
@@ -231,12 +247,18 @@ class PCAPExporter:
                 timestamp_str = packet.get("timestamp")
                 if timestamp_str:
                     try:
-                        timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                        timestamp = datetime.fromisoformat(
+                            timestamp_str.replace("Z", "+00:00")
+                        )
                         # 시간 슬라이스 계산
-                        slice_start = timestamp.replace(minute=0, second=0, microsecond=0)
+                        slice_start = timestamp.replace(
+                            minute=0, second=0, microsecond=0
+                        )
 
                         if slice_duration < 3600:  # 1시간 미만이면 분 단위로
-                            slice_minutes = (timestamp.minute // (slice_duration // 60)) * (slice_duration // 60)
+                            slice_minutes = (
+                                timestamp.minute // (slice_duration // 60)
+                            ) * (slice_duration // 60)
                             slice_start = slice_start.replace(minute=slice_minutes)
 
                         slice_key = slice_start.strftime("%Y%m%d_%H%M%S")
@@ -291,7 +313,9 @@ class PCAPExporter:
         )
         pcap_file.write(header)
 
-    def _write_packet_record(self, pcap_file: BinaryIO, packet_data: bytes, timestamp: float):
+    def _write_packet_record(
+        self, pcap_file: BinaryIO, packet_data: bytes, timestamp: float
+    ):
         """패킷 레코드 작성"""
         # 타임스탬프를 초와 마이크로초로 분리
         ts_sec = int(timestamp)
@@ -423,7 +447,16 @@ class PCAPExporter:
         urgent = 0
 
         return struct.pack(
-            ">HHIIBBHHH", src_port, dst_port, seq_num, ack_num, data_offset, flags, window, checksum, urgent
+            ">HHIIBBHHH",
+            src_port,
+            dst_port,
+            seq_num,
+            ack_num,
+            data_offset,
+            flags,
+            window,
+            checksum,
+            urgent,
         )
 
     def _create_udp_header(self, packet: Dict[str, Any]) -> bytes:
@@ -443,7 +476,9 @@ class PCAPExporter:
         identifier = packet.get("identifier", 0)
         sequence = packet.get("sequence", 0)
 
-        return struct.pack(">BBHHH", icmp_type, icmp_code, checksum, identifier, sequence)
+        return struct.pack(
+            ">BBHHH", icmp_type, icmp_code, checksum, identifier, sequence
+        )
 
     def _extract_timestamp(self, packet: Dict[str, Any]) -> float:
         """패킷에서 타임스탬프 추출"""
@@ -458,7 +493,9 @@ class PCAPExporter:
         except Exception:
             return datetime.now().timestamp()
 
-    def _apply_bpf_filter(self, packets: List[Dict[str, Any]], filter_expression: str) -> List[Dict[str, Any]]:
+    def _apply_bpf_filter(
+        self, packets: List[Dict[str, Any]], filter_expression: str
+    ) -> List[Dict[str, Any]]:
         """BPF 필터 적용 (간단한 구현)"""
         try:
             # 간단한 필터 파싱 및 적용
@@ -489,14 +526,19 @@ class PCAPExporter:
                 port_match = filter_lower.replace("port", "").strip()
                 try:
                     port_num = int(port_match)
-                    return packet.get("src_port") == port_num or packet.get("dst_port") == port_num
+                    return (
+                        packet.get("src_port") == port_num
+                        or packet.get("dst_port") == port_num
+                    )
                 except ValueError:
                     pass
 
             # IP 주소 필터
             if "host" in filter_lower:
                 ip_match = filter_lower.replace("host", "").strip()
-                return packet.get("src_ip") == ip_match or packet.get("dst_ip") == ip_match
+                return (
+                    packet.get("src_ip") == ip_match or packet.get("dst_ip") == ip_match
+                )
 
             # 기본적으로 모든 패킷 포함
             return True
@@ -505,7 +547,9 @@ class PCAPExporter:
             logger.error(f"필터 매칭 오류: {e}")
             return True
 
-    def _write_metadata_file(self, metadata_path: str, packets: List[Dict[str, Any]], exported_count: int):
+    def _write_metadata_file(
+        self, metadata_path: str, packets: List[Dict[str, Any]], exported_count: int
+    ):
         """메타데이터 파일 작성"""
         try:
             metadata = {
@@ -518,7 +562,9 @@ class PCAPExporter:
                 "capture_info": {
                     "snaplen": self.snaplen,
                     "network_type": self.network,
-                    "protocols": list(set(p.get("protocol", "unknown") for p in packets)),
+                    "protocols": list(
+                        set(p.get("protocol", "unknown") for p in packets)
+                    ),
                 },
                 "statistics": self._generate_packet_statistics(packets),
             }
@@ -531,7 +577,9 @@ class PCAPExporter:
         except Exception as e:
             logger.error(f"메타데이터 파일 작성 오류: {e}")
 
-    def _generate_packet_statistics(self, packets: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _generate_packet_statistics(
+        self, packets: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """패킷 통계 생성"""
         from collections import Counter
 
@@ -546,7 +594,9 @@ class PCAPExporter:
             "total_packets": len(packets),
         }
 
-    def merge_pcap_files(self, input_files: List[str], output_path: str) -> Dict[str, Any]:
+    def merge_pcap_files(
+        self, input_files: List[str], output_path: str
+    ) -> Dict[str, Any]:
         """여러 PCAP 파일을 하나로 병합"""
         try:
             total_packets = 0
@@ -602,11 +652,18 @@ class PCAPExporter:
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"exported_files": 0, "exported_packets": 0, "total_bytes": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "exported_packets": 0,
+            "total_bytes": 0,
+            "last_export": None,
+        }
         logger.info("PCAP 내보내기 통계 초기화됨")
 
 
 # 팩토리 함수
-def create_pcap_exporter(snaplen: int = 65535, network: int = PCAPExporter.DLT_EN10MB) -> PCAPExporter:
+def create_pcap_exporter(
+    snaplen: int = 65535, network: int = PCAPExporter.DLT_EN10MB
+) -> PCAPExporter:
     """PCAP 내보내기 인스턴스 생성"""
     return PCAPExporter(snaplen, network)

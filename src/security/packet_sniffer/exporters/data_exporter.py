@@ -27,13 +27,20 @@ class DataExporter:
             output_base_dir: 출력 파일 기본 디렉토리
         """
         self.output_base_dir = output_base_dir
-        self.statistics = {"exported_files": 0, "total_packets_exported": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "total_packets_exported": 0,
+            "last_export": None,
+        }
 
         # 출력 디렉토리 생성
         Path(output_base_dir).mkdir(parents=True, exist_ok=True)
 
     def export_to_json(
-        self, packets: List[Dict[str, Any]], session_id: str, filename: Optional[str] = None
+        self,
+        packets: List[Dict[str, Any]],
+        session_id: str,
+        filename: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         패킷 데이터를 JSON 형식으로 내보내기
@@ -54,7 +61,9 @@ class DataExporter:
                     file_path += ".json"
             else:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path = os.path.join(self.output_base_dir, f"packets_{session_id}_{timestamp}.json")
+                file_path = os.path.join(
+                    self.output_base_dir, f"packets_{session_id}_{timestamp}.json"
+                )
 
             # 패킷 데이터 단순화
             simplified_packets = self._simplify_packets(packets)
@@ -83,7 +92,12 @@ class DataExporter:
 
         except Exception as e:
             logger.error(f"JSON 내보내기 오류: {e}")
-            return {"success": False, "format": "json", "error": str(e), "message": f"JSON 파일 저장 중 오류: {str(e)}"}
+            return {
+                "success": False,
+                "format": "json",
+                "error": str(e),
+                "message": f"JSON 파일 저장 중 오류: {str(e)}",
+            }
 
     def export_to_csv(
         self,
@@ -112,7 +126,9 @@ class DataExporter:
                     file_path += ".csv"
             else:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path = os.path.join(self.output_base_dir, f"packets_{session_id}_{timestamp}.csv")
+                file_path = os.path.join(
+                    self.output_base_dir, f"packets_{session_id}_{timestamp}.csv"
+                )
 
             # CSV 필드명 설정
             if custom_fields:
@@ -162,10 +178,18 @@ class DataExporter:
 
         except Exception as e:
             logger.error(f"CSV 내보내기 오류: {e}")
-            return {"success": False, "format": "csv", "error": str(e), "message": f"CSV 파일 저장 중 오류: {str(e)}"}
+            return {
+                "success": False,
+                "format": "csv",
+                "error": str(e),
+                "message": f"CSV 파일 저장 중 오류: {str(e)}",
+            }
 
     def export_summary_json(
-        self, summary_data: Dict[str, Any], session_id: str, filename: Optional[str] = None
+        self,
+        summary_data: Dict[str, Any],
+        session_id: str,
+        filename: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         요약 데이터를 JSON 형식으로 내보내기
@@ -186,7 +210,9 @@ class DataExporter:
                     file_path += ".json"
             else:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                file_path = os.path.join(self.output_base_dir, f"summary_{session_id}_{timestamp}.json")
+                file_path = os.path.join(
+                    self.output_base_dir, f"summary_{session_id}_{timestamp}.json"
+                )
 
             # 요약 데이터에 메타정보 추가
             export_data = {
@@ -280,7 +306,11 @@ class DataExporter:
 
         except Exception as e:
             logger.error(f"필터링된 데이터 내보내기 오류: {e}")
-            return {"success": False, "error": str(e), "message": f"필터링된 데이터 내보내기 중 오류: {str(e)}"}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": f"필터링된 데이터 내보내기 중 오류: {str(e)}",
+            }
 
     def _simplify_packets(self, packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """패킷 데이터 단순화"""
@@ -307,8 +337,12 @@ class DataExporter:
                 deep_inspection = packet["deep_inspection"]
                 simple_packet["security_summary"] = {
                     "threat_level": deep_inspection.get("threat_level", "none"),
-                    "suspicious_patterns": len(deep_inspection.get("suspicious_patterns", [])),
-                    "malware_indicators": len(deep_inspection.get("malware_indicators", [])),
+                    "suspicious_patterns": len(
+                        deep_inspection.get("suspicious_patterns", [])
+                    ),
+                    "malware_indicators": len(
+                        deep_inspection.get("malware_indicators", [])
+                    ),
                 }
 
             # 페이로드 미리보기 (처음 100자만)
@@ -317,18 +351,22 @@ class DataExporter:
                 if isinstance(payload, bytes):
                     try:
                         payload_str = payload.decode("utf-8", errors="ignore")
-                    except:
+                    except Exception:
                         payload_str = str(payload)
                 else:
                     payload_str = str(payload)
 
-                simple_packet["payload_preview"] = payload_str[:100] + ("..." if len(payload_str) > 100 else "")
+                simple_packet["payload_preview"] = payload_str[:100] + (
+                    "..." if len(payload_str) > 100 else ""
+                )
 
             simplified.append(simple_packet)
 
         return simplified
 
-    def _prepare_csv_row(self, packet: Dict[str, Any], fieldnames: List[str]) -> Dict[str, str]:
+    def _prepare_csv_row(
+        self, packet: Dict[str, Any], fieldnames: List[str]
+    ) -> Dict[str, str]:
         """CSV 행 데이터 준비"""
         row = {}
 
@@ -344,11 +382,13 @@ class DataExporter:
                     if isinstance(payload, bytes):
                         try:
                             payload_str = payload.decode("utf-8", errors="ignore")
-                        except:
+                        except Exception:
                             payload_str = str(payload)
                     else:
                         payload_str = str(payload)
-                    row[field] = payload_str[:50] + ("..." if len(payload_str) > 50 else "")
+                    row[field] = payload_str[:50] + (
+                        "..." if len(payload_str) > 50 else ""
+                    )
                 else:
                     row[field] = ""
             else:
@@ -357,7 +397,9 @@ class DataExporter:
 
         return row
 
-    def _apply_filters(self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _apply_filters(
+        self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """필터 조건 적용"""
         filtered = []
 
@@ -397,7 +439,11 @@ class DataExporter:
             if "time_range" in filter_criteria:
                 time_range = filter_criteria["time_range"]
                 packet_time = packet.get("timestamp", 0)
-                if not (time_range.get("start", 0) <= packet_time <= time_range.get("end", float("inf"))):
+                if not (
+                    time_range.get("start", 0)
+                    <= packet_time
+                    <= time_range.get("end", float("inf"))
+                ):
                     include_packet = False
                     continue
 
@@ -429,7 +475,11 @@ class DataExporter:
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"exported_files": 0, "total_packets_exported": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "total_packets_exported": 0,
+            "last_export": None,
+        }
         logger.info("데이터 내보내기 통계 초기화됨")
 
     def cleanup_old_files(self, max_age_days: int = 7) -> Dict[str, Any]:
@@ -450,7 +500,9 @@ class DataExporter:
                         deleted_files.append(str(file_path))
                         total_size_freed += file_size
 
-            logger.info(f"오래된 파일 정리 완료: {len(deleted_files)}개 파일, {total_size_freed} bytes")
+            logger.info(
+                f"오래된 파일 정리 완료: {len(deleted_files)}개 파일, {total_size_freed} bytes"
+            )
 
             return {
                 "success": True,

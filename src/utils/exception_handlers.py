@@ -9,7 +9,8 @@ import traceback
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
 
-from src.utils.common_imports import get_current_timestamp, jsonify, os, requests
+from src.utils.common_imports import (get_current_timestamp, jsonify, os,
+                                      requests)
 from src.utils.unified_logger import setup_logger as setup_module_logger
 
 
@@ -17,7 +18,13 @@ from src.utils.unified_logger import setup_logger as setup_module_logger
 def format_error_response(error_message: str, status_code: int = 500):
     """표준화된 오류 응답 생성"""
     return (
-        jsonify({"error": error_message, "timestamp": get_current_timestamp(), "status_code": status_code}),
+        jsonify(
+            {
+                "error": error_message,
+                "timestamp": get_current_timestamp(),
+                "status_code": status_code,
+            }
+        ),
         status_code,
     )
 
@@ -90,17 +97,25 @@ class ExceptionHandler:
                 return self._format_api_error("Resource not found", api_type, 404)
             else:
                 return self._format_api_error(
-                    f"HTTP {e.response.status_code}: {str(e)}", api_type, e.response.status_code
+                    f"HTTP {e.response.status_code}: {str(e)}",
+                    api_type,
+                    e.response.status_code,
                 )
 
         if isinstance(e, requests.exceptions.ConnectionError):
-            return self._format_api_error("Connection failed - check network connectivity", api_type, 503)
+            return self._format_api_error(
+                "Connection failed - check network connectivity", api_type, 503
+            )
 
         if isinstance(e, requests.exceptions.Timeout):
-            return self._format_api_error("Request timeout - API server not responding", api_type, 504)
+            return self._format_api_error(
+                "Request timeout - API server not responding", api_type, 504
+            )
 
         if isinstance(e, requests.exceptions.SSLError):
-            return self._format_api_error("SSL certificate verification failed", api_type, 495)
+            return self._format_api_error(
+                "SSL certificate verification failed", api_type, 495
+            )
 
         # 기본 처리
         return self._format_api_error(f"Unexpected error: {str(e)}", api_type, 500)
@@ -256,7 +271,11 @@ def comprehensive_exception_handler(api_type: str = "unknown"):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except (FortiGateAPIException, FortiManagerAPIException, requests.exceptions.RequestException) as e:
+            except (
+                FortiGateAPIException,
+                FortiManagerAPIException,
+                requests.exceptions.RequestException,
+            ) as e:
                 return exception_handler.handle_api_exception(e, api_type)
             except (ValidationException, ValueError, TypeError, KeyError) as e:
                 return exception_handler.handle_validation_exception(e)

@@ -59,7 +59,9 @@ class DeviceManager:
                         devices.append(
                             {
                                 "name": device.get("name", ""),
-                                "hostname": device.get("hostname", device.get("name", "")),
+                                "hostname": device.get(
+                                    "hostname", device.get("name", "")
+                                ),
                                 "ip": device.get("ip", ""),
                                 "platform": device.get("platform", ""),
                                 "version": device.get("version", ""),
@@ -145,7 +147,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 인터페이스 목록 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/cmdb/system/interface")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/cmdb/system/interface"
+                )
 
                 if response and "results" in response:
                     for interface in response["results"]:
@@ -257,7 +261,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 방화벽 정책 목록 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/cmdb/firewall/policy")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/cmdb/firewall/policy"
+                )
 
                 if response and "results" in response:
                     for policy in response["results"]:
@@ -288,7 +294,11 @@ class DeviceManager:
                         "dstintf": [{"name": "port3"}],
                         "srcaddr": [{"name": "Internal_Network"}],
                         "dstaddr": [{"name": "all"}],
-                        "service": [{"name": "HTTP"}, {"name": "HTTPS"}, {"name": "DNS"}],
+                        "service": [
+                            {"name": "HTTP"},
+                            {"name": "HTTPS"},
+                            {"name": "DNS"},
+                        ],
                         "action": "accept",
                         "status": "enable",
                         "comments": "Allow internal users to access internet",
@@ -359,7 +369,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 라우팅 테이블 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/router/ipv4")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/router/ipv4"
+                )
 
                 if response and "results" in response:
                     for route in response["results"]:
@@ -455,9 +467,13 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 ARP 테이블 및 DHCP 리스 정보 조회
-                arp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/arp")
+                arp_response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/system/arp"
+                )
 
-                dhcp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/dhcp")
+                dhcp_response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/system/dhcp"
+                )
 
                 # ARP 테이블에서 연결된 장치 정보 추출
                 if arp_response and "results" in arp_response:
@@ -469,7 +485,9 @@ class DeviceManager:
                             "type": "Unknown",
                             "hostname": "",
                             "vendor": "",
-                            "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                            "last_seen": time.strftime(
+                                "%Y-%m-%d %H:%M:%S", time.localtime()
+                            ),
                             "source": "ARP",
                         }
                         connected_devices.append(device)
@@ -500,7 +518,9 @@ class DeviceManager:
                                         "type": "DHCP Client",
                                         "hostname": lease.get("hostname", ""),
                                         "vendor": "",
-                                        "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                                        "last_seen": time.strftime(
+                                            "%Y-%m-%d %H:%M:%S", time.localtime()
+                                        ),
                                         "source": "DHCP",
                                     }
                                     connected_devices.append(device)
@@ -514,7 +534,9 @@ class DeviceManager:
                         "type": "PC",
                         "hostname": "workstation1",
                         "vendor": "Dell Inc.",
-                        "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "last_seen": time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime()
+                        ),
                         "source": "DHCP",
                     },
                     {
@@ -524,7 +546,9 @@ class DeviceManager:
                         "type": "Mobile",
                         "hostname": "employee-phone",
                         "vendor": "Apple Inc.",
-                        "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "last_seen": time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime()
+                        ),
                         "source": "DHCP",
                     },
                     {
@@ -534,7 +558,9 @@ class DeviceManager:
                         "type": "Server",
                         "hostname": "fileserver",
                         "vendor": "HP Enterprise",
-                        "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "last_seen": time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime()
+                        ),
                         "source": "ARP",
                     },
                     {
@@ -544,7 +570,9 @@ class DeviceManager:
                         "type": "Server",
                         "hostname": "webserver",
                         "vendor": "Cisco Systems",
-                        "last_seen": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                        "last_seen": time.strftime(
+                            "%Y-%m-%d %H:%M:%S", time.localtime()
+                        ),
                         "source": "ARP",
                     },
                 ]
@@ -585,9 +613,13 @@ class DeviceManager:
             return "Server"
         elif any(pc in hostname for pc in ["pc", "desktop", "workstation"]):
             return "PC"
-        elif any(mobile in hostname for mobile in ["phone", "iphone", "android", "mobile"]):
+        elif any(
+            mobile in hostname for mobile in ["phone", "iphone", "android", "mobile"]
+        ):
             return "Mobile"
-        elif any(printer in hostname for printer in ["print", "printer", "hp", "canon"]):
+        elif any(
+            printer in hostname for printer in ["print", "printer", "hp", "canon"]
+        ):
             return "Printer"
         elif any(network in hostname for network in ["switch", "router", "ap", "wifi"]):
             return "Network Device"
@@ -643,12 +675,20 @@ class DeviceManager:
         Returns:
             장치 상세 정보
         """
-        details = {"basic_info": None, "interfaces": [], "policies": [], "routes": [], "connected_devices": []}
+        details = {
+            "basic_info": None,
+            "interfaces": [],
+            "policies": [],
+            "routes": [],
+            "connected_devices": [],
+        }
 
         try:
             # 기본 정보
             if device_name in self._device_cache:
-                details["basic_info"] = self._device_cache[device_name].get("basic_info", {})
+                details["basic_info"] = self._device_cache[device_name].get(
+                    "basic_info", {}
+                )
             else:
                 devices = self.get_fortigate_devices()
                 for device in devices:
@@ -754,14 +794,18 @@ class DeviceManagerAPI:
             for device in fortigate_devices:
                 device_name = device.get("name", "")
                 if device_name:
-                    connected_devices = self.device_manager.get_connected_devices(device_name)
+                    connected_devices = self.device_manager.get_connected_devices(
+                        device_name
+                    )
                     # FortiGate 정보 추가
                     for connected in connected_devices:
                         connected["fortigate_device"] = device_name
                     all_connected_devices.extend(connected_devices)
 
             # 장치 유형별 통계
-            statistics = self._calculate_device_statistics(fortigate_devices, all_connected_devices)
+            statistics = self._calculate_device_statistics(
+                fortigate_devices, all_connected_devices
+            )
 
             return {
                 "fortigate_devices": fortigate_devices,
@@ -774,7 +818,9 @@ class DeviceManagerAPI:
             return {"fortigate_devices": [], "connected_devices": [], "statistics": {}}
 
     def _calculate_device_statistics(
-        self, fortigate_devices: List[Dict[str, Any]], connected_devices: List[Dict[str, Any]]
+        self,
+        fortigate_devices: List[Dict[str, Any]],
+        connected_devices: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """
         장치 통계 계산
@@ -896,11 +942,21 @@ class DeviceManagerAPI:
                 return device_info
             else:
                 # 기본 정보 반환
-                return {"name": device_id, "type": "unknown", "interfaces": [], "policies": []}
+                return {
+                    "name": device_id,
+                    "type": "unknown",
+                    "interfaces": [],
+                    "policies": [],
+                }
 
         except Exception as e:
             logger.error(f"장치 정보 조회 실패: {str(e)}")
-            return {"name": device_id, "type": "unknown", "interfaces": [], "policies": []}
+            return {
+                "name": device_id,
+                "type": "unknown",
+                "interfaces": [],
+                "policies": [],
+            }
 
     def search_devices(self, keyword: str) -> Dict[str, Any]:
         """
@@ -934,7 +990,12 @@ class DeviceManagerAPI:
 
         except Exception as e:
             logger.error(f"장치 검색 실패: {str(e)}")
-            return {"keyword": keyword, "total_results": 0, "fortigate_results": [], "connected_results": []}
+            return {
+                "keyword": keyword,
+                "total_results": 0,
+                "fortigate_results": [],
+                "connected_results": [],
+            }
 
     def get_fortigate_interfaces(self, device_name: str) -> List[Dict[str, Any]]:
         """
@@ -968,7 +1029,9 @@ class DeviceManagerAPI:
             logger.error(f"방화벽 정책 목록 조회 실패: {str(e)}")
             return []
 
-    def get_interface_connected_devices(self, device_name: str, interface: str) -> List[Dict[str, Any]]:
+    def get_interface_connected_devices(
+        self, device_name: str, interface: str
+    ) -> List[Dict[str, Any]]:
         """
         특정 인터페이스에 연결된 장치 목록 조회
 
@@ -981,7 +1044,9 @@ class DeviceManagerAPI:
         """
         try:
             all_devices = self.device_manager.get_connected_devices(device_name)
-            filtered_devices = [d for d in all_devices if d.get("interface") == interface]
+            filtered_devices = [
+                d for d in all_devices if d.get("interface") == interface
+            ]
             return filtered_devices
         except Exception as e:
             logger.error(f"인터페이스 연결 장치 목록 조회 실패: {str(e)}")

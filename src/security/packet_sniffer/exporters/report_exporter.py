@@ -30,7 +30,10 @@ class ReportExporter:
         self.statistics = {"generated_reports": 0, "last_generation": None}
 
     def generate_html_report(
-        self, analysis_data: Dict[str, Any], output_path: str, include_charts: bool = True
+        self,
+        analysis_data: Dict[str, Any],
+        output_path: str,
+        include_charts: bool = True,
     ) -> Dict[str, Any]:
         """
         HTML 형식 종합 분석 보고서 생성
@@ -77,7 +80,9 @@ class ReportExporter:
             logger.error(f"HTML 보고서 생성 오류: {e}")
             return {"success": False, "error": str(e), "report_type": "HTML"}
 
-    def generate_pdf_report(self, analysis_data: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+    def generate_pdf_report(
+        self, analysis_data: Dict[str, Any], output_path: str
+    ) -> Dict[str, Any]:
         """
         PDF 형식 종합 분석 보고서 생성
 
@@ -91,7 +96,9 @@ class ReportExporter:
         try:
             # HTML 보고서 먼저 생성
             html_path = output_path.replace(".pdf", ".html")
-            html_result = self.generate_html_report(analysis_data, html_path, include_charts=False)
+            html_result = self.generate_html_report(
+                analysis_data, html_path, include_charts=False
+            )
 
             if not html_result["success"]:
                 return html_result
@@ -121,7 +128,9 @@ class ReportExporter:
             logger.error(f"PDF 보고서 생성 오류: {e}")
             return {"success": False, "error": str(e), "report_type": "PDF"}
 
-    def generate_executive_summary(self, analysis_data: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+    def generate_executive_summary(
+        self, analysis_data: Dict[str, Any], output_path: str
+    ) -> Dict[str, Any]:
         """
         경영진용 요약 보고서 생성
 
@@ -160,9 +169,15 @@ class ReportExporter:
 
         except Exception as e:
             logger.error(f"경영진용 요약 보고서 생성 오류: {e}")
-            return {"success": False, "error": str(e), "report_type": "Executive Summary"}
+            return {
+                "success": False,
+                "error": str(e),
+                "report_type": "Executive Summary",
+            }
 
-    def generate_security_report(self, analysis_data: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+    def generate_security_report(
+        self, analysis_data: Dict[str, Any], output_path: str
+    ) -> Dict[str, Any]:
         """
         보안 중심 분석 보고서 생성
 
@@ -201,9 +216,15 @@ class ReportExporter:
 
         except Exception as e:
             logger.error(f"보안 분석 보고서 생성 오류: {e}")
-            return {"success": False, "error": str(e), "report_type": "Security Analysis"}
+            return {
+                "success": False,
+                "error": str(e),
+                "report_type": "Security Analysis",
+            }
 
-    def generate_performance_report(self, analysis_data: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+    def generate_performance_report(
+        self, analysis_data: Dict[str, Any], output_path: str
+    ) -> Dict[str, Any]:
         """
         성능 분석 보고서 생성
 
@@ -242,7 +263,11 @@ class ReportExporter:
 
         except Exception as e:
             logger.error(f"성능 분석 보고서 생성 오류: {e}")
-            return {"success": False, "error": str(e), "report_type": "Performance Analysis"}
+            return {
+                "success": False,
+                "error": str(e),
+                "report_type": "Performance Analysis",
+            }
 
     def _prepare_report_data(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """보고서 데이터 준비"""
@@ -272,14 +297,19 @@ class ReportExporter:
                 "time_analysis": time_stats,
                 "security_analysis": security_stats,
                 "anomaly_analysis": anomaly_stats,
-                "raw_data": {"total_packets": len(packets), "total_analysis_results": len(analysis_results)},
+                "raw_data": {
+                    "total_packets": len(packets),
+                    "total_analysis_results": len(analysis_results),
+                },
             }
 
         except Exception as e:
             logger.error(f"보고서 데이터 준비 오류: {e}")
             return {}
 
-    def _calculate_basic_statistics(self, packets: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_basic_statistics(
+        self, packets: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """기본 통계 계산"""
         if not packets:
             return {}
@@ -326,7 +356,9 @@ class ReportExporter:
                 "packet_count": len(protocol_packets),
                 "total_bytes": sum(sizes),
                 "average_size": sum(sizes) / len(sizes) if sizes else 0,
-                "percentage": (len(protocol_packets) / len(packets)) * 100 if packets else 0,
+                "percentage": (len(protocol_packets) / len(packets)) * 100
+                if packets
+                else 0,
             }
 
         return {"distribution": dict(protocol_counter), "details": protocol_details}
@@ -339,7 +371,9 @@ class ReportExporter:
                 timestamp_str = packet.get("timestamp")
                 if timestamp_str:
                     try:
-                        dt = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                        dt = datetime.fromisoformat(
+                            timestamp_str.replace("Z", "+00:00")
+                        )
                         timestamps.append(dt)
                     except Exception:
                         continue
@@ -369,15 +403,21 @@ class ReportExporter:
                 },
                 "hourly_distribution": dict(hourly_distribution),
                 "daily_distribution": dict(daily_distribution),
-                "peak_hour": max(hourly_distribution.items(), key=lambda x: x[1])[0] if hourly_distribution else None,
-                "packets_per_second": len(packets) / duration.total_seconds() if duration.total_seconds() > 0 else 0,
+                "peak_hour": max(hourly_distribution.items(), key=lambda x: x[1])[0]
+                if hourly_distribution
+                else None,
+                "packets_per_second": len(packets) / duration.total_seconds()
+                if duration.total_seconds() > 0
+                else 0,
             }
 
         except Exception as e:
             logger.error(f"시간 패턴 분석 오류: {e}")
             return {}
 
-    def _analyze_security_issues(self, analysis_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_security_issues(
+        self, analysis_results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """보안 이슈 분석"""
         security_issues = []
 
@@ -386,23 +426,39 @@ class ReportExporter:
             security_issues.extend(issues)
 
         if not security_issues:
-            return {"total_issues": 0, "severity_distribution": {}, "type_distribution": {}}
+            return {
+                "total_issues": 0,
+                "severity_distribution": {},
+                "type_distribution": {},
+            }
 
         # 심각도별 분류
-        severity_counter = Counter(issue.get("severity", "unknown") for issue in security_issues)
+        severity_counter = Counter(
+            issue.get("severity", "unknown") for issue in security_issues
+        )
 
         # 타입별 분류
-        type_counter = Counter(issue.get("type", "unknown") for issue in security_issues)
+        type_counter = Counter(
+            issue.get("type", "unknown") for issue in security_issues
+        )
 
         return {
             "total_issues": len(security_issues),
             "severity_distribution": dict(severity_counter),
             "type_distribution": dict(type_counter),
-            "critical_issues": [issue for issue in security_issues if issue.get("severity") == "critical"],
-            "high_issues": [issue for issue in security_issues if issue.get("severity") == "high"],
+            "critical_issues": [
+                issue
+                for issue in security_issues
+                if issue.get("severity") == "critical"
+            ],
+            "high_issues": [
+                issue for issue in security_issues if issue.get("severity") == "high"
+            ],
         }
 
-    def _analyze_anomalies(self, analysis_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_anomalies(
+        self, analysis_results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """이상 징후 분석"""
         anomalies = []
 
@@ -421,7 +477,9 @@ class ReportExporter:
             "anomaly_details": anomalies[:20],  # 상위 20개만
         }
 
-    def _generate_html_content(self, report_data: Dict[str, Any], include_charts: bool) -> str:
+    def _generate_html_content(
+        self, report_data: Dict[str, Any], include_charts: bool
+    ) -> str:
         """HTML 내용 생성"""
         html_template = """
 <!DOCTYPE html>
@@ -594,7 +652,9 @@ class ReportExporter:
 
         type_dist = anomaly_stats.get("type_distribution", {})
 
-        content = f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
+        content = (
+            f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
+        )
 
         content += "<h4>유형별 분류</h4><ul>"
         for anomaly_type, count in type_dist.items():
@@ -719,7 +779,9 @@ class ReportExporter:
         </script>
         """
 
-    def _prepare_executive_summary(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_executive_summary(
+        self, analysis_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """경영진용 요약 데이터 준비"""
         # 핵심 지표만 추출
         packets = analysis_data.get("packets", [])
@@ -729,7 +791,9 @@ class ReportExporter:
             "key_metrics": {
                 "total_packets": len(packets),
                 "analysis_period": "24시간",  # 예시
-                "security_incidents": len([r for r in analysis_results if r.get("security_issues")]),
+                "security_incidents": len(
+                    [r for r in analysis_results if r.get("security_issues")]
+                ),
                 "network_utilization": "78%",  # 예시
             },
             "risk_assessment": "MEDIUM",  # 예시
@@ -776,7 +840,11 @@ class ReportExporter:
     def _extract_security_data(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """보안 데이터 추출"""
         # 보안 중심 데이터 추출 로직
-        return {"threats_detected": 0, "blocked_connections": 0, "malware_detected": 0}  # 실제 구현 필요
+        return {
+            "threats_detected": 0,
+            "blocked_connections": 0,
+            "malware_detected": 0,
+        }  # 실제 구현 필요
 
     def _generate_security_html(self, security_data: Dict[str, Any]) -> str:
         """보안 보고서 HTML 생성"""
@@ -798,7 +866,9 @@ class ReportExporter:
         </html>
         """
 
-    def _extract_performance_data(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_performance_data(
+        self, analysis_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """성능 데이터 추출"""
         # 성능 중심 데이터 추출 로직
         return {"throughput": "1.2 Gbps", "latency": "5.2 ms", "packet_loss": "0.01%"}

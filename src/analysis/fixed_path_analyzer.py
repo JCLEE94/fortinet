@@ -18,7 +18,9 @@ class FixedPathAnalyzer:
     def __init__(self):
         # 네트워크 구성 정의
         self.network_zones = {
-            "internal": CONFIG.network.INTERNAL_NETWORKS[0] if CONFIG.network.INTERNAL_NETWORKS else "192.168.0.0/16",
+            "internal": CONFIG.network.INTERNAL_NETWORKS[0]
+            if CONFIG.network.INTERNAL_NETWORKS
+            else "192.168.0.0/16",
             "dmz": CONFIG.network.DMZ_NETWORK,
             "external": "0.0.0.0/0",
             "guest": "10.10.0.0/16",
@@ -120,11 +122,23 @@ class FixedPathAnalyzer:
 
         # 라우팅 테이블 정의
         self.routing_table = {
-            "192.168.0.0/16": {"gateway": "192.168.1.1", "interface": "internal", "metric": 1},
+            "192.168.0.0/16": {
+                "gateway": "192.168.1.1",
+                "interface": "internal",
+                "metric": 1,
+            },
             "172.16.0.0/16": {"gateway": "172.16.1.1", "interface": "dmz", "metric": 1},
             "10.10.0.0/16": {"gateway": "10.10.1.1", "interface": "guest", "metric": 1},
-            "10.100.0.0/24": {"gateway": "10.100.0.1", "interface": "management", "metric": 1},
-            "0.0.0.0/0": {"gateway": "203.0.113.1", "interface": "external", "metric": 10},
+            "10.100.0.0/24": {
+                "gateway": "10.100.0.1",
+                "interface": "management",
+                "metric": 1,
+            },
+            "0.0.0.0/0": {
+                "gateway": "203.0.113.1",
+                "interface": "external",
+                "metric": 10,
+            },
         }
 
     def get_zone_for_ip(self, ip_str):
@@ -138,7 +152,7 @@ class FixedPathAnalyzer:
                 if ip in ipaddress.ip_network(network):
                     return zone
             return "external"  # 기본값
-        except:
+        except Exception:
             return "unknown"
 
     def find_matching_policy(self, src_ip, dst_ip, port=None):
@@ -166,7 +180,7 @@ class FixedPathAnalyzer:
                 if policy["dest_net"] != "0.0.0.0/0":
                     if dst_addr not in ipaddress.ip_network(policy["dest_net"]):
                         continue
-            except:
+            except Exception:
                 continue
 
             # 포트 매칭
@@ -190,14 +204,24 @@ class FixedPathAnalyzer:
 
         # 같은 존이면 직접 통신
         if src_zone == dst_zone:
-            path.append({"hop": 1, "from": src_ip, "to": dst_ip, "gateway": "Direct", "interface": src_zone})
+            path.append(
+                {
+                    "hop": 1,
+                    "from": src_ip,
+                    "to": dst_ip,
+                    "gateway": "Direct",
+                    "interface": src_zone,
+                }
+            )
         else:
             # 다른 존이면 라우터 경유
             # 1. 소스 -> 게이트웨이
             src_route = (
                 self.routing_table.get(f"{src_ip}/32")
                 or self.routing_table.get(
-                    CONFIG.network.INTERNAL_NETWORKS[0] if CONFIG.network.INTERNAL_NETWORKS else "192.168.0.0/16"
+                    CONFIG.network.INTERNAL_NETWORKS[0]
+                    if CONFIG.network.INTERNAL_NETWORKS
+                    else "192.168.0.0/16"
                 )
                 or self.routing_table.get("0.0.0.0/0")
             )
@@ -219,7 +243,7 @@ class FixedPathAnalyzer:
                     if ipaddress.ip_address(dst_ip) in ipaddress.ip_network(network):
                         dst_route = route
                         break
-                except:
+                except Exception:
                     continue
 
             if not dst_route:
@@ -293,7 +317,9 @@ class FixedPathAnalyzer:
                 "policy_description": policy["description"],
                 "analysis_time": datetime.now().isoformat(),
             },
-            "recommendations": self.generate_recommendations(src_ip, dst_ip, port, allowed, policy),
+            "recommendations": self.generate_recommendations(
+                src_ip, dst_ip, port, allowed, policy
+            ),
         }
 
         return result
@@ -315,18 +341,26 @@ class FixedPathAnalyzer:
             src_zone = self.get_zone_for_ip(src_ip)
             dst_zone = self.get_zone_for_ip(dst_ip)
             for pol_id, pol in self.firewall_policies.items():
-                if pol["source_zone"] == src_zone and pol["dest_zone"] == dst_zone and pol["action"] == "allow":
+                if (
+                    pol["source_zone"] == src_zone
+                    and pol["dest_zone"] == dst_zone
+                    and pol["action"] == "allow"
+                ):
                     recommendations.append(
                         {
                             "type": "info",
                             "message": f"유사한 허용 정책: {pol['name']}",
-                            "action": f"이 정책을 참고하여 새 규칙을 생성할 수 있습니다.",
+                            "action": "이 정책을 참고하여 새 규칙을 생성할 수 있습니다.",
                         }
                     )
                     break
         else:
             recommendations.append(
-                {"type": "success", "message": f"트래픽이 정책 '{policy['name']}'에 의해 허용됩니다.", "action": None}
+                {
+                    "type": "success",
+                    "message": f"트래픽이 정책 '{policy['name']}'에 의해 허용됩니다.",
+                    "action": None,
+                }
             )
 
             # 보안 권장사항
@@ -341,7 +375,11 @@ class FixedPathAnalyzer:
 
             if self.get_zone_for_ip(src_ip) == "external":
                 recommendations.append(
-                    {"type": "warning", "message": "외부에서의 접근이 허용되어 있습니다.", "action": "IPS/IDS 정책 적용 및 로깅 강화를 권장합니다."}
+                    {
+                        "type": "warning",
+                        "message": "외부에서의 접근이 허용되어 있습니다.",
+                        "action": "IPS/IDS 정책 적용 및 로깅 강화를 권장합니다.",
+                    }
                 )
 
         return recommendations

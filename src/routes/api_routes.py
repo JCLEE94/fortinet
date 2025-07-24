@@ -11,7 +11,8 @@ from flask import Blueprint, current_app, jsonify, request
 
 from src.api.integration.api_integration import APIIntegrationManager
 from src.config.unified_settings import unified_settings
-from src.utils.security import InputValidator, csrf_protect, rate_limit, validate_request
+from src.utils.security import (InputValidator, csrf_protect, rate_limit,
+                                validate_request)
 from src.utils.unified_cache_manager import cached, get_cache_manager
 
 # from src.utils.performance_cache import get_performance_cache, cached  # 제거됨
@@ -27,15 +28,10 @@ def optimized_response(**kwargs):
 
 
 from src.utils.api_utils import get_api_manager, get_data_source
-from src.utils.route_helpers import (
-    api_route,
-    handle_api_exceptions,
-    require_json_data,
-    standard_api_response,
-    validate_ip_address,
-    validate_port,
-    validate_required_fields,
-)
+from src.utils.route_helpers import (api_route, handle_api_exceptions,
+                                     require_json_data, standard_api_response,
+                                     validate_ip_address, validate_port,
+                                     validate_required_fields)
 from src.utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
@@ -74,7 +70,9 @@ def health_check():
             "project": os.getenv("PROJECT_NAME", "fortinet"),
             "docker": os.path.exists("/.dockerenv"),
             "uptime": time.time() - getattr(current_app, "start_time", time.time()),
-            "uptime_human": format_uptime(time.time() - getattr(current_app, "start_time", time.time())),
+            "uptime_human": format_uptime(
+                time.time() - getattr(current_app, "start_time", time.time())
+            ),
             "version": "1.0.1",
             "git_commit": os.getenv("GIT_COMMIT", "unknown"),
             "build_date": os.getenv("BUILD_DATE", "unknown"),
@@ -86,7 +84,7 @@ def health_check():
             cache_manager.set("health_check", "ok", ttl=10)
             cache_status = cache_manager.get("health_check") == "ok"
             health_data["cache"] = "available" if cache_status else "unavailable"
-        except:
+        except Exception:
             health_data["cache"] = "unavailable"
 
         # Test mode is always false
@@ -95,7 +93,16 @@ def health_check():
         return jsonify(health_data), 200
 
     except Exception as e:
-        return jsonify({"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}), 500
+        return (
+            jsonify(
+                {
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            ),
+            500,
+        )
 
 
 @api_bp.route("/settings", methods=["GET"])
@@ -198,15 +205,23 @@ def update_settings():
             if key and value is not None:
                 os.environ[key] = str(value)
                 updated_env_vars[key] = str(value)
-                logger.info(f"환경변수 업데이트: {key}={'*****' if 'PASS' in key or 'PASSWORD' in key else value}")
+                logger.info(
+                    f"환경변수 업데이트: {key}={'*****' if 'PASS' in key or 'PASSWORD' in key else value}"
+                )
 
     # FortiManager 설정 업데이트
     if "fortimanager" in data:
         fm_config = data["fortimanager"]
 
         # 유효성 검사
-        if "host" in fm_config and fm_config["host"] and not validate_ip_address(fm_config["host"]):
-            return standard_api_response(success=False, message="Invalid IP address format", status_code=400)
+        if (
+            "host" in fm_config
+            and fm_config["host"]
+            and not validate_ip_address(fm_config["host"])
+        ):
+            return standard_api_response(
+                success=False, message="Invalid IP address format", status_code=400
+            )
 
         unified_settings.update_api_config("fortimanager", **fm_config)
 
@@ -291,7 +306,9 @@ def update_settings():
             "fortigate": unified_settings.get_service_config("fortigate"),
             "fortianalyzer": unified_settings.get_service_config("fortianalyzer"),
             "app_mode": unified_settings.app_mode,
-            "environment_variables_updated": list(updated_env_vars.keys()) if updated_env_vars else [],
+            "environment_variables_updated": list(updated_env_vars.keys())
+            if updated_env_vars
+            else [],
             "is_test_mode": unified_settings.is_test_mode(),
         },
     )
@@ -302,7 +319,8 @@ def update_settings():
 def get_system_stats():
     """시스템 통계 정보 조회 - 실제 장비 연동"""
     try:
-        from src.api.integration.dashboard_collector import DashboardDataCollector
+        from src.api.integration.dashboard_collector import \
+            DashboardDataCollector
 
         # API 매니저 가져오기
         api_manager = get_api_manager()
@@ -333,7 +351,9 @@ def get_system_stats():
                 "services_enabled": {
                     "fortimanager": unified_settings.is_service_enabled("fortimanager"),
                     "fortigate": unified_settings.is_service_enabled("fortigate"),
-                    "fortianalyzer": unified_settings.is_service_enabled("fortianalyzer"),
+                    "fortianalyzer": unified_settings.is_service_enabled(
+                        "fortianalyzer"
+                    ),
                 },
             }
         )
@@ -344,7 +364,11 @@ def get_system_stats():
         logger.error(f"대시보드 통계 조회 실패: {e}")
 
         # Return error response
-        fallback_stats = {"error": str(e), "data_source": "error_fallback", "app_mode": unified_settings.app_mode}
+        fallback_stats = {
+            "error": str(e),
+            "data_source": "error_fallback",
+            "app_mode": unified_settings.app_mode,
+        }
 
         return jsonify(fallback_stats), 200  # 200으로 반환하여 프론트엔드 오류 방지
 
@@ -371,7 +395,8 @@ def test_connection():
 def test_fortimanager_connection(data):
     """FortiManager 연결 테스트"""
     try:
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import \
+            FortiManagerAPIClient
 
         hostname = data.get("fortimanager_hostname", "").strip()
         port = int(data.get("fortimanager_port", 443))
@@ -381,7 +406,10 @@ def test_fortimanager_connection(data):
         verify_ssl = data.get("verify_ssl") == "true"
 
         if not hostname:
-            return jsonify({"success": False, "message": "FortiManager 호스트 주소가 필요합니다."}), 400
+            return (
+                jsonify({"success": False, "message": "FortiManager 호스트 주소가 필요합니다."}),
+                400,
+            )
 
         # API 클라이언트 초기화
         client = FortiManagerAPIClient(
@@ -409,13 +437,19 @@ def test_fortimanager_connection(data):
                     connection_data = {
                         "auth_method": "token",
                         "adom_count": len(adom_list) if adom_list else 0,
-                        "adoms": [adom.get("name", "Unknown") for adom in (adom_list or [])][:5],
+                        "adoms": [
+                            adom.get("name", "Unknown") for adom in (adom_list or [])
+                        ][:5],
                         "device_count": len(devices) if devices else 0,
                         "version": "API Access",
                     }
                 except Exception as e:
                     # 토큰 인증은 성공했지만 추가 정보 수집 실패
-                    connection_data = {"auth_method": "token", "limited_access": True, "message": "Limited API access"}
+                    connection_data = {
+                        "auth_method": "token",
+                        "limited_access": True,
+                        "message": "Limited API access",
+                    }
         elif username and password:
             # 세션 인증 시도
             auth_success = client.login()
@@ -430,7 +464,9 @@ def test_fortimanager_connection(data):
                         "version": status.get("version", "Unknown"),
                         "hostname": status.get("hostname", "FortiManager"),
                         "adom_count": len(adom_list) if adom_list else 0,
-                        "adoms": [adom.get("name", "Unknown") for adom in (adom_list or [])][:5],
+                        "adoms": [
+                            adom.get("name", "Unknown") for adom in (adom_list or [])
+                        ][:5],
                         "device_count": len(devices) if devices else 0,
                     }
 
@@ -440,12 +476,26 @@ def test_fortimanager_connection(data):
                     connection_data = {"auth_method": "session", "error": str(e)}
                     client.logout()
         else:
-            return jsonify({"success": False, "message": "API 토큰 또는 사용자명/비밀번호가 필요합니다."}), 400
+            return (
+                jsonify({"success": False, "message": "API 토큰 또는 사용자명/비밀번호가 필요합니다."}),
+                400,
+            )
 
         if auth_success:
-            return jsonify({"success": True, "message": "FortiManager 연결 성공", "data": connection_data})
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "FortiManager 연결 성공",
+                    "data": connection_data,
+                }
+            )
         else:
-            return jsonify({"success": False, "message": "FortiManager 인증 실패. 설정을 확인하세요."}), 401
+            return (
+                jsonify(
+                    {"success": False, "message": "FortiManager 인증 실패. 설정을 확인하세요."}
+                ),
+                401,
+            )
 
     except Exception as e:
         logger.error(f"FortiManager 연결 테스트 실패: {e}")
@@ -516,7 +566,9 @@ def get_devices():
                             "id": "fm_demo",
                             "name": "FortiManager Demo",
                             "type": "firewall",
-                            "ip_address": os.getenv("FORTIMANAGER_DEMO_HOST", "demo.fortinet.com"),
+                            "ip_address": os.getenv(
+                                "FORTIMANAGER_DEMO_HOST", "demo.fortinet.com"
+                            ),
                             "serial_number": "DEMO-001",
                             "firmware_version": "v7.2.4",
                             "adom": "root",
@@ -547,7 +599,10 @@ def get_devices():
 
             return {
                 "success": True,
-                "devices": {"fortigate_devices": fortigate_devices, "connected_devices": connected_devices},
+                "devices": {
+                    "fortigate_devices": fortigate_devices,
+                    "connected_devices": connected_devices,
+                },
                 "data_source": "fortimanager",
                 "total_devices": len(fortigate_devices) + len(connected_devices),
             }
@@ -564,7 +619,11 @@ def get_devices():
             }, 500
 
     except Exception as e:
-        return {"success": False, "error": str(e), "devices": {"fortigate_devices": [], "connected_devices": []}}, 500
+        return {
+            "success": False,
+            "error": str(e),
+            "devices": {"fortigate_devices": [], "connected_devices": []},
+        }, 500
 
 
 @api_bp.route("/device/<device_id>", methods=["GET"])
@@ -577,7 +636,16 @@ def get_device_detail(device_id):
 
         # FortiManager 서비스 확인
         if not unified_settings.is_service_enabled("fortimanager"):
-            return jsonify({"success": False, "error": "FortiManager 서비스가 활성화되지 않았습니다.", "device": None}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "FortiManager 서비스가 활성화되지 않았습니다.",
+                        "device": None,
+                    }
+                ),
+                400,
+            )
 
         # FortiManager 클라이언트를 통해 장치 정보 조회
         try:
@@ -589,11 +657,19 @@ def get_device_detail(device_id):
             # TODO: FortiManager API를 통한 실제 장치 정보 조회
             logger.info(f"장치 상세 정보 조회: {device_id}")
 
-            return {"success": False, "error": "장치 정보 조회 기능이 아직 구현되지 않았습니다.", "device": None}, 501
+            return {
+                "success": False,
+                "error": "장치 정보 조회 기능이 아직 구현되지 않았습니다.",
+                "device": None,
+            }, 501
 
         except Exception as api_error:
             logger.error(f"FortiManager API 호출 실패: {api_error}")
-            return {"success": False, "error": f"FortiManager 연결 실패: {str(api_error)}", "device": None}, 500
+            return {
+                "success": False,
+                "error": f"FortiManager 연결 실패: {str(api_error)}",
+                "device": None,
+            }, 500
 
     except Exception as e:
         logger.error(f"장치 상세 정보 조회 오류: {e}")
@@ -608,7 +684,15 @@ def update_mode():
         new_mode = data.get("mode", "production")
 
         if new_mode not in ["production", "test"]:
-            return jsonify({"status": "error", "message": 'Invalid mode. Must be "production" or "test"'}), 400
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": 'Invalid mode. Must be "production" or "test"',
+                    }
+                ),
+                400,
+            )
 
         # 환경 변수 업데이트
         os.environ["APP_MODE"] = new_mode
@@ -619,10 +703,19 @@ def update_mode():
         # 캐시 삭제 - 모드 변경 시 즉시 반영되도록
         get_cache_manager().clear()
 
-        return jsonify({"status": "success", "message": f"Mode changed to {new_mode}", "mode": new_mode})
+        return jsonify(
+            {
+                "status": "success",
+                "message": f"Mode changed to {new_mode}",
+                "mode": new_mode,
+            }
+        )
 
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Failed to change mode: {str(e)}"}), 500
+        return (
+            jsonify({"status": "error", "message": f"Failed to change mode: {str(e)}"}),
+            500,
+        )
 
 
 @api_bp.route("/monitoring", methods=["GET"])
@@ -634,11 +727,19 @@ def get_monitoring():
         api_manager = get_api_manager()
 
         # Production mode - attempt real data
-        if unified_settings.is_service_enabled("fortimanager") or unified_settings.is_service_enabled("fortigate"):
+        if unified_settings.is_service_enabled(
+            "fortimanager"
+        ) or unified_settings.is_service_enabled("fortigate"):
             # 실제 모니터링 데이터 수집
             monitoring_data = {
                 "cpu_usage": {"current": 0, "average": 0, "peak": 0, "history": []},
-                "memory_usage": {"current": 0, "total": 0, "used": 0, "free": 0, "history": []},
+                "memory_usage": {
+                    "current": 0,
+                    "total": 0,
+                    "used": 0,
+                    "free": 0,
+                    "history": [],
+                },
                 "network_traffic": {
                     "incoming": 0,
                     "outgoing": 0,
@@ -646,7 +747,14 @@ def get_monitoring():
                     "active_sessions": 0,
                     "history": {},
                 },
-                "active_sessions": {"total": 0, "tcp": 0, "udp": 0, "http": 0, "https": 0, "by_zone": {}},
+                "active_sessions": {
+                    "total": 0,
+                    "tcp": 0,
+                    "udp": 0,
+                    "http": 0,
+                    "https": 0,
+                    "by_zone": {},
+                },
                 "threat_count": {
                     "today": 0,
                     "this_week": 0,
@@ -688,8 +796,12 @@ def get_monitoring():
                             if interfaces:
                                 for interface in interfaces:
                                     stats = interface.get("stats", {})
-                                    total_traffic_in += stats.get("rx_bytes", 0) / (1024 * 1024)  # MB
-                                    total_traffic_out += stats.get("tx_bytes", 0) / (1024 * 1024)  # MB
+                                    total_traffic_in += stats.get("rx_bytes", 0) / (
+                                        1024 * 1024
+                                    )  # MB
+                                    total_traffic_out += stats.get("tx_bytes", 0) / (
+                                        1024 * 1024
+                                    )  # MB
 
                         except Exception as e:
                             logger.warning(f"FortiGate {device_id} 모니터링 데이터 수집 실패: {e}")
@@ -706,14 +818,20 @@ def get_monitoring():
                                     "current": int(avg_cpu),
                                     "average": int(avg_cpu * 0.9),
                                     "peak": int(avg_cpu * 1.2),
-                                    "history": [int(avg_cpu + random.randint(-10, 10)) for _ in range(24)],
+                                    "history": [
+                                        int(avg_cpu + random.randint(-10, 10))
+                                        for _ in range(24)
+                                    ],
                                 },
                                 "memory_usage": {
                                     "current": int(avg_memory),
                                     "total": 16384,  # MB
                                     "used": int(16384 * avg_memory / 100),
                                     "free": int(16384 * (100 - avg_memory) / 100),
-                                    "history": [int(avg_memory + random.randint(-5, 5)) for _ in range(24)],
+                                    "history": [
+                                        int(avg_memory + random.randint(-5, 5))
+                                        for _ in range(24)
+                                    ],
                                 },
                                 "network_traffic": {
                                     "incoming": int(total_traffic_in),
@@ -722,10 +840,18 @@ def get_monitoring():
                                     "active_sessions": int(total_sessions * 0.8),
                                     "history": {
                                         "incoming": [
-                                            int(total_traffic_in + random.randint(-50, 50)) for _ in range(24)
+                                            int(
+                                                total_traffic_in
+                                                + random.randint(-50, 50)
+                                            )
+                                            for _ in range(24)
                                         ],
                                         "outgoing": [
-                                            int(total_traffic_out + random.randint(-50, 50)) for _ in range(24)
+                                            int(
+                                                total_traffic_out
+                                                + random.randint(-50, 50)
+                                            )
+                                            for _ in range(24)
                                         ],
                                     },
                                 },
@@ -758,8 +884,12 @@ def get_monitoring():
                                     "this_week": threat_stats.get("week", 0),
                                     "this_month": threat_stats.get("month", 0),
                                     "by_type": threat_stats.get("by_type", {}),
-                                    "blocked": threat_stats.get("blocked_percentage", 95),
-                                    "quarantined": threat_stats.get("quarantined_percentage", 3),
+                                    "blocked": threat_stats.get(
+                                        "blocked_percentage", 95
+                                    ),
+                                    "quarantined": threat_stats.get(
+                                        "quarantined_percentage", 3
+                                    ),
                                 }
                             fm_client.logout()
                     except Exception as e:
@@ -773,8 +903,19 @@ def get_monitoring():
                 return {
                     "status": "error",
                     "data": {
-                        "cpu_usage": {"current": 0, "average": 0, "peak": 0, "history": []},
-                        "memory_usage": {"current": 0, "total": 0, "used": 0, "free": 0, "history": []},
+                        "cpu_usage": {
+                            "current": 0,
+                            "average": 0,
+                            "peak": 0,
+                            "history": [],
+                        },
+                        "memory_usage": {
+                            "current": 0,
+                            "total": 0,
+                            "used": 0,
+                            "free": 0,
+                            "history": [],
+                        },
                         "network_traffic": {
                             "incoming": 0,
                             "outgoing": 0,
@@ -782,7 +923,14 @@ def get_monitoring():
                             "active_sessions": 0,
                             "history": {},
                         },
-                        "active_sessions": {"total": 0, "tcp": 0, "udp": 0, "http": 0, "https": 0, "by_zone": {}},
+                        "active_sessions": {
+                            "total": 0,
+                            "tcp": 0,
+                            "udp": 0,
+                            "http": 0,
+                            "https": 0,
+                            "by_zone": {},
+                        },
                         "threat_count": {
                             "today": 0,
                             "this_week": 0,
@@ -800,7 +948,9 @@ def get_monitoring():
             return {
                 "status": "success",
                 "data": monitoring_data,
-                "data_source": "real" if monitoring_data["cpu_usage"]["current"] > 0 else "real",
+                "data_source": "real"
+                if monitoring_data["cpu_usage"]["current"] > 0
+                else "real",
             }
         else:
             # No service enabled - return error
@@ -814,7 +964,13 @@ def get_monitoring():
             "status": "error",
             "data": {
                 "cpu_usage": {"current": 0, "average": 0, "peak": 0, "history": []},
-                "memory_usage": {"current": 0, "total": 0, "used": 0, "free": 0, "history": []},
+                "memory_usage": {
+                    "current": 0,
+                    "total": 0,
+                    "used": 0,
+                    "free": 0,
+                    "history": [],
+                },
                 "network_traffic": {
                     "incoming": 0,
                     "outgoing": 0,
@@ -822,7 +978,14 @@ def get_monitoring():
                     "active_sessions": 0,
                     "history": {},
                 },
-                "active_sessions": {"total": 0, "tcp": 0, "udp": 0, "http": 0, "https": 0, "by_zone": {}},
+                "active_sessions": {
+                    "total": 0,
+                    "tcp": 0,
+                    "udp": 0,
+                    "http": 0,
+                    "https": 0,
+                    "by_zone": {},
+                },
                 "threat_count": {
                     "today": 0,
                     "this_week": 0,
@@ -844,7 +1007,8 @@ def get_monitoring():
 def get_dashboard():
     """대시보드 데이터 조회 - 실제 장비 연동"""
     try:
-        from src.api.integration.dashboard_collector import DashboardDataCollector
+        from src.api.integration.dashboard_collector import \
+            DashboardDataCollector
 
         # API 매니저 가져오기
         api_manager = get_api_manager()
@@ -853,7 +1017,9 @@ def get_dashboard():
         collector = DashboardDataCollector(api_manager)
 
         # Production mode - attempt real data
-        if unified_settings.is_service_enabled("fortimanager") or unified_settings.is_service_enabled("fortigate"):
+        if unified_settings.is_service_enabled(
+            "fortimanager"
+        ) or unified_settings.is_service_enabled("fortigate"):
             # 실제 장비에서 데이터 수집
             stats = collector.get_dashboard_stats()
 
@@ -874,9 +1040,15 @@ def get_dashboard():
                                 alerts.append(
                                     {
                                         "id": event.get("eventid", ""),
-                                        "type": "warning" if event.get("level") == "warning" else "critical",
-                                        "message": event.get("msg", "Security event detected"),
-                                        "timestamp": event.get("date", datetime.now().isoformat()),
+                                        "type": "warning"
+                                        if event.get("level") == "warning"
+                                        else "critical",
+                                        "message": event.get(
+                                            "msg", "Security event detected"
+                                        ),
+                                        "timestamp": event.get(
+                                            "date", datetime.now().isoformat()
+                                        ),
                                         "source": event.get("devname", "FortiGate"),
                                         "acknowledged": False,
                                     }
@@ -888,8 +1060,12 @@ def get_dashboard():
                                     {
                                         "id": event.get("eventid", ""),
                                         "type": "security",
-                                        "description": event.get("msg", "Security event"),
-                                        "timestamp": event.get("date", datetime.now().isoformat()),
+                                        "description": event.get(
+                                            "msg", "Security event"
+                                        ),
+                                        "timestamp": event.get(
+                                            "date", datetime.now().isoformat()
+                                        ),
                                         "source_ip": event.get("srcip", ""),
                                         "destination_ip": event.get("dstip", ""),
                                         "user": event.get("user", "system"),
@@ -906,8 +1082,12 @@ def get_dashboard():
                                         {
                                             "name": threat_type,
                                             "count": count,
-                                            "severity": "high" if count > 100 else "medium",
-                                            "first_seen": (datetime.now() - timedelta(days=7)).isoformat(),
+                                            "severity": "high"
+                                            if count > 100
+                                            else "medium",
+                                            "first_seen": (
+                                                datetime.now() - timedelta(days=7)
+                                            ).isoformat(),
                                             "last_seen": datetime.now().isoformat(),
                                         }
                                     )
@@ -922,9 +1102,18 @@ def get_dashboard():
             # 대역폭 사용량 (실제 데이터가 있으면 사용, 없으면 Mock)
             bandwidth_usage = {
                 "total_capacity": 1000,
-                "current_usage": stats.get("total_bandwidth_in", 0) + stats.get("total_bandwidth_out", 0),
-                "peak_usage": (stats.get("total_bandwidth_in", 0) + stats.get("total_bandwidth_out", 0)) * 1.2,
-                "average_usage": (stats.get("total_bandwidth_in", 0) + stats.get("total_bandwidth_out", 0)) * 0.8,
+                "current_usage": stats.get("total_bandwidth_in", 0)
+                + stats.get("total_bandwidth_out", 0),
+                "peak_usage": (
+                    stats.get("total_bandwidth_in", 0)
+                    + stats.get("total_bandwidth_out", 0)
+                )
+                * 1.2,
+                "average_usage": (
+                    stats.get("total_bandwidth_in", 0)
+                    + stats.get("total_bandwidth_out", 0)
+                )
+                * 0.8,
                 "by_interface": {
                     "wan1": stats.get("total_bandwidth_out", 0),
                     "internal": stats.get("total_bandwidth_in", 0),
@@ -932,7 +1121,9 @@ def get_dashboard():
                     "wan2": stats.get("total_bandwidth_out", 0) * 0.3,
                 },
                 "history": [
-                    stats.get("total_bandwidth_in", 100) + stats.get("total_bandwidth_out", 100) for _ in range(24)
+                    stats.get("total_bandwidth_in", 100)
+                    + stats.get("total_bandwidth_out", 100)
+                    for _ in range(24)
                 ],
             }
 
@@ -949,7 +1140,9 @@ def get_dashboard():
                 "status": "success",
                 "data": dashboard_data,
                 "data_source": stats.get("data_source", "real"),
-                "connection_status": api_manager.get_connection_status() if api_manager else {},
+                "connection_status": api_manager.get_connection_status()
+                if api_manager
+                else {},
             }
         else:
             # No service enabled - return error
@@ -1041,9 +1234,14 @@ def get_topology_data():
                                 "links": links,
                                 "summary": {
                                     "total_devices": len(nodes),
-                                    "online_devices": len([n for n in nodes if n["status"] == "online"]),
+                                    "online_devices": len(
+                                        [n for n in nodes if n["status"] == "online"]
+                                    ),
                                     "total_links": len(links),
-                                    "avg_utilization": sum(l["utilization"] for l in links) / len(links)
+                                    "avg_utilization": sum(
+                                        l["utilization"] for l in links
+                                    )
+                                    / len(links)
                                     if links
                                     else 0,
                                 },
@@ -1058,7 +1256,9 @@ def get_topology_data():
         # Return error - no mock data
         return jsonify({"error": "Topology data not available"}), 500
 
-        return jsonify({"status": "success", "data": topology_data, "data_source": "real"})
+        return jsonify(
+            {"status": "success", "data": topology_data, "data_source": "real"}
+        )
 
     except Exception as e:
         logger.error(f"토폴로지 데이터 조회 실패: {e}")
@@ -1070,7 +1270,12 @@ def get_topology_data():
                     "data": {
                         "nodes": [],
                         "links": [],
-                        "summary": {"total_devices": 0, "online_devices": 0, "total_links": 0, "avg_utilization": 0},
+                        "summary": {
+                            "total_devices": 0,
+                            "online_devices": 0,
+                            "total_links": 0,
+                            "avg_utilization": 0,
+                        },
                     },
                 }
             ),
@@ -1125,7 +1330,15 @@ def generate_token():
         verify_ssl = data.get("fortimanager_verify_ssl") == "true"
 
         if not all([hostname, username, password]):
-            return jsonify({"success": False, "message": "All fields are required for token generation"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "All fields are required for token generation",
+                    }
+                ),
+                400,
+            )
 
         # In test mode, return mock token
         if unified_settings.app_mode == "test":
@@ -1141,10 +1354,15 @@ def generate_token():
 
         # In production mode, attempt real token generation
         try:
-            from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+            from src.api.clients.fortimanager_api_client import \
+                FortiManagerAPIClient
 
             client = FortiManagerAPIClient(
-                host=hostname, port=port, username=username, password=password, verify_ssl=verify_ssl
+                host=hostname,
+                port=port,
+                username=username,
+                password=password,
+                verify_ssl=verify_ssl,
             )
 
             # Login and generate token
@@ -1155,14 +1373,32 @@ def generate_token():
                 client.logout()
 
                 return jsonify(
-                    {"success": True, "message": "Token generated successfully", "token": token, "expires_in": 3600}
+                    {
+                        "success": True,
+                        "message": "Token generated successfully",
+                        "token": token,
+                        "expires_in": 3600,
+                    }
                 )
             else:
-                return jsonify({"success": False, "message": "Failed to authenticate with FortiManager"}), 401
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Failed to authenticate with FortiManager",
+                        }
+                    ),
+                    401,
+                )
 
         except Exception as e:
             logger.error(f"Token generation failed: {e}")
-            return jsonify({"success": False, "message": f"Token generation failed: {str(e)}"}), 500
+            return (
+                jsonify(
+                    {"success": False, "message": f"Token generation failed: {str(e)}"}
+                ),
+                500,
+            )
 
     except Exception as e:
         logger.error(f"Token generation error: {e}")
@@ -1176,7 +1412,10 @@ def upload_ssl_certificate():
     try:
         # Check if file was uploaded
         if "certificate" not in request.files:
-            return jsonify({"success": False, "message": "No certificate file uploaded"}), 400
+            return (
+                jsonify({"success": False, "message": "No certificate file uploaded"}),
+                400,
+            )
 
         file = request.files["certificate"]
         if file.filename == "":
@@ -1194,7 +1433,13 @@ def upload_ssl_certificate():
 
         # In production, implement actual SSL certificate handling
         # This would require proper certificate validation and storage
-        return jsonify({"success": True, "message": "SSL certificate uploaded successfully", "filename": file.filename})
+        return jsonify(
+            {
+                "success": True,
+                "message": "SSL certificate uploaded successfully",
+                "filename": file.filename,
+            }
+        )
 
     except Exception as e:
         logger.error(f"SSL upload error: {e}")
@@ -1218,14 +1463,21 @@ def get_ssl_status():
                 }
             ],
             "ssl_enabled": True,
-            "verify_ssl": unified_settings.get_service_config("fortimanager").get("verify_ssl", False),
+            "verify_ssl": unified_settings.get_service_config("fortimanager").get(
+                "verify_ssl", False
+            ),
         }
 
         return jsonify({"success": True, "data": ssl_status})
 
     except Exception as e:
         logger.error(f"SSL status error: {e}")
-        return jsonify({"success": False, "message": f"Failed to get SSL status: {str(e)}"}), 500
+        return (
+            jsonify(
+                {"success": False, "message": f"Failed to get SSL status: {str(e)}"}
+            ),
+            500,
+        )
 
 
 @api_bp.route("/redis/settings", methods=["POST"])
@@ -1248,11 +1500,21 @@ def update_redis_settings():
             os.environ["REDIS_PASSWORD"] = redis_password
         os.environ["REDIS_ENABLED"] = "true" if redis_enabled else "false"
 
-        return jsonify({"success": True, "message": "Redis settings updated successfully"})
+        return jsonify(
+            {"success": True, "message": "Redis settings updated successfully"}
+        )
 
     except Exception as e:
         logger.error(f"Redis settings update error: {e}")
-        return jsonify({"success": False, "message": f"Failed to update Redis settings: {str(e)}"}), 500
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Failed to update Redis settings: {str(e)}",
+                }
+            ),
+            500,
+        )
 
 
 @api_bp.route("/redis/test", methods=["GET"])
@@ -1277,7 +1539,9 @@ def test_redis_connection():
                     "message": "Redis connection successful",
                     "data": {
                         "status": "connected",
-                        "backend": "redis" if cache_manager.redis_available() else "memory",
+                        "backend": "redis"
+                        if cache_manager.redis_available()
+                        else "memory",
                     },
                 }
             )
@@ -1324,7 +1588,10 @@ def get_system_info():
                 "machine": platform.machine(),
                 "processor": platform.processor(),
             },
-            "python": {"version": platform.python_version(), "implementation": platform.python_implementation()},
+            "python": {
+                "version": platform.python_version(),
+                "implementation": platform.python_implementation(),
+            },
             "uptime": time.time() - getattr(current_app, "start_time", time.time()),
         }
 
@@ -1347,13 +1614,20 @@ def get_system_info():
                 }
             )
         else:
-            system_info["note"] = "Limited system information available (psutil not installed)"
+            system_info[
+                "note"
+            ] = "Limited system information available (psutil not installed)"
 
         return jsonify({"success": True, "data": system_info})
 
     except Exception as e:
         logger.error(f"System info error: {e}")
-        return jsonify({"success": False, "message": f"Failed to get system info: {str(e)}"}), 500
+        return (
+            jsonify(
+                {"success": False, "message": f"Failed to get system info: {str(e)}"}
+            ),
+            500,
+        )
 
 
 @api_bp.route("/analyze", methods=["POST"])
@@ -1372,7 +1646,15 @@ def analyze_traffic():
 
         # Validate inputs
         if not src_ip or not dst_ip:
-            return jsonify({"status": "error", "message": "Source and destination IP addresses are required"}), 400
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Source and destination IP addresses are required",
+                    }
+                ),
+                400,
+            )
 
         # Import analyzer
         try:
@@ -1381,9 +1663,17 @@ def analyze_traffic():
             analyzer = FixedPathAnalyzer()
 
             # Perform analysis
-            result = analyzer.analyze_path(src_ip=src_ip, dst_ip=dst_ip, protocol=protocol, port=port)
+            result = analyzer.analyze_path(
+                src_ip=src_ip, dst_ip=dst_ip, protocol=protocol, port=port
+            )
 
-            return jsonify({"status": "success", "analysis": result, "timestamp": datetime.now().isoformat()})
+            return jsonify(
+                {
+                    "status": "success",
+                    "analysis": result,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         except ImportError:
             # Fallback to simple mock analysis
@@ -1414,7 +1704,10 @@ def analyze_traffic():
                 "security_verdict": {
                     "allowed": True,
                     "threat_level": "low",
-                    "recommendations": ["Traffic path is secure", "No policy violations detected"],
+                    "recommendations": [
+                        "Traffic path is secure",
+                        "No policy violations detected",
+                    ],
                 },
             }
 
@@ -1429,4 +1722,7 @@ def analyze_traffic():
 
     except Exception as e:
         logger.error(f"Traffic analysis failed: {e}")
-        return jsonify({"status": "error", "message": f"Analysis failed: {str(e)}"}), 500
+        return (
+            jsonify({"status": "error", "message": f"Analysis failed: {str(e)}"}),
+            500,
+        )

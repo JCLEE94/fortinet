@@ -23,7 +23,9 @@ class RealtimeMonitoringHandler:
     def __init__(self, socketio, redis_cache=None):
         self.socketio = socketio
         self.redis_cache = redis_cache
-        self.monitoring_clients = {}  # {room_id: {clients: set(), monitor_thread: thread}}
+        self.monitoring_clients = (
+            {}
+        )  # {room_id: {clients: set(), monitor_thread: thread}}
         self.device_monitors = {}  # {device_id: api_client}
 
     def register_handlers(self):
@@ -39,17 +41,26 @@ class RealtimeMonitoringHandler:
 
             # 룸 초기화
             if room not in self.monitoring_clients:
-                self.monitoring_clients[room] = {"clients": set(), "monitor_thread": None, "device_id": device_id}
+                self.monitoring_clients[room] = {
+                    "clients": set(),
+                    "monitor_thread": None,
+                    "device_id": device_id,
+                }
 
             self.monitoring_clients[room]["clients"].add(request.sid)
 
             # 모니터링 스레드 시작
             if not self.monitoring_clients[room]["monitor_thread"]:
-                thread = threading.Thread(target=self._monitoring_loop, args=(room, device_id), daemon=True)
+                thread = threading.Thread(
+                    target=self._monitoring_loop, args=(room, device_id), daemon=True
+                )
                 thread.start()
                 self.monitoring_clients[room]["monitor_thread"] = thread
 
-            emit("monitoring_joined", {"room": room, "device_id": device_id, "message": "실시간 모니터링이 시작되었습니다."})
+            emit(
+                "monitoring_joined",
+                {"room": room, "device_id": device_id, "message": "실시간 모니터링이 시작되었습니다."},
+            )
 
             logger.info(f"Client {request.sid} joined monitoring room {room}")
 
@@ -94,9 +105,14 @@ class RealtimeMonitoringHandler:
                     )
                 except Exception as e:
                     logger.error(f"Error getting device status: {str(e)}")
-                    emit("device_status_error", {"device_id": device_id, "error": str(e)})
+                    emit(
+                        "device_status_error", {"device_id": device_id, "error": str(e)}
+                    )
             else:
-                emit("device_status_error", {"device_id": device_id, "error": "장치가 연결되지 않았습니다."})
+                emit(
+                    "device_status_error",
+                    {"device_id": device_id, "error": "장치가 연결되지 않았습니다."},
+                )
 
         @self.socketio.on("request_traffic_stats")
         def handle_traffic_stats(data):
@@ -113,11 +129,18 @@ class RealtimeMonitoringHandler:
 
                     emit(
                         "traffic_stats_update",
-                        {"device_id": device_id, "interface": interface, "stats": stats, "timestamp": time.time()},
+                        {
+                            "device_id": device_id,
+                            "interface": interface,
+                            "stats": stats,
+                            "timestamp": time.time(),
+                        },
                     )
                 except Exception as e:
                     logger.error(f"Error getting traffic stats: {str(e)}")
-                    emit("traffic_stats_error", {"device_id": device_id, "error": str(e)})
+                    emit(
+                        "traffic_stats_error", {"device_id": device_id, "error": str(e)}
+                    )
 
         @self.socketio.on("request_security_events")
         def handle_security_events(data):
@@ -131,10 +154,20 @@ class RealtimeMonitoringHandler:
                     # 보안 이벤트 가져오기
                     events = monitor.get_security_events(limit=limit)
 
-                    emit("security_events_update", {"device_id": device_id, "events": events, "timestamp": time.time()})
+                    emit(
+                        "security_events_update",
+                        {
+                            "device_id": device_id,
+                            "events": events,
+                            "timestamp": time.time(),
+                        },
+                    )
                 except Exception as e:
                     logger.error(f"Error getting security events: {str(e)}")
-                    emit("security_events_error", {"device_id": device_id, "error": str(e)})
+                    emit(
+                        "security_events_error",
+                        {"device_id": device_id, "error": str(e)},
+                    )
 
     def _monitoring_loop(self, room, device_id):
         """모니터링 루프"""
@@ -158,7 +191,9 @@ class RealtimeMonitoringHandler:
                             # 실시간 데이터 수집
                             monitoring_data = monitor.get_monitoring_data()
                             # 캐시에 저장 (5초 TTL)
-                            self.redis_cache.set(cache_key, json.dumps(monitoring_data), ttl=5)
+                            self.redis_cache.set(
+                                cache_key, json.dumps(monitoring_data), ttl=5
+                            )
                     else:
                         # Redis가 없으면 직접 수집
                         monitoring_data = monitor.get_monitoring_data()
@@ -166,7 +201,12 @@ class RealtimeMonitoringHandler:
                     # 데이터 브로드캐스트
                     self.socketio.emit(
                         "monitoring_update",
-                        {"room": room, "device_id": device_id, "data": monitoring_data, "timestamp": time.time()},
+                        {
+                            "room": room,
+                            "device_id": device_id,
+                            "data": monitoring_data,
+                            "timestamp": time.time(),
+                        },
                         room=room,
                     )
 
@@ -212,7 +252,10 @@ class RealtimeMonitoringHandler:
                 "disk_usage": random.randint(20, 50),
                 "temperature": random.randint(30, 60),
             },
-            "sessions": {"total": random.randint(1000, 5000), "active": random.randint(500, 2000)},
+            "sessions": {
+                "total": random.randint(1000, 5000),
+                "active": random.randint(500, 2000),
+            },
             "interfaces": [
                 {
                     "name": "port1",
@@ -251,7 +294,12 @@ class RealtimeMonitoringHandler:
                 if info.get("device_id") == device_id:
                     self.socketio.emit(
                         "monitoring_update",
-                        {"room": room, "device_id": device_id, "data": data, "timestamp": time.time()},
+                        {
+                            "room": room,
+                            "device_id": device_id,
+                            "data": data,
+                            "timestamp": time.time(),
+                        },
                         room=room,
                     )
 

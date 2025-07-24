@@ -114,14 +114,21 @@ class DiagnosticTool:
                     if "docker" in line:
                         docker_info["container_id"] = line.split("/")[-1].strip()
                         break
-        except:
+        except Exception:
             pass
 
         return docker_info
 
     def _check_permissions(self) -> Dict[str, Any]:
         """권한 체크"""
-        paths_to_check = ["/app", "/app/data", "/app/logs", "/app/src", "/app/src/static", "/app/src/templates"]
+        paths_to_check = [
+            "/app",
+            "/app/data",
+            "/app/logs",
+            "/app/src",
+            "/app/src/static",
+            "/app/src/templates",
+        ]
 
         permissions = {}
         for path in paths_to_check:
@@ -140,7 +147,12 @@ class DiagnosticTool:
 
     def _check_fortimanager_connectivity(self) -> Dict[str, Any]:
         """FortiManager 연결 체크"""
-        result = {"configured": False, "reachable": False, "api_test": False, "error": None}
+        result = {
+            "configured": False,
+            "reachable": False,
+            "api_test": False,
+            "error": None,
+        }
 
         try:
             # 설정 파일 읽기
@@ -166,7 +178,13 @@ class DiagnosticTool:
                         try:
                             url = f"https://{host}/jsonrpc"
                             response = requests.post(
-                                url, json={"method": "get", "params": [{"url": "/sys/status"}]}, verify=False, timeout=5
+                                url,
+                                json={
+                                    "method": "get",
+                                    "params": [{"url": "/sys/status"}],
+                                },
+                                verify=False,
+                                timeout=5,
                             )
                             result["api_test"] = response.status_code == 200
                         except Exception as e:
@@ -223,7 +241,7 @@ class DiagnosticTool:
                             with open(filepath, "r", encoding="utf-8") as f:
                                 lines = f.readlines()
                                 log_info["recent_errors"].extend(lines[-10:])
-                        except:
+                        except Exception:
                             pass
 
         return log_info
@@ -247,7 +265,12 @@ class DiagnosticTool:
         network = self.results.get("network", {})
         if not network.get("dns_resolution", {}).get("fortinet.com"):
             recommendations.append(
-                {"severity": "high", "category": "network", "issue": "DNS 해석 실패", "recommendation": "DNS 설정을 확인하세요"}
+                {
+                    "severity": "high",
+                    "category": "network",
+                    "issue": "DNS 해석 실패",
+                    "recommendation": "DNS 설정을 확인하세요",
+                }
             )
 
         if network.get("port_checks", {}).get(5000) == "closed":
@@ -322,7 +345,7 @@ class DiagnosticTool:
                         if key in ["MemTotal", "MemFree", "MemAvailable"]:
                             mem_info[key] = int(value)
                 return mem_info
-        except:
+        except Exception:
             return {}
 
     def _get_disk_space(self) -> Dict[str, Any]:
@@ -335,7 +358,7 @@ class DiagnosticTool:
                 "used": (stat.f_blocks - stat.f_bavail) * stat.f_frsize,
                 "percentage": ((stat.f_blocks - stat.f_bavail) / stat.f_blocks) * 100,
             }
-        except:
+        except Exception:
             return {}
 
     def _get_local_ip(self) -> str:
@@ -346,7 +369,7 @@ class DiagnosticTool:
             ip = s.getsockname()[0]
             s.close()
             return ip
-        except:
+        except Exception:
             return "Unknown"
 
     def _get_network_interfaces(self) -> List[Dict[str, str]]:
@@ -360,7 +383,11 @@ class DiagnosticTool:
                 if netifaces.AF_INET in addrs:
                     for addr in addrs[netifaces.AF_INET]:
                         interfaces.append(
-                            {"interface": interface, "ip": addr["addr"], "netmask": addr.get("netmask", "N/A")}
+                            {
+                                "interface": interface,
+                                "ip": addr["addr"],
+                                "netmask": addr.get("netmask", "N/A"),
+                            }
                         )
         except ImportError:
             # netifaces가 없는 경우 기본 방법 사용
@@ -375,7 +402,7 @@ class DiagnosticTool:
         try:
             stat = os.stat(path)
             return {"uid": stat.st_uid, "gid": stat.st_gid}
-        except:
+        except Exception:
             return {}
 
     def _save_diagnosis_report(self):

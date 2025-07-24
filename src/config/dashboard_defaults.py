@@ -31,8 +31,12 @@ CHART_CONFIG = {
 
 # CDN 및 외부 리소스
 EXTERNAL_RESOURCES = {
-    "chartjs_cdn": os.getenv("CHARTJS_CDN_URL", "https://cdn.jsdelivr.net/npm/chart.js"),
-    "socketio_cdn": os.getenv("SOCKETIO_CDN_URL", "https://cdn.socket.io/4.5.4/socket.io.min.js"),
+    "chartjs_cdn": os.getenv(
+        "CHARTJS_CDN_URL", "https://cdn.jsdelivr.net/npm/chart.js"
+    ),
+    "socketio_cdn": os.getenv(
+        "SOCKETIO_CDN_URL", "https://cdn.socket.io/4.5.4/socket.io.min.js"
+    ),
     "fallback_enabled": os.getenv("CDN_FALLBACK_ENABLED", "true").lower() == "true",
 }
 
@@ -43,7 +47,9 @@ ALERT_TEMPLATES = [
         "icon": "exclamation-circle",
         "color": os.getenv("ALERT_CRITICAL_COLOR", "var(--danger)"),
         "title_template": os.getenv("ALERT_CRITICAL_TITLE", "높은 CPU 사용률"),
-        "description_template": os.getenv("ALERT_CRITICAL_DESC", "{device}에서 CPU 사용률이 {threshold}%를 초과했습니다."),
+        "description_template": os.getenv(
+            "ALERT_CRITICAL_DESC", "{device}에서 CPU 사용률이 {threshold}%를 초과했습니다."
+        ),
         "threshold": int(os.getenv("CPU_CRITICAL_THRESHOLD", "85")),
     },
     {
@@ -51,7 +57,9 @@ ALERT_TEMPLATES = [
         "icon": "exclamation-triangle",
         "color": os.getenv("ALERT_WARNING_COLOR", "var(--warning)"),
         "title_template": os.getenv("ALERT_WARNING_TITLE", "메모리 사용량 경고"),
-        "description_template": os.getenv("ALERT_WARNING_DESC", "{device}에서 메모리 사용률이 {threshold}%를 초과했습니다."),
+        "description_template": os.getenv(
+            "ALERT_WARNING_DESC", "{device}에서 메모리 사용률이 {threshold}%를 초과했습니다."
+        ),
         "threshold": int(os.getenv("MEMORY_WARNING_THRESHOLD", "75")),
     },
     {
@@ -59,7 +67,9 @@ ALERT_TEMPLATES = [
         "icon": "info-circle",
         "color": os.getenv("ALERT_INFO_COLOR", "var(--info)"),
         "title_template": os.getenv("ALERT_INFO_TITLE", "장치 연결 해제"),
-        "description_template": os.getenv("ALERT_INFO_DESC", "{device}가 네트워크에서 연결 해제되었습니다."),
+        "description_template": os.getenv(
+            "ALERT_INFO_DESC", "{device}가 네트워크에서 연결 해제되었습니다."
+        ),
     },
 ]
 
@@ -67,7 +77,8 @@ ALERT_TEMPLATES = [
 DEVICE_LIST_CONFIG = {
     "top_devices_limit": int(os.getenv("TOP_DEVICES_LIMIT", "5")),
     "bandwidth_display_unit": os.getenv("BANDWIDTH_DISPLAY_UNIT", "Mbps"),
-    "trend_calculation_enabled": os.getenv("DEVICE_TREND_ENABLED", "true").lower() == "true",
+    "trend_calculation_enabled": os.getenv("DEVICE_TREND_ENABLED", "true").lower()
+    == "true",
     "trend_max_percentage": int(os.getenv("DEVICE_TREND_MAX_PCT", "20")),
 }
 
@@ -85,7 +96,8 @@ SECURITY_EVENTS_CONFIG = {
 
 # 대시보드 새로고침 설정
 REFRESH_CONFIG = {
-    "auto_refresh_enabled": os.getenv("DASHBOARD_AUTO_REFRESH", "true").lower() == "true",
+    "auto_refresh_enabled": os.getenv("DASHBOARD_AUTO_REFRESH", "true").lower()
+    == "true",
     "refresh_interval_seconds": int(os.getenv("DASHBOARD_REFRESH_INTERVAL", "30")),
     "chart_update_interval": int(os.getenv("CHART_UPDATE_INTERVAL", "60")),
     "stats_update_interval": int(os.getenv("STATS_UPDATE_INTERVAL", "15")),
@@ -93,10 +105,18 @@ REFRESH_CONFIG = {
 
 # 퀵 액션 버튼 설정
 QUICK_ACTIONS_CONFIG = {
-    "traffic_analysis_enabled": os.getenv("QUICK_ACTION_TRAFFIC_ANALYSIS", "true").lower() == "true",
-    "policy_optimization_enabled": os.getenv("QUICK_ACTION_POLICY_OPT", "true").lower() == "true",
-    "report_generation_enabled": os.getenv("QUICK_ACTION_REPORT_GEN", "true").lower() == "true",
-    "security_diagnostics_enabled": os.getenv("QUICK_ACTION_SECURITY_DIAG", "true").lower() == "true",
+    "traffic_analysis_enabled": os.getenv(
+        "QUICK_ACTION_TRAFFIC_ANALYSIS", "true"
+    ).lower()
+    == "true",
+    "policy_optimization_enabled": os.getenv("QUICK_ACTION_POLICY_OPT", "true").lower()
+    == "true",
+    "report_generation_enabled": os.getenv("QUICK_ACTION_REPORT_GEN", "true").lower()
+    == "true",
+    "security_diagnostics_enabled": os.getenv(
+        "QUICK_ACTION_SECURITY_DIAG", "true"
+    ).lower()
+    == "true",
 }
 
 
@@ -128,7 +148,14 @@ def generate_mock_alerts(count: int = 3) -> List[Dict[str, Any]]:
     from datetime import datetime, timedelta
 
     alerts = []
-    devices = ["FIREWALL-09", "SWITCH-11", "WORKSTATION-14", "SERVER-03", "ROUTER-07", "AP-22"]
+    devices = [
+        "FIREWALL-09",
+        "SWITCH-11",
+        "WORKSTATION-14",
+        "SERVER-03",
+        "ROUTER-07",
+        "AP-22",
+    ]
 
     for i in range(count):
         template = random.choice(ALERT_TEMPLATES)

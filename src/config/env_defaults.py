@@ -137,7 +137,11 @@ class EnvironmentDefaults:
         env_content.append("# FortiManager 설정 (데모 환경)")
         env_content.append("# 실제 환경에서는 보안을 위해 별도 설정")
         for key, value in cls.FORTIMANAGER_DEFAULTS.items():
-            if key in ["FORTIMANAGER_HOST", "FORTIMANAGER_USERNAME", "FORTIMANAGER_PASSWORD"]:
+            if key in [
+                "FORTIMANAGER_HOST",
+                "FORTIMANAGER_USERNAME",
+                "FORTIMANAGER_PASSWORD",
+            ]:
                 env_content.append(f"# {key}={value}")  # 주석 처리
             else:
                 env_content.append(f"{key}={value}")

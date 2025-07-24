@@ -5,7 +5,7 @@ External services configuration module
 """
 
 import os
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # 외부 서비스 URL
 EXTERNAL_SERVICES: Dict[str, str] = {
@@ -15,7 +15,10 @@ EXTERNAL_SERVICES: Dict[str, str] = {
     "gitlab_api_version": os.getenv("GITLAB_API_VERSION", "v4"),
     "docker_registry": os.getenv("DOCKER_REGISTRY", "registry.jclee.me"),
     "dns_check": os.getenv("INTERNET_CHECK_URL", "http://8.8.8.8"),
-    "health_check": os.getenv("HEALTH_CHECK_URL", f'http://localhost:{os.getenv("WEB_APP_PORT", "7777")}/health'),
+    "health_check": os.getenv(
+        "HEALTH_CHECK_URL",
+        f'http://localhost:{os.getenv("WEB_APP_PORT", "7777")}/health',
+    ),
 }
 
 # CDN URL
@@ -73,10 +76,22 @@ MOCK_ENDPOINTS: Dict[str, str] = {
 }
 
 # 인증 엔드포인트
-AUTH_ENDPOINTS: Dict[str, Dict[str, str]] = {
-    "fortigate": {"login": "/logincheck", "logout": "/logout", "refresh": "/api/v2/authentication/refresh"},
-    "fortimanager": {"login": "/sys/login/user", "logout": "/sys/logout", "refresh": None},  # JSON-RPC 사용
-    "fortiweb": {"login": "/login", "logout": "/logout", "refresh": "/api/v2.0/authentication/refresh"},
+AUTH_ENDPOINTS: Dict[str, Dict[str, Optional[str]]] = {
+    "fortigate": {
+        "login": "/logincheck",
+        "logout": "/logout",
+        "refresh": "/api/v2/authentication/refresh",
+    },
+    "fortimanager": {
+        "login": "/sys/login/user",
+        "logout": "/sys/logout",
+        "refresh": None,
+    },  # JSON-RPC 사용
+    "fortiweb": {
+        "login": "/login",
+        "logout": "/logout",
+        "refresh": "/api/v2.0/authentication/refresh",
+    },
 }
 
 
@@ -123,7 +138,7 @@ def get_csp_header() -> str:
     return "; ".join(csp_parts)
 
 
-def get_fortimanager_config() -> Optional[Dict[str, any]]:
+def get_fortimanager_config() -> Optional[Dict[str, Any]]:
     """
     FortiManager 설정을 반환합니다.
 

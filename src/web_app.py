@@ -44,40 +44,22 @@ if not DISABLE_SOCKETIO:
 else:
     print("Socket.IO disabled by environment variable")
 
-from flask import (
-    Flask,
-    current_app,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    send_from_directory,
-    session,
-    url_for,
-)
+from flask import (Flask, current_app, g, jsonify, redirect, render_template,
+                   request, send_from_directory, session, url_for)
 
 from src.routes.api_routes import api_bp
 from src.routes.fortimanager_routes import fortimanager_bp
 from src.routes.itsm_api_routes import itsm_api_bp
 from src.routes.itsm_routes import itsm_bp
-
 # Route imports
 from src.routes.main_routes import main_bp
-from src.utils.security import (
-    InputValidator,
-    add_security_headers,
-    csrf_protect,
-    generate_csrf_token,
-    rate_limit,
-    validate_request,
-)
-
+from src.utils.security import (InputValidator, add_security_headers,
+                                csrf_protect, generate_csrf_token, rate_limit,
+                                validate_request)
 # 모듈 임포트
 from src.utils.unified_logger import get_advanced_logger, get_logger
 
 # Removed old cache_manager import - using unified_cache_manager instead
-
 
 
 def create_app():
@@ -277,7 +259,11 @@ def main():
     if not DISABLE_SOCKETIO:
         try:
             socketio = SocketIO(
-                app, cors_allowed_origins="*", async_mode="threading", ping_timeout=60, ping_interval=25
+                app,
+                cors_allowed_origins="*",
+                async_mode="threading",
+                ping_timeout=60,
+                ping_interval=25,
             )
             print("Socket.IO 초기화 완료")
         except Exception as e:

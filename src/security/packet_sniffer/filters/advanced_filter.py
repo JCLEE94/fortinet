@@ -38,7 +38,9 @@ class AdvancedFilterRule:
         self.last_match = None
         self.enabled = True
 
-    def matches(self, packet_info: Dict[str, Any], context: Dict[str, Any] = None) -> Tuple[bool, Dict[str, Any]]:
+    def matches(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any] = None
+    ) -> Tuple[bool, Dict[str, Any]]:
         """
         패킷이 규칙과 매치되는지 확인
 
@@ -70,7 +72,9 @@ class AdvancedFilterRule:
             logger.error(f"규칙 매칭 오류 ({self.rule_id}): {e}")
             return False, {"error": str(e)}
 
-    def _match_time_based(self, packet_info: Dict[str, Any], context: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _match_time_based(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any]
+    ) -> Tuple[bool, Dict[str, Any]]:
         """시간 기반 필터링"""
         try:
             params = self.parameters
@@ -81,9 +85,17 @@ class AdvancedFilterRule:
                 start_time = params["time_range"].get("start")
                 end_time = params["time_range"].get("end")
 
-                if start_time and current_time.time() < datetime.strptime(start_time, "%H:%M:%S").time():
+                if (
+                    start_time
+                    and current_time.time()
+                    < datetime.strptime(start_time, "%H:%M:%S").time()
+                ):
                     return False, {}
-                if end_time and current_time.time() > datetime.strptime(end_time, "%H:%M:%S").time():
+                if (
+                    end_time
+                    and current_time.time()
+                    > datetime.strptime(end_time, "%H:%M:%S").time()
+                ):
                     return False, {}
 
             # 요일 체크
@@ -110,7 +122,9 @@ class AdvancedFilterRule:
             logger.error(f"시간 기반 필터링 오류: {e}")
             return False, {"error": str(e)}
 
-    def _match_statistical(self, packet_info: Dict[str, Any], context: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _match_statistical(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any]
+    ) -> Tuple[bool, Dict[str, Any]]:
         """통계 기반 필터링"""
         try:
             params = self.parameters
@@ -138,13 +152,17 @@ class AdvancedFilterRule:
 
             # 변화율 기반 필터링
             if "change_rate" in params:
-                change_result = self._check_change_rate(packet_info, params["change_rate"], stats)
+                change_result = self._check_change_rate(
+                    packet_info, params["change_rate"], stats
+                )
                 if not change_result:
                     return False, {}
 
             # 이상치 탐지
             if "outlier_detection" in params:
-                outlier_result = self._detect_outlier(packet_info, params["outlier_detection"], stats)
+                outlier_result = self._detect_outlier(
+                    packet_info, params["outlier_detection"], stats
+                )
                 return outlier_result, {"outlier_detection": outlier_result}
 
             return True, {"statistical_match": True}
@@ -153,14 +171,18 @@ class AdvancedFilterRule:
             logger.error(f"통계 기반 필터링 오류: {e}")
             return False, {"error": str(e)}
 
-    def _match_pattern(self, packet_info: Dict[str, Any], context: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _match_pattern(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any]
+    ) -> Tuple[bool, Dict[str, Any]]:
         """패턴 기반 필터링"""
         try:
             params = self.parameters
 
             # 시퀀스 패턴 매칭
             if "sequence_pattern" in params:
-                sequence_result = self._match_sequence_pattern(packet_info, params["sequence_pattern"], context)
+                sequence_result = self._match_sequence_pattern(
+                    packet_info, params["sequence_pattern"], context
+                )
                 if not sequence_result:
                     return False, {}
 
@@ -173,7 +195,9 @@ class AdvancedFilterRule:
 
             # 네트워크 패턴
             if "network_pattern" in params:
-                network_result = self._match_network_pattern(packet_info, params["network_pattern"])
+                network_result = self._match_network_pattern(
+                    packet_info, params["network_pattern"]
+                )
                 if not network_result:
                     return False, {}
 
@@ -183,7 +207,9 @@ class AdvancedFilterRule:
             logger.error(f"패턴 기반 필터링 오류: {e}")
             return False, {"error": str(e)}
 
-    def _match_composite(self, packet_info: Dict[str, Any], context: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _match_composite(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any]
+    ) -> Tuple[bool, Dict[str, Any]]:
         """복합 조건 필터링"""
         try:
             params = self.parameters
@@ -195,7 +221,9 @@ class AdvancedFilterRule:
             for condition in conditions:
                 # 하위 규칙 생성 및 실행
                 sub_rule = AdvancedFilterRule(
-                    f"{self.rule_id}_sub_{len(results)}", condition.get("type"), condition.get("parameters", {})
+                    f"{self.rule_id}_sub_{len(results)}",
+                    condition.get("type"),
+                    condition.get("parameters", {}),
                 )
 
                 match_result, match_info = sub_rule.matches(packet_info, context)
@@ -211,13 +239,18 @@ class AdvancedFilterRule:
             else:
                 final_result = False
 
-            return final_result, {"composite_match": final_result, "sub_results": results}
+            return final_result, {
+                "composite_match": final_result,
+                "sub_results": results,
+            }
 
         except Exception as e:
             logger.error(f"복합 조건 필터링 오류: {e}")
             return False, {"error": str(e)}
 
-    def _match_ml(self, packet_info: Dict[str, Any], context: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    def _match_ml(
+        self, packet_info: Dict[str, Any], context: Dict[str, Any]
+    ) -> Tuple[bool, Dict[str, Any]]:
         """머신러닝 기반 필터링"""
         try:
             params = self.parameters
@@ -236,7 +269,12 @@ class AdvancedFilterRule:
             logger.error(f"ML 기반 필터링 오류: {e}")
             return False, {"error": str(e)}
 
-    def _detect_burst(self, packet_info: Dict[str, Any], burst_params: Dict[str, Any], context: Dict[str, Any]) -> bool:
+    def _detect_burst(
+        self,
+        packet_info: Dict[str, Any],
+        burst_params: Dict[str, Any],
+        context: Dict[str, Any],
+    ) -> bool:
         """버스트 패턴 탐지"""
         try:
             window_size = burst_params.get("window_size", 10)
@@ -252,7 +290,10 @@ class AdvancedFilterRule:
                     p
                     for p in recent_packets
                     if (
-                        current_time - datetime.fromisoformat(p.get("timestamp", current_time.isoformat()))
+                        current_time
+                        - datetime.fromisoformat(
+                            p.get("timestamp", current_time.isoformat())
+                        )
                     ).total_seconds()
                     <= window_size
                 ]
@@ -265,7 +306,9 @@ class AdvancedFilterRule:
             logger.error(f"버스트 탐지 오류: {e}")
             return False
 
-    def _extract_metric_value(self, packet_info: Dict[str, Any], metric: str) -> Optional[Union[int, float]]:
+    def _extract_metric_value(
+        self, packet_info: Dict[str, Any], metric: str
+    ) -> Optional[Union[int, float]]:
         """패킷에서 메트릭 값 추출"""
         try:
             if metric == "packet_size":
@@ -293,7 +336,10 @@ class AdvancedFilterRule:
             return None
 
     def _check_change_rate(
-        self, packet_info: Dict[str, Any], change_params: Dict[str, Any], stats: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        change_params: Dict[str, Any],
+        stats: Dict[str, Any],
     ) -> bool:
         """변화율 확인"""
         try:
@@ -326,7 +372,10 @@ class AdvancedFilterRule:
             return False
 
     def _detect_outlier(
-        self, packet_info: Dict[str, Any], outlier_params: Dict[str, Any], stats: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        outlier_params: Dict[str, Any],
+        stats: Dict[str, Any],
     ) -> bool:
         """이상치 탐지"""
         try:
@@ -368,7 +417,10 @@ class AdvancedFilterRule:
             return False
 
     def _match_sequence_pattern(
-        self, packet_info: Dict[str, Any], pattern_params: Dict[str, Any], context: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        pattern_params: Dict[str, Any],
+        context: Dict[str, Any],
     ) -> bool:
         """시퀀스 패턴 매칭"""
         try:
@@ -395,7 +447,9 @@ class AdvancedFilterRule:
             logger.error(f"시퀀스 패턴 매칭 오류: {e}")
             return False
 
-    def _match_network_pattern(self, packet_info: Dict[str, Any], network_params: Dict[str, Any]) -> bool:
+    def _match_network_pattern(
+        self, packet_info: Dict[str, Any], network_params: Dict[str, Any]
+    ) -> bool:
         """네트워크 패턴 매칭"""
         try:
             pattern_type = network_params.get("type")
@@ -413,26 +467,35 @@ class AdvancedFilterRule:
             logger.error(f"네트워크 패턴 매칭 오류: {e}")
             return False
 
-    def _detect_port_scan(self, packet_info: Dict[str, Any], params: Dict[str, Any]) -> bool:
+    def _detect_port_scan(
+        self, packet_info: Dict[str, Any], params: Dict[str, Any]
+    ) -> bool:
         """포트 스캔 탐지"""
         # 간단한 구현 - 실제로는 더 정교한 로직 필요
         tcp_flags = packet_info.get("tcp_flags", [])
         return "SYN" in tcp_flags and "ACK" not in tcp_flags
 
-    def _detect_host_sweep(self, packet_info: Dict[str, Any], params: Dict[str, Any]) -> bool:
+    def _detect_host_sweep(
+        self, packet_info: Dict[str, Any], params: Dict[str, Any]
+    ) -> bool:
         """호스트 스윕 탐지"""
         # 간단한 구현
         protocol = packet_info.get("protocol")
         return protocol == "ICMP"
 
-    def _detect_dos_pattern(self, packet_info: Dict[str, Any], params: Dict[str, Any]) -> bool:
+    def _detect_dos_pattern(
+        self, packet_info: Dict[str, Any], params: Dict[str, Any]
+    ) -> bool:
         """DoS 패턴 탐지"""
         # 간단한 구현
         packet_size = packet_info.get("size", 0)
         return packet_size > params.get("large_packet_threshold", 1500)
 
     def _ml_anomaly_detection(
-        self, packet_info: Dict[str, Any], params: Dict[str, Any], context: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        params: Dict[str, Any],
+        context: Dict[str, Any],
     ) -> Tuple[bool, Dict[str, Any]]:
         """머신러닝 기반 이상 탐지"""
         try:
@@ -445,14 +508,21 @@ class AdvancedFilterRule:
 
             is_anomaly = anomaly_score > threshold
 
-            return is_anomaly, {"anomaly_score": anomaly_score, "threshold": threshold, "features": features}
+            return is_anomaly, {
+                "anomaly_score": anomaly_score,
+                "threshold": threshold,
+                "features": features,
+            }
 
         except Exception as e:
             logger.error(f"ML 이상 탐지 오류: {e}")
             return False, {"error": str(e)}
 
     def _ml_classification(
-        self, packet_info: Dict[str, Any], params: Dict[str, Any], context: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        params: Dict[str, Any],
+        context: Dict[str, Any],
     ) -> Tuple[bool, Dict[str, Any]]:
         """머신러닝 기반 분류"""
         # 간단한 규칙 기반 분류 (실제 ML 모델 대신)
@@ -469,7 +539,10 @@ class AdvancedFilterRule:
         }
 
     def _ml_clustering(
-        self, packet_info: Dict[str, Any], params: Dict[str, Any], context: Dict[str, Any]
+        self,
+        packet_info: Dict[str, Any],
+        params: Dict[str, Any],
+        context: Dict[str, Any],
     ) -> Tuple[bool, Dict[str, Any]]:
         """머신러닝 기반 클러스터링"""
         # 간단한 프로토콜 기반 클러스터링
@@ -477,7 +550,9 @@ class AdvancedFilterRule:
         cluster_id = hash(protocol) % 10  # 10개 클러스터
 
         target_cluster = params.get("target_cluster")
-        matches_cluster = cluster_id == target_cluster if target_cluster is not None else True
+        matches_cluster = (
+            cluster_id == target_cluster if target_cluster is not None else True
+        )
 
         return matches_cluster, {"cluster_id": cluster_id, "protocol": protocol}
 
@@ -492,13 +567,17 @@ class AdvancedFilterRule:
         ]
         return features
 
-    def _calculate_anomaly_score(self, features: List[float], context: Dict[str, Any]) -> float:
+    def _calculate_anomaly_score(
+        self, features: List[float], context: Dict[str, Any]
+    ) -> float:
         """이상 스코어 계산"""
         try:
             # 간단한 거리 기반 이상 스코어
             normal_features = [1000, 50000, 80, 500, 2]  # 정상 패킷의 평균 특성
 
-            distance = sum((f - n) ** 2 for f, n in zip(features, normal_features)) ** 0.5
+            distance = (
+                sum((f - n) ** 2 for f, n in zip(features, normal_features)) ** 0.5
+            )
             max_distance = 100000  # 정규화를 위한 최대 거리
 
             return min(distance / max_distance, 1.0)
@@ -516,9 +595,15 @@ class AdvancedFilter:
         self.statistics = defaultdict(list)
         self.recent_packets = deque(maxlen=1000)  # 최근 패킷 저장
         self.callbacks = []
-        self.global_stats = {"total_packets": 0, "filtered_packets": 0, "anomalies_detected": 0}
+        self.global_stats = {
+            "total_packets": 0,
+            "filtered_packets": 0,
+            "anomalies_detected": 0,
+        }
 
-    def add_rule(self, rule_id: str, rule_type: str, parameters: Dict[str, Any]) -> AdvancedFilterRule:
+    def add_rule(
+        self, rule_id: str, rule_type: str, parameters: Dict[str, Any]
+    ) -> AdvancedFilterRule:
         """
         고급 필터 규칙 추가
 
@@ -591,7 +676,13 @@ class AdvancedFilter:
                 "global_stats": self.global_stats.copy(),
             }
 
-            result = {"packet_info": packet_info, "matches": [], "anomalies": [], "filtered": False, "action": "allow"}
+            result = {
+                "packet_info": packet_info,
+                "matches": [],
+                "anomalies": [],
+                "filtered": False,
+                "action": "allow",
+            }
 
             # 모든 규칙에 대해 매칭 검사
             for rule_id, rule in self.rules.items():
@@ -652,7 +743,9 @@ class AdvancedFilter:
                         self.statistics[f"historical_{metric}"].append(value)
                         # 최대 1000개만 유지
                         if len(self.statistics[f"historical_{metric}"]) > 1000:
-                            self.statistics[f"historical_{metric}"] = self.statistics[f"historical_{metric}"][-1000:]
+                            self.statistics[f"historical_{metric}"] = self.statistics[
+                                f"historical_{metric}"
+                            ][-1000:]
 
             # 시간대별 통계
             current_hour = datetime.now().hour
@@ -679,7 +772,9 @@ class AdvancedFilter:
             except Exception as e:
                 logger.error(f"콜백 호출 오류: {e}")
 
-    def add_ml_anomaly_rule(self, rule_id: str, threshold: float = 0.8) -> AdvancedFilterRule:
+    def add_ml_anomaly_rule(
+        self, rule_id: str, threshold: float = 0.8
+    ) -> AdvancedFilterRule:
         """머신러닝 기반 이상 탐지 규칙 추가"""
         parameters = {"model_type": "anomaly_detection", "threshold": threshold}
         return self.add_rule(rule_id, "ml", parameters)
@@ -711,7 +806,10 @@ class AdvancedFilter:
         return self.add_rule(rule_id, "time_based", parameters)
 
     def add_statistical_rule(
-        self, rule_id: str, thresholds: Dict[str, Dict[str, Any]] = None, outlier_detection: Dict[str, Any] = None
+        self,
+        rule_id: str,
+        thresholds: Dict[str, Dict[str, Any]] = None,
+        outlier_detection: Dict[str, Any] = None,
     ) -> AdvancedFilterRule:
         """통계 기반 필터링 규칙 추가"""
         parameters = {}
@@ -745,9 +843,13 @@ class AdvancedFilter:
 
         return self.add_rule(rule_id, "pattern", parameters)
 
-    def add_burst_detection_rule(self, rule_id: str, window_size: int = 10, threshold: int = 5) -> AdvancedFilterRule:
+    def add_burst_detection_rule(
+        self, rule_id: str, window_size: int = 10, threshold: int = 5
+    ) -> AdvancedFilterRule:
         """버스트 탐지 규칙 추가"""
-        parameters = {"burst_detection": {"window_size": window_size, "threshold": threshold}}
+        parameters = {
+            "burst_detection": {"window_size": window_size, "threshold": threshold}
+        }
         return self.add_rule(rule_id, "time_based", parameters)
 
     def get_statistics(self) -> Dict[str, Any]:
@@ -763,7 +865,9 @@ class AdvancedFilter:
                     "rule_type": rule.rule_type,
                     "enabled": rule.enabled,
                     "match_count": rule.match_count,
-                    "last_match": rule.last_match.isoformat() if rule.last_match else None,
+                    "last_match": rule.last_match.isoformat()
+                    if rule.last_match
+                    else None,
                 }
             )
 
@@ -782,7 +886,11 @@ class AdvancedFilter:
         """통계 초기화"""
         self.statistics.clear()
         self.recent_packets.clear()
-        self.global_stats = {"total_packets": 0, "filtered_packets": 0, "anomalies_detected": 0}
+        self.global_stats = {
+            "total_packets": 0,
+            "filtered_packets": 0,
+            "anomalies_detected": 0,
+        }
 
         for rule in self.rules.values():
             rule.match_count = 0

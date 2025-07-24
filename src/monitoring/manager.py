@@ -16,7 +16,8 @@ from typing import Any, Callable, Dict, List, Optional
 from src.config.unified_settings import CONFIG
 from src.utils.performance_optimizer import LRUCache, measure_time, profile
 
-from .base import MonitoringBase, get_all_monitors, register_monitor, unregister_monitor
+from .base import (MonitoringBase, get_all_monitors, register_monitor,
+                   unregister_monitor)
 from .config import MonitoringConfig, get_config_manager
 
 logger = logging.getLogger(__name__)
@@ -72,10 +73,18 @@ class EventAggregator:
         cutoff = datetime.now() - timedelta(hours=hours)
 
         with self._lock:
-            filtered_events = [event for event in self.events if datetime.fromisoformat(event["timestamp"]) > cutoff]
+            filtered_events = [
+                event
+                for event in self.events
+                if datetime.fromisoformat(event["timestamp"]) > cutoff
+            ]
 
             if event_type:
-                filtered_events = [event for event in filtered_events if event.get("type") == event_type]
+                filtered_events = [
+                    event
+                    for event in filtered_events
+                    if event.get("type") == event_type
+                ]
 
             result = sorted(filtered_events, key=lambda x: x["timestamp"], reverse=True)
 
@@ -103,7 +112,8 @@ class EventAggregator:
         similar_events = [
             e
             for e in recent_events[-10:]  # 최근 10개 이벤트
-            if e.get("source") == event.get("source") and e.get("type") == event.get("type")
+            if e.get("source") == event.get("source")
+            and e.get("type") == event.get("type")
         ]
 
         if len(similar_events) >= 3:
@@ -142,7 +152,9 @@ class DataIntegrator:
                 }
 
                 # 상관관계 분석
-                integrated["correlations"] = self._analyze_data_correlations(monitor_data)
+                integrated["correlations"] = self._analyze_data_correlations(
+                    monitor_data
+                )
 
                 # 인사이트 생성
                 integrated["insights"] = self._generate_insights(monitor_data)
@@ -178,7 +190,9 @@ class DataIntegrator:
                         "description": "높은 시스템 리소스 사용률이 API 성능에 영향을 줄 수 있습니다",
                         "cpu_usage": cpu_usage,
                         "memory_usage": memory_usage,
-                        "severity": "warning" if max(cpu_usage, memory_usage) < 90 else "critical",
+                        "severity": "warning"
+                        if max(cpu_usage, memory_usage) < 90
+                        else "critical",
                     }
 
             # 보안 스캔과 시스템 상태 상관관계
@@ -187,7 +201,11 @@ class DataIntegrator:
                 vulnerabilities = security_data.get("vulnerabilities", [])
 
                 if vulnerabilities:
-                    high_severity = [v for v in vulnerabilities if v.get("severity") in ["high", "critical"]]
+                    high_severity = [
+                        v
+                        for v in vulnerabilities
+                        if v.get("severity") in ["high", "critical"]
+                    ]
                     if high_severity:
                         correlations["security_risk"] = {
                             "description": "높은 심각도의 보안 취약점이 발견되었습니다",
@@ -244,7 +262,9 @@ class DataIntegrator:
                 security_data = data["security_scanner"].get("data", {})
                 scan_result = security_data.get("latest_scan", {})
 
-                critical_vulns = scan_result.get("severity_summary", {}).get("critical", 0)
+                critical_vulns = scan_result.get("severity_summary", {}).get(
+                    "critical", 0
+                )
                 if critical_vulns > 0:
                     insights.append(
                         {
@@ -275,7 +295,9 @@ class DataIntegrator:
 
             # 중복 제거 및 우선순위 정렬
             unique_alerts = self._deduplicate_alerts(alerts)
-            return sorted(unique_alerts, key=lambda x: self._get_alert_priority(x), reverse=True)
+            return sorted(
+                unique_alerts, key=lambda x: self._get_alert_priority(x), reverse=True
+            )
 
         except Exception as e:
             logger.error(f"통합 알림 생성 실패: {e}")
@@ -361,7 +383,9 @@ class UnifiedMonitoringManager:
                 self.is_running = True
                 self._stop_event.clear()
                 self.management_thread = threading.Thread(
-                    target=self._management_loop, name="unified-monitoring-manager", daemon=True
+                    target=self._management_loop,
+                    name="unified-monitoring-manager",
+                    daemon=True,
                 )
                 self.management_thread.start()
 
@@ -479,7 +503,9 @@ class UnifiedMonitoringManager:
                 "monitors": monitor_status,
                 "config": {
                     "file": self.config_manager.config_file,
-                    "last_updated": getattr(self.config_manager.config, "_metadata", {}).get("last_updated", "unknown"),
+                    "last_updated": getattr(
+                        self.config_manager.config, "_metadata", {}
+                    ).get("last_updated", "unknown"),
                 },
             }
 
@@ -545,7 +571,9 @@ class UnifiedMonitoringManager:
                             "sources": integrated_data.get("sources", []),
                             "insights_count": len(integrated_data.get("insights", [])),
                             "alerts_count": len(integrated_data.get("alerts", [])),
-                            "correlations_count": len(integrated_data.get("correlations", {})),
+                            "correlations_count": len(
+                                integrated_data.get("correlations", {})
+                            ),
                         },
                     }
 
@@ -592,7 +620,11 @@ class UnifiedMonitoringManager:
         """모니터 이벤트 처리"""
         try:
             # 이벤트 집계기에 추가
-            event = {"type": event_type, "source": data.get("source", "unknown"), "data": data.get("data", {})}
+            event = {
+                "type": event_type,
+                "source": data.get("source", "unknown"),
+                "data": data.get("data", {}),
+            }
 
             self.event_aggregator.add_event(event)
             self.stats["total_events"] += 1
@@ -641,7 +673,10 @@ class UnifiedMonitoringManager:
                 health_event = {
                     "type": "health_check_warning",
                     "source": "unified_manager",
-                    "data": {"unhealthy_monitors": unhealthy_monitors, "total_monitors": len(self.monitors)},
+                    "data": {
+                        "unhealthy_monitors": unhealthy_monitors,
+                        "total_monitors": len(self.monitors),
+                    },
                 }
 
                 self.event_aggregator.add_event(health_event)

@@ -13,7 +13,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import psutil
 import requests
@@ -67,7 +67,9 @@ class SecurityScanner:
             return
 
         self.is_scanning = True
-        self.scan_thread = threading.Thread(target=self._continuous_scan_loop, args=(interval_hours,), daemon=True)
+        self.scan_thread = threading.Thread(
+            target=self._continuous_scan_loop, args=(interval_hours,), daemon=True
+        )
         self.scan_thread.start()
         logger.info(f"지속적 보안 스캔 시작 (주기: {interval_hours}시간)")
 
@@ -78,11 +80,11 @@ class SecurityScanner:
             self.scan_thread.join(timeout=10)
         logger.info("보안 스캔 중지됨")
 
-    def run_full_security_scan(self) -> Dict:
+    def run_full_security_scan(self) -> Dict[str, Any]:
         """전체 보안 스캔 실행"""
         logger.info("전체 보안 스캔 시작")
 
-        scan_result = {
+        scan_result: Dict[str, Any] = {
             "timestamp": datetime.now().isoformat(),
             "scan_id": hashlib.sha256(str(datetime.now()).encode()).hexdigest()[:8],
             "results": {},
@@ -98,7 +100,9 @@ class SecurityScanner:
 
             # 2. 취약점 스캔
             if self.scan_config["vulnerability_scan"]:
-                scan_result["results"]["vulnerability_scan"] = self._scan_vulnerabilities()
+                scan_result["results"][
+                    "vulnerability_scan"
+                ] = self._scan_vulnerabilities()
 
             # 3. 파일 무결성 검사
             if self.scan_config["file_integrity_check"]:
@@ -106,7 +110,9 @@ class SecurityScanner:
 
             # 4. 네트워크 보안 검사
             if self.scan_config["network_scan"]:
-                scan_result["results"]["network_security"] = self._scan_network_security()
+                scan_result["results"][
+                    "network_security"
+                ] = self._scan_network_security()
 
             # 5. Docker 보안 검사
             if self.scan_config["docker_security_scan"]:
@@ -139,7 +145,9 @@ class SecurityScanner:
 
         return scan_result
 
-    def auto_fix_vulnerabilities(self, scan_result: Dict = None) -> Dict:
+    def auto_fix_vulnerabilities(
+        self, scan_result: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """취약점 자동 수정"""
         if not scan_result:
             # 최신 스캔 결과 사용
@@ -174,7 +182,7 @@ class SecurityScanner:
 
         return fix_results
 
-    def harden_system(self) -> Dict:
+    def harden_system(self) -> Dict[str, Any]:
         """시스템 보안 강화"""
         logger.info("시스템 보안 강화 시작")
 
@@ -204,10 +212,14 @@ class SecurityScanner:
                         {"action": action_name, "status": "success", "details": result}
                     )
                 else:
-                    hardening_results["failed_settings"].append({"action": action_name, "status": "failed"})
+                    hardening_results["failed_settings"].append(
+                        {"action": action_name, "status": "failed"}
+                    )
             except Exception as e:
                 logger.error(f"보안 강화 실패 ({action_name}): {e}")
-                hardening_results["failed_settings"].append({"action": action_name, "status": "error", "error": str(e)})
+                hardening_results["failed_settings"].append(
+                    {"action": action_name, "status": "error", "error": str(e)}
+                )
 
         logger.info("시스템 보안 강화 완료")
         return hardening_results
@@ -215,7 +227,10 @@ class SecurityScanner:
     def get_security_dashboard(self) -> Dict:
         """보안 대시보드 데이터"""
         if not self.scan_results:
-            return {"status": "no_data", "message": "No security scan results available"}
+            return {
+                "status": "no_data",
+                "message": "No security scan results available",
+            }
 
         latest_scan = self.scan_results[-1]
 
@@ -224,7 +239,11 @@ class SecurityScanner:
             "scan_id": latest_scan["scan_id"],
             "total_vulnerabilities": len(latest_scan["vulnerabilities"]),
             "severity_breakdown": latest_scan["severity_summary"],
-            "critical_issues": [v for v in latest_scan["vulnerabilities"] if v.get("severity") == "critical"],
+            "critical_issues": [
+                v
+                for v in latest_scan["vulnerabilities"]
+                if v.get("severity") == "critical"
+            ],
             "system_health": self._get_security_health_score(latest_scan),
             "trending": self._get_security_trends(),
             "recommendations": latest_scan.get("recommendations", [])[:5],
@@ -262,7 +281,9 @@ class SecurityScanner:
     def _scan_open_ports(self) -> Dict:
         """오픈 포트 스캔"""
         try:
-            result = subprocess.run(["netstat", "-tlnp"], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                ["netstat", "-tlnp"], capture_output=True, text=True, timeout=30
+            )
 
             open_ports = []
             unauthorized_ports = []
@@ -295,7 +316,12 @@ class SecurityScanner:
 
         try:
             # 1. 패키지 업데이트 확인
-            result = subprocess.run(["apt", "list", "--upgradable"], capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                ["apt", "list", "--upgradable"],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
 
             if result.stdout:
                 outdated_packages = len(result.stdout.split("\n")) - 1
@@ -336,7 +362,10 @@ class SecurityScanner:
                         }
                     )
 
-            return {"vulnerabilities": vulnerabilities, "total_count": len(vulnerabilities)}
+            return {
+                "vulnerabilities": vulnerabilities,
+                "total_count": len(vulnerabilities),
+            }
 
         except Exception as e:
             logger.error(f"취약점 스캔 실패: {e}")
@@ -356,7 +385,13 @@ class SecurityScanner:
                     # 이전 해시와 비교
                     if file_path in self.file_checksums:
                         if self.file_checksums[file_path] != file_hash:
-                            integrity_issues.append({"file": file_path, "issue": "modified", "severity": "high"})
+                            integrity_issues.append(
+                                {
+                                    "file": file_path,
+                                    "issue": "modified",
+                                    "severity": "high",
+                                }
+                            )
                     else:
                         # 첫 번째 스캔 시 기준점 설정
                         self.file_checksums[file_path] = file_hash
@@ -377,7 +412,9 @@ class SecurityScanner:
                                 }
                             )
                 else:
-                    integrity_issues.append({"file": file_path, "issue": "missing", "severity": "medium"})
+                    integrity_issues.append(
+                        {"file": file_path, "issue": "missing", "severity": "medium"}
+                    )
 
             return {
                 "integrity_issues": integrity_issues,
@@ -396,13 +433,19 @@ class SecurityScanner:
         try:
             # 1. 방화벽 상태 확인
             try:
-                result = subprocess.run(["ufw", "status"], capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    ["ufw", "status"], capture_output=True, text=True, timeout=10
+                )
 
                 if "inactive" in result.stdout.lower():
                     network_issues.append(
-                        {"type": "firewall_disabled", "severity": "high", "description": "UFW 방화벽이 비활성화됨"}
+                        {
+                            "type": "firewall_disabled",
+                            "severity": "high",
+                            "description": "UFW 방화벽이 비활성화됨",
+                        }
                     )
-            except:
+            except Exception:
                 pass
 
             # 2. SSH 설정 확인
@@ -413,18 +456,30 @@ class SecurityScanner:
                 # 루트 로그인 허용 여부
                 if "PermitRootLogin yes" in ssh_config:
                     network_issues.append(
-                        {"type": "ssh_root_login", "severity": "high", "description": "SSH 루트 로그인이 허용됨"}
+                        {
+                            "type": "ssh_root_login",
+                            "severity": "high",
+                            "description": "SSH 루트 로그인이 허용됨",
+                        }
                     )
 
                 # 패스워드 인증 허용 여부
                 if "PasswordAuthentication yes" in ssh_config:
                     network_issues.append(
-                        {"type": "ssh_password_auth", "severity": "medium", "description": "SSH 패스워드 인증이 허용됨"}
+                        {
+                            "type": "ssh_password_auth",
+                            "severity": "medium",
+                            "description": "SSH 패스워드 인증이 허용됨",
+                        }
                     )
 
             # 3. 네트워크 연결 확인
             connections = psutil.net_connections()
-            external_connections = [conn for conn in connections if conn.status == "ESTABLISHED" and conn.raddr]
+            external_connections = [
+                conn
+                for conn in connections
+                if conn.status == "ESTABLISHED" and conn.raddr
+            ]
 
             suspicious_connections = []
             for conn in external_connections:
@@ -459,7 +514,12 @@ class SecurityScanner:
 
         try:
             # Docker 컨테이너 보안 검사
-            result = subprocess.run(["docker", "ps", "--format", "json"], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                ["docker", "ps", "--format", "json"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
 
             if result.returncode == 0:
                 containers = []
@@ -472,7 +532,10 @@ class SecurityScanner:
 
                     # 컨테이너 권한 검사
                     inspect_result = subprocess.run(
-                        ["docker", "inspect", container_name], capture_output=True, text=True, timeout=10
+                        ["docker", "inspect", container_name],
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
                     )
 
                     if inspect_result.returncode == 0:
@@ -490,7 +553,9 @@ class SecurityScanner:
                             )
 
                         # 호스트 네트워크 모드 검사
-                        network_mode = inspect_data.get("HostConfig", {}).get("NetworkMode", "")
+                        network_mode = inspect_data.get("HostConfig", {}).get(
+                            "NetworkMode", ""
+                        )
                         if network_mode == "host":
                             docker_issues.append(
                                 {
@@ -503,7 +568,9 @@ class SecurityScanner:
 
             return {
                 "docker_issues": docker_issues,
-                "containers_checked": len(containers) if "containers" in locals() else 0,
+                "containers_checked": len(containers)
+                if "containers" in locals()
+                else 0,
             }
 
         except Exception as e:
@@ -516,7 +583,11 @@ class SecurityScanner:
 
         try:
             # 시스템 로그 분석
-            log_files = ["/var/log/auth.log", "/var/log/syslog", "/home/jclee/dev/fortinet/logs/app.log"]
+            log_files = [
+                "/var/log/auth.log",
+                "/var/log/syslog",
+                "/home/jclee/dev/fortinet/logs/app.log",
+            ]
 
             suspicious_patterns = [
                 r"Failed password",
@@ -545,7 +616,7 @@ class SecurityScanner:
                                         }
                                     )
                                     break
-                    except:
+                    except Exception:
                         continue
 
             return {
@@ -568,7 +639,10 @@ class SecurityScanner:
             for service in self.security_baselines["required_services"]:
                 try:
                     result = subprocess.run(
-                        ["systemctl", "is-active", service], capture_output=True, text=True, timeout=5
+                        ["systemctl", "is-active", service],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
                     )
                     running_services.append(
                         {
@@ -577,31 +651,44 @@ class SecurityScanner:
                             "running": result.stdout.strip() == "active",
                         }
                     )
-                except:
-                    running_services.append({"service": service, "status": "unknown", "running": False})
+                except Exception:
+                    running_services.append(
+                        {"service": service, "status": "unknown", "running": False}
+                    )
 
             security_config["services"] = running_services
 
             # 2. 시스템 업데이트 상태
             try:
-                result = subprocess.run(["apt", "list", "--upgradable"], capture_output=True, text=True, timeout=30)
+                result = subprocess.run(
+                    ["apt", "list", "--upgradable"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
                 upgradable_count = len(result.stdout.split("\n")) - 1
                 security_config["system_updates"] = {
                     "upgradable_packages": max(0, upgradable_count),
                     "up_to_date": upgradable_count <= 1,
                 }
-            except:
+            except Exception:
                 security_config["system_updates"] = {"error": "Unable to check updates"}
 
             # 3. 디스크 암호화 상태 (간단한 확인)
             try:
-                result = subprocess.run(["lsblk", "-f"], capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    ["lsblk", "-f"], capture_output=True, text=True, timeout=10
+                )
                 security_config["disk_encryption"] = {
                     "encrypted_partitions": "crypt" in result.stdout,
-                    "details": result.stdout if "crypt" in result.stdout else "No encrypted partitions found",
+                    "details": result.stdout
+                    if "crypt" in result.stdout
+                    else "No encrypted partitions found",
                 }
-            except:
-                security_config["disk_encryption"] = {"error": "Unable to check disk encryption"}
+            except Exception:
+                security_config["disk_encryption"] = {
+                    "error": "Unable to check disk encryption"
+                }
 
             return security_config
 
@@ -639,7 +726,9 @@ class SecurityScanner:
                             "type": "system",
                             "auto_fixable": vuln["type"] == "outdated_packages",
                             "description": vuln["description"],
-                            "recommendation": self._get_vulnerability_recommendation(vuln),
+                            "recommendation": self._get_vulnerability_recommendation(
+                                vuln
+                            ),
                         }
                     )
 
@@ -668,7 +757,9 @@ class SecurityScanner:
                             "type": "network",
                             "auto_fixable": issue["type"] in ["firewall_disabled"],
                             "description": issue["description"],
-                            "recommendation": self._get_network_recommendation(issue["type"]),
+                            "recommendation": self._get_network_recommendation(
+                                issue["type"]
+                            ),
                         }
                     )
 
@@ -697,8 +788,12 @@ class SecurityScanner:
         recommendations = []
 
         # 취약점 기반 권장사항
-        critical_vulns = [v for v in scan_result["vulnerabilities"] if v["severity"] == "critical"]
-        high_vulns = [v for v in scan_result["vulnerabilities"] if v["severity"] == "high"]
+        critical_vulns = [
+            v for v in scan_result["vulnerabilities"] if v["severity"] == "critical"
+        ]
+        high_vulns = [
+            v for v in scan_result["vulnerabilities"] if v["severity"] == "high"
+        ]
 
         if critical_vulns:
             recommendations.append(
@@ -749,19 +844,35 @@ class SecurityScanner:
 
             if vuln_type == "system" and "outdated_packages" in vulnerability["id"]:
                 # 패키지 업데이트
-                result = subprocess.run(["sudo", "apt", "upgrade", "-y"], capture_output=True, text=True, timeout=300)
+                result = subprocess.run(
+                    ["sudo", "apt", "upgrade", "-y"],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
                 return result.returncode == 0
 
-            elif vuln_type == "integrity" and "insecure_permissions" in vulnerability["id"]:
+            elif (
+                vuln_type == "integrity"
+                and "insecure_permissions" in vulnerability["id"]
+            ):
                 # 파일 권한 수정
                 file_path = vulnerability["id"].split("_")[-1]
-                result = subprocess.run(["sudo", "chmod", "644", file_path], capture_output=True, text=True, timeout=10)
+                result = subprocess.run(
+                    ["sudo", "chmod", "644", file_path],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
                 return result.returncode == 0
 
             elif vuln_type == "network" and "firewall_disabled" in vulnerability["id"]:
                 # 방화벽 활성화
                 result = subprocess.run(
-                    ["sudo", "ufw", "--force", "enable"], capture_output=True, text=True, timeout=10
+                    ["sudo", "ufw", "--force", "enable"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
                 return result.returncode == 0
 
@@ -804,7 +915,8 @@ class SecurityScanner:
         # 심각도별 가중치
         weights = {"critical": 25, "high": 15, "medium": 5, "low": 1}
         total_score = sum(
-            scan_result["severity_summary"].get(severity, 0) * weight for severity, weight in weights.items()
+            scan_result["severity_summary"].get(severity, 0) * weight
+            for severity, weight in weights.items()
         )
 
         # 100점 만점으로 환산 (점수가 높을수록 나쁨)
@@ -869,15 +981,25 @@ class SecurityScanner:
         """보안 파일 권한 설정"""
         try:
             # 중요 파일 권한 설정
-            secure_permissions = {"/etc/passwd": "644", "/etc/shadow": "640", "/etc/hosts": "644"}
+            secure_permissions = {
+                "/etc/passwd": "644",
+                "/etc/shadow": "640",
+                "/etc/hosts": "644",
+            }
 
             for file_path, permissions in secure_permissions.items():
                 if os.path.exists(file_path):
-                    subprocess.run(["sudo", "chmod", permissions, file_path], timeout=10)
+                    subprocess.run(
+                        ["sudo", "chmod", permissions, file_path], timeout=10
+                    )
 
             return {"action": "set_secure_file_permissions", "status": "success"}
         except Exception as e:
-            return {"action": "set_secure_file_permissions", "status": "failed", "error": str(e)}
+            return {
+                "action": "set_secure_file_permissions",
+                "status": "failed",
+                "error": str(e),
+            }
 
     def _configure_docker_security(self) -> Dict:
         """Docker 보안 설정"""

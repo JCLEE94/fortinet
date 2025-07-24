@@ -96,7 +96,11 @@ class SessionManager:
             return False
 
         # 분석 이력에 추가
-        analysis_record = {"timestamp": time.time(), "type": analysis_type, "result": result}
+        analysis_record = {
+            "timestamp": time.time(),
+            "type": analysis_type,
+            "result": result,
+        }
 
         session["analysis_history"].append(analysis_record)
 
@@ -149,7 +153,10 @@ class SessionManager:
         if not session:
             return False
 
-        session["firewall_configs"][firewall_id] = {"data": config_data, "stored_at": time.time()}
+        session["firewall_configs"][firewall_id] = {
+            "data": config_data,
+            "stored_at": time.time(),
+        }
 
         self.logger.info(f"방화벽 설정 저장: {session_id} - {firewall_id}")
         return True
@@ -288,7 +295,9 @@ class SessionManager:
         self.cleanup_expired_sessions()
 
         total_sessions = len(self._sessions)
-        total_analyses = sum(len(s["analysis_history"]) for s in self._sessions.values())
+        total_analyses = sum(
+            len(s["analysis_history"]) for s in self._sessions.values()
+        )
 
         # 사용자별 세션 수
         user_sessions = {}
@@ -300,5 +309,7 @@ class SessionManager:
             "total_sessions": total_sessions,
             "total_analyses": total_analyses,
             "user_sessions": user_sessions,
-            "average_analyses_per_session": total_analyses / total_sessions if total_sessions > 0 else 0,
+            "average_analyses_per_session": total_analyses / total_sessions
+            if total_sessions > 0
+            else 0,
         }

@@ -18,7 +18,6 @@ from functools import wraps
 from flask import Blueprint, jsonify, render_template, request
 
 from src.utils.security import csrf_protect, rate_limit, validate_request
-
 # 보안 및 유틸리티 임포트
 from src.utils.unified_logger import get_logger
 
@@ -30,7 +29,9 @@ logger = get_logger(__name__)
 def docker_available():
     """Docker 명령어 사용 가능 여부 확인"""
     try:
-        result = subprocess.run(["docker", "--version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["docker", "--version"], capture_output=True, text=True, timeout=5
+        )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
         return False
@@ -65,7 +66,16 @@ def get_container_logs():
         follow = request.args.get("follow", "false").lower() == "true"
 
         if not docker_available():
-            return jsonify({"error": "Docker not available", "logs": [], "container": container_name}), 503
+            return (
+                jsonify(
+                    {
+                        "error": "Docker not available",
+                        "logs": [],
+                        "container": container_name,
+                    }
+                ),
+                503,
+            )
 
         # Docker logs 명령어 구성
         cmd = ["docker", "logs"]
@@ -82,7 +92,11 @@ def get_container_logs():
             logger.error(f"Docker logs 실행 실패: {result.stderr}")
             return (
                 jsonify(
-                    {"error": f"Container logs unavailable: {result.stderr}", "logs": [], "container": container_name}
+                    {
+                        "error": f"Container logs unavailable: {result.stderr}",
+                        "logs": [],
+                        "container": container_name,
+                    }
                 ),
                 404,
             )
@@ -101,10 +115,16 @@ def get_container_logs():
                         parts = line.split(" - - [")
                         if len(parts) > 1:
                             timestamp = parts[1].split("]")[0]
-                    except:
+                    except Exception:
                         pass
 
-                structured_logs.append({"timestamp": timestamp, "raw": line, "level": detect_log_level(line)})
+                structured_logs.append(
+                    {
+                        "timestamp": timestamp,
+                        "raw": line,
+                        "level": detect_log_level(line),
+                    }
+                )
 
         return jsonify(
             {
@@ -118,10 +138,24 @@ def get_container_logs():
         )
 
     except subprocess.TimeoutExpired:
-        return jsonify({"error": "Request timeout", "logs": [], "container": container_name}), 408
+        return (
+            jsonify(
+                {"error": "Request timeout", "logs": [], "container": container_name}
+            ),
+            408,
+        )
     except Exception as e:
         logger.error(f"컨테이너 로그 조회 실패: {str(e)}")
-        return jsonify({"error": f"Failed to retrieve logs: {str(e)}", "logs": [], "container": container_name}), 500
+        return (
+            jsonify(
+                {
+                    "error": f"Failed to retrieve logs: {str(e)}",
+                    "logs": [],
+                    "container": container_name,
+                }
+            ),
+            500,
+        )
 
 
 @logs_bp.route("/application", methods=["GET"])
@@ -200,7 +234,15 @@ def get_application_logs():
 
     except Exception as e:
         logger.error(f"애플리케이션 로그 조회 실패: {str(e)}")
-        return jsonify({"error": f"Failed to retrieve application logs: {str(e)}", "log_type": log_type}), 500
+        return (
+            jsonify(
+                {
+                    "error": f"Failed to retrieve application logs: {str(e)}",
+                    "log_type": log_type,
+                }
+            ),
+            500,
+        )
 
 
 @logs_bp.route("/files", methods=["GET"])
@@ -210,7 +252,17 @@ def get_application_logs():
 def list_log_files():
     """사용 가능한 로그 파일 목록 조회"""
     try:
-        cmd = ["docker", "exec", "fortinet", "find", "/app/logs", "-name", "*.log", "-type", "f"]
+        cmd = [
+            "docker",
+            "exec",
+            "fortinet",
+            "find",
+            "/app/logs",
+            "-name",
+            "*.log",
+            "-type",
+            "f",
+        ]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
         if result.returncode != 0:
@@ -221,7 +273,9 @@ def list_log_files():
             if file_path.strip():
                 # 파일 크기 확인
                 size_cmd = ["docker", "exec", "fortinet", "stat", "-c", "%s", file_path]
-                size_result = subprocess.run(size_cmd, capture_output=True, text=True, timeout=5)
+                size_result = subprocess.run(
+                    size_cmd, capture_output=True, text=True, timeout=5
+                )
 
                 file_size = 0
                 if size_result.returncode == 0:
@@ -250,7 +304,10 @@ def list_log_files():
 
     except Exception as e:
         logger.error(f"로그 파일 목록 조회 실패: {str(e)}")
-        return jsonify({"error": f"Failed to list log files: {str(e)}", "files": []}), 500
+        return (
+            jsonify({"error": f"Failed to list log files: {str(e)}", "files": []}),
+            500,
+        )
 
 
 @logs_bp.route("/search", methods=["POST"])
@@ -282,7 +339,10 @@ def search_logs():
             content = result.stdout
 
         if result.returncode != 0:
-            return jsonify({"error": "Failed to read logs for search", "matches": []}), 500
+            return (
+                jsonify({"error": "Failed to read logs for search", "matches": []}),
+                500,
+            )
 
         # 패턴 검색
         matches = []
@@ -369,7 +429,9 @@ def get_log_stats():
             "{}",
             "+",
         ]
-        result = subprocess.run(log_files_cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            log_files_cmd, capture_output=True, text=True, timeout=15
+        )
 
         log_stats = {}
         if result.returncode == 0:
@@ -392,7 +454,10 @@ def get_log_stats():
 
     except Exception as e:
         logger.error(f"로그 통계 조회 실패: {str(e)}")
-        return jsonify({"error": f"Failed to get log stats: {str(e)}", "stats": {}}), 500
+        return (
+            jsonify({"error": f"Failed to get log stats: {str(e)}", "stats": {}}),
+            500,
+        )
 
 
 # 헬퍼 함수들
@@ -490,7 +555,11 @@ def stream_logs():
                 import subprocess
 
                 process = subprocess.Popen(
-                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                    bufsize=1,
                 )
 
                 # SSE 헤더 전송

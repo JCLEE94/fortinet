@@ -95,7 +95,11 @@ class AutoRecoveryEngine:
             "total_recoveries": self.stats["total_recoveries"],
             "successful_recoveries": self.stats["successful_recoveries"],
             "failed_recoveries": self.stats["failed_recoveries"],
-            "success_rate": (self.stats["successful_recoveries"] / max(self.stats["total_recoveries"], 1)) * 100,
+            "success_rate": (
+                self.stats["successful_recoveries"]
+                / max(self.stats["total_recoveries"], 1)
+            )
+            * 100,
             "by_type": dict(self.stats["by_type"]),
             "by_severity": dict(self.stats["by_severity"]),
             "recent_recoveries": list(self.recovery_history)[-10:],
@@ -151,7 +155,9 @@ class AutoRecoveryEngine:
                 self.consecutive_failures[issue_type] += 1
 
                 # 심각도 결정
-                severity = self._determine_severity(issue_type, self.consecutive_failures[issue_type])
+                severity = self._determine_severity(
+                    issue_type, self.consecutive_failures[issue_type]
+                )
 
                 logger.warning(f"이상 상태 감지: {issue_type} (심각도: {severity})")
 
@@ -239,7 +245,10 @@ class AutoRecoveryEngine:
 
             # systemctl 재시작
             result = subprocess.run(
-                ["sudo", "systemctl", "restart", service_name], capture_output=True, text=True, timeout=30
+                ["sudo", "systemctl", "restart", service_name],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -259,7 +268,12 @@ class AutoRecoveryEngine:
             logger.info(f"컨테이너 재시작 시도: {container_name}")
 
             # Docker 재시작
-            result = subprocess.run(["docker", "restart", container_name], capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                ["docker", "restart", container_name],
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
 
             if result.returncode == 0:
                 logger.info(f"컨테이너 재시작 성공: {container_name}")
@@ -283,7 +297,9 @@ class AutoRecoveryEngine:
             if cache_type == "system":
                 # 시스템 캐시 정리
                 subprocess.run(["sync"], timeout=10)
-                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"], timeout=10)
+                subprocess.run(
+                    ["echo", "3", ">", "/proc/sys/vm/drop_caches"], timeout=10
+                )
 
             elif cache_type == "docker":
                 # Docker 캐시 정리
@@ -296,10 +312,12 @@ class AutoRecoveryEngine:
                     import redis
 
                     r = redis.Redis(
-                        host=os.getenv("REDIS_HOST", "redis-server"), port=int(os.getenv("REDIS_PORT", "6379")), db=0
+                        host=os.getenv("REDIS_HOST", "redis-server"),
+                        port=int(os.getenv("REDIS_PORT", "6379")),
+                        db=0,
                     )
                     r.flushall()
-                except:
+                except Exception:
                     pass
 
             logger.info(f"캐시 정리 완료: {cache_type}")
@@ -341,7 +359,10 @@ class AutoRecoveryEngine:
 
             # NetworkManager 재시작
             result = subprocess.run(
-                ["sudo", "systemctl", "restart", "NetworkManager"], capture_output=True, text=True, timeout=30
+                ["sudo", "systemctl", "restart", "NetworkManager"],
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             if result.returncode == 0:
@@ -366,7 +387,15 @@ class AutoRecoveryEngine:
 
             # 컨테이너 업데이트
             result = subprocess.run(
-                ["docker", "update", "--cpus", cpu_limit, "--memory", memory_limit, container_name],
+                [
+                    "docker",
+                    "update",
+                    "--cpus",
+                    cpu_limit,
+                    "--memory",
+                    memory_limit,
+                    container_name,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -383,7 +412,9 @@ class AutoRecoveryEngine:
         try:
             logger.info(f"커스텀 명령 실행: {command}")
 
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True, timeout=60
+            )
 
             if result.returncode == 0:
                 logger.info(f"명령 실행 성공: {command}")
@@ -405,7 +436,9 @@ class AutoRecoveryEngine:
             if alert_type == "webhook":
                 webhook_url = params.get("webhook_url")
                 if webhook_url:
-                    response = requests.post(webhook_url, json={"message": message}, timeout=10)
+                    response = requests.post(
+                        webhook_url, json={"message": message}, timeout=10
+                    )
                     return response.status_code == 200
 
             elif alert_type == "log":
@@ -425,9 +458,14 @@ class AutoRecoveryEngine:
 
         for service in services:
             try:
-                result = subprocess.run(["systemctl", "is-active", service], capture_output=True, text=True, timeout=5)
+                result = subprocess.run(
+                    ["systemctl", "is-active", service],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
                 health[service] = result.stdout.strip() == "active"
-            except:
+            except Exception:
                 health[service] = False
 
         return health
@@ -447,16 +485,18 @@ class AutoRecoveryEngine:
             # 인터넷 연결 테스트
             response = requests.get("http://8.8.8.8", timeout=5)
             internet_ok = response.status_code == 200
-        except:
+        except Exception:
             internet_ok = False
 
         try:
             # 로컬 서비스 테스트
             from src.config.services import APP_CONFIG
 
-            response = requests.get(f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=5)
+            response = requests.get(
+                f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=5
+            )
             local_service_ok = response.status_code == 200
-        except:
+        except Exception:
             local_service_ok = False
 
         return {"internet_connectivity": internet_ok, "local_service": local_service_ok}
@@ -466,7 +506,9 @@ class AutoRecoveryEngine:
         try:
             from src.config.services import APP_CONFIG
 
-            response = requests.get(f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=10)
+            response = requests.get(
+                f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=10
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -483,7 +525,12 @@ class AutoRecoveryEngine:
     def _check_docker_health(self) -> Dict:
         """Docker 헬스 체크"""
         try:
-            result = subprocess.run(["docker", "ps", "--format", "json"], capture_output=True, text=True, timeout=10)
+            result = subprocess.run(
+                ["docker", "ps", "--format", "json"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
 
             if result.returncode == 0:
                 containers = []
@@ -491,7 +538,11 @@ class AutoRecoveryEngine:
                     if line:
                         containers.append(json.loads(line))
 
-                return {"docker_running": True, "containers": containers, "container_count": len(containers)}
+                return {
+                    "docker_running": True,
+                    "containers": containers,
+                    "container_count": len(containers),
+                }
             else:
                 return {"docker_running": False}
 
@@ -502,7 +553,13 @@ class AutoRecoveryEngine:
         """컨테이너 헬스 검증"""
         try:
             result = subprocess.run(
-                ["docker", "inspect", "--format", "{{.State.Health.Status}}", container_name],
+                [
+                    "docker",
+                    "inspect",
+                    "--format",
+                    "{{.State.Health.Status}}",
+                    container_name,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -514,7 +571,13 @@ class AutoRecoveryEngine:
             else:
                 # Health check가 없는 경우 실행 상태만 확인
                 result = subprocess.run(
-                    ["docker", "inspect", "--format", "{{.State.Running}}", container_name],
+                    [
+                        "docker",
+                        "inspect",
+                        "--format",
+                        "{{.State.Running}}",
+                        container_name,
+                    ],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -530,7 +593,7 @@ class AutoRecoveryEngine:
         try:
             response = requests.get("http://8.8.8.8", timeout=5)
             return response.status_code == 200
-        except:
+        except Exception:
             return False
 
     def _setup_default_rules(self):
@@ -560,19 +623,37 @@ class AutoRecoveryEngine:
             },
             {
                 "name": "application_unresponsive",
-                "condition": {"type": "boolean", "metric": "application.responsive", "value": False},
-                "action": {"type": "restart_container", "params": {"container_name": "fortigate-nextrade"}},
+                "condition": {
+                    "type": "boolean",
+                    "metric": "application.responsive",
+                    "value": False,
+                },
+                "action": {
+                    "type": "restart_container",
+                    "params": {"container_name": "fortigate-nextrade"},
+                },
                 "cooldown": 600,  # 10분
             },
             {
                 "name": "docker_not_running",
-                "condition": {"type": "boolean", "metric": "docker.docker_running", "value": False},
-                "action": {"type": "restart_service", "params": {"service_name": "docker"}},
+                "condition": {
+                    "type": "boolean",
+                    "metric": "docker.docker_running",
+                    "value": False,
+                },
+                "action": {
+                    "type": "restart_service",
+                    "params": {"service_name": "docker"},
+                },
                 "cooldown": 300,
             },
             {
                 "name": "network_connectivity_lost",
-                "condition": {"type": "boolean", "metric": "network.internet_connectivity", "value": False},
+                "condition": {
+                    "type": "boolean",
+                    "metric": "network.internet_connectivity",
+                    "value": False,
+                },
                 "action": {"type": "restart_network", "params": {}},
                 "cooldown": 600,
             },
@@ -647,7 +728,9 @@ class AutoRecoveryEngine:
 
     def _set_cooldown(self, issue_type: str, cooldown_seconds: int):
         """쿨다운 설정"""
-        self.recovery_cooldown[issue_type] = datetime.now() + timedelta(seconds=cooldown_seconds)
+        self.recovery_cooldown[issue_type] = datetime.now() + timedelta(
+            seconds=cooldown_seconds
+        )
 
     def _manage_cooldowns(self):
         """만료된 쿨다운 정리"""
@@ -657,7 +740,9 @@ class AutoRecoveryEngine:
         for key in expired:
             del self.recovery_cooldown[key]
 
-    def _find_recovery_action(self, issue_type: str, severity: str, details: Dict) -> Optional[Dict]:
+    def _find_recovery_action(
+        self, issue_type: str, severity: str, details: Dict
+    ) -> Optional[Dict]:
         """복구 액션 찾기"""
         for rule in self.recovery_rules:
             if rule["name"] == issue_type:

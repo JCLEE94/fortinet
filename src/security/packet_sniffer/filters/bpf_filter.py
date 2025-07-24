@@ -22,7 +22,11 @@ class BPFFilter:
         """BPF 필터 초기화"""
         self.filter_string = ""
         self.compiled_filter = None
-        self.statistics = {"total_packets": 0, "matched_packets": 0, "compilation_errors": 0}
+        self.statistics = {
+            "total_packets": 0,
+            "matched_packets": 0,
+            "compilation_errors": 0,
+        }
 
     def set_filter(self, filter_string: str) -> bool:
         """
@@ -151,7 +155,11 @@ class BPFFilter:
 
         # NOT 연산자 처리
         if len(tokens) >= 2 and tokens[0].lower() == "not":
-            return {"type": "unary_op", "operator": "not", "operand": self._parse_tokens(tokens[1:])}
+            return {
+                "type": "unary_op",
+                "operator": "not",
+                "operand": self._parse_tokens(tokens[1:]),
+            }
 
         # 기본적으로 첫 번째 조건만 사용
         return self._parse_condition(tokens[0])
@@ -219,7 +227,9 @@ class BPFFilter:
             logger.error(f"조건 파싱 오류 ({condition}): {e}")
             return {"type": "always_false"}
 
-    def _evaluate_filter(self, filter_expr: Dict[str, Any], packet_info: Dict[str, Any]) -> bool:
+    def _evaluate_filter(
+        self, filter_expr: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> bool:
         """컴파일된 필터를 패킷 정보에 대해 평가"""
         try:
             expr_type = filter_expr.get("type")
@@ -241,7 +251,9 @@ class BPFFilter:
 
             elif expr_type == "unary_op":
                 operator = filter_expr["operator"]
-                operand_result = self._evaluate_filter(filter_expr["operand"], packet_info)
+                operand_result = self._evaluate_filter(
+                    filter_expr["operand"], packet_info
+                )
 
                 if operator == "not":
                     return not operand_result
@@ -264,9 +276,9 @@ class BPFFilter:
 
             elif expr_type == "net":
                 network = filter_expr["network"]
-                return self._ip_in_network(packet_info.get("src_ip"), network) or self._ip_in_network(
-                    packet_info.get("dst_ip"), network
-                )
+                return self._ip_in_network(
+                    packet_info.get("src_ip"), network
+                ) or self._ip_in_network(packet_info.get("dst_ip"), network)
 
             elif expr_type == "src_net":
                 network = filter_expr["network"]
@@ -297,7 +309,9 @@ class BPFFilter:
                 end_port = filter_expr["end"]
                 src_port = packet_info.get("src_port", 0)
                 dst_port = packet_info.get("dst_port", 0)
-                return (start_port <= src_port <= end_port) or (start_port <= dst_port <= end_port)
+                return (start_port <= src_port <= end_port) or (
+                    start_port <= dst_port <= end_port
+                )
 
             elif expr_type == "protocol":
                 protocol = filter_expr["protocol"]
@@ -383,13 +397,22 @@ class BPFFilter:
         else:
             stats["match_rate"] = 0.0
 
-        stats.update({"filter_string": self.filter_string, "is_compiled": self.compiled_filter is not None})
+        stats.update(
+            {
+                "filter_string": self.filter_string,
+                "is_compiled": self.compiled_filter is not None,
+            }
+        )
 
         return stats
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"total_packets": 0, "matched_packets": 0, "compilation_errors": 0}
+        self.statistics = {
+            "total_packets": 0,
+            "matched_packets": 0,
+            "compilation_errors": 0,
+        }
 
         logger.info("BPF 필터 통계 초기화됨")
 
@@ -425,11 +448,27 @@ class BPFFilter:
     def get_filter_examples(self) -> List[Dict[str, str]]:
         """BPF 필터 예제 반환"""
         return [
-            {"name": "특정 호스트와의 통신", "filter": "host 192.168.1.100", "description": "192.168.1.100과 주고받는 모든 패킷"},
-            {"name": "HTTP 트래픽", "filter": "port 80 or port 443", "description": "웹 트래픽 (HTTP/HTTPS)"},
+            {
+                "name": "특정 호스트와의 통신",
+                "filter": "host 192.168.1.100",
+                "description": "192.168.1.100과 주고받는 모든 패킷",
+            },
+            {
+                "name": "HTTP 트래픽",
+                "filter": "port 80 or port 443",
+                "description": "웹 트래픽 (HTTP/HTTPS)",
+            },
             {"name": "TCP 트래픽만", "filter": "tcp", "description": "TCP 프로토콜 패킷만"},
-            {"name": "특정 서브넷에서 오는 트래픽", "filter": "src net 192.168.0.0/24", "description": "192.168.0.x 네트워크에서 오는 패킷"},
-            {"name": "SSH 접속", "filter": "dst port 22 and tcp", "description": "SSH 서버로의 연결"},
+            {
+                "name": "특정 서브넷에서 오는 트래픽",
+                "filter": "src net 192.168.0.0/24",
+                "description": "192.168.0.x 네트워크에서 오는 패킷",
+            },
+            {
+                "name": "SSH 접속",
+                "filter": "dst port 22 and tcp",
+                "description": "SSH 서버로의 연결",
+            },
             {"name": "DNS 쿼리", "filter": "port 53 and udp", "description": "DNS 조회 패킷"},
             {
                 "name": "사설 네트워크 제외",

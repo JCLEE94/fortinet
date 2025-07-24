@@ -21,10 +21,15 @@ def scrape_itsm_requests():
         scraper = ITSMScraper()
         requests = scraper.get_firewall_requests()
 
-        return jsonify({"status": "success", "requests": requests, "total": len(requests)})
+        return jsonify(
+            {"status": "success", "requests": requests, "total": len(requests)}
+        )
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e), "requests": [], "total": 0}), 500
+        return (
+            jsonify({"status": "error", "message": str(e), "requests": [], "total": 0}),
+            500,
+        )
 
 
 @itsm_api_bp.route("/process-request", methods=["POST"])

@@ -91,7 +91,11 @@ class APIDataCollector:
     @redis_cached(ttl=30, key_prefix="api_data")
     def get_system_status(self) -> Dict[str, Any]:
         """시스템 상태 정보 수집"""
-        status = {"fortigate": None, "fortimanager": None, "timestamp": datetime.now().isoformat()}
+        status = {
+            "fortigate": None,
+            "fortimanager": None,
+            "timestamp": datetime.now().isoformat(),
+        }
 
         # FortiGate 상태
         if self.fortigate_client:
@@ -166,7 +170,9 @@ class APIDataCollector:
                             "name": device.get("name", "Unknown"),
                             "type": "FortiGate (Managed)",
                             "ip": device.get("ip", "N/A"),
-                            "status": "online" if device.get("conn_status") == 1 else "offline",
+                            "status": "online"
+                            if device.get("conn_status") == 1
+                            else "offline",
                             "cpu_usage": 0,
                             "memory_usage": 0,
                             "sessions": 0,
@@ -204,7 +210,9 @@ class APIDataCollector:
                 session_response = self.fortigate_client.get_firewall_sessions()
                 if session_response.success and session_response.data:
                     stats["total_sessions"] = len(session_response.data)
-                    stats["blocked_sessions"] = sum(1 for s in session_response.data if s.get("action") == "deny")
+                    stats["blocked_sessions"] = sum(
+                        1 for s in session_response.data if s.get("action") == "deny"
+                    )
 
             except Exception as e:
                 logger.error(f"트래픽 통계 조회 실패: {str(e)}")
@@ -231,7 +239,9 @@ class APIDataCollector:
                         "type": "warning",
                         "message": "비정상적인 트래픽 패턴 감지",
                         "source": "172.16.0.50",
-                        "timestamp": (datetime.now() - timedelta(minutes=5)).isoformat(),
+                        "timestamp": (
+                            datetime.now() - timedelta(minutes=5)
+                        ).isoformat(),
                     },
                 ]
                 events.extend(sample_events[:limit])

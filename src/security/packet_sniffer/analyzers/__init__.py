@@ -11,4 +11,11 @@ from .network_analyzer import NetworkAnalyzer
 from .protocol_analyzer import ProtocolAnalyzer
 from .tls_analyzer import TlsAnalyzer
 
-__all__ = ["ProtocolAnalyzer", "HttpAnalyzer", "TlsAnalyzer", "DnsAnalyzer", "NetworkAnalyzer", "ApplicationAnalyzer"]
+__all__ = [
+    "ProtocolAnalyzer",
+    "HttpAnalyzer",
+    "TlsAnalyzer",
+    "DnsAnalyzer",
+    "NetworkAnalyzer",
+    "ApplicationAnalyzer",
+]

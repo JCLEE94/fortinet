@@ -84,7 +84,12 @@ class ConnectionPoolManager:
         return self._sessions[identifier]
 
     def _create_session(
-        self, pool_connections: int, pool_maxsize: int, max_retries: int, backoff_factor: float, status_forcelist: list
+        self,
+        pool_connections: int,
+        pool_maxsize: int,
+        max_retries: int,
+        backoff_factor: float,
+        status_forcelist: list,
     ) -> requests.Session:
         """
         새로운 세션 생성 및 구성
@@ -96,11 +101,23 @@ class ConnectionPoolManager:
             total=max_retries,
             backoff_factor=backoff_factor,
             status_forcelist=status_forcelist,
-            allowed_methods=["HEAD", "GET", "PUT", "DELETE", "OPTIONS", "TRACE", "POST"],
+            allowed_methods=[
+                "HEAD",
+                "GET",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "TRACE",
+                "POST",
+            ],
         )
 
         # HTTP 어댑터 설정
-        adapter = HTTPAdapter(pool_connections=pool_connections, pool_maxsize=pool_maxsize, max_retries=retry_strategy)
+        adapter = HTTPAdapter(
+            pool_connections=pool_connections,
+            pool_maxsize=pool_maxsize,
+            max_retries=retry_strategy,
+        )
 
         # 어댑터 마운트
         session.mount("http://", adapter)
@@ -108,7 +125,11 @@ class ConnectionPoolManager:
 
         # 기본 헤더 설정
         session.headers.update(
-            {"User-Agent": "FortiGate-Nextrade/1.0", "Accept": "application/json", "Content-Type": "application/json"}
+            {
+                "User-Agent": "FortiGate-Nextrade/1.0",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
         )
 
         return session
@@ -158,7 +179,11 @@ class ConnectionPoolManager:
                     else 0,
                 }
             else:
-                pool_stats = {"num_connections": 0, "num_requests": 0, "num_connections_dropped": 0}
+                pool_stats = {
+                    "num_connections": 0,
+                    "num_requests": 0,
+                    "num_connections_dropped": 0,
+                }
             stats[identifier] = pool_stats
 
         return stats
@@ -167,7 +192,7 @@ class ConnectionPoolManager:
         """소멸자 - 모든 세션 정리"""
         try:
             self.close_all_sessions()
-        except:
+        except Exception:
             pass
 
 

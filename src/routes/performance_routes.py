@@ -22,7 +22,6 @@ def optimized_response(**kwargs):
 from src.utils.api_utils import get_data_source
 from src.utils.route_helpers import standard_api_response
 from src.utils.security import rate_limit
-
 # from src.utils.performance_cache import get_performance_cache, CacheWarmer  # 제거됨
 from src.utils.unified_cache_manager import get_cache_manager
 from src.utils.unified_logger import get_logger
@@ -87,12 +86,18 @@ def clear_performance_cache():
         return standard_api_response(
             success=True,
             message=f"Cache cleared successfully. {cleared_count} items removed.",
-            data={"namespace": namespace, "cleared_items": cleared_count, "timestamp": datetime.now().isoformat()},
+            data={
+                "namespace": namespace,
+                "cleared_items": cleared_count,
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
     except Exception as e:
         logger.error(f"캐시 삭제 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache clear failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False, message=f"Cache clear failed: {str(e)}", status_code=500
+        )
 
 
 @performance_bp.route("/cache/warmup", methods=["POST"])
@@ -112,12 +117,13 @@ def warmup_performance_cache():
                 else:
                     # 실제 장치 데이터 수집 로직 (간단화)
                     return []
-            except:
+            except Exception:
                 return []
 
         def warm_dashboard_stats():
             try:
-                from src.api.integration.dashboard_collector import DashboardDataCollector
+                from src.api.integration.dashboard_collector import \
+                    DashboardDataCollector
 
                 api_manager, dummy_generator, test_mode = get_data_source()
                 if test_mode:
@@ -125,7 +131,7 @@ def warmup_performance_cache():
                 else:
                     collector = DashboardDataCollector(api_manager)
                     return collector.get_dashboard_stats()
-            except:
+            except Exception:
                 return {}
 
         def warm_monitoring_data():
@@ -138,7 +144,7 @@ def warmup_performance_cache():
                     }
                 else:
                     return {}
-            except:
+            except Exception:
                 return {}
 
         # 예열 작업 추가
@@ -161,7 +167,9 @@ def warmup_performance_cache():
 
     except Exception as e:
         logger.error(f"캐시 예열 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache warming failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False, message=f"Cache warming failed: {str(e)}", status_code=500
+        )
 
 
 @performance_bp.route("/cache/stats", methods=["GET"])
@@ -261,7 +269,11 @@ def get_realtime_monitoring():
 
     except Exception as e:
         logger.error(f"실시간 모니터링 데이터 조회 실패: {e}")
-        return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @performance_bp.route("/monitoring/start", methods=["POST"])
@@ -285,7 +297,9 @@ def start_realtime_monitoring():
     except Exception as e:
         logger.error(f"실시간 모니터링 시작 실패: {e}")
         return standard_api_response(
-            success=False, message=f"Failed to start real-time monitoring: {str(e)}", status_code=500
+            success=False,
+            message=f"Failed to start real-time monitoring: {str(e)}",
+            status_code=500,
         )
 
 
@@ -300,13 +314,18 @@ def stop_realtime_monitoring():
         return standard_api_response(
             success=True,
             message="Real-time monitoring stopped successfully",
-            data={"is_monitoring_active": monitor.is_running, "timestamp": datetime.now().isoformat()},
+            data={
+                "is_monitoring_active": monitor.is_running,
+                "timestamp": datetime.now().isoformat(),
+            },
         )
 
     except Exception as e:
         logger.error(f"실시간 모니터링 중지 실패: {e}")
         return standard_api_response(
-            success=False, message=f"Failed to stop real-time monitoring: {str(e)}", status_code=500
+            success=False,
+            message=f"Failed to stop real-time monitoring: {str(e)}",
+            status_code=500,
         )
 
 
@@ -332,7 +351,11 @@ def get_metric_history(metric_name):
 
     except Exception as e:
         logger.error(f"메트릭 히스토리 조회 실패: {e}")
-        return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @performance_bp.route("/monitoring/alerts/recent", methods=["GET"])
@@ -360,4 +383,8 @@ def get_recent_alerts():
 
     except Exception as e:
         logger.error(f"최근 알림 조회 실패: {e}")
-        return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }

@@ -34,21 +34,37 @@ class PathVisualizer:
                 return None
 
             # 그래프 데이터 구조 초기화
-            graph_data = {"nodes": [], "edges": [], "allowed": path_data.get("allowed", False)}
+            graph_data = {
+                "nodes": [],
+                "edges": [],
+                "allowed": path_data.get("allowed", False),
+            }
 
             # 소스 노드와 목적지 노드 정보 추출
             if len(path_data["path"]) > 0:
                 src_ip = path_data["path"][0]["src_ip"]
-                dst_ip = path_data.get("final_destination", path_data["path"][-1]["dst_ip"])
+                dst_ip = path_data.get(
+                    "final_destination", path_data["path"][-1]["dst_ip"]
+                )
 
                 # 소스 노드 추가
                 graph_data["nodes"].append(
-                    {"id": f"src_{src_ip}", "label": f"Source\n{src_ip}", "type": "host", "ip": src_ip}
+                    {
+                        "id": f"src_{src_ip}",
+                        "label": f"Source\n{src_ip}",
+                        "type": "host",
+                        "ip": src_ip,
+                    }
                 )
 
                 # 목적지 노드 추가
                 graph_data["nodes"].append(
-                    {"id": f"dst_{dst_ip}", "label": f"Destination\n{dst_ip}", "type": "host", "ip": dst_ip}
+                    {
+                        "id": f"dst_{dst_ip}",
+                        "label": f"Destination\n{dst_ip}",
+                        "type": "host",
+                        "ip": dst_ip,
+                    }
                 )
             else:
                 self.logger.warning("경로 데이터가 비어 있습니다.")
@@ -104,7 +120,7 @@ class PathVisualizer:
 
                     graph_data["edges"].append(
                         {
-                            "id": f"edge_final",
+                            "id": "edge_final",
                             "source": fw_node_id,
                             "target": f"dst_{dst_ip}",
                             "policy_id": None,
@@ -260,9 +276,14 @@ class PathVisualizer:
                 "blocked_by": path_data.get("blocked_by"),
                 "summary": {
                     "total_hops": len(path_data.get("path", [])),
-                    "source_ip": path_data["path"][0]["src_ip"] if path_data.get("path") else None,
+                    "source_ip": path_data["path"][0]["src_ip"]
+                    if path_data.get("path")
+                    else None,
                     "destination_ip": path_data.get(
-                        "final_destination", path_data["path"][-1]["dst_ip"] if path_data.get("path") else None
+                        "final_destination",
+                        path_data["path"][-1]["dst_ip"]
+                        if path_data.get("path")
+                        else None,
                     ),
                 },
             }
@@ -271,7 +292,13 @@ class PathVisualizer:
 
         except Exception as e:
             self.logger.error(f"시각화 데이터 생성 중 오류: {str(e)}")
-            return {"error": str(e), "allowed": False, "graph": None, "path_table": [], "detailed_rules": []}
+            return {
+                "error": str(e),
+                "allowed": False,
+                "graph": None,
+                "path_table": [],
+                "detailed_rules": [],
+            }
 
     def visualize_path(self, path_data):
         """

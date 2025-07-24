@@ -33,7 +33,9 @@ class FortigateMonitor:
                 return True
 
             self.is_running = True
-            self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
+            self.monitor_thread = threading.Thread(
+                target=self._monitor_loop, daemon=True
+            )
             self.monitor_thread.start()
 
             logger.info("FortiGate 모니터링 시작됨")
@@ -89,7 +91,9 @@ class FortigateMonitor:
             "running": self.is_running,
             "listeners_count": len(self.listeners),
             "data_cache_size": len(self.data_cache),
-            "thread_alive": self.monitor_thread.is_alive() if self.monitor_thread else False,
+            "thread_alive": self.monitor_thread.is_alive()
+            if self.monitor_thread
+            else False,
         }
 
     def get_real_time_data(self) -> Dict[str, Any]:
@@ -100,10 +104,24 @@ class FortigateMonitor:
 
             return {
                 "timestamp": current_time,
-                "system_info": {"cpu_usage": 25.5, "memory_usage": 45.2, "uptime": 86400, "version": "FortiOS 7.4.0"},
-                "traffic_stats": {"bytes_in": 1024000, "bytes_out": 512000, "packets_in": 1500, "packets_out": 1200},
+                "system_info": {
+                    "cpu_usage": 25.5,
+                    "memory_usage": 45.2,
+                    "uptime": 86400,
+                    "version": "FortiOS 7.4.0",
+                },
+                "traffic_stats": {
+                    "bytes_in": 1024000,
+                    "bytes_out": 512000,
+                    "packets_in": 1500,
+                    "packets_out": 1200,
+                },
                 "connections": {"active": 150, "total": 1500, "ssl_vpn": 25},
-                "security": {"threats_blocked": 5, "ips_attacks": 2, "antivirus_detections": 1},
+                "security": {
+                    "threats_blocked": 5,
+                    "ips_attacks": 2,
+                    "antivirus_detections": 1,
+                },
             }
 
         except Exception as e:

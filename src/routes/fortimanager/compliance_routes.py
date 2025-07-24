@@ -9,7 +9,8 @@ import asyncio
 from flask import Blueprint, jsonify, request
 
 from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-from src.utils.api_utils import get_api_manager, get_data_source, get_dummy_generator, is_test_mode
+from src.utils.api_utils import (get_api_manager, get_data_source,
+                                 get_dummy_generator, is_test_mode)
 from src.utils.security import rate_limit
 from src.utils.unified_cache_manager import cached
 from src.utils.unified_logger import setup_logger
@@ -37,7 +38,9 @@ async def check_compliance():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            compliance_results = dummy_generator.generate_compliance_check(devices, frameworks)
+            compliance_results = dummy_generator.generate_compliance_check(
+                devices, frameworks
+            )
             return jsonify(
                 {
                     "compliance_check": compliance_results,
@@ -96,7 +99,9 @@ async def remediate_violations():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            remediation_results = dummy_generator.generate_remediation_results(violations)
+            remediation_results = dummy_generator.generate_remediation_results(
+                violations
+            )
             return jsonify(
                 {
                     "remediation": remediation_results,
@@ -147,7 +152,14 @@ def get_policy_templates():
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             templates = dummy_generator.generate_policy_templates(category, framework)
-            return jsonify({"templates": templates, "category": category, "framework": framework, "mode": "test"})
+            return jsonify(
+                {
+                    "templates": templates,
+                    "category": category,
+                    "framework": framework,
+                    "mode": "test",
+                }
+            )
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -158,10 +170,17 @@ def get_policy_templates():
         # FortiManager 고급 허브 사용
         hub = FortiManagerAdvancedHub(fm_client)
 
-        templates = hub.policy_orchestrator.get_available_templates(category=category, framework=framework)
+        templates = hub.policy_orchestrator.get_available_templates(
+            category=category, framework=framework
+        )
 
         return jsonify(
-            {"templates": templates or [], "category": category, "framework": framework, "mode": "production"}
+            {
+                "templates": templates or [],
+                "category": category,
+                "framework": framework,
+                "mode": "production",
+            }
         )
 
     except Exception as e:
@@ -177,7 +196,10 @@ async def apply_policy_template():
         data = request.get_json()
 
         if not data:
-            return jsonify({"error": "Template application parameters are required"}), 400
+            return (
+                jsonify({"error": "Template application parameters are required"}),
+                400,
+            )
 
         template_name = data.get("template_name")
         devices = data.get("devices", [])
@@ -213,7 +235,10 @@ async def apply_policy_template():
 
         # 비동기 템플릿 적용
         application_result = await hub.policy_orchestrator.apply_template(
-            template_name=template_name, devices=devices, parameters=parameters, dry_run=dry_run
+            template_name=template_name,
+            devices=devices,
+            parameters=parameters,
+            dry_run=dry_run,
         )
 
         return jsonify(
@@ -244,7 +269,9 @@ def get_compliance_reports():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            reports = dummy_generator.generate_compliance_reports(devices, frameworks, date_range)
+            reports = dummy_generator.generate_compliance_reports(
+                devices, frameworks, date_range
+            )
             return jsonify(
                 {
                     "reports": reports,
@@ -266,7 +293,10 @@ def get_compliance_reports():
         hub = FortiManagerAdvancedHub(fm_client)
 
         reports = hub.compliance_framework.generate_report(
-            devices=devices, frameworks=frameworks, date_range=date_range, report_format=report_format
+            devices=devices,
+            frameworks=frameworks,
+            date_range=date_range,
+            report_format=report_format,
         )
 
         return jsonify(
@@ -330,7 +360,12 @@ def create_scheduled_check():
         auto_remediate = data.get("auto_remediate", False)
 
         if not name or not devices or not frameworks or not schedule:
-            return jsonify({"error": "Name, devices, frameworks, and schedule are required"}), 400
+            return (
+                jsonify(
+                    {"error": "Name, devices, frameworks, and schedule are required"}
+                ),
+                400,
+            )
 
         if is_test_mode():
             schedule_id = f"test_schedule_{hash(name) % 10000}"
@@ -354,7 +389,11 @@ def create_scheduled_check():
         hub = FortiManagerAdvancedHub(fm_client)
 
         schedule_result = hub.compliance_framework.schedule_check(
-            name=name, devices=devices, frameworks=frameworks, schedule=schedule, auto_remediate=auto_remediate
+            name=name,
+            devices=devices,
+            frameworks=frameworks,
+            schedule=schedule,
+            auto_remediate=auto_remediate,
         )
 
         if schedule_result:

@@ -14,27 +14,14 @@ from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
 # 공통 임포트 사용
-from src.utils.common_imports import (
-    Any,
-    Dict,
-    Enum,
-    List,
-    Optional,
-    Tuple,
-    Union,
-    dataclass,
-    datetime,
-    json,
-    requests,
-    time,
-)
-from src.utils.exception_handlers import (
-    FortiGateAPIException,
-    FortiManagerAPIException,
-    NetworkException,
-    comprehensive_exception_handler,
-    safe_execute,
-)
+from src.utils.common_imports import (Any, Dict, Enum, List, Optional, Tuple,
+                                      Union, dataclass, datetime, json,
+                                      requests, time)
+from src.utils.exception_handlers import (FortiGateAPIException,
+                                          FortiManagerAPIException,
+                                          NetworkException,
+                                          comprehensive_exception_handler,
+                                          safe_execute)
 from src.utils.unified_logger import setup_logger as setup_module_logger
 
 from .auth_manager import AuthManager, AuthType, auth_manager
@@ -143,15 +130,21 @@ class UnifiedAPIClient:
         from src.config.services import API_VERSIONS
 
         if self.client_type == ClientType.FORTIGATE:
-            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortigate']}"
+            self.base_url = (
+                f"https://{self.host}:{self.port}{API_VERSIONS['fortigate']}"
+            )
             self.auth_endpoint = "/logincheck"
             self.logout_endpoint = "/logout"
         elif self.client_type == ClientType.FORTIMANAGER:
-            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortimanager']}"
+            self.base_url = (
+                f"https://{self.host}:{self.port}{API_VERSIONS['fortimanager']}"
+            )
             self.auth_endpoint = None  # Uses JSON-RPC for auth
             self.logout_endpoint = None
         elif self.client_type == ClientType.FORTIANALYZER:
-            self.base_url = f"https://{self.host}:{self.port}{API_VERSIONS['fortianalyzer']}"
+            self.base_url = (
+                f"https://{self.host}:{self.port}{API_VERSIONS['fortianalyzer']}"
+            )
             self.auth_endpoint = None
             self.logout_endpoint = None
         elif self.client_type == ClientType.FORTIWEB:
@@ -171,7 +164,9 @@ class UnifiedAPIClient:
         try:
             if self.api_key:
                 auth_type = AuthType.FORTIGATE_API_KEY
-                success, session = self.auth_manager.authenticate(self.host, self.port, auth_type, api_key=self.api_key)
+                success, session = self.auth_manager.authenticate(
+                    self.host, self.port, auth_type, api_key=self.api_key
+                )
             elif self.username and self.password:
                 if self.client_type == ClientType.FORTIMANAGER:
                     auth_type = AuthType.FORTIMANAGER_SESSION
@@ -179,7 +174,11 @@ class UnifiedAPIClient:
                     auth_type = AuthType.FORTIGATE_BASIC
 
                 success, session = self.auth_manager.authenticate(
-                    self.host, self.port, auth_type, username=self.username, password=self.password
+                    self.host,
+                    self.port,
+                    auth_type,
+                    username=self.username,
+                    password=self.password,
                 )
             else:
                 raise ValueError("No authentication credentials provided")
@@ -266,7 +265,11 @@ class UnifiedAPIClient:
         # Ensure authentication
         if not self.session_id:
             if not self.authenticate():
-                return APIResponse(success=False, error="Authentication failed", response_time=time.time() - start_time)
+                return APIResponse(
+                    success=False,
+                    error="Authentication failed",
+                    response_time=time.time() - start_time,
+                )
 
         try:
             # Prepare request
@@ -274,7 +277,9 @@ class UnifiedAPIClient:
             request_headers = self._build_headers(headers)
 
             # Make request with retry logic
-            response = self._make_request_with_retry(method, url, data, params, request_headers)
+            response = self._make_request_with_retry(
+                method, url, data, params, request_headers
+            )
 
             response_time = time.time() - start_time
             self._stats["requests_made"] += 1
@@ -284,7 +289,12 @@ class UnifiedAPIClient:
             api_response = self._parse_response(response, response_time)
 
             # Cache successful GET responses
-            if self.cache_enabled and cache_key and api_response.success and method.upper() == "GET":
+            if (
+                self.cache_enabled
+                and cache_key
+                and api_response.success
+                and method.upper() == "GET"
+            ):
                 ttl = cache_ttl or self.config_manager.app.cache_default_ttl
                 self.cache_manager.set(cache_key, api_response, ttl)
 
@@ -292,7 +302,9 @@ class UnifiedAPIClient:
 
         except Exception as e:
             self._stats["requests_failed"] += 1
-            return APIResponse(success=False, error=str(e), response_time=time.time() - start_time)
+            return APIResponse(
+                success=False, error=str(e), response_time=time.time() - start_time
+            )
 
     def _make_request_with_retry(
         self,
@@ -322,25 +334,43 @@ class UnifiedAPIClient:
             try:
                 if self.client_type == ClientType.FORTIMANAGER:
                     # FortiManager uses JSON-RPC
-                    response = self._session.post(url, json=data, params=params, headers=headers, timeout=self.timeout)
+                    response = self._session.post(
+                        url,
+                        json=data,
+                        params=params,
+                        headers=headers,
+                        timeout=self.timeout,
+                    )
                 else:
                     # Standard REST API
                     response = self._session.request(
-                        method, url, json=data, params=params, headers=headers, timeout=self.timeout
+                        method,
+                        url,
+                        json=data,
+                        params=params,
+                        headers=headers,
+                        timeout=self.timeout,
                     )
 
                 # Check if we need to re-authenticate
                 if response.status_code == 401:
                     if attempt < max_retries:
-                        print(f"Authentication expired, retrying... (attempt {attempt + 1})")
+                        print(
+                            f"Authentication expired, retrying... (attempt {attempt + 1})"
+                        )
                         if self.authenticate():
                             continue
 
                 return response
 
-            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as e:
                 if attempt < max_retries:
-                    print(f"Request failed, retrying in {retry_delay}s... (attempt {attempt + 1})")
+                    print(
+                        f"Request failed, retrying in {retry_delay}s... (attempt {attempt + 1})"
+                    )
                     time.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff
                 else:
@@ -364,7 +394,9 @@ class UnifiedAPIClient:
         endpoint = endpoint.lstrip("/")
         return f"{self.base_url}/{endpoint}"
 
-    def _build_headers(self, additional_headers: Optional[Dict] = None) -> Dict[str, str]:
+    def _build_headers(
+        self, additional_headers: Optional[Dict] = None
+    ) -> Dict[str, str]:
         """
         Build request headers.
 
@@ -391,7 +423,9 @@ class UnifiedAPIClient:
 
         return headers
 
-    def _parse_response(self, response: requests.Response, response_time: float) -> APIResponse:
+    def _parse_response(
+        self, response: requests.Response, response_time: float
+    ) -> APIResponse:
         """
         Parse HTTP response into APIResponse.
 
@@ -409,8 +443,10 @@ class UnifiedAPIClient:
                 try:
                     error_data = response.json()
                     if isinstance(error_data, dict):
-                        error_msg = error_data.get("error", error_data.get("message", error_msg))
-                except:
+                        error_msg = error_data.get(
+                            "error", error_data.get("message", error_msg)
+                        )
+                except Exception:
                     error_msg = response.text or error_msg
 
                 return APIResponse(
@@ -429,7 +465,9 @@ class UnifiedAPIClient:
                 data = response.json()
 
                 # Handle FortiManager JSON-RPC responses
-                if self.client_type == ClientType.FORTIMANAGER and isinstance(data, dict):
+                if self.client_type == ClientType.FORTIMANAGER and isinstance(
+                    data, dict
+                ):
                     if "result" in data:
                         result = data["result"]
                         if isinstance(result, list) and len(result) > 0:
@@ -463,7 +501,9 @@ class UnifiedAPIClient:
                 response_time=response_time,
             )
 
-    def _generate_cache_key(self, method: str, endpoint: str, params: Optional[Dict] = None) -> str:
+    def _generate_cache_key(
+        self, method: str, endpoint: str, params: Optional[Dict] = None
+    ) -> str:
         """
         Generate cache key for request.
 
@@ -475,7 +515,13 @@ class UnifiedAPIClient:
         Returns:
             Cache key
         """
-        key_parts = [self.client_type.value, self.host, str(self.port), method.upper(), endpoint]
+        key_parts = [
+            self.client_type.value,
+            self.host,
+            str(self.port),
+            method.upper(),
+            endpoint,
+        ]
 
         if params:
             sorted_params = sorted(params.items())
@@ -492,7 +538,9 @@ class UnifiedAPIClient:
         """
         avg_response_time = 0.0
         if self._stats["requests_made"] > 0:
-            avg_response_time = self._stats["total_response_time"] / self._stats["requests_made"]
+            avg_response_time = (
+                self._stats["total_response_time"] / self._stats["requests_made"]
+            )
 
         cache_hit_rate = 0.0
         total_requests = self._stats["requests_made"] + self._stats["requests_cached"]
@@ -522,7 +570,9 @@ class UnifiedAPIClient:
         if self.cache_enabled:
             cache_pattern = f"{self.client_type.value}:{self.host}:{self.port}:*"
             if pattern != "*":
-                cache_pattern = f"{self.client_type.value}:{self.host}:{self.port}:{pattern}"
+                cache_pattern = (
+                    f"{self.client_type.value}:{self.host}:{self.port}:{pattern}"
+                )
 
             keys = self.cache_manager.keys(cache_pattern)
             for key in keys:
@@ -543,7 +593,10 @@ class UnifiedAPIClient:
             data = {"method": "get", "params": [{"url": "/sys/status"}], "id": 1}
             return self.request("POST", "", data=data)
         else:
-            return APIResponse(success=False, error=f"Health check not implemented for {self.client_type.value}")
+            return APIResponse(
+                success=False,
+                error=f"Health check not implemented for {self.client_type.value}",
+            )
 
     def __enter__(self):
         """Context manager entry."""
@@ -558,7 +611,7 @@ class UnifiedAPIClient:
         """Destructor."""
         try:
             self.logout()
-        except:
+        except Exception:
             pass
 
 
@@ -568,12 +621,16 @@ def create_fortigate_client(host: str, port: int = 443, **kwargs) -> UnifiedAPIC
     return UnifiedAPIClient(ClientType.FORTIGATE, host, port, **kwargs)
 
 
-def create_fortimanager_client(host: str, port: int = 443, **kwargs) -> UnifiedAPIClient:
+def create_fortimanager_client(
+    host: str, port: int = 443, **kwargs
+) -> UnifiedAPIClient:
     """Create FortiManager API client."""
     return UnifiedAPIClient(ClientType.FORTIMANAGER, host, port, **kwargs)
 
 
-def create_fortianalyzer_client(host: str, port: int = 443, **kwargs) -> UnifiedAPIClient:
+def create_fortianalyzer_client(
+    host: str, port: int = 443, **kwargs
+) -> UnifiedAPIClient:
     """Create FortiAnalyzer API client."""
     return UnifiedAPIClient(ClientType.FORTIANALYZER, host, port, **kwargs)
 

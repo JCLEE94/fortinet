@@ -87,7 +87,11 @@ class ITSMScraper:
                 return False
 
             # 로그인 폼 데이터 준비 (실제 구현 시 사이트 구조에 맞게 수정 필요)
-            login_data = {"username": self.username, "password": self.password, "login_type": "normal"}
+            login_data = {
+                "username": self.username,
+                "password": self.password,
+                "login_type": "normal",
+            }
 
             # 로그인 수행 (더미 - 실제 구현 시 사이트 구조 분석 필요)
             login_response = self.session.post(login_url, data=login_data)
@@ -117,7 +121,12 @@ class ITSMScraper:
             # 나의 요청 목록 API 호출
             list_url = f"{self.base_url}/api/egene/list/LSTMYREQ00001.html"
 
-            params = {"limit": limit, "offset": 0, "search_type": "all", "search_keyword": "방화벽"}
+            params = {
+                "limit": limit,
+                "offset": 0,
+                "search_type": "all",
+                "search_keyword": "방화벽",
+            }
 
             response = self.session.get(list_url, params=params)
 
@@ -157,7 +166,11 @@ class ITSMScraper:
             # 폼 상세 정보 조회
             detail_url = f"{self.base_url}/api/egene/form.html"
 
-            params = {"form_id": "FRM004812", "entity_id": "SRM", "request_id": request_id}
+            params = {
+                "form_id": "FRM004812",
+                "entity_id": "SRM",
+                "request_id": request_id,
+            }
 
             response = self.session.get(detail_url, params=params)
 
@@ -228,7 +241,10 @@ class ITSMScraper:
             category = request.get("category", "").lower()
 
             # 방화벽 관련 키워드 검사
-            is_firewall_request = any(keyword in title or keyword in category for keyword in self.firewall_keywords)
+            is_firewall_request = any(
+                keyword in title or keyword in category
+                for keyword in self.firewall_keywords
+            )
 
             if is_firewall_request:
                 request["request_type"] = self._classify_request_type(request)
@@ -296,7 +312,12 @@ class ITSMScraper:
         """HTML 형태의 요청 상세 파싱"""
         soup = BeautifulSoup(html, "html.parser")
 
-        detail = {"request_id": request_id, "title": "", "description": "", "form_data": {}}
+        detail = {
+            "request_id": request_id,
+            "title": "",
+            "description": "",
+            "form_data": {},
+        }
 
         # 폼 필드 추출 (실제 구조에 맞게 수정 필요)
         input_fields = soup.find_all(["input", "textarea", "select"])
@@ -401,7 +422,12 @@ class ITSMScraper:
 
         return dummy_details.get(
             request_id,
-            {"request_id": request_id, "title": f"요청 {request_id}", "description": "상세 정보 없음", "form_data": {}},
+            {
+                "request_id": request_id,
+                "title": f"요청 {request_id}",
+                "description": "상세 정보 없음",
+                "form_data": {},
+            },
         )
 
     def monitor_new_requests(self, callback_func, interval: int = 300):
@@ -424,7 +450,10 @@ class ITSMScraper:
                 new_requests = [
                     req
                     for req in current_requests
-                    if datetime.strptime(req.get("request_date", ""), "%Y-%m-%d %H:%M:%S") > last_check_time
+                    if datetime.strptime(
+                        req.get("request_date", ""), "%Y-%m-%d %H:%M:%S"
+                    )
+                    > last_check_time
                 ]
 
                 if new_requests:

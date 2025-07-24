@@ -14,7 +14,11 @@ DEVICE_TYPE_ICONS = {
         "class": "firewall",
         "display_name": os.getenv("DEVICE_TYPE_FIREWALL_NAME", "방화벽"),
     },
-    "router": {"icon": "fas fa-route", "class": "router", "display_name": os.getenv("DEVICE_TYPE_ROUTER_NAME", "라우터")},
+    "router": {
+        "icon": "fas fa-route",
+        "class": "router",
+        "display_name": os.getenv("DEVICE_TYPE_ROUTER_NAME", "라우터"),
+    },
     "switch": {
         "icon": "fas fa-network-wired",
         "class": "switch",
@@ -25,7 +29,11 @@ DEVICE_TYPE_ICONS = {
         "class": "client",
         "display_name": os.getenv("DEVICE_TYPE_CLIENT_NAME", "클라이언트"),
     },
-    "server": {"icon": "fas fa-server", "class": "server", "display_name": os.getenv("DEVICE_TYPE_SERVER_NAME", "서버")},
+    "server": {
+        "icon": "fas fa-server",
+        "class": "server",
+        "display_name": os.getenv("DEVICE_TYPE_SERVER_NAME", "서버"),
+    },
     "workstation": {
         "icon": "fas fa-laptop",
         "class": "client",
@@ -75,23 +83,63 @@ DATATABLE_LANGUAGE = {
 # 장치 필터 설정
 DEVICE_FILTERS = [
     {"key": "all", "label": os.getenv("FILTER_ALL_TEXT", "모든 장치"), "active": True},
-    {"key": "firewall", "label": os.getenv("FILTER_FIREWALL_TEXT", "방화벽"), "active": False},
+    {
+        "key": "firewall",
+        "label": os.getenv("FILTER_FIREWALL_TEXT", "방화벽"),
+        "active": False,
+    },
     {"key": "router", "label": os.getenv("FILTER_ROUTER_TEXT", "라우터"), "active": False},
     {"key": "switch", "label": os.getenv("FILTER_SWITCH_TEXT", "스위치"), "active": False},
-    {"key": "client", "label": os.getenv("FILTER_CLIENT_TEXT", "클라이언트"), "active": False},
+    {
+        "key": "client",
+        "label": os.getenv("FILTER_CLIENT_TEXT", "클라이언트"),
+        "active": False,
+    },
     {"key": "server", "label": os.getenv("FILTER_SERVER_TEXT", "서버"), "active": False},
 ]
 
 # 테이블 컬럼 설정
 TABLE_COLUMNS = {
-    "type": {"header": os.getenv("COLUMN_TYPE_HEADER", "유형"), "class": "table-col-xs", "sortable": True},
-    "name": {"header": os.getenv("COLUMN_NAME_HEADER", "장치 이름"), "class": "table-col-md", "sortable": True},
-    "ip": {"header": os.getenv("COLUMN_IP_HEADER", "IP 주소"), "class": "table-col-sm", "sortable": True},
-    "mac": {"header": os.getenv("COLUMN_MAC_HEADER", "MAC 주소"), "class": "table-col-sm", "sortable": False},
-    "status": {"header": os.getenv("COLUMN_STATUS_HEADER", "상태"), "class": "table-col-xs", "sortable": True},
-    "zone": {"header": os.getenv("COLUMN_ZONE_HEADER", "Zone"), "class": "table-col-xs", "sortable": True},
-    "last_seen": {"header": os.getenv("COLUMN_LAST_SEEN_HEADER", "마지막 활동"), "class": "table-col-sm", "sortable": True},
-    "actions": {"header": os.getenv("COLUMN_ACTIONS_HEADER", "액션"), "class": "table-col-xs", "sortable": False},
+    "type": {
+        "header": os.getenv("COLUMN_TYPE_HEADER", "유형"),
+        "class": "table-col-xs",
+        "sortable": True,
+    },
+    "name": {
+        "header": os.getenv("COLUMN_NAME_HEADER", "장치 이름"),
+        "class": "table-col-md",
+        "sortable": True,
+    },
+    "ip": {
+        "header": os.getenv("COLUMN_IP_HEADER", "IP 주소"),
+        "class": "table-col-sm",
+        "sortable": True,
+    },
+    "mac": {
+        "header": os.getenv("COLUMN_MAC_HEADER", "MAC 주소"),
+        "class": "table-col-sm",
+        "sortable": False,
+    },
+    "status": {
+        "header": os.getenv("COLUMN_STATUS_HEADER", "상태"),
+        "class": "table-col-xs",
+        "sortable": True,
+    },
+    "zone": {
+        "header": os.getenv("COLUMN_ZONE_HEADER", "Zone"),
+        "class": "table-col-xs",
+        "sortable": True,
+    },
+    "last_seen": {
+        "header": os.getenv("COLUMN_LAST_SEEN_HEADER", "마지막 활동"),
+        "class": "table-col-sm",
+        "sortable": True,
+    },
+    "actions": {
+        "header": os.getenv("COLUMN_ACTIONS_HEADER", "액션"),
+        "class": "table-col-xs",
+        "sortable": False,
+    },
 }
 
 # 모달 설정
@@ -123,7 +171,9 @@ SEARCH_CONFIG = {
 
 # 테스트 모드 설정
 TEST_MODE_CONFIG = {
-    "banner_message": os.getenv("TEST_MODE_BANNER_MESSAGE", "현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다."),
+    "banner_message": os.getenv(
+        "TEST_MODE_BANNER_MESSAGE", "현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다."
+    ),
     "badge_text": os.getenv("TEST_MODE_BADGE_TEXT", "테스트"),
     "device_suffix": os.getenv("TEST_MODE_DEVICE_SUFFIX", " (테스트 데이터)"),
 }
@@ -138,8 +188,11 @@ API_ENDPOINTS = {
 # 성능 설정
 PERFORMANCE_CONFIG = {
     "datatable_page_length": int(os.getenv("DATATABLE_PAGE_LENGTH", "25")),
-    "auto_refresh_interval": int(os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")),  # 밀리초
-    "auto_refresh_enabled": os.getenv("DEVICE_AUTO_REFRESH_ENABLED", "false").lower() == "true",
+    "auto_refresh_interval": int(
+        os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")
+    ),  # 밀리초
+    "auto_refresh_enabled": os.getenv("DEVICE_AUTO_REFRESH_ENABLED", "false").lower()
+    == "true",
 }
 
 
@@ -163,7 +216,12 @@ def get_device_config() -> Dict[str, Any]:
 def get_device_type_icon(device_type: str) -> Dict[str, str]:
     """장치 타입에 따른 아이콘 정보 반환"""
     return DEVICE_TYPE_ICONS.get(
-        device_type, {"icon": "fas fa-question-circle", "class": "unknown", "display_name": "알 수 없음"}
+        device_type,
+        {
+            "icon": "fas fa-question-circle",
+            "class": "unknown",
+            "display_name": "알 수 없음",
+        },
     )
 
 

@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SecurityScanner:
 
     def __init__(self):
         # 보안 패턴 정의
-        self.vulnerability_patterns = {
+        self.vulnerability_patterns: Dict[str, Dict[str, Any]] = {
             "hardcoded_secrets": {
                 "patterns": [
                     r"password\s*=\s*['\"][^'\"]{3,}['\"]",
@@ -83,14 +83,24 @@ class SecurityScanner:
                 "cwe_id": "CWE-22",
             },
             "weak_crypto": {
-                "patterns": [r"hashlib\.md5\(", r"hashlib\.sha1\(", r"random\.random\(", r"random\.choice\("],
+                "patterns": [
+                    r"hashlib\.md5\(",
+                    r"hashlib\.sha1\(",
+                    r"random\.random\(",
+                    r"random\.choice\(",
+                ],
                 "severity": "medium",
                 "description": "약한 암호화 알고리즘",
                 "recommendation": "강력한 암호화 알고리즘을 사용하세요 (SHA-256, bcrypt 등)",
                 "cwe_id": "CWE-327",
             },
             "unsafe_deserialization": {
-                "patterns": [r"pickle\.loads\(", r"pickle\.load\(", r"yaml\.load\(", r"eval\s*\("],
+                "patterns": [
+                    r"pickle\.loads\(",
+                    r"pickle\.load\(",
+                    r"yaml\.load\(",
+                    r"eval\s*\(",
+                ],
                 "severity": "high",
                 "description": "안전하지 않은 역직렬화",
                 "recommendation": "안전한 역직렬화 방법을 사용하세요",
@@ -131,7 +141,10 @@ class SecurityScanner:
                     file_path = os.path.join(root, file)
 
                     # 제외 패턴 확인
-                    if any(re.search(pattern, file_path) for pattern in self.exclude_patterns):
+                    if any(
+                        re.search(pattern, file_path)
+                        for pattern in self.exclude_patterns
+                    ):
                         continue
 
                     self.scan_file(file_path)
@@ -150,15 +163,23 @@ class SecurityScanner:
             # 각 취약점 카테고리별로 검사
             for category, config in self.vulnerability_patterns.items():
                 for pattern in config["patterns"]:
-                    matches = re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE)
+                    matches = re.finditer(
+                        pattern, content, re.IGNORECASE | re.MULTILINE
+                    )
 
                     for match in matches:
                         line_num = content[: match.start()].count("\n") + 1
-                        line_content = lines[line_num - 1].strip() if line_num <= len(lines) else ""
+                        line_content = (
+                            lines[line_num - 1].strip()
+                            if line_num <= len(lines)
+                            else ""
+                        )
 
                         # 코드 스니펫 생성 (전후 2줄 포함)
                         snippet_lines = []
-                        for i in range(max(0, line_num - 2), min(len(lines), line_num + 2)):
+                        for i in range(
+                            max(0, line_num - 2), min(len(lines), line_num + 2)
+                        ):
                             prefix = ">>> " if i == line_num - 1 else "    "
                             snippet_lines.append(f"{prefix}{lines[i]}")
 
@@ -181,7 +202,9 @@ class SecurityScanner:
 
         return vulnerabilities
 
-    def analyze_dependencies(self, requirements_file: str) -> List[SecurityVulnerability]:
+    def analyze_dependencies(
+        self, requirements_file: str
+    ) -> List[SecurityVulnerability]:
         """의존성 보안 분석"""
         vulnerabilities = []
 
@@ -234,7 +257,7 @@ class SecurityScanner:
 
         return vulnerabilities
 
-    def generate_report(self, output_file: str = None) -> Dict[str, Any]:
+    def generate_report(self, output_file: Optional[str] = None) -> Dict[str, Any]:
         """보안 스캔 보고서 생성"""
         # 심각도별 분류
         severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
@@ -323,7 +346,9 @@ class SecurityScanner:
         return specific_recommendations + recommendations
 
 
-def run_security_scan(directory: str, output_file: str = None) -> Dict[str, Any]:
+def run_security_scan(
+    directory: str, output_file: Optional[str] = None
+) -> Dict[str, Any]:
     """보안 스캔 실행"""
     scanner = SecurityScanner()
 
@@ -344,7 +369,9 @@ def run_security_scan(directory: str, output_file: str = None) -> Dict[str, Any]
     # 보고서 생성
     report = scanner.generate_report(output_file)
 
-    logger.info(f"Security scan completed. Found {len(vulnerabilities)} vulnerabilities")
+    logger.info(
+        f"Security scan completed. Found {len(vulnerabilities)} vulnerabilities"
+    )
 
     return report
 

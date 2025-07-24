@@ -33,7 +33,7 @@ try:
         headers={"Content-Type": "application/json"},
         json={"id": 1, "method": "get", "params": []},
         verify=False,
-        timeout=5
+        timeout=5,
     )
     print(f"JSON-RPC 응답: {response.status_code}")
     print(f"응답 내용: {response.text[:200]}")
@@ -42,32 +42,20 @@ except Exception as e:
 
 # 3. API 키 인증 테스트
 print("\n3. API 키 인증 확인")
-headers = {
-    "Content-Type": "application/json",
-    "X-API-Key": API_KEY
-}
+headers = {"Content-Type": "application/json", "X-API-Key": API_KEY}
 
-test_request = {
-    "id": 1,
-    "method": "get",
-    "params": [{"url": "/sys/status"}]
-}
+test_request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
 
 try:
-    response = requests.post(
-        f"{BASE_URL}/jsonrpc",
-        headers=headers,
-        json=test_request,
-        verify=False
-    )
-    
+    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_request, verify=False)
+
     result = response.json()
     code = result['result'][0]['status']['code']
     message = result['result'][0]['status']['message']
-    
+
     print(f"응답 코드: {code}")
     print(f"메시지: {message}")
-    
+
     if code == -11:
         print("\n⚠️  API 키는 유효하지만 권한이 없습니다.")
         print("필요한 설정:")
@@ -78,11 +66,11 @@ try:
         print("\n✅ API 접근 성공!")
     else:
         print(f"\n❌ 다른 오류: {code}")
-        
+
 except Exception as e:
     print(f"예외: {e}")
 
-print("\n" + "-"*60)
+print("\n" + "-" * 60)
 print("현재 설정된 권한:")
 print("- user_type: api ✅")
 print("- profileid: Super_User ✅")

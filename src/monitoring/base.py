@@ -17,7 +17,9 @@ from typing import Any, Callable, Dict, List, Optional
 class MonitoringBase(ABC):
     """모든 모니터링 모듈의 기반 클래스"""
 
-    def __init__(self, name: str, collection_interval: float = 5.0, max_history: int = 1000):
+    def __init__(
+        self, name: str, collection_interval: float = 5.0, max_history: int = 1000
+    ):
         """
         Args:
             name: 모니터링 모듈 이름
@@ -70,7 +72,11 @@ class MonitoringBase(ABC):
                 self._stop_event.clear()
                 self._pause_event.clear()
 
-                self._thread = threading.Thread(target=self._monitoring_loop, name=f"{self.name}-monitor", daemon=True)
+                self._thread = threading.Thread(
+                    target=self._monitoring_loop,
+                    name=f"{self.name}-monitor",
+                    daemon=True,
+                )
                 self._thread.start()
 
                 self.stats["start_time"] = datetime.now().isoformat()
@@ -177,7 +183,8 @@ class MonitoringBase(ABC):
             return [
                 data
                 for data in self.data_history
-                if "timestamp" in data and datetime.fromisoformat(data["timestamp"]) > cutoff
+                if "timestamp" in data
+                and datetime.fromisoformat(data["timestamp"]) > cutoff
             ]
 
     def get_statistics(self) -> Dict:
@@ -186,8 +193,12 @@ class MonitoringBase(ABC):
             stats = self.stats.copy()
 
             if stats["total_collections"] > 0:
-                stats["success_rate"] = stats["successful_collections"] / stats["total_collections"] * 100
-                stats["error_rate"] = stats["failed_collections"] / stats["total_collections"] * 100
+                stats["success_rate"] = (
+                    stats["successful_collections"] / stats["total_collections"] * 100
+                )
+                stats["error_rate"] = (
+                    stats["failed_collections"] / stats["total_collections"] * 100
+                )
             else:
                 stats["success_rate"] = 0.0
                 stats["error_rate"] = 0.0
@@ -278,7 +289,11 @@ class MonitoringBase(ABC):
 
             except Exception as e:
                 self.error_count += 1
-                self.last_error = {"timestamp": datetime.now().isoformat(), "error": str(e), "type": type(e).__name__}
+                self.last_error = {
+                    "timestamp": datetime.now().isoformat(),
+                    "error": str(e),
+                    "type": type(e).__name__,
+                }
 
                 self.logger.error(f"{self.name} 모니터링 루프 오류: {e}")
                 self._update_stats(False)
@@ -299,9 +314,13 @@ class MonitoringBase(ABC):
 
                 # 평균 수집 시간 계산
                 total_time = (
-                    self.stats["average_collection_time"] * (self.stats["successful_collections"] - 1) + collection_time
+                    self.stats["average_collection_time"]
+                    * (self.stats["successful_collections"] - 1)
+                    + collection_time
                 )
-                self.stats["average_collection_time"] = total_time / self.stats["successful_collections"]
+                self.stats["average_collection_time"] = (
+                    total_time / self.stats["successful_collections"]
+                )
             else:
                 self.stats["failed_collections"] += 1
 
@@ -312,7 +331,14 @@ class MonitoringBase(ABC):
 
             for listener in self.listeners:
                 try:
-                    listener(event_type, {"source": self.name, "data": data, "timestamp": datetime.now().isoformat()})
+                    listener(
+                        event_type,
+                        {
+                            "source": self.name,
+                            "data": data,
+                            "timestamp": datetime.now().isoformat(),
+                        },
+                    )
                 except Exception as e:
                     self.logger.error(f"{self.name} 리스너 호출 실패: {e}")
                     listeners_to_remove.append(listener)
@@ -360,7 +386,11 @@ class HealthCheckMixin:
 
     def get_health(self) -> Dict:
         """헬스 상태 조회"""
-        return {"status": self.health_status, "details": self.health_details, "timestamp": datetime.now().isoformat()}
+        return {
+            "status": self.health_status,
+            "details": self.health_details,
+            "timestamp": datetime.now().isoformat(),
+        }
 
     def _update_health(self, status: str, details: Dict = None):
         """헬스 상태 업데이트"""
@@ -416,7 +446,11 @@ class ThresholdMixin:
         """임계값 위반 히스토리 조회"""
         cutoff = datetime.now() - timedelta(hours=hours)
 
-        return [v for v in self.threshold_violations if datetime.fromisoformat(v["timestamp"]) > cutoff]
+        return [
+            v
+            for v in self.threshold_violations
+            if datetime.fromisoformat(v["timestamp"]) > cutoff
+        ]
 
 
 # 전역 모니터링 레지스트리

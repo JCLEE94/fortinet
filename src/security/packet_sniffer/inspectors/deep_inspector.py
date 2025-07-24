@@ -23,7 +23,11 @@ class DeepInspector:
         """딥 패킷 검사 초기화"""
         self.suspicious_patterns = self._load_suspicious_patterns()
         self.protocol_signatures = self._load_protocol_signatures()
-        self.statistics = {"inspected_packets": 0, "threats_detected": 0, "last_inspection": None}
+        self.statistics = {
+            "inspected_packets": 0,
+            "threats_detected": 0,
+            "last_inspection": None,
+        }
 
     def inspect_packet(self, packet: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -55,20 +59,36 @@ class DeepInspector:
             if isinstance(payload, str):
                 try:
                     payload = payload.encode("utf-8")
-                except:
+                except Exception:
                     payload = b""
 
             # 프로토콜별 심층 분석
             if protocol == "HTTP":
-                inspection_result["protocol_analysis"] = self._analyze_http_packet(packet, payload)
-            elif protocol == "TCP" and (packet.get("dst_port") == 443 or packet.get("src_port") == 443):
-                inspection_result["protocol_analysis"] = self._analyze_tls_packet(packet, payload)
-            elif protocol == "UDP" and (packet.get("dst_port") == 53 or packet.get("src_port") == 53):
-                inspection_result["protocol_analysis"] = self._analyze_dns_packet(packet, payload)
+                inspection_result["protocol_analysis"] = self._analyze_http_packet(
+                    packet, payload
+                )
+            elif protocol == "TCP" and (
+                packet.get("dst_port") == 443 or packet.get("src_port") == 443
+            ):
+                inspection_result["protocol_analysis"] = self._analyze_tls_packet(
+                    packet, payload
+                )
+            elif protocol == "UDP" and (
+                packet.get("dst_port") == 53 or packet.get("src_port") == 53
+            ):
+                inspection_result["protocol_analysis"] = self._analyze_dns_packet(
+                    packet, payload
+                )
             elif protocol == "ICMP":
-                inspection_result["protocol_analysis"] = self._analyze_icmp_packet(packet, payload)
-            elif protocol == "TCP" and (packet.get("dst_port") == 22 or packet.get("src_port") == 22):
-                inspection_result["protocol_analysis"] = self._analyze_ssh_packet(packet, payload)
+                inspection_result["protocol_analysis"] = self._analyze_icmp_packet(
+                    packet, payload
+                )
+            elif protocol == "TCP" and (
+                packet.get("dst_port") == 22 or packet.get("src_port") == 22
+            ):
+                inspection_result["protocol_analysis"] = self._analyze_ssh_packet(
+                    packet, payload
+                )
 
             # 보안 위협 탐지
             threats = self._detect_security_threats(packet, payload)
@@ -97,9 +117,14 @@ class DeepInspector:
 
         except Exception as e:
             logger.error(f"딥 패킷 검사 오류: {e}")
-            return {"error": str(e), "timestamp": packet.get("timestamp", datetime.now().isoformat())}
+            return {
+                "error": str(e),
+                "timestamp": packet.get("timestamp", datetime.now().isoformat()),
+            }
 
-    def _analyze_http_packet(self, packet: Dict[str, Any], payload: bytes) -> Dict[str, Any]:
+    def _analyze_http_packet(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> Dict[str, Any]:
         """HTTP 패킷 심층 분석"""
         try:
             payload_str = payload.decode("utf-8", errors="ignore")
@@ -118,7 +143,9 @@ class DeepInspector:
             }
 
             # HTTP 요청 분석
-            if payload_str.startswith(("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")):
+            if payload_str.startswith(
+                ("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
+            ):
                 lines = payload_str.split("\r\n")
                 if lines:
                     # 첫 번째 줄에서 메서드와 URL 추출
@@ -141,7 +168,9 @@ class DeepInspector:
 
                             # 의심스러운 헤더 탐지
                             if self._is_suspicious_header(header, value):
-                                analysis["suspicious_headers"].append({"header": header, "value": value})
+                                analysis["suspicious_headers"].append(
+                                    {"header": header, "value": value}
+                                )
 
             # HTTP 응답 분석
             elif payload_str.startswith("HTTP/"):
@@ -180,7 +209,11 @@ class DeepInspector:
                         break
 
                 # XSS 탐지
-                xss_patterns = [r"<script.*?>.*?</script>", r"javascript:", r"on(load|error|click|mouseover)\s*="]
+                xss_patterns = [
+                    r"<script.*?>.*?</script>",
+                    r"javascript:",
+                    r"on(load|error|click|mouseover)\s*=",
+                ]
                 for pattern in xss_patterns:
                     if re.search(pattern, url, re.IGNORECASE):
                         analysis["xss_attempt"] = True
@@ -196,7 +229,9 @@ class DeepInspector:
             logger.error(f"HTTP 패킷 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_tls_packet(self, packet: Dict[str, Any], payload: bytes) -> Dict[str, Any]:
+    def _analyze_tls_packet(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> Dict[str, Any]:
         """TLS/SSL 패킷 심층 분석"""
         try:
             analysis = {
@@ -228,7 +263,9 @@ class DeepInspector:
                     0x0304: "TLS 1.3",
                     0x0300: "SSL 3.0",
                 }
-                analysis["tls_version"] = version_map.get(version, f"Unknown (0x{version:04x})")
+                analysis["tls_version"] = version_map.get(
+                    version, f"Unknown (0x{version:04x})"
+                )
 
                 # 구버전 SSL/TLS는 취약함
                 if version <= 0x0301:
@@ -253,7 +290,9 @@ class DeepInspector:
                         16: "Client Key Exchange",
                         20: "Finished",
                     }
-                    analysis["handshake_type"] = handshake_types.get(handshake_type, f"Unknown ({handshake_type})")
+                    analysis["handshake_type"] = handshake_types.get(
+                        handshake_type, f"Unknown ({handshake_type})"
+                    )
 
                     # Client Hello에서 SNI 추출
                     if handshake_type == 1:
@@ -277,7 +316,9 @@ class DeepInspector:
             logger.error(f"TLS 패킷 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_dns_packet(self, packet: Dict[str, Any], payload: bytes) -> Dict[str, Any]:
+    def _analyze_dns_packet(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> Dict[str, Any]:
         """DNS 패킷 심층 분석"""
         try:
             analysis = {
@@ -302,7 +343,14 @@ class DeepInspector:
 
             # 응답 코드 추출
             rcode = flags & 0xF
-            rcodes = {0: "NOERROR", 1: "FORMERR", 2: "SERVFAIL", 3: "NXDOMAIN", 4: "NOTIMP", 5: "REFUSED"}
+            rcodes = {
+                0: "NOERROR",
+                1: "FORMERR",
+                2: "SERVFAIL",
+                3: "NXDOMAIN",
+                4: "NOTIMP",
+                5: "REFUSED",
+            }
             analysis["response_code"] = rcodes.get(rcode, f"Unknown ({rcode})")
 
             # 질의 섹션 분석
@@ -334,7 +382,9 @@ class DeepInspector:
             logger.error(f"DNS 패킷 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_icmp_packet(self, packet: Dict[str, Any], payload: bytes) -> Dict[str, Any]:
+    def _analyze_icmp_packet(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> Dict[str, Any]:
         """ICMP 패킷 심층 분석"""
         try:
             analysis = {
@@ -373,7 +423,9 @@ class DeepInspector:
             logger.error(f"ICMP 패킷 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_ssh_packet(self, packet: Dict[str, Any], payload: bytes) -> Dict[str, Any]:
+    def _analyze_ssh_packet(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> Dict[str, Any]:
         """SSH 패킷 심층 분석"""
         try:
             analysis = {
@@ -409,7 +461,9 @@ class DeepInspector:
             logger.error(f"SSH 패킷 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _detect_security_threats(self, packet: Dict[str, Any], payload: bytes) -> List[Dict[str, Any]]:
+    def _detect_security_threats(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> List[Dict[str, Any]]:
         """보안 위협 탐지"""
         threats = []
 
@@ -435,31 +489,64 @@ class DeepInspector:
 
             for pattern in shellcode_patterns:
                 if pattern in payload:
-                    threats.append({"type": "shellcode", "severity": "critical", "description": "쉘코드 패턴 감지"})
+                    threats.append(
+                        {
+                            "type": "shellcode",
+                            "severity": "critical",
+                            "description": "쉘코드 패턴 감지",
+                        }
+                    )
                     break
 
             # 백도어 시그니처
-            backdoor_strings = ["metasploit", "meterpreter", "backdoor", "rootkit", "keylogger", "trojan", "netcat"]
+            backdoor_strings = [
+                "metasploit",
+                "meterpreter",
+                "backdoor",
+                "rootkit",
+                "keylogger",
+                "trojan",
+                "netcat",
+            ]
 
             for backdoor in backdoor_strings:
                 if backdoor in payload_str:
                     threats.append(
-                        {"type": "backdoor", "severity": "critical", "description": f"백도어 시그니처 감지: {backdoor}"}
+                        {
+                            "type": "backdoor",
+                            "severity": "critical",
+                            "description": f"백도어 시그니처 감지: {backdoor}",
+                        }
                     )
 
             # 익스플로잇 킷
-            exploit_patterns = ["exploit", "payload", "rop", "heap spray", "use after free", "format string"]
+            exploit_patterns = [
+                "exploit",
+                "payload",
+                "rop",
+                "heap spray",
+                "use after free",
+                "format string",
+            ]
 
             for exploit in exploit_patterns:
                 if exploit in payload_str:
-                    threats.append({"type": "exploit", "severity": "high", "description": f"익스플로잇 패턴 감지: {exploit}"})
+                    threats.append(
+                        {
+                            "type": "exploit",
+                            "severity": "high",
+                            "description": f"익스플로잇 패턴 감지: {exploit}",
+                        }
+                    )
 
         except Exception as e:
             logger.error(f"보안 위협 탐지 오류: {e}")
 
         return threats
 
-    def _detect_suspicious_patterns(self, packet: Dict[str, Any], payload: bytes) -> List[Dict[str, Any]]:
+    def _detect_suspicious_patterns(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> List[Dict[str, Any]]:
         """의심스러운 패턴 탐지"""
         patterns = []
 
@@ -481,15 +568,26 @@ class DeepInspector:
             hex_matches = re.findall(r"[0-9a-fA-F]{100,}", payload_str)
             if hex_matches:
                 patterns.append(
-                    {"type": "hex_data", "severity": "low", "description": f"{len(hex_matches)}개의 긴 16진수 문자열 발견"}
+                    {
+                        "type": "hex_data",
+                        "severity": "low",
+                        "description": f"{len(hex_matches)}개의 긴 16진수 문자열 발견",
+                    }
                 )
 
             # 의심스러운 URL 패턴
             suspicious_urls = re.findall(r"https?://[^\s]+", payload_str)
             for url in suspicious_urls:
-                if any(domain in url.lower() for domain in ["bit.ly", "tinyurl", "short.link"]):
+                if any(
+                    domain in url.lower()
+                    for domain in ["bit.ly", "tinyurl", "short.link"]
+                ):
                     patterns.append(
-                        {"type": "suspicious_url", "severity": "medium", "description": f"의심스러운 단축 URL: {url}"}
+                        {
+                            "type": "suspicious_url",
+                            "severity": "medium",
+                            "description": f"의심스러운 단축 URL: {url}",
+                        }
                     )
 
         except Exception as e:
@@ -513,8 +611,10 @@ class DeepInspector:
                 try:
                     text = payload.decode("utf-8", errors="ignore")
                     printable_chars = sum(1 for c in text if c.isprintable())
-                    analysis["printable_ratio"] = printable_chars / len(text) if text else 0
-                except:
+                    analysis["printable_ratio"] = (
+                        printable_chars / len(text) if text else 0
+                    )
+                except Exception:
                     analysis["printable_ratio"] = 0
 
                 # 파일 시그니처 확인
@@ -527,7 +627,9 @@ class DeepInspector:
             logger.error(f"페이로드 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _detect_malware_indicators(self, packet: Dict[str, Any], payload: bytes) -> List[Dict[str, Any]]:
+    def _detect_malware_indicators(
+        self, packet: Dict[str, Any], payload: bytes
+    ) -> List[Dict[str, Any]]:
         """멀웨어 지표 탐지"""
         indicators = []
 
@@ -535,15 +637,35 @@ class DeepInspector:
             payload_str = payload.decode("utf-8", errors="ignore").lower()
 
             # 알려진 멀웨어 시그니처
-            malware_signatures = ["wannacry", "petya", "conficker", "stuxnet", "emotet", "trickbot", "ransomware"]
+            malware_signatures = [
+                "wannacry",
+                "petya",
+                "conficker",
+                "stuxnet",
+                "emotet",
+                "trickbot",
+                "ransomware",
+            ]
 
             for signature in malware_signatures:
                 if signature in payload_str:
-                    indicators.append({"type": "malware_signature", "name": signature, "severity": "critical"})
+                    indicators.append(
+                        {
+                            "type": "malware_signature",
+                            "name": signature,
+                            "severity": "critical",
+                        }
+                    )
 
             # C&C 통신 패턴
             if packet.get("dst_port") in [8080, 8443, 9999] and len(payload) > 100:
-                indicators.append({"type": "cnc_communication", "severity": "high", "description": "의심스러운 C&C 통신 패턴"})
+                indicators.append(
+                    {
+                        "type": "cnc_communication",
+                        "severity": "high",
+                        "description": "의심스러운 C&C 통신 패턴",
+                    }
+                )
 
         except Exception as e:
             logger.error(f"멀웨어 지표 탐지 오류: {e}")
@@ -618,7 +740,7 @@ class DeepInspector:
                     # 실제 구현에서는 TLS 구조를 정확히 파싱해야 함
                     pass
             return None
-        except:
+        except Exception:
             return None
 
     def _extract_cipher_suite(self, handshake_data: bytes) -> Optional[str]:
@@ -631,7 +753,7 @@ class DeepInspector:
                     cipher_id = struct.unpack(">H", cipher_suite_bytes)[0]
                     return f"0x{cipher_id:04x}"
             return None
-        except:
+        except Exception:
             return None
 
     def _is_weak_cipher(self, cipher_suite: str) -> bool:
@@ -657,7 +779,9 @@ class DeepInspector:
                 if offset + length + 1 > len(question_data):
                     break
 
-                part = question_data[offset + 1 : offset + 1 + length].decode("utf-8", errors="ignore")
+                part = question_data[offset + 1 : offset + 1 + length].decode(
+                    "utf-8", errors="ignore"
+                )
                 domain_parts.append(part)
                 offset += length + 1
 
@@ -666,7 +790,14 @@ class DeepInspector:
             # 질의 타입과 클래스
             if offset + 4 <= len(question_data):
                 qtype, qclass = struct.unpack(">HH", question_data[offset : offset + 4])
-                query_types = {1: "A", 2: "NS", 5: "CNAME", 15: "MX", 16: "TXT", 28: "AAAA"}
+                query_types = {
+                    1: "A",
+                    2: "NS",
+                    5: "CNAME",
+                    15: "MX",
+                    16: "TXT",
+                    28: "AAAA",
+                }
                 return domain, query_types.get(qtype, f"TYPE{qtype}")
 
             return domain, "UNKNOWN"
@@ -763,7 +894,11 @@ class DeepInspector:
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"inspected_packets": 0, "threats_detected": 0, "last_inspection": None}
+        self.statistics = {
+            "inspected_packets": 0,
+            "threats_detected": 0,
+            "last_inspection": None,
+        }
         logger.info("딥 패킷 검사 통계 초기화됨")
 
 

@@ -27,10 +27,17 @@ class CSVExporter:
         """
         self.delimiter = delimiter
         self.quoting = quoting
-        self.statistics = {"exported_files": 0, "exported_records": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "exported_records": 0,
+            "last_export": None,
+        }
 
     def export_packets(
-        self, packets: List[Dict[str, Any]], output_path: str, columns: Optional[List[str]] = None
+        self,
+        packets: List[Dict[str, Any]],
+        output_path: str,
+        columns: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         패킷 목록을 CSV로 내보내기
@@ -45,7 +52,11 @@ class CSVExporter:
         """
         try:
             if not packets:
-                return {"success": False, "error": "내보낼 패킷 데이터가 없습니다", "exported_count": 0}
+                return {
+                    "success": False,
+                    "error": "내보낼 패킷 데이터가 없습니다",
+                    "exported_count": 0,
+                }
 
             # 출력 디렉토리 생성
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -58,7 +69,11 @@ class CSVExporter:
 
             with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(
-                    csvfile, fieldnames=columns, delimiter=self.delimiter, quoting=self.quoting, extrasaction="ignore"
+                    csvfile,
+                    fieldnames=columns,
+                    delimiter=self.delimiter,
+                    quoting=self.quoting,
+                    extrasaction="ignore",
                 )
 
                 # 헤더 작성
@@ -89,7 +104,9 @@ class CSVExporter:
             logger.error(f"CSV 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def export_analysis_results(self, analysis_results: List[Dict[str, Any]], output_path: str) -> Dict[str, Any]:
+    def export_analysis_results(
+        self, analysis_results: List[Dict[str, Any]], output_path: str
+    ) -> Dict[str, Any]:
         """
         분석 결과를 CSV로 내보내기
 
@@ -102,7 +119,11 @@ class CSVExporter:
         """
         try:
             if not analysis_results:
-                return {"success": False, "error": "내보낼 분석 결과가 없습니다", "exported_count": 0}
+                return {
+                    "success": False,
+                    "error": "내보낼 분석 결과가 없습니다",
+                    "exported_count": 0,
+                }
 
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -126,7 +147,11 @@ class CSVExporter:
 
             with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
                 writer = csv.DictWriter(
-                    csvfile, fieldnames=columns, delimiter=self.delimiter, quoting=self.quoting, extrasaction="ignore"
+                    csvfile,
+                    fieldnames=columns,
+                    delimiter=self.delimiter,
+                    quoting=self.quoting,
+                    extrasaction="ignore",
                 )
 
                 writer.writeheader()
@@ -154,7 +179,9 @@ class CSVExporter:
             logger.error(f"분석 결과 CSV 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def export_statistics(self, statistics: Dict[str, Any], output_path: str) -> Dict[str, Any]:
+    def export_statistics(
+        self, statistics: Dict[str, Any], output_path: str
+    ) -> Dict[str, Any]:
         """
         통계 데이터를 CSV로 내보내기
 
@@ -183,22 +210,41 @@ class CSVExporter:
                                 flatten_stats(item, f"{full_key}[{i}]")
                             else:
                                 rows.append(
-                                    {"category": full_key, "index": i, "value": str(item), "type": type(item).__name__}
+                                    {
+                                        "category": full_key,
+                                        "index": i,
+                                        "value": str(item),
+                                        "type": type(item).__name__,
+                                    }
                                 )
                     else:
                         rows.append(
-                            {"category": full_key, "index": "", "value": str(value), "type": type(value).__name__}
+                            {
+                                "category": full_key,
+                                "index": "",
+                                "value": str(value),
+                                "type": type(value).__name__,
+                            }
                         )
 
             flatten_stats(statistics)
 
             if not rows:
-                return {"success": False, "error": "내보낼 통계 데이터가 없습니다", "exported_count": 0}
+                return {
+                    "success": False,
+                    "error": "내보낼 통계 데이터가 없습니다",
+                    "exported_count": 0,
+                }
 
             columns = ["category", "index", "value", "type"]
 
             with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=columns, delimiter=self.delimiter, quoting=self.quoting)
+                writer = csv.DictWriter(
+                    csvfile,
+                    fieldnames=columns,
+                    delimiter=self.delimiter,
+                    quoting=self.quoting,
+                )
 
                 writer.writeheader()
                 writer.writerows(rows)
@@ -222,7 +268,10 @@ class CSVExporter:
             return {"success": False, "error": str(e), "exported_count": 0}
 
     def export_filtered_packets(
-        self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any], output_path: str
+        self,
+        packets: List[Dict[str, Any]],
+        filter_criteria: Dict[str, Any],
+        output_path: str,
     ) -> Dict[str, Any]:
         """
         필터링된 패킷을 CSV로 내보내기
@@ -274,7 +323,16 @@ class CSVExporter:
             columns.update(flattened.keys())
 
         # 일반적인 순서로 정렬
-        priority_columns = ["timestamp", "src_ip", "dst_ip", "src_port", "dst_port", "protocol", "size", "packet_size"]
+        priority_columns = [
+            "timestamp",
+            "src_ip",
+            "dst_ip",
+            "src_port",
+            "dst_port",
+            "protocol",
+            "size",
+            "packet_size",
+        ]
 
         ordered_columns = []
         for col in priority_columns:
@@ -287,7 +345,9 @@ class CSVExporter:
 
         return ordered_columns
 
-    def _flatten_packet_data(self, packet: Dict[str, Any], prefix: str = "") -> Dict[str, Any]:
+    def _flatten_packet_data(
+        self, packet: Dict[str, Any], prefix: str = ""
+    ) -> Dict[str, Any]:
         """패킷 데이터를 플랫 구조로 변환"""
         flattened = {}
 
@@ -313,14 +373,21 @@ class CSVExporter:
 
         return flattened
 
-    def _convert_analysis_to_csv_row(self, analysis_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _convert_analysis_to_csv_row(
+        self, analysis_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """분석 결과를 CSV 행으로 변환"""
         packet_info = analysis_result.get("packet_info", {})
 
         # 보안 이슈를 문자열로 변환
         security_issues = analysis_result.get("security_issues", [])
         security_summary = (
-            "; ".join([f"{issue.get('type', 'unknown')}: {issue.get('description', '')}" for issue in security_issues])
+            "; ".join(
+                [
+                    f"{issue.get('type', 'unknown')}: {issue.get('description', '')}"
+                    for issue in security_issues
+                ]
+            )
             if security_issues
             else ""
         )
@@ -328,7 +395,12 @@ class CSVExporter:
         # 이상 징후를 문자열로 변환
         anomalies = analysis_result.get("anomalies", [])
         anomaly_summary = (
-            "; ".join([f"{anomaly.get('type', 'unknown')}: {anomaly.get('description', '')}" for anomaly in anomalies])
+            "; ".join(
+                [
+                    f"{anomaly.get('type', 'unknown')}: {anomaly.get('description', '')}"
+                    for anomaly in anomalies
+                ]
+            )
             if anomalies
             else ""
         )
@@ -348,7 +420,9 @@ class CSVExporter:
             "confidence_score": analysis_result.get("confidence", ""),
         }
 
-    def _apply_filter(self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _apply_filter(
+        self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """패킷에 필터 조건 적용"""
         filtered = []
 
@@ -358,7 +432,9 @@ class CSVExporter:
 
         return filtered
 
-    def _packet_matches_filter(self, packet: Dict[str, Any], filter_criteria: Dict[str, Any]) -> bool:
+    def _packet_matches_filter(
+        self, packet: Dict[str, Any], filter_criteria: Dict[str, Any]
+    ) -> bool:
         """패킷이 필터 조건에 맞는지 확인"""
         try:
             for field, condition in filter_criteria.items():
@@ -394,11 +470,17 @@ class CSVExporter:
             logger.error(f"필터 매칭 오류: {e}")
             return False
 
-    def create_summary_report(self, packets: List[Dict[str, Any]], output_path: str) -> Dict[str, Any]:
+    def create_summary_report(
+        self, packets: List[Dict[str, Any]], output_path: str
+    ) -> Dict[str, Any]:
         """패킷 데이터의 요약 보고서를 CSV로 생성"""
         try:
             if not packets:
-                return {"success": False, "error": "요약할 패킷 데이터가 없습니다", "exported_count": 0}
+                return {
+                    "success": False,
+                    "error": "요약할 패킷 데이터가 없습니다",
+                    "exported_count": 0,
+                }
 
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -409,28 +491,53 @@ class CSVExporter:
             rows = []
 
             # 기본 통계
-            rows.append({"metric": "Total Packets", "value": summary_data["total_packets"], "description": "전체 패킷 수"})
+            rows.append(
+                {
+                    "metric": "Total Packets",
+                    "value": summary_data["total_packets"],
+                    "description": "전체 패킷 수",
+                }
+            )
 
             # 프로토콜별 통계
             for protocol, count in summary_data["protocols"].items():
-                rows.append({"metric": f"Protocol: {protocol}", "value": count, "description": f"{protocol} 프로토콜 패킷 수"})
+                rows.append(
+                    {
+                        "metric": f"Protocol: {protocol}",
+                        "value": count,
+                        "description": f"{protocol} 프로토콜 패킷 수",
+                    }
+                )
 
             # 상위 IP 주소
             for i, (ip, count) in enumerate(summary_data["top_src_ips"][:10]):
                 rows.append(
-                    {"metric": f"Top Source IP #{i+1}", "value": f"{ip} ({count})", "description": "상위 송신 IP 주소"}
+                    {
+                        "metric": f"Top Source IP #{i+1}",
+                        "value": f"{ip} ({count})",
+                        "description": "상위 송신 IP 주소",
+                    }
                 )
 
             # 상위 포트
             for i, (port, count) in enumerate(summary_data["top_dst_ports"][:10]):
                 rows.append(
-                    {"metric": f"Top Destination Port #{i+1}", "value": f"{port} ({count})", "description": "상위 수신 포트"}
+                    {
+                        "metric": f"Top Destination Port #{i+1}",
+                        "value": f"{port} ({count})",
+                        "description": "상위 수신 포트",
+                    }
                 )
 
             columns = ["metric", "value", "description"]
 
             with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=columns, delimiter=self.delimiter, quoting=self.quoting)
+                writer = csv.DictWriter(
+                    csvfile,
+                    fieldnames=columns,
+                    delimiter=self.delimiter,
+                    quoting=self.quoting,
+                )
 
                 writer.writeheader()
                 writer.writerows(rows)
@@ -454,7 +561,9 @@ class CSVExporter:
             logger.error(f"요약 보고서 CSV 생성 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def _calculate_summary_statistics(self, packets: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_summary_statistics(
+        self, packets: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """패킷 데이터의 요약 통계 계산"""
         from collections import Counter
 
@@ -510,11 +619,17 @@ class CSVExporter:
 
     def reset_statistics(self):
         """통계 초기화"""
-        self.statistics = {"exported_files": 0, "exported_records": 0, "last_export": None}
+        self.statistics = {
+            "exported_files": 0,
+            "exported_records": 0,
+            "last_export": None,
+        }
         logger.info("CSV 내보내기 통계 초기화됨")
 
 
 # 팩토리 함수
-def create_csv_exporter(delimiter: str = ",", quoting: int = csv.QUOTE_MINIMAL) -> CSVExporter:
+def create_csv_exporter(
+    delimiter: str = ",", quoting: int = csv.QUOTE_MINIMAL
+) -> CSVExporter:
     """CSV 내보내기 인스턴스 생성"""
     return CSVExporter(delimiter, quoting)
