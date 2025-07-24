@@ -155,9 +155,9 @@ jobs:
           attempt=1
           while [ $attempt -le $max_attempts ]; do
             echo "Attempt $attempt: Checking deployment health..."
-            if curl -f -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health > /dev/null; then
+            if curl -f -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health > /dev/null; then
               echo "✅ Deployment verified successfully!"
-              curl -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health | jq . || curl -s http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health
+              curl -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health | jq . || curl -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health
               break
             else
               echo "❌ Health check failed, retrying in 30s..."
