@@ -1,14 +1,30 @@
 apiVersion: v2
 name: fortinet
-description: FortiGate Nextrade - Network Monitoring and Analysis Platform
+description: FortiGate Nextrade - Comprehensive network monitoring and analysis platform
+
 type: application
-version: 1.0.12
-appVersion: "1.0.0"
+
+version: 1.0.3
+
+appVersion: "1.0.1"
+
 keywords:
+  - fortinet
   - fortigate
-  - fortimanager
   - network-monitoring
-  - security
+  - fortimanager
+  - itsm
+
+home: https://github.com/JCLEE94/fortinet
+sources:
+  - https://github.com/JCLEE94/fortinet
+
 maintainers:
-  - name: JCLEE
-    email: admin@jclee.me
+  - name: JC Lee
+    email: jclee@example.com
+
+# dependencies:
+#   - name: redis
+#     version: "^21.2.0"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: redis.enabled
