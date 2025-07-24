@@ -170,22 +170,12 @@ jobs:
           sed -i "s/^appVersion:.*/appVersion: \"${CHART_VERSION}\"/" ./charts/${APP_NAME}/Chart.yaml
           sed -i "s/tag:.*/tag: \"${IMAGE_TAG}\"/" ./charts/${APP_NAME}/values.yaml
           
-          # Git에 차트 변경사항 커밋
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add charts/${APP_NAME}/Chart.yaml charts/${APP_NAME}/values.yaml
-          
-          if git diff --staged --quiet; then
-            echo "📝 No chart changes to commit"
-          else
-            git commit -m "chore: update chart version to ${CHART_VERSION} and image tag to ${IMAGE_TAG}
-            
-            🚀 Generated with GitHub Actions
-            
-            Co-Authored-By: GitHub Actions <actions@github.com>"
-            git push
-            echo "✅ Chart changes committed and pushed"
-          fi
+          # ChartMuseum에 Helm 차트 업로드
+          helm package ./charts/${APP_NAME}
+          curl --data-binary "@fortinet-${CHART_VERSION}.tgz" \
+            -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
+            https://charts.jclee.me/api/charts
+          echo "✅ Chart uploaded to ChartMuseum"
           
       - name: Verify deployment
         run: |

@@ -1,19 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet-fortinet
+  name: fortinet
   namespace: argocd
-  labels:
-    app: fortinet
-    env: fortinet
+  labels: {}
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   project: default
   source:
-    repoURL: https://github.com/jclee94/fortinet.git
-    path: charts/fortinet
-    targetRevision: HEAD
+    repoURL: https://charts.jclee.me
+    chart: fortinet
+    targetRevision: "*"
     helm:
       releaseName: fortinet
       values: |
