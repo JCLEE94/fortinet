@@ -77,7 +77,11 @@ class IntegrationTestFramework:
                     duration = time.time() - start_time
                     error_msg = f"{type(e).__name__}: {str(e)}"
 
-                    self.results.append(TestResult(name=name, passed=False, error=error_msg, duration=duration))
+                    self.results.append(
+                        TestResult(
+                            name=name, passed=False, error=error_msg, duration=duration
+                        )
+                    )
                     self.failed_count += 1
                     print(f"❌ {name} - FAILED ({duration:.3f}s)")
                     print(f"   Error: {error_msg}")
@@ -95,17 +99,23 @@ class IntegrationTestFramework:
     def assert_eq(self, actual: Any, expected: Any, message: str = ""):
         """Rust 스타일 assert_eq! 매크로"""
         if actual != expected:
-            raise AssertionError(f"Assertion failed: {message}\n  Expected: {expected}\n  Actual: {actual}")
+            raise AssertionError(
+                f"Assertion failed: {message}\n  Expected: {expected}\n  Actual: {actual}"
+            )
 
     def assert_ne(self, actual: Any, expected: Any, message: str = ""):
         """Rust 스타일 assert_ne! 매크로"""
         if actual == expected:
-            raise AssertionError(f"Assertion failed: {message}\n  Expected NOT: {expected}\n  Actual: {actual}")
+            raise AssertionError(
+                f"Assertion failed: {message}\n  Expected NOT: {expected}\n  Actual: {actual}"
+            )
 
     def assert_ok(self, result: Any, message: str = ""):
         """Result가 성공인지 확인"""
         if isinstance(result, dict) and result.get("success") is False:
-            raise AssertionError(f"Expected success but got failure: {message}\n  Error: {result.get('error')}")
+            raise AssertionError(
+                f"Expected success but got failure: {message}\n  Error: {result.get('error')}"
+            )
         if result is None or result is False:
             raise AssertionError(f"Expected truthy result: {message}")
 
@@ -156,15 +166,25 @@ class IntegrationTestFramework:
 
     @contextmanager
     def temp_config_file(self, config_data: Dict[str, Any]):
-        """임시 설정 파일 생성"""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(config_data, f, indent=2)
-            temp_path = f.name
+        """향상된 임시 설정 파일 생성 - 더 명확한 파일명 사용"""
+        # 향상된 임시 파일명 생성 (예: fortinet_test_config_20250724_143052_12345.json)
+        prefix = "fortinet_test_config"
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        pid = os.getpid()
+        filename = f"{prefix}_{timestamp}_{pid}.json"
+
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, filename)
 
         try:
+            with open(temp_path, "w", encoding="utf-8") as f:
+                json.dump(config_data, f, indent=2, ensure_ascii=False)
             yield temp_path
         finally:
-            os.unlink(temp_path)
+            try:
+                os.unlink(temp_path)
+            except OSError:
+                pass  # 파일이 이미 삭제된 경우 무시
 
     def run_all_tests(self) -> Dict[str, Any]:
         """모든 등록된 테스트 실행"""
@@ -199,7 +219,9 @@ class IntegrationTestFramework:
             "total": self.test_count,
             "passed": self.passed_count,
             "failed": self.failed_count,
-            "success_rate": self.passed_count / self.test_count if self.test_count > 0 else 0,
+            "success_rate": self.passed_count / self.test_count
+            if self.test_count > 0
+            else 0,
             "duration": total_time,
             "results": self.results,
         }
@@ -225,7 +247,10 @@ if __name__ == "__main__":
         self_test.assert_ne(1, 2, "Basic inequality")
         self_test.assert_ok({"success": True}, "Success result")
 
-        return {"framework_version": "1.0", "features": ["decorators", "assertions", "context_managers"]}
+        return {
+            "framework_version": "1.0",
+            "features": ["decorators", "assertions", "context_managers"],
+        }
 
     @self_test.test("temp_config_file_creation")
     def test_temp_config():
@@ -233,15 +258,23 @@ if __name__ == "__main__":
         test_config = {"test_mode": True, "port": 7777}
 
         with self_test.temp_config_file(test_config) as config_path:
-            self_test.assert_ok(os.path.exists(config_path), "Temp config file should exist")
+            self_test.assert_ok(
+                os.path.exists(config_path), "Temp config file should exist"
+            )
 
             with open(config_path, "r") as f:
                 loaded_config = json.load(f)
 
-            self_test.assert_eq(loaded_config, test_config, "Config should be correctly saved and loaded")
+            self_test.assert_eq(
+                loaded_config,
+                test_config,
+                "Config should be correctly saved and loaded",
+            )
 
         # 파일이 정리되었는지 확인
-        self_test.assert_ok(not os.path.exists(config_path), "Temp file should be cleaned up")
+        self_test.assert_ok(
+            not os.path.exists(config_path), "Temp file should be cleaned up"
+        )
 
         return {"config_data": test_config}
 
@@ -252,11 +285,17 @@ if __name__ == "__main__":
 
         with self_test.test_app(config_overrides) as (app, client):
             self_test.assert_ok(app.testing, "App should be in testing mode")
-            self_test.assert_eq(app.config.get("CUSTOM_TEST_VALUE"), "test123", "Custom config should be applied")
+            self_test.assert_eq(
+                app.config.get("CUSTOM_TEST_VALUE"),
+                "test123",
+                "Custom config should be applied",
+            )
 
             # 기본 라우트 테스트
             response = client.get("/")
-            self_test.assert_eq(response.status_code, 200, "Home page should be accessible")
+            self_test.assert_eq(
+                response.status_code, 200, "Home page should be accessible"
+            )
 
         return {"app_testing": True, "custom_config_applied": True}
 
