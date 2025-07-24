@@ -12,7 +12,7 @@ service:
   type: NodePort
   port: 80
   targetPort: 7777
-  nodePort: 30777  # Changed back to 30777 as requested
+  nodePort: 30777
 
 ingress:
   enabled: true
