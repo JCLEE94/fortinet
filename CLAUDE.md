@@ -92,15 +92,20 @@ docker run -d --name fortigate-nextrade \
 ### Deployment & Monitoring
 ```bash
 # Check deployment status
-curl http://192.168.50.110:30779/api/health  # Current NodePort
+curl http://192.168.50.110:30777/api/health  # Current NodePort
 curl http://fortinet.jclee.me/api/health     # Domain (needs /etc/hosts entry)
+
+# Monitor GitOps pipeline
+gh run list --workflow="GitOps CI/CD Pipeline" --limit 5
+gh run view <run-id>
 
 # Monitor ArgoCD deployment
 argocd app get fortinet
 argocd app sync fortinet
 
-# Check pods
+# Check pods and services
 kubectl get pods -n fortinet
+kubectl get svc fortinet -n fortinet
 kubectl logs -l app=fortinet -n fortinet -f
 ```
 
@@ -148,7 +153,7 @@ hub = FortiManagerAdvancedHub(api_client)
 1. **Test Stage**: pytest, flake8, safety, bandit (parallel)
 2. **Build Stage**: Docker buildx → Harbor Registry
 3. **Helm Deploy**: Package → ChartMuseum upload → ArgoCD sync
-4. **Verify Stage**: Health checks on NodePort 30779
+4. **Verify Stage**: Health checks on NodePort 30777
 
 ### Required GitHub Secrets
 - `REGISTRY_URL`: registry.jclee.me
@@ -156,11 +161,14 @@ hub = FortiManagerAdvancedHub(api_client)
 - `CHARTMUSEUM_URL`: https://charts.jclee.me
 - `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`
 - `APP_NAME`: fortinet
+- `DEPLOYMENT_HOST`: 192.168.50.110
+- `DEPLOYMENT_PORT`: 30777
 
 ### Current Deployment
-- **Active NodePort**: 30779
+- **Active NodePort**: 30777 (updated from 30779)
 - **Domain**: http://fortinet.jclee.me (HTTP only, TLS issues)
 - **DNS Fix**: Add `192.168.50.110 fortinet.jclee.me` to `/etc/hosts`
+- **Direct Access**: http://192.168.50.110:30777
 
 ## Project Structure
 ```
@@ -233,24 +241,46 @@ kubectl create secret docker-registry harbor-registry \
 argocd app sync fortinet --prune
 ```
 
+## GitOps Workflow Status
+
+### Pipeline Verification
+```bash
+# Check pipeline status
+gh run list --workflow="GitOps CI/CD Pipeline" --limit 3
+
+# Monitor current run
+gh run watch <run-id> --exit-status
+
+# Cancel stuck runs
+gh run cancel <run-id>
+```
+
+### Common Pipeline Issues
+- **Verification timeout**: Health check may take 5-10 minutes due to ArgoCD sync delays
+- **NodePort conflicts**: Use `kubectl get svc --all-namespaces | grep 30777` to check port usage
+- **Service updates**: May require manual service recreation for NodePort changes
+
 ## Development Guidelines
 
 ### Do's
 - Always use `APP_MODE=test` for local development
-- Use blueprint namespaces in templates
+- Use blueprint namespaces in templates: `{{ url_for('main.dashboard') }}`
 - Call `super().__init__()` when extending API clients
 - Run tests before committing: `pytest tests/ -v`
-- Use existing patterns for error handling, caching, and logging
+- Use environment variables instead of hardcoded values
+- Monitor GitOps pipeline after commits to master
 
 ### Don'ts
-- Don't hardcode URLs - use environment variables
+- Don't hardcode IPs or URLs - all removed and replaced with env vars
 - Don't bypass the mock system when `APP_MODE=test`
 - Don't forget session management in API clients
 - Don't use uppercase in Docker image names (use lowercase)
 
 ### Current State Notes
+- **ALL hardcoded values removed** - project uses environment variables
 - Package management uses `requirements.txt` (not pyproject.toml)
 - Ingress controller is Traefik (not NGINX)
 - TLS is currently disabled due to certificate issues
 - GitHub Actions uses self-hosted runners
-- Harbor Registry image path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
+- Harbor Registry image path: `registry.jclee.me/fortinet`
+- GitOps pipeline fully operational with all secrets configured
