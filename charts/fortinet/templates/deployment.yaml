@@ -1,137 +1,107 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "fortinet.fullname" . }}
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "fortinet.labels" . | nindent 4 }}
+    app: {{ .Chart.Name }}
+    version: {{ .Chart.AppVersion }}
+    component: microservice
+    managed-by: argocd
+    infrastructure: jclee.me
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
   selector:
     matchLabels:
-      {{- include "fortinet.selectorLabels" . | nindent 6 }}
+      app: {{ .Chart.Name }}
+      version: {{ .Chart.AppVersion }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       labels:
-        {{- include "fortinet.selectorLabels" . | nindent 8 }}
+        app: {{ .Chart.Name }}
+        version: {{ .Chart.AppVersion }}
+        component: microservice
+      annotations:
+        prometheus.io/scrape: "{{ .Values.monitoring.enabled }}"
+        prometheus.io/path: "/api/health"
+        prometheus.io/port: "7777"
     spec:
-      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "fortinet.serviceAccountName" . }}
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.securityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.fortinet.webPort }}
-              protocol: TCP
-          env:
-            - name: APP_MODE
-              value: "{{ .Values.fortinet.appMode }}"
-            - name: WEB_APP_PORT
-              value: "{{ .Values.fortinet.webPort }}"
-            - name: WEB_APP_HOST
-              value: "{{ .Values.fortinet.webHost }}"
-            - name: OFFLINE_MODE
-              value: "{{ .Values.fortinet.offlineMode }}"
-            {{- if .Values.fortinet.fortimanager.enabled }}
-            - name: FORTIMANAGER_HOST
-              value: "{{ .Values.fortinet.fortimanager.host }}"
-            - name: FORTIMANAGER_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "fortinet.fullname" . }}-secrets
-                  key: fortimanager-api-key
-                  optional: true
-            {{- end }}
-            {{- if .Values.fortinet.fortigate.enabled }}
-            - name: FORTIGATE_HOST
-              value: "{{ .Values.fortinet.fortigate.host }}"
-            - name: FORTIGATE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "fortinet.fullname" . }}-secrets
-                  key: fortigate-api-key
-                  optional: true
-            {{- end }}
-            {{- if .Values.fortinet.itsm.enabled }}
-            - name: ITSM_URL
-              value: "{{ .Values.fortinet.itsm.url }}"
-            - name: ITSM_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "fortinet.fullname" . }}-secrets
-                  key: itsm-api-key
-                  optional: true
-            {{- end }}
-            {{- if .Values.redis.enabled }}
-            - name: REDIS_ENABLED
-              value: "true"
-            - name: REDIS_HOST
-              value: "{{ .Release.Name }}-redis-master"
-            - name: REDIS_PORT
-              value: "6379"
-            {{- end }}
-            {{- range .Values.extraEnvVars }}
-            - name: {{ .name }}
-              value: {{ .value | quote }}
-            {{- end }}
-          livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
-          readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          volumeMounts:
-            - name: data
-              mountPath: /app/data
-            - name: logs
-              mountPath: /app/logs
-            {{- if .Values.scripts.enabled }}
-            - name: scripts
-              mountPath: /app/scripts
-            {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - containerPort: 7777
+          name: http
+          protocol: TCP
+        env:
+        {{- range $key, $value := .Values.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- if .Values.fortinet.apiKeys.fortigate }}
+        - name: FORTIGATE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secrets
+              key: fortigate-api-key
+        {{- end }}
+        {{- if .Values.fortinet.apiKeys.fortimanager }}
+        - name: FORTIMANAGER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secrets
+              key: fortimanager-api-key
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probes.liveness.path }}
+            port: {{ .Values.probes.liveness.port }}
+          initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.probes.readiness.path }}
+            port: {{ .Values.probes.readiness.port }}
+          initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+          failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        {{- if .Values.volumes.data.enabled }}
+        - name: data-volume
+          mountPath: /app/data
+        {{- end }}
+        {{- if .Values.volumes.logs.enabled }}
+        - name: logs-volume
+          mountPath: /app/logs
+        {{- end }}
+        - name: tmp
+          mountPath: /tmp
+        - name: var-cache
+          mountPath: /var/cache
       volumes:
-        {{- if .Values.persistence.enabled }}
-        - name: data
-          persistentVolumeClaim:
-            claimName: {{ include "fortinet.fullname" . }}-data
-        - name: logs
-          persistentVolumeClaim:
-            claimName: {{ include "fortinet.fullname" . }}-logs
-        {{- else }}
-        - name: data
-          emptyDir: {}
-        - name: logs
-          emptyDir: {}
-        {{- end }}
-        {{- if .Values.scripts.enabled }}
-        - name: scripts
-          configMap:
-            name: {{ include "fortinet.fullname" . }}-scripts
-            defaultMode: 0755
-        {{- end }}
+      {{- if .Values.volumes.data.enabled }}
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }}-data-pvc
+      {{- end }}
+      {{- if .Values.volumes.logs.enabled }}
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: {{ .Chart.Name }}-logs-pvc
+      {{- end }}
+      - name: tmp
+        emptyDir: {}
+      - name: var-cache
+        emptyDir: {}

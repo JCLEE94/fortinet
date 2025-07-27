@@ -1,0 +1,20 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Chart.Name }}
+    component: microservice
+    infrastructure: jclee.me
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  endpoints:
+  - port: http
+    path: {{ .Values.monitoring.serviceMonitor.path }}
+    interval: 30s
+    scrapeTimeout: 10s
+{{- end }}

@@ -1,155 +1,127 @@
-# Default values for fortinet.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
+# MSA 기본 설정 (jclee.me 인프라 최적화)
+replicaCount: 3
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
 
 image:
-  repository: registry.jclee.me/fortinet
+  repository: registry.jclee.me/jclee/fortinet
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "master-37900ce8"
 
 imagePullSecrets:
-  - name: harbor-registry
+  - name: jclee-registry-secret
 
-nameOverride: ""
-fullnameOverride: ""
-
-# FortiGate Nextrade specific configuration
-fortinet:
-  appMode: "production"
-  webPort: 7777
-  webHost: "0.0.0.0"
-  offlineMode: false
-  
-  # FortiManager Configuration
-  fortimanager:
-    enabled: true
-    host: ""
-    apiKey: ""
-    
-  # FortiGate Configuration
-  fortigate:
-    enabled: true
-    host: ""
-    apiKey: ""
-    
-  # ITSM Integration
-  itsm:
-    enabled: false
-    url: ""
-    apiKey: ""
-
-# Service configuration
 service:
   type: NodePort
   port: 80
-  targetPort: 7777
+  targetPort: 7777  # Fortinet 애플리케이션 포트
   nodePort: 30777
-  
-# NodePort service for external access (disabled - using main service as NodePort)
-nodePortService:
-  enabled: false
-  type: NodePort
-  port: 80
-  nodePort: 30777
-  targetPort: 7777
 
-# Ingress configuration
 ingress:
   enabled: true
-  className: "traefik"
-  annotations: {}
-  hosts: []
-  tls: []
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+  hosts:
+    - host: fortinet.jclee.me
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fortinet-tls
+      hosts:
+        - fortinet.jclee.me
 
-# Resources
+# MSA 리소스 최적화
 resources:
-  requests:
-    memory: "512Mi"
-    cpu: "100m"
   limits:
-    memory: "2Gi"
-    cpu: "1000m"
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
 
-# Probes
-livenessProbe:
-  httpGet:
-    path: /api/health
-    port: 7777
-  initialDelaySeconds: 30
-  periodSeconds: 30
-  timeoutSeconds: 10
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /api/health
-    port: 7777
-  initialDelaySeconds: 20
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-# Autoscaling
+# HPA (Horizontal Pod Autoscaler)
 autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 3
-  targetCPUUtilizationPercentage: 80
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 
-# Redis dependency
-redis:
+# Fortinet 애플리케이션 환경 변수
+env:
+  NODE_ENV: production
+  WEB_APP_PORT: "7777"
+  APP_MODE: production
+  OFFLINE_MODE: "false"
+  MICROSERVICE_NAME: fortinet
+  CLUSTER_NAME: microservices-cluster
+  NAMESPACE: microservices
+
+# Health Check 설정 (Fortinet 애플리케이션 기준)
+probes:
+  liveness:
+    path: /api/health
+    port: 7777
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /api/health
+    port: 7777
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# MSA 보안 설정
+securityContext:
+  runAsNonRoot: false  # Fortinet 애플리케이션 요구사항
+  runAsUser: 0
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: false
+
+# Fortinet 애플리케이션 볼륨 설정
+volumes:
+  data:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+  logs:
+    enabled: true
+    size: 500Mi
+    storageClass: standard
+
+# MSA 모니터링 (Prometheus/Grafana)
+monitoring:
   enabled: true
-  auth:
-    enabled: false
-  master:
-    persistence:
-      enabled: true
-      size: 1Gi
-  replica:
-    replicaCount: 0
+  serviceMonitor:
+    enabled: true
+    path: /api/health
+    port: metrics
 
-# Persistent storage
-persistence:
+# MSA 로깅 (ELK Stack)  
+logging:
   enabled: true
-  storageClass: "local-path"
-  accessMode: ReadWriteOnce
-  size: 5Gi
-  
-# ConfigMap for scripts
-scripts:
-  enabled: true
+  level: info
+  format: json
 
-# ServiceAccount
-serviceAccount:
-  create: false
-  annotations: {}
-  name: ""
-
-# Security Context
-podSecurityContext: {}
-securityContext: {}
-
-# Node selector
-nodeSelector: {}
-
-# Tolerations
-tolerations: []
-
-# Affinity
-affinity: {}
-
-# Extra environment variables
-extraEnvVars: []
-  # - name: CUSTOM_VAR
-  #   value: "custom_value"
-
-# Registry credentials
-registryCredentials:
-  create: true
-  registry: registry.jclee.me
-  username: "admin"  # Default for jclee.me registry
-  password: "bingogo1"  # Default for jclee.me registry
+# Fortinet 특화 설정
+fortinet:
+  mockMode: false
+  apiKeys:
+    fortigate: ""
+    fortimanager: ""
+  networking:
+    enableSocketIO: true
+    enableSSE: true

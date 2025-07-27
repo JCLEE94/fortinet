@@ -1,30 +1,23 @@
 apiVersion: v2
 name: fortinet
-description: FortiGate Nextrade - Comprehensive network monitoring and analysis platform
-
+description: Fortinet microservice on jclee.me infrastructure
 type: application
-
 version: 1.0.0-20250727-235741-37900ce8
-
 appVersion: "1.0.0-20250727-235741-37900ce8"
-
 keywords:
+  - microservice
+  - jclee.me
+  - gitops
+  - argocd
   - fortinet
-  - fortigate
-  - network-monitoring
-  - fortimanager
-  - itsm
-
-home: https://github.com/JCLEE94/fortinet
+  - network-security
+home: https://fortinet.jclee.me
 sources:
-  - https://github.com/JCLEE94/fortinet
-
+  - https://github.com/jclee/fortinet
 maintainers:
-  - name: JC Lee
-    email: jclee@example.com
-
-# dependencies:
-#   - name: redis
-#     version: "^21.2.0"
-#     repository: "https://charts.bitnami.com/bitnami"
-#     condition: redis.enabled
+  - name: jclee
+    email: admin@jclee.me
+annotations:
+  category: microservice
+  infrastructure: jclee.me
+  security: network-monitoring

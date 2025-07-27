@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet-microservices
+  namespace: argocd
+  labels:
+    app: fortinet
+    env: microservices
+    infrastructure: jclee.me
+    component: microservice
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    notifications.argoproj.io/subscribe.on-deployed.slack: gitops-notifications
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jclee.me
+    chart: fortinet
+    targetRevision: "*"
+    helm:
+      releaseName: fortinet
+      values: |
+        image:
+          repository: registry.jclee.me/jclee/fortinet
+          tag: latest
+        service:
+          nodePort: 30777
+        ingress:
+          hosts:
+            - host: fortinet.jclee.me
+              paths:
+                - path: /
+                  pathType: Prefix
+        env:
+          APP_MODE: production
+          WEB_APP_PORT: "7777"
+          MICROSERVICE_NAME: fortinet
+          CLUSTER_NAME: microservices-cluster
+          NAMESPACE: microservices
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: microservices
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
