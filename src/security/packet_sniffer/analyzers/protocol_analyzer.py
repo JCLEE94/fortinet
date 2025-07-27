@@ -4,12 +4,11 @@
 프로토콜 분석기 - 패킷 프로토콜 식별 및 분석의 메인 엔진
 """
 
-import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Optional, Tuple
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 from ..base_sniffer import PacketInfo, ProtocolIdentifier
 

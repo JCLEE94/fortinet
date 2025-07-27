@@ -1,10 +1,9 @@
 """
 ITSM related routes
 """
-import os
-from datetime import datetime
 
-from flask import Blueprint, jsonify, render_template, request
+
+from flask import Blueprint, render_template
 
 itsm_bp = Blueprint("itsm", __name__, url_prefix="/itsm")
 

@@ -6,7 +6,7 @@ IP 주소와 서비스가 방화벽 규칙에 매치되는지 검증하는 책�
 
 import ipaddress
 
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("rule_validator")
 
@@ -91,7 +91,9 @@ class RuleValidator:
         """
         address_groups = self.data_loader.get_address_groups(firewall_id)
         if not address_groups:
-            self.logger.error(f"방화벽 {firewall_id}의 주소 그룹 데이터가 로드되지 않았습니다.")
+            self.logger.error(
+                f"방화벽 {firewall_id}의 주소 그룹 데이터가 로드되지 않았습니다."
+            )
             return False
 
         # 그룹 찾기
@@ -210,7 +212,9 @@ class RuleValidator:
         """
         service_groups = self.data_loader.get_service_groups(firewall_id)
         if not service_groups:
-            self.logger.error(f"방화벽 {firewall_id}의 서비스 그룹 데이터가 로드되지 않았습니다.")
+            self.logger.error(
+                f"방화벽 {firewall_id}의 서비스 그룹 데이터가 로드되지 않았습니다."
+            )
             return False
 
         # 그룹 찾기

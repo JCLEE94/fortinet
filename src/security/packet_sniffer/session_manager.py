@@ -4,19 +4,17 @@
 세션 관리자 - 패킷 캡처 세션의 생명주기 관리
 """
 
-import json
 import threading
-import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-from .base_sniffer import BaseSniffer, PacketInfo, SnifferConfig
+from .base_sniffer import PacketInfo
 
 try:
-    from src.utils.unified_logger import get_logger
+    from utils.unified_logger import get_logger
 except ImportError:
     # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
     import logging

@@ -2,15 +2,14 @@
 Diagnostic Tool for Nextrade FortiGate
 시스템 진단 및 트러블슈팅 도구
 """
+
 import json
-import logging
 import os
 import platform
 import socket
-import subprocess
 import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import requests
 

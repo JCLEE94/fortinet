@@ -1,9 +1,7 @@
 """
 ITSM API routes
 """
-import os
-import random
-from datetime import datetime
+
 
 from flask import Blueprint, jsonify, request
 
@@ -16,7 +14,7 @@ def scrape_itsm_requests():
     try:
         # Production mode - fetch actual ITSM data
         # Actual scraping logic
-        from src.itsm.scraper import ITSMScraper
+        from itsm.scraper import ITSMScraper
 
         scraper = ITSMScraper()
         requests = scraper.get_firewall_requests()
@@ -43,7 +41,7 @@ def process_itsm_request():
             return jsonify({"error": "request_id is required"}), 400
 
         # 실제 처리 로직
-        from src.itsm.processor import ITSMProcessor
+        from itsm.processor import ITSMProcessor
 
         processor = ITSMProcessor()
         result = processor.process_request(request_id)
@@ -58,7 +56,7 @@ def process_itsm_request():
 def get_request_status(request_id):
     """요청 상태 조회"""
     try:
-        from src.itsm.scraper import ITSMScraper
+        from itsm.scraper import ITSMScraper
 
         scraper = ITSMScraper()
         status = scraper.get_request_status(request_id)

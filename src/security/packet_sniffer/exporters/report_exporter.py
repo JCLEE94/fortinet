@@ -5,13 +5,11 @@
 패킷 분석 결과를 종합한 HTML/PDF 보고서 생성
 """
 
-import base64
-import json
 import logging
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +120,11 @@ class ReportExporter:
                     "html_path": html_path,
                 }
             else:
-                return {"success": False, "error": "PDF 변환 실패", "report_type": "PDF"}
+                return {
+                    "success": False,
+                    "error": "PDF 변환 실패",
+                    "report_type": "PDF",
+                }
 
         except Exception as e:
             logger.error(f"PDF 보고서 생성 오류: {e}")
@@ -356,9 +358,9 @@ class ReportExporter:
                 "packet_count": len(protocol_packets),
                 "total_bytes": sum(sizes),
                 "average_size": sum(sizes) / len(sizes) if sizes else 0,
-                "percentage": (len(protocol_packets) / len(packets)) * 100
-                if packets
-                else 0,
+                "percentage": (
+                    (len(protocol_packets) / len(packets)) * 100 if packets else 0
+                ),
             }
 
         return {"distribution": dict(protocol_counter), "details": protocol_details}
@@ -403,12 +405,16 @@ class ReportExporter:
                 },
                 "hourly_distribution": dict(hourly_distribution),
                 "daily_distribution": dict(daily_distribution),
-                "peak_hour": max(hourly_distribution.items(), key=lambda x: x[1])[0]
-                if hourly_distribution
-                else None,
-                "packets_per_second": len(packets) / duration.total_seconds()
-                if duration.total_seconds() > 0
-                else 0,
+                "peak_hour": (
+                    max(hourly_distribution.items(), key=lambda x: x[1])[0]
+                    if hourly_distribution
+                    else None
+                ),
+                "packets_per_second": (
+                    len(packets) / duration.total_seconds()
+                    if duration.total_seconds() > 0
+                    else 0
+                ),
             }
 
         except Exception as e:
@@ -652,9 +658,7 @@ class ReportExporter:
 
         type_dist = anomaly_stats.get("type_distribution", {})
 
-        content = (
-            f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
-        )
+        content = f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
 
         content += "<h4>유형별 분류</h4><ul>"
         for anomaly_type, count in type_dist.items():
@@ -797,7 +801,11 @@ class ReportExporter:
                 "network_utilization": "78%",  # 예시
             },
             "risk_assessment": "MEDIUM",  # 예시
-            "recommendations": ["방화벽 정책 검토 권장", "이상 트래픽 모니터링 강화", "보안 업데이트 적용"],
+            "recommendations": [
+                "방화벽 정책 검토 권장",
+                "이상 트래픽 모니터링 강화",
+                "보안 업데이트 적용",
+            ],
         }
 
     def _generate_executive_html(self, summary_data: Dict[str, Any]) -> str:

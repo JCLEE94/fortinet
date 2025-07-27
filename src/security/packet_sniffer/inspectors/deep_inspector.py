@@ -5,13 +5,12 @@
 프로토콜별 심층 분석 및 보안 위협 탐지
 """
 
-import base64
 import logging
 import re
 import struct
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

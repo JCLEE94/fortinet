@@ -158,9 +158,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                 "architecture": os.uname().machine,
                 "boot_time": boot_time.isoformat(),
                 "uptime_seconds": int(uptime.total_seconds()),
-                "load_average": os.getloadavg()
-                if hasattr(os, "getloadavg")
-                else [0, 0, 0],
+                "load_average": (
+                    os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]
+                ),
             }
         except Exception as e:
             logger.error(f"시스템 정보 수집 실패: {e}")
@@ -248,9 +248,9 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             result = {
                 "partitions": disk_data,
-                "usage_percent": total_usage / partition_count
-                if partition_count > 0
-                else 0,
+                "usage_percent": (
+                    total_usage / partition_count if partition_count > 0 else 0
+                ),
             }
 
             if disk_io:

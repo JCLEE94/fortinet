@@ -6,19 +6,17 @@ Advanced compliance checking with automated remediation capabilities
 """
 
 import asyncio
-import hashlib
 import json
 import logging
-import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 logger = logging.getLogger(__name__)
 

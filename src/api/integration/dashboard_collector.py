@@ -8,10 +8,10 @@ import asyncio
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from src.config.unified_settings import unified_settings
-from src.utils.unified_logger import get_logger
+from config.unified_settings import unified_settings
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -294,7 +294,7 @@ class DashboardDataCollector:
 
     def _get_mock_stats(self) -> DashboardStats:
         """Mock 통계 데이터 생성 (실제 장비 연결 불가 시)"""
-        from src.mock.data_generator import DummyDataGenerator
+        from mock.data_generator import DummyDataGenerator
 
         generator = DummyDataGenerator()
         mock_data = generator.generate_dashboard_stats()

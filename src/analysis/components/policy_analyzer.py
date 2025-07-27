@@ -4,7 +4,7 @@
 방화벽 정책을 분석하고 트래픽 허용 여부를 결정하는 책임을 담당합니다.
 """
 
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("policy_analyzer")
 

@@ -6,16 +6,16 @@
 ITSM 요청을 자동으로 처리하여 적절한 방화벽에 정책을 배포
 """
 
-import asyncio
 import ipaddress
+import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.unified_logger import get_logger
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from utils.unified_logger import get_logger
 
 from .external_connector import ExternalITSMConnector, FirewallPolicyRequest
 
@@ -703,7 +703,9 @@ class PolicyAutomationEngine:
                 firewall.api_client = FortiGateAPIClient(
                     host=firewall.host,
                     username="admin",  # 실제로는 설정에서 가져와야 함
-                    password=os.environ.get("PASSWORD", ""),  # 실제로는 설정에서 가져와야 함
+                    password=os.environ.get(
+                        "PASSWORD", ""
+                    ),  # 실제로는 설정에서 가져와야 함
                 )
 
             # 정책 데이터 구성

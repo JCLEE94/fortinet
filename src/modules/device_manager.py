@@ -5,14 +5,12 @@ FortiGate 연결 장치 관리 모듈
 - 장치 인터페이스, 정책, 라우팅 등 상세 정보 제공
 """
 
-import json
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List
 
 from ..config.hardcoded_values import CONFIG
-from .faz_client import FAZClient
 from .fortigate_api_client import FortiGateAPIClient
 
 logger = logging.getLogger(__name__)

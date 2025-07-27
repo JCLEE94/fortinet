@@ -7,7 +7,7 @@
 import time
 import uuid
 
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("session_manager")
 
@@ -309,7 +309,7 @@ class SessionManager:
             "total_sessions": total_sessions,
             "total_analyses": total_analyses,
             "user_sessions": user_sessions,
-            "average_analyses_per_session": total_analyses / total_sessions
-            if total_sessions > 0
-            else 0,
+            "average_analyses_per_session": (
+                total_analyses / total_sessions if total_sessions > 0 else 0
+            ),
         }

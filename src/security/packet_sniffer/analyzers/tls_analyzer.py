@@ -6,11 +6,9 @@ TLS 연결 분석, 인증서 검증, 암호화 강도 분석
 """
 
 import logging
-import socket
-import ssl
 import struct
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -420,9 +418,11 @@ class TLSAnalyzer:
                     {
                         "type": handshake_type,
                         "timestamp": packet_info.get("timestamp"),
-                        "direction": "client_to_server"
-                        if packet_info.get("src_port") > packet_info.get("dst_port")
-                        else "server_to_client",
+                        "direction": (
+                            "client_to_server"
+                            if packet_info.get("src_port") > packet_info.get("dst_port")
+                            else "server_to_client"
+                        ),
                     }
                 )
 

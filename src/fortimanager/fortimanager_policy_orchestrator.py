@@ -7,17 +7,14 @@ Advanced policy management with intelligent orchestration capabilities
 
 import asyncio
 import hashlib
-import ipaddress
-import json
 import logging
-import re
-from collections import Counter, defaultdict
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 logger = logging.getLogger(__name__)
 

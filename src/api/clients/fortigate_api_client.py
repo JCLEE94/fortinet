@@ -5,15 +5,11 @@ FortiGate API Client
 Provides communication with FortiGate devices using REST API
 """
 
-import json
-import os
-import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from requests.exceptions import RequestException
 
-from src.utils.api_utils import ConnectionTestMixin
+from utils.api_utils import ConnectionTestMixin
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
@@ -68,7 +64,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         ConnectionTestMixin.__init__(self)
 
         # FortiGate specific setup
-        from src.config.services import API_VERSIONS
+        from config.services import API_VERSIONS
 
         self.base_url = f"{self.protocol}://{self.host}"
         if self.port and self.port != (443 if use_https else 80):

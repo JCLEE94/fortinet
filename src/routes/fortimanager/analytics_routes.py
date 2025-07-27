@@ -4,17 +4,19 @@ FortiManager 분석 라우트
 패킷 캡처, 트렌드 분석, 보안 분석 등 고급 분석 기능을 담당합니다.
 """
 
-import asyncio
 import time
 
 from flask import Blueprint, jsonify, request
 
-from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-from src.utils.api_utils import (get_api_manager, get_data_source,
-                                 get_dummy_generator, is_test_mode)
-from src.utils.security import rate_limit
-from src.utils.unified_cache_manager import cached
-from src.utils.unified_logger import setup_logger
+from fortimanager.advanced_hub import FortiManagerAdvancedHub
+from utils.api_utils import (
+    get_api_manager,
+    get_dummy_generator,
+    is_test_mode,
+)
+from utils.security import rate_limit
+from utils.unified_cache_manager import cached
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("analytics_routes")
 analytics_bp = Blueprint("analytics", __name__, url_prefix="/analytics")

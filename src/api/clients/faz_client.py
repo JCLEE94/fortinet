@@ -5,12 +5,11 @@ FortiAnalyzer API Client Module
 Provides communication with FortiAnalyzer devices
 """
 
-import json
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from src.utils.api_utils import ConnectionTestMixin
+from utils.api_utils import ConnectionTestMixin
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
@@ -34,7 +33,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
             password (str, optional): Password (used if token is not available)
             port (int, optional): Port number (defaults to config value)
         """
-        from src.config.services import FORTINET_PRODUCTS
+        from config.services import FORTINET_PRODUCTS
 
         # Get values from environment if not provided
         host = host or os.environ.get("FORTIANALYZER_HOST")
@@ -69,7 +68,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         # CacheMixin.__init__(self)
 
         # FortiAnalyzer specific setup
-        from src.config.services import API_VERSIONS
+        from config.services import API_VERSIONS
 
         self.base_url = (
             f"https://{self.host}{API_VERSIONS['fortianalyzer']}" if self.host else ""

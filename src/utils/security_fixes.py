@@ -5,11 +5,8 @@
 자동으로 보안 문제를 수정하고 개선된 보안 패턴을 적용
 """
 
-import hashlib
 import os
 import re
-import secrets
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 
@@ -18,7 +15,7 @@ class SecurityFixer:
 
     def __init__(self, project_root: str):
         self.project_root = project_root
-        self.fixes_applied = []
+        self.fixes_applied: List[str] = []
 
     def fix_weak_crypto(self) -> List[str]:
         """약한 암호화 알고리즘을 강력한 것으로 교체"""
@@ -293,7 +290,7 @@ def generate_security_best_practices() -> str:
 
 ### 인증 데코레이터 사용
 ```python
-from src.utils.security import rate_limit, csrf_protect
+from utils.security import rate_limit, csrf_protect
 
 @app.route('/api/sensitive-endpoint', methods=['POST'])
 @rate_limit(max_requests=30, window=60)
@@ -386,7 +383,9 @@ if __name__ == "__main__":
     parser.add_argument("--weak-crypto", action="store_true", help="약한 암호화 수정")
     parser.add_argument("--auth", action="store_true", help="인증 누락 수정")
     parser.add_argument("--deserialization", action="store_true", help="역직렬화 수정")
-    parser.add_argument("--secrets", action="store_true", help="하드코딩된 비밀정보 수정")
+    parser.add_argument(
+        "--secrets", action="store_true", help="하드코딩된 비밀정보 수정"
+    )
     parser.add_argument("--path-traversal", action="store_true", help="경로 탐색 수정")
 
     args = parser.parse_args()

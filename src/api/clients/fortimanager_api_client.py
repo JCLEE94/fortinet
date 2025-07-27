@@ -5,17 +5,14 @@ FortiManager API Client
 Provides communication with FortiManager devices using JSON-RPC API
 """
 
-import json
 import os
-import threading
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import requests
-from requests.exceptions import RequestException
 
-from src.utils.api_utils import ConnectionTestMixin
-from src.utils.unified_logger import get_logger
+from utils.api_utils import ConnectionTestMixin
+from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
@@ -48,7 +45,7 @@ class FortiManagerAPIClient(
             port (int, optional): Port number (defaults to config value)
             verify_ssl (bool): Whether to verify SSL certificates
         """
-        from src.config.services import FORTINET_PRODUCTS
+        from config.services import FORTINET_PRODUCTS
 
         # Use default port from config if not specified
         if port is None:
@@ -973,7 +970,7 @@ class FortiManagerAPIClient(
         """
         success, result = self._make_api_request(
             method="exec",
-            url=f"/securityconsole/install/package",
+            url="/securityconsole/install/package",
             data={
                 "adom": adom,
                 "pkg": package_name,

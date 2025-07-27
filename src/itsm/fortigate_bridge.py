@@ -7,17 +7,14 @@ ITSM 요청을 스크래핑하여 실제 FortiGate 정책으로 변환하고 적
 """
 
 import asyncio
-import json
-import time
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.itsm.policy_mapper import PolicyMapper
-from src.itsm.scraper import ITSMScraper
-from src.utils.unified_logger import get_logger
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from itsm.policy_mapper import PolicyMapper
+from itsm.scraper import ITSMScraper
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -225,7 +222,9 @@ class ITSMFortiGateBridge:
                             f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}"
                         )
                     else:
-                        logger.error(f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}")
+                        logger.error(
+                            f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}"
+                        )
 
                 except Exception as e:
                     logger.error(f"FortiGate {fw_id} 정책 구현 중 오류: {str(e)}")
@@ -395,7 +394,9 @@ class ITSMFortiGateBridge:
 
                 if fg_client:
                     # 정책 삭제 (실제 구현 시 FortiGate API 호출)
-                    logger.info(f"FortiGate {fw_id}에서 정책 롤백: {step['description']}")
+                    logger.info(
+                        f"FortiGate {fw_id}에서 정책 롤백: {step['description']}"
+                    )
 
                     if not self.dry_run:
                         # 실제 롤백 수행

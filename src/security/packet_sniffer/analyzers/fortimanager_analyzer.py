@@ -11,7 +11,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,9 @@ class FortiManagerAnalyzer:
 
                     fortimanager_packets.append(packet)
 
-            logger.debug(f"FortiManager 패킷 필터링 완료: {len(fortimanager_packets)}개 발견")
+            logger.debug(
+                f"FortiManager 패킷 필터링 완료: {len(fortimanager_packets)}개 발견"
+            )
             return fortimanager_packets
 
         except Exception as e:
@@ -401,7 +403,10 @@ class FortiManagerAnalyzer:
                     ],
                 }
             else:
-                return {"total_pairs": 0, "message": "완전한 요청/응답 쌍을 찾을 수 없음"}
+                return {
+                    "total_pairs": 0,
+                    "message": "완전한 요청/응답 쌍을 찾을 수 없음",
+                }
 
         except Exception as e:
             logger.error(f"응답 시간 분석 오류: {e}")
@@ -688,12 +693,16 @@ class FortiManagerAnalyzer:
                 )
 
             if requests_per_second > 50:
-                recommendations.append("높은 API 호출 빈도가 감지되었습니다. 배치 처리 또는 호출 최적화 검토")
+                recommendations.append(
+                    "높은 API 호출 빈도가 감지되었습니다. 배치 처리 또는 호출 최적화 검토"
+                )
 
             slowest_method = response_times.get("slowest_method", {})
             if slowest_method.get("avg_time", 0) > 3000:
                 method_name = slowest_method.get("method", "unknown")
-                recommendations.append(f'"{method_name}" API 호출이 느립니다. 쿼리 최적화 검토')
+                recommendations.append(
+                    f'"{method_name}" API 호출이 느립니다. 쿼리 최적화 검토'
+                )
 
             if not recommendations:
                 recommendations.append("전반적인 성능이 양호합니다")

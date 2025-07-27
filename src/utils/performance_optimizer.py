@@ -14,8 +14,8 @@ import time
 import weakref
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

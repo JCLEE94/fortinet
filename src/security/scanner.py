@@ -11,12 +11,10 @@ import re
 import subprocess
 import threading
 import time
-from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Callable, Dict, Optional
 
 import psutil
-import requests
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +135,9 @@ class SecurityScanner:
             # 리스너들에게 알림
             self._notify_listeners("scan_completed", scan_result)
 
-            logger.info(f"보안 스캔 완료: {len(scan_result['vulnerabilities'])}개 취약점 발견")
+            logger.info(
+                f"보안 스캔 완료: {len(scan_result['vulnerabilities'])}개 취약점 발견"
+            )
 
         except Exception as e:
             logger.error(f"보안 스캔 실패: {e}")
@@ -266,7 +266,9 @@ class SecurityScanner:
                 ]
 
                 if critical_vulns:
-                    logger.warning(f"{len(critical_vulns)}개 중요 취약점 발견, 자동 수정 시도")
+                    logger.warning(
+                        f"{len(critical_vulns)}개 중요 취약점 발견, 자동 수정 시도"
+                    )
                     self.auto_fix_vulnerabilities(scan_result)
 
                 # 다음 스캔까지 대기
@@ -568,9 +570,9 @@ class SecurityScanner:
 
             return {
                 "docker_issues": docker_issues,
-                "containers_checked": len(containers)
-                if "containers" in locals()
-                else 0,
+                "containers_checked": (
+                    len(containers) if "containers" in locals() else 0
+                ),
             }
 
         except Exception as e:
@@ -681,9 +683,11 @@ class SecurityScanner:
                 )
                 security_config["disk_encryption"] = {
                     "encrypted_partitions": "crypt" in result.stdout,
-                    "details": result.stdout
-                    if "crypt" in result.stdout
-                    else "No encrypted partitions found",
+                    "details": (
+                        result.stdout
+                        if "crypt" in result.stdout
+                        else "No encrypted partitions found"
+                    ),
                 }
             except Exception:
                 security_config["disk_encryption"] = {
@@ -888,7 +892,9 @@ class SecurityScanner:
         if vuln_type == "outdated_packages":
             return "시스템 패키지를 최신 버전으로 업데이트하세요: sudo apt upgrade"
         elif vuln_type == "forbidden_user":
-            return f"금지된 사용자 계정을 삭제하세요: sudo userdel {vuln.get('user', '')}"
+            return (
+                f"금지된 사용자 계정을 삭제하세요: sudo userdel {vuln.get('user', '')}"
+            )
         elif vuln_type == "suspicious_process":
             return f"의심스러운 프로세스를 종료하고 원인을 조사하세요"
         else:
@@ -1077,7 +1083,9 @@ if __name__ == "__main__":
 
     # 시스템 강화
     harden_result = scanner.harden_system()
-    print(f"시스템 강화 결과: {json.dumps(harden_result, indent=2, ensure_ascii=False)}")
+    print(
+        f"시스템 강화 결과: {json.dumps(harden_result, indent=2, ensure_ascii=False)}"
+    )
 
     # 보안 대시보드
     dashboard = scanner.get_security_dashboard()

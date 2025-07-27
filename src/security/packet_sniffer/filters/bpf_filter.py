@@ -7,8 +7,6 @@ BPF (Berkeley Packet Filter) 필터
 
 import logging
 import re
-import socket
-import struct
 from ipaddress import ip_address, ip_network
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -458,7 +456,11 @@ class BPFFilter:
                 "filter": "port 80 or port 443",
                 "description": "웹 트래픽 (HTTP/HTTPS)",
             },
-            {"name": "TCP 트래픽만", "filter": "tcp", "description": "TCP 프로토콜 패킷만"},
+            {
+                "name": "TCP 트래픽만",
+                "filter": "tcp",
+                "description": "TCP 프로토콜 패킷만",
+            },
             {
                 "name": "특정 서브넷에서 오는 트래픽",
                 "filter": "src net 192.168.0.0/24",
@@ -469,7 +471,11 @@ class BPFFilter:
                 "filter": "dst port 22 and tcp",
                 "description": "SSH 서버로의 연결",
             },
-            {"name": "DNS 쿼리", "filter": "port 53 and udp", "description": "DNS 조회 패킷"},
+            {
+                "name": "DNS 쿼리",
+                "filter": "port 53 and udp",
+                "description": "DNS 조회 패킷",
+            },
             {
                 "name": "사설 네트워크 제외",
                 "filter": "not (net 192.168.0.0/16 or net 10.0.0.0/8)",

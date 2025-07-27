@@ -8,7 +8,7 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 # Logger 설정
 logger = logging.getLogger(__name__)
@@ -91,9 +91,9 @@ class FortigateMonitor:
             "running": self.is_running,
             "listeners_count": len(self.listeners),
             "data_cache_size": len(self.data_cache),
-            "thread_alive": self.monitor_thread.is_alive()
-            if self.monitor_thread
-            else False,
+            "thread_alive": (
+                self.monitor_thread.is_alive() if self.monitor_thread else False
+            ),
         }
 
     def get_real_time_data(self) -> Dict[str, Any]:

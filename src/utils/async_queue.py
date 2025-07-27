@@ -9,11 +9,10 @@ import asyncio
 import logging
 import threading
 import time
-import weakref
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 

@@ -79,7 +79,9 @@ class DataExporter:
 
             file_size = Path(file_path).stat().st_size
 
-            logger.info(f"JSON 내보내기 완료: {file_path} ({len(simplified_packets)}개 패킷)")
+            logger.info(
+                f"JSON 내보내기 완료: {file_path} ({len(simplified_packets)}개 패킷)"
+            )
 
             return {
                 "success": True,

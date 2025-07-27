@@ -9,7 +9,7 @@ import json
 import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from dotenv import load_dotenv
 
@@ -44,6 +44,13 @@ class WebAppConfig:
 
 
 @dataclass
+class ThresholdConfig:
+    """임계값 설정"""
+
+    MAX_EVENT_QUEUE_SIZE: int = 1000
+
+
+@dataclass
 class UnifiedSettings:
     """통합 설정 관리 클래스"""
 
@@ -59,6 +66,7 @@ class UnifiedSettings:
         self.fortimanager = self._init_api_config("FORTIMANAGER")
         self.fortigate = self._init_api_config("FORTIGATE")
         self.fortianalyzer = self._init_api_config("FORTIANALYZER")
+        self.thresholds = ThresholdConfig()
 
         # JSON 파일에서 설정 오버라이드
         self._load_from_json()
@@ -291,3 +299,4 @@ unified_settings = UnifiedSettings()
 
 # 하위 호환성을 위한 별칭
 settings = unified_settings
+CONFIG = unified_settings

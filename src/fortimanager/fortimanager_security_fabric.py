@@ -15,9 +15,9 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -438,9 +438,11 @@ class SecurityFabricIntegration:
         threat_stats["response_effectiveness"] = {
             "total_responses": total_responses,
             "successful": successful_responses,
-            "success_rate": (successful_responses / total_responses * 100)
-            if total_responses > 0
-            else 0,
+            "success_rate": (
+                (successful_responses / total_responses * 100)
+                if total_responses > 0
+                else 0
+            ),
         }
 
         # Fabric health
@@ -882,7 +884,6 @@ class SecurityFabricIntegration:
         """Push threat indicators to component"""
 
         # This would push IoCs to the component
-        pass
 
     async def _hunt_lateral_movement(self, parameters: Dict) -> List[Dict]:
         """Hunt for lateral movement indicators"""

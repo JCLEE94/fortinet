@@ -4,13 +4,11 @@
 기존 설정을 새로운 통합 설정 시스템으로 마이그레이션합니다.
 """
 
-import json
-import os
 import sys
 from pathlib import Path
 from typing import Any, Dict
 
-from src.config.unified_settings import UnifiedSettings, unified_settings
+from config.unified_settings import UnifiedSettings, unified_settings
 
 
 class ConfigMigration:

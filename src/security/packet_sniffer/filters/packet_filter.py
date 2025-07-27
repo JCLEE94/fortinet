@@ -8,9 +8,8 @@ IP, 포트, 프로토콜 등 기본적인 필터링 기능
 import ipaddress
 import logging
 import re
-from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List
 
 logger = logging.getLogger(__name__)
 

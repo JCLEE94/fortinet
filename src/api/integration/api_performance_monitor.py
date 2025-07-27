@@ -4,14 +4,15 @@ API 성능 모니터링 시스템
 CLAUDE.md 지시사항에 따른 완전 자율적 API 성능 추적 및 최적화
 """
 import functools
+import json
 import logging
+import secrets
 import statistics
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-import requests
 
 from .monitoring_base import MonitoringBase, ThresholdMixin
 from .monitoring_config import get_config
@@ -35,7 +36,6 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
         )
 
         # 믹스인 초기화 (순서가 중요함)
-        from collections import defaultdict, deque
 
         if not hasattr(self, "thresholds"):
             self.thresholds = {}
@@ -47,7 +47,9 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
             lambda: {"calls": [], "errors": 0, "total": 0}
         )
         self.metrics = defaultdict(lambda: deque(maxlen=1000))  # 수정: 누락된 속성
-        self.response_times = defaultdict(lambda: deque(maxlen=1000))  # 수정: 누락된 속성
+        self.response_times = defaultdict(
+            lambda: deque(maxlen=1000)
+        )  # 수정: 누락된 속성
         self.success_counts = defaultdict(int)  # 수정: 누락된 속성
         self.error_counts = defaultdict(int)  # 수정: 누락된 속성
         self.throughput_data = defaultdict(list)  # 수정: 누락된 속성
@@ -118,9 +120,9 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
             return {
                 "endpoint_stats": endpoint_stats,
                 "overall_stats": overall_stats,
-                "optimization_actions": self.optimization_actions[-10:]
-                if self.optimization_actions
-                else [],
+                "optimization_actions": (
+                    self.optimization_actions[-10:] if self.optimization_actions else []
+                ),
             }
 
         except Exception as e:
@@ -379,10 +381,12 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
                     {
                         "type": "response_time_optimization",
                         "endpoint": ep["endpoint"],
-                        "priority": "high"
-                        if ep["avg_response_time"]
-                        > self.thresholds["response_time_critical"]
-                        else "medium",
+                        "priority": (
+                            "high"
+                            if ep["avg_response_time"]
+                            > self.thresholds["response_time_critical"]
+                            else "medium"
+                        ),
                         "description": f"엔드포인트 {ep['endpoint']} 응답시간 최적화 필요",
                         "current_value": ep["avg_response_time"],
                         "actions": [

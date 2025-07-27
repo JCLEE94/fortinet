@@ -8,7 +8,6 @@
 import json
 import logging
 import re
-from abc import ABC, abstractmethod
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -389,7 +388,9 @@ class AdvancedFilterRule:
 
             historical_values = stats.get(f"historical_{metric}", [])
 
-            if len(historical_values) < 10:  # 충분한 데이터가 없으면 이상치로 판단하지 않음
+            if (
+                len(historical_values) < 10
+            ):  # 충분한 데이터가 없으면 이상치로 판단하지 않음
                 return False
 
             if method == "zscore":
@@ -865,9 +866,9 @@ class AdvancedFilter:
                     "rule_type": rule.rule_type,
                     "enabled": rule.enabled,
                     "match_count": rule.match_count,
-                    "last_match": rule.last_match.isoformat()
-                    if rule.last_match
-                    else None,
+                    "last_match": (
+                        rule.last_match.isoformat() if rule.last_match else None
+                    ),
                 }
             )
 

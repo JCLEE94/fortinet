@@ -5,22 +5,19 @@ Unified API Utilities
 모든 API 관련 유틸리티를 통합한 모듈
 """
 
-import asyncio
 import gzip
 import json
-import os
 import threading
 import time
-from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from flask import Response, g, jsonify, request
+from flask import Response, jsonify, request
 
-from src.config.constants import RATE_LIMITS
-from src.config.unified_settings import unified_settings
-from src.utils.unified_logger import get_logger
+from config.constants import RATE_LIMITS
+from config.unified_settings import unified_settings
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -35,7 +32,7 @@ def get_api_manager():
     Returns:
         APIIntegrationManager instance
     """
-    from src.api.integration.api_integration import APIIntegrationManager
+    from api.integration.api_integration import APIIntegrationManager
 
     # 통합 설정에서 데이터 구성
     settings_data = {

@@ -1,10 +1,10 @@
 """
 Main routes for pages
 """
-import os
-from datetime import datetime
 
-from flask import Blueprint, current_app, render_template
+import os
+
+from flask import Blueprint, render_template
 
 main_bp = Blueprint("main", __name__)
 
@@ -79,7 +79,7 @@ def batch_results():
     """배치 분석 결과 페이지"""
     from flask import session
 
-    from src.config.batch_defaults import get_default_batch_results
+    from config.batch_defaults import get_default_batch_results
 
     # 세션에서 배치 분석 결과 가져오기
     results = session.get("batch_results")
@@ -94,7 +94,7 @@ def batch_results():
 @main_bp.route("/devices")
 def devices():
     """장치 목록 페이지"""
-    from src.config.device_defaults import get_device_config
+    from config.device_defaults import get_device_config
 
     # 장치 관리 설정 로드
     device_config = get_device_config()
@@ -145,9 +145,8 @@ def settings():
 @main_bp.route("/monitoring")
 def monitoring():
     """모니터링 페이지"""
-    from src.config.dashboard_defaults import (generate_mock_alerts,
-                                               get_dashboard_config)
-    from src.mock.data_generator import DummyDataGenerator
+    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from mock.data_generator import DummyDataGenerator
 
     # 모니터링용 더미 데이터 생성
     dummy_generator = DummyDataGenerator()
@@ -193,11 +192,10 @@ def dashboard_modern():
 @main_bp.route("/dashboard")
 def dashboard():
     """대시보드 페이지"""
-    from src.api.integration.api_integration import APIIntegrationManager
-    from src.config.dashboard_defaults import (generate_mock_alerts,
-                                               get_dashboard_config)
-    from src.config.unified_settings import unified_settings
-    from src.mock.data_generator import DummyDataGenerator
+    from api.integration.api_integration import APIIntegrationManager
+    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.unified_settings import unified_settings
+    from mock.data_generator import DummyDataGenerator
 
     # 대시보드 설정 로드
     dashboard_config = get_dashboard_config()
@@ -263,9 +261,9 @@ def dashboard():
 @main_bp.route("/result")
 def result():
     """분석 결과 페이지"""
-    from flask import request, session
+    from flask import session
 
-    from src.config.result_defaults import get_default_result
+    from config.result_defaults import get_default_result
 
     # 세션에서 분석 결과 가져오기 (분석 후 리다이렉트된 경우)
     data = session.get("analysis_result")

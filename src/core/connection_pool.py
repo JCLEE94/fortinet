@@ -13,7 +13,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from src.config.constants import BATCH_SETTINGS
+from config.constants import BATCH_SETTINGS
 
 logger = logging.getLogger(__name__)
 
@@ -171,12 +171,16 @@ class ConnectionPoolManager:
             if hasattr(adapter, "poolmanager") and adapter.poolmanager:
                 pool_stats = {
                     "num_connections": len(adapter.poolmanager.pools),
-                    "num_requests": adapter.poolmanager.num_requests
-                    if hasattr(adapter.poolmanager, "num_requests")
-                    else 0,
-                    "num_connections_dropped": adapter.poolmanager.num_connections_dropped
-                    if hasattr(adapter.poolmanager, "num_connections_dropped")
-                    else 0,
+                    "num_requests": (
+                        adapter.poolmanager.num_requests
+                        if hasattr(adapter.poolmanager, "num_requests")
+                        else 0
+                    ),
+                    "num_connections_dropped": (
+                        adapter.poolmanager.num_connections_dropped
+                        if hasattr(adapter.poolmanager, "num_connections_dropped")
+                        else 0
+                    ),
                 }
             else:
                 pool_stats = {

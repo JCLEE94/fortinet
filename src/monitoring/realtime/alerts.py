@@ -7,7 +7,6 @@ WebSocket을 통한 실시간 알림 및 이벤트 스트리밍
 """
 
 import asyncio
-import json
 import logging
 from collections import deque
 from datetime import datetime
@@ -247,7 +246,9 @@ class RealtimeAlertSystem:
 
     def _format_message(self, rule: Dict, metrics: Dict) -> str:
         """알림 메시지 포맷팅"""
-        template = rule.get("message_template", "{metric} 값이 임계값을 초과했습니다: {value}")
+        template = rule.get(
+            "message_template", "{metric} 값이 임계값을 초과했습니다: {value}"
+        )
 
         condition = rule.get("condition", {})
         metric_name = condition.get("metric", "unknown")

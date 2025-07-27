@@ -5,13 +5,12 @@ CLAUDE.md 지시사항에 따른 통합 모니터링 프레임워크의 핵심 �
 """
 import json
 import logging
-import os
 import threading
 import time
 from abc import ABC, abstractmethod
 from collections import deque
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 
 class MonitoringBase(ABC):
@@ -110,7 +109,9 @@ class MonitoringBase(ABC):
                     self._thread.join(timeout=timeout)
 
                     if self._thread.is_alive():
-                        self.logger.warning(f"{self.name} 모니터링 스레드가 시간 초과로 강제 종료됨")
+                        self.logger.warning(
+                            f"{self.name} 모니터링 스레드가 시간 초과로 강제 종료됨"
+                        )
                         return False
 
                 self.logger.info(f"{self.name} 모니터링 중지됨")
@@ -351,7 +352,6 @@ class MonitoringBase(ABC):
     @abstractmethod
     def _collect_data(self) -> Optional[Dict]:
         """데이터 수집 (필수 구현)"""
-        pass
 
     def _process_data(self, data: Dict) -> Optional[Dict]:
         """데이터 처리 (선택적 구현)"""
@@ -359,15 +359,12 @@ class MonitoringBase(ABC):
 
     def _analyze_data(self, data: Dict):
         """데이터 분석 (선택적 구현)"""
-        pass
 
     def _on_start(self):
         """시작 시 콜백 (선택적 구현)"""
-        pass
 
     def _on_stop(self):
         """중지 시 콜백 (선택적 구현)"""
-        pass
 
 
 class HealthCheckMixin:

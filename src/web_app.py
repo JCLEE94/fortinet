@@ -6,16 +6,9 @@ Nextrade Fortigate - 모듈화된 웹 애플리케이션
 Flask + Socket.IO 기반 웹 애플리케이션 (모듈화 버전)
 """
 
-import asyncio
-import json
-import logging
 import os
-import queue
-import random
-import sys
-import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # 오프라인 모드 감지
 OFFLINE_MODE = (
@@ -35,7 +28,7 @@ DISABLE_SOCKETIO = os.getenv("DISABLE_SOCKETIO", "false").lower() == "true"
 
 if not DISABLE_SOCKETIO:
     try:
-        from flask_socketio import SocketIO, emit
+        from flask_socketio import SocketIO
 
         print("Socket.IO enabled")
     except ImportError:
@@ -44,20 +37,29 @@ if not DISABLE_SOCKETIO:
 else:
     print("Socket.IO disabled by environment variable")
 
-from flask import (Flask, current_app, g, jsonify, redirect, render_template,
-                   request, send_from_directory, session, url_for)
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+)
 
-from src.routes.api_routes import api_bp
-from src.routes.fortimanager_routes import fortimanager_bp
-from src.routes.itsm_api_routes import itsm_api_bp
-from src.routes.itsm_routes import itsm_bp
+from routes.api_routes import api_bp
+from routes.fortimanager_routes import fortimanager_bp
+from routes.itsm_api_routes import itsm_api_bp
+from routes.itsm_routes import itsm_bp
+
 # Route imports
-from src.routes.main_routes import main_bp
-from src.utils.security import (InputValidator, add_security_headers,
-                                csrf_protect, generate_csrf_token, rate_limit,
-                                validate_request)
+from routes.main_routes import main_bp
+from utils.security import (
+    add_security_headers,
+    csrf_protect,
+    generate_csrf_token,
+    rate_limit,
+)
+
 # 모듈 임포트
-from src.utils.unified_logger import get_advanced_logger, get_logger
+from utils.unified_logger import get_logger
 
 # Removed old cache_manager import - using unified_cache_manager instead
 
@@ -84,10 +86,12 @@ def create_app():
         os.environ["REDIS_ENABLED"] = "false"
 
     try:
-        from src.utils.unified_cache_manager import get_cache_manager
+        from utils.unified_cache_manager import get_cache_manager
 
         cache_manager = get_cache_manager()
-        print(f"통합 캐시 매니저 로드 성공: {cache_manager.get_stats()['backends']}개 백엔드")
+        print(
+            f"통합 캐시 매니저 로드 성공: {cache_manager.get_stats()['backends']}개 백엔드"
+        )
     except Exception as e:
         print(f"캐시 매니저 로드 실패: {e}")
         cache_manager = None
@@ -100,7 +104,7 @@ def create_app():
     # Context processor for global variables
     @app.context_processor
     def inject_global_vars():
-        from src.config.unified_settings import unified_settings
+        from config.unified_settings import unified_settings
 
         # 운영 환경에서는 테스트 모드 숨김
         show_test_mode = unified_settings.app_mode != "production"
@@ -136,7 +140,7 @@ def create_app():
 
     # 성능 최적화 라우트 등록
     try:
-        from src.routes.performance_routes import performance_bp
+        from routes.performance_routes import performance_bp
 
         app.register_blueprint(performance_bp)
         logger.info("Performance optimization routes registered")
@@ -145,7 +149,7 @@ def create_app():
 
     # ITSM 자동화 라우트 등록
     try:
-        from src.routes.itsm_automation_routes import itsm_automation_bp
+        from routes.itsm_automation_routes import itsm_automation_bp
 
         app.register_blueprint(itsm_automation_bp)
         logger.info("ITSM automation routes registered")
@@ -154,7 +158,7 @@ def create_app():
 
     # 로그 관리 라우트 등록
     try:
-        from src.routes.logs_routes import logs_bp
+        from routes.logs_routes import logs_bp
 
         app.register_blueprint(logs_bp)
         logger.info("Docker logs management routes registered")
@@ -169,7 +173,7 @@ def create_app():
         """경로 분석 (레거시 호환성)"""
         try:
             data = request.get_json()
-            from src.analysis.analyzer import FirewallRuleAnalyzer
+            from analysis.analyzer import FirewallRuleAnalyzer
 
             analyzer = FirewallRuleAnalyzer()
             result = analyzer.analyze_path(data)
@@ -185,7 +189,7 @@ def create_app():
         """방화벽 정책 분석"""
         try:
             data = request.get_json()
-            from src.analysis.fixed_path_analyzer import FixedPathAnalyzer
+            from analysis.fixed_path_analyzer import FixedPathAnalyzer
 
             analyzer = FixedPathAnalyzer()
 
@@ -271,8 +275,8 @@ def main():
             socketio = None
 
     # 서버 설정
-    from src.config.services import APP_CONFIG
-    from src.config.unified_settings import unified_settings
+    from config.services import APP_CONFIG
+    from config.unified_settings import unified_settings
 
     host = os.environ.get("HOST_IP", unified_settings.webapp.host)
     port = int(os.environ.get("FLASK_PORT", APP_CONFIG["web_port"]))

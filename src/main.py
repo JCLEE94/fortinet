@@ -12,19 +12,24 @@ import argparse
 from pathlib import Path
 
 # 공통 임포트 사용
-from src.utils.common_imports import (Optional, datetime, get_env_bool, json,
-                                      os, setup_module_logger, sys)
+from utils.common_imports import (
+    json,
+    os,
+    setup_module_logger,
+    sys,
+)
 
 # Handle different execution contexts
 if __name__ == "__main__":
     # Add parent directory to path when executed directly
     sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.analysis.refactored_analyzer import RefactoredFirewallAnalyzer
-from src.analysis.visualizer import PathVisualizer
+from analysis.analyzer import FirewallRuleAnalyzer
+from analysis.visualizer import PathVisualizer
+
 # 프로젝트 특정 임포트 (중복 try-except 제거)
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 logger = setup_module_logger("main")
 
@@ -49,7 +54,7 @@ def determine_target_environment() -> str:
 
 def get_env_port(environment: str) -> int:
     """CLAUDE.md v8.7.0: Get port based on environment"""
-    from src.config.services import APP_CONFIG
+    from config.services import APP_CONFIG
 
     if environment == "dev":
         return int(
@@ -118,7 +123,9 @@ def parse_args():
     )
     parser.add_argument("--output", help="출력 파일 경로", required=False)
     parser.add_argument("--web", help="웹 인터페이스 시작", action="store_true")
-    parser.add_argument("--host", help="FortiManager 또는 FortiGate 호스트", required=False)
+    parser.add_argument(
+        "--host", help="FortiManager 또는 FortiGate 호스트", required=False
+    )
     parser.add_argument("--token", help="API 토큰", required=False)
     parser.add_argument("--username", help="사용자 이름", required=False)
     parser.add_argument("--password", help="비밀번호", required=False)
@@ -154,7 +161,9 @@ def analyze_packet_path(src_ip, dst_ip, port, protocol, api_client, manager=Fals
                 return None
 
         # 경로 분석
-        logger.info(f"패킷 경로 분석 중: {src_ip} -> {dst_ip}, 포트: {port}, 프로토콜: {protocol}")
+        logger.info(
+            f"패킷 경로 분석 중: {src_ip} -> {dst_ip}, 포트: {port}, 프로토콜: {protocol}"
+        )
         path_data = analyzer.trace_packet_path(src_ip, dst_ip, port, protocol)
 
         return path_data
@@ -208,10 +217,10 @@ def main():
 
         # Use web_app module
         try:
-            from src.config.unified_settings import unified_settings
-            from src.web_app import create_app
+            from config.unified_settings import unified_settings
+            from web_app import create_app
         except ImportError:
-            from src.config.unified_settings import unified_settings
+            from config.unified_settings import unified_settings
             from web_app import create_app
 
         # Create app with factory pattern
@@ -262,7 +271,9 @@ def main():
 
     # CLI 모드에서는 필수 인수 확인
     if not all([args.src, args.dst, args.port]):
-        print("오류: 출발지 IP(--src), 목적지 IP(--dst), 포트(--port)는 필수 인수입니다.")
+        print(
+            "오류: 출발지 IP(--src), 목적지 IP(--dst), 포트(--port)는 필수 인수입니다."
+        )
         return 1
 
     # API 클라이언트 설정

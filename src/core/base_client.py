@@ -8,25 +8,27 @@ Version: 3.0.0
 Date: 2025-05-30
 """
 
-from datetime import timedelta
 
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
 # 공통 임포트 사용
-from src.utils.common_imports import (Any, Dict, Enum, List, Optional, Tuple,
-                                      Union, dataclass, datetime, json,
-                                      requests, time)
-from src.utils.exception_handlers import (FortiGateAPIException,
-                                          FortiManagerAPIException,
-                                          NetworkException,
-                                          comprehensive_exception_handler,
-                                          safe_execute)
-from src.utils.unified_logger import setup_logger as setup_module_logger
+from utils.common_imports import (
+    Any,
+    Dict,
+    Enum,
+    Optional,
+    dataclass,
+    requests,
+    time,
+)
+from utils.exception_handlers import (
+    NetworkException,
+)
 
-from .auth_manager import AuthManager, AuthType, auth_manager
-from .cache_manager import CacheManager, cache_manager
-from .config_manager import ConfigManager, config_manager
+from .auth_manager import AuthManager, AuthType
+from .cache_manager import CacheManager
+from .config_manager import ConfigManager
 
 # Disable SSL warnings
 disable_warnings(InsecureRequestWarning)
@@ -127,7 +129,7 @@ class UnifiedAPIClient:
 
     def _setup_client_config(self):
         """Setup client-specific configuration."""
-        from src.config.services import API_VERSIONS
+        from config.services import API_VERSIONS
 
         if self.client_type == ClientType.FORTIGATE:
             self.base_url = (

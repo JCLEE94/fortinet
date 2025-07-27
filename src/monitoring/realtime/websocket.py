@@ -12,7 +12,7 @@ import time
 from flask import request
 from flask_socketio import emit, join_room, leave_room
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -59,7 +59,11 @@ class RealtimeMonitoringHandler:
 
             emit(
                 "monitoring_joined",
-                {"room": room, "device_id": device_id, "message": "실시간 모니터링이 시작되었습니다."},
+                {
+                    "room": room,
+                    "device_id": device_id,
+                    "message": "실시간 모니터링이 시작되었습니다.",
+                },
             )
 
             logger.info(f"Client {request.sid} joined monitoring room {room}")
@@ -78,7 +82,10 @@ class RealtimeMonitoringHandler:
                 if not self.monitoring_clients[room]["clients"]:
                     del self.monitoring_clients[room]
 
-            emit("monitoring_left", {"room": room, "message": "실시간 모니터링이 중지되었습니다."})
+            emit(
+                "monitoring_left",
+                {"room": room, "message": "실시간 모니터링이 중지되었습니다."},
+            )
 
             logger.info(f"Client {request.sid} left monitoring room {room}")
 

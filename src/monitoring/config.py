@@ -6,10 +6,10 @@ CLAUDE.md 지시사항에 따른 중앙화된 설정 관리 시스템
 import json
 import logging
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from threading import RLock
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,9 @@ class APIPerformanceConfig:
     def __post_init__(self):
         if self.thresholds is None:
             self.thresholds = {
-                "response_time_warning": ThresholdConfig(1000.0, 3000.0, "ms", "응답 시간"),
+                "response_time_warning": ThresholdConfig(
+                    1000.0, 3000.0, "ms", "응답 시간"
+                ),
                 "error_rate": ThresholdConfig(5.0, 10.0, "%", "오류율"),
                 "throughput_min": ThresholdConfig(10.0, 5.0, "req/min", "최소 처리량"),
             }

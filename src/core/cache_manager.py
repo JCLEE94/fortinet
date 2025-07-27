@@ -16,9 +16,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from src.config.constants import CACHE_SETTINGS, DEFAULT_PORTS
+from config.constants import CACHE_SETTINGS, DEFAULT_PORTS
 
 
 class CacheBackend(Enum):
@@ -65,37 +65,30 @@ class BaseCacheBackend(ABC):
     @abstractmethod
     def get(self, key: str) -> Optional[Any]:
         """Get value from cache."""
-        pass
 
     @abstractmethod
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
         """Set value in cache."""
-        pass
 
     @abstractmethod
     def delete(self, key: str) -> bool:
         """Delete value from cache."""
-        pass
 
     @abstractmethod
     def exists(self, key: str) -> bool:
         """Check if key exists in cache."""
-        pass
 
     @abstractmethod
     def clear(self) -> bool:
         """Clear all cache entries."""
-        pass
 
     @abstractmethod
     def keys(self, pattern: str = "*") -> List[str]:
         """Get all keys matching pattern."""
-        pass
 
     @abstractmethod
     def stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
-        pass
 
 
 class MemoryCacheBackend(BaseCacheBackend):
@@ -427,9 +420,9 @@ class RedisCacheBackend(BaseCacheBackend):
                 stats.update(
                     {
                         "redis_memory_used": info.get("used_memory_human", "Unknown"),
-                        "redis_keys": info.get("db0", {}).get("keys", 0)
-                        if "db0" in info
-                        else 0,
+                        "redis_keys": (
+                            info.get("db0", {}).get("keys", 0) if "db0" in info else 0
+                        ),
                     }
                 )
             except Exception:

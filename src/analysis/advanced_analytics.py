@@ -23,12 +23,11 @@ except ImportError:
     HAS_PANDAS = False
     pd = None
 
-import json
 import logging
 import statistics
 from collections import deque
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -299,9 +298,9 @@ class AdvancedAnalytics:
                 "metric": metric_name,
                 "current_value": current_value,
                 "expected_range": (mean - stdev, mean + stdev),
-                "severity": "high"
-                if abs(current_value - mean) > 3 * stdev
-                else "medium",
+                "severity": (
+                    "high" if abs(current_value - mean) > 3 * stdev else "medium"
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -449,10 +448,14 @@ class AdvancedAnalytics:
         bottleneck_types = [b["type"] for b in bottlenecks]
 
         if "cpu" in bottleneck_types and "memory" in bottleneck_types:
-            recommendations.append("시스템 리소스가 전반적으로 부족합니다. 하드웨어 업그레이드를 권장합니다.")
+            recommendations.append(
+                "시스템 리소스가 전반적으로 부족합니다. 하드웨어 업그레이드를 권장합니다."
+            )
 
         if "network" in bottleneck_types:
-            recommendations.append("네트워크 최적화: QoS 정책 검토, 불필요한 트래픽 차단, 캐싱 활용")
+            recommendations.append(
+                "네트워크 최적화: QoS 정책 검토, 불필요한 트래픽 차단, 캐싱 활용"
+            )
 
         if len(bottlenecks) == 0:
             recommendations.append("시스템이 정상적으로 작동하고 있습니다.")

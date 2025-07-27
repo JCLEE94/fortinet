@@ -5,16 +5,13 @@
 코드베이스의 보안 문제를 자동으로 탐지하고 보고
 """
 
-import ast
-import hashlib
 import json
 import logging
 import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -335,13 +332,19 @@ class SecurityScanner:
 
         specific_recommendations = []
         if "hardcoded_secrets" in categories_found:
-            specific_recommendations.append("⚠️ 하드코딩된 비밀번호/키를 즉시 제거하고 환경 변수로 이동하세요")
+            specific_recommendations.append(
+                "⚠️ 하드코딩된 비밀번호/키를 즉시 제거하고 환경 변수로 이동하세요"
+            )
 
         if "sql_injection" in categories_found:
-            specific_recommendations.append("⚠️ SQL 인젝션 취약점을 수정하세요 - 매개변수화된 쿼리 사용")
+            specific_recommendations.append(
+                "⚠️ SQL 인젝션 취약점을 수정하세요 - 매개변수화된 쿼리 사용"
+            )
 
         if "command_injection" in categories_found:
-            specific_recommendations.append("⚠️ 명령어 인젝션 취약점을 수정하세요 - 입력 검증 강화")
+            specific_recommendations.append(
+                "⚠️ 명령어 인젝션 취약점을 수정하세요 - 입력 검증 강화"
+            )
 
         return specific_recommendations + recommendations
 

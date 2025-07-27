@@ -4,13 +4,15 @@ FortiManager 장치 관리 라우트
 장치 조회, 상태 확인, 인터페이스 관리 등 장치 관련 기능을 담당합니다.
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 
-from src.utils.api_utils import (get_api_manager, get_data_source,
-                                 get_dummy_generator, is_test_mode)
-from src.utils.security import rate_limit
-from src.utils.unified_cache_manager import cached
-from src.utils.unified_logger import setup_logger
+from utils.api_utils import (
+    get_api_manager,
+    get_dummy_generator,
+    is_test_mode,
+)
+from utils.unified_cache_manager import cached
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("device_routes")
 device_bp = Blueprint("devices", __name__, url_prefix="/devices")

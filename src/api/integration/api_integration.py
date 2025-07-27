@@ -10,9 +10,9 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.unified_logger import get_logger
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -45,7 +45,7 @@ class APIIntegrationManager:
     def _connect_fortimanager(self):
         """FortiManager 연결"""
         try:
-            from src.config.unified_settings import get_settings
+            from config.unified_settings import get_settings
 
             settings = get_settings()
 
@@ -67,7 +67,9 @@ class APIIntegrationManager:
                 == "true",
             }
 
-            logger.info(f"FortiManager 연결 시도: {fm_config['host']}:{fm_config['port']}")
+            logger.info(
+                f"FortiManager 연결 시도: {fm_config['host']}:{fm_config['port']}"
+            )
 
             self.fortimanager_client = FortiManagerAPIClient(
                 host=fm_config["host"],
@@ -132,7 +134,9 @@ class APIIntegrationManager:
                                 device_name, device_ip, device
                             )
 
-            logger.info(f"총 {len(self.fortigate_clients)}개의 FortiGate 장치를 발견했습니다.")
+            logger.info(
+                f"총 {len(self.fortigate_clients)}개의 FortiGate 장치를 발견했습니다."
+            )
 
         except Exception as e:
             logger.error(f"FortiGate 장치 검색 오류: {str(e)}")

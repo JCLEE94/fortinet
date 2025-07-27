@@ -1,15 +1,19 @@
 """
 FortiManager API routes (Refactored with Advanced Capabilities)
 """
-import asyncio
+
+import json
 import time
 
 from flask import Blueprint, jsonify, request
 
-from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-from src.utils.api_utils import get_api_manager
-from src.utils.security import rate_limit
-from src.utils.unified_cache_manager import cached
+from fortimanager.advanced_hub import FortiManagerAdvancedHub
+from utils.api_utils import get_api_manager
+from utils.security import rate_limit
+from utils.unified_cache_manager import cached
+from utils.unified_logger import get_logger
+
+logger = get_logger(__name__)
 
 fortimanager_bp = Blueprint("fortimanager", __name__, url_prefix="/api/fortimanager")
 
@@ -261,9 +265,11 @@ def get_topology():
                         "hostname": device.get("hostname", "Unknown"),
                         "ip": device.get("ip", "N/A"),
                         "type": device.get("platform", "fortigate").lower(),
-                        "status": device.get("conn_status", "up").lower()
-                        if device.get("conn_status", "up").lower() == "up"
-                        else "offline",
+                        "status": (
+                            device.get("conn_status", "up").lower()
+                            if device.get("conn_status", "up").lower() == "up"
+                            else "offline"
+                        ),
                         "model": device.get("model", "FortiGate"),
                         "version": device.get("version", "N/A"),
                         "cpu_usage": device.get("cpu", 0),
@@ -632,7 +638,6 @@ def detect_threats():
 
         # Convert async call to sync using asyncio.run
         import asyncio
-        from datetime import datetime
 
         try:
             loop = asyncio.get_event_loop()
@@ -747,7 +752,6 @@ def generate_threat_report():
 
         # Convert async call to sync using asyncio.run
         import asyncio
-        from datetime import datetime, timedelta
 
         try:
             loop = asyncio.get_event_loop()
@@ -852,7 +856,6 @@ def detect_anomalies():
 
         # Convert async call to sync using asyncio.run
         import asyncio
-        from datetime import datetime
 
         try:
             loop = asyncio.get_event_loop()
@@ -925,8 +928,6 @@ def generate_analytics_report():
 
         # Convert async call to sync using asyncio.run
         import asyncio
-        import json
-        from datetime import datetime
 
         try:
             loop = asyncio.get_event_loop()
@@ -1203,11 +1204,13 @@ def analyze_policy_scenario(scenario_id):
                     "port": scenario["port"],
                     "protocol": scenario["protocol"],
                     "allowed": overall_allowed,
-                    "reason": "; ".join(reasons) if reasons else "FortiManager 분석 완료",
+                    "reason": (
+                        "; ".join(reasons) if reasons else "FortiManager 분석 완료"
+                    ),
                     "policy_paths": policy_paths,  # 다중 정책 경로
-                    "policy_path": "; ".join(policy_paths)
-                    if policy_paths
-                    else "N/A",  # 기존 호환성
+                    "policy_path": (
+                        "; ".join(policy_paths) if policy_paths else "N/A"
+                    ),  # 기존 호환성
                     "device_analyses": device_analyses,  # 장치별 상세 분석
                     "devices_count": len(device_analyses),
                     "timestamp": time.time(),
@@ -1404,13 +1407,15 @@ def batch_analyze_scenarios():
                             "port": scenario["port"],
                             "protocol": scenario["protocol"],
                             "allowed": overall_allowed,
-                            "reason": "; ".join(reasons)
-                            if reasons
-                            else "FortiManager 분석 완료",
+                            "reason": (
+                                "; ".join(reasons)
+                                if reasons
+                                else "FortiManager 분석 완료"
+                            ),
                             "policy_paths": policy_paths,  # 다중 정책 경로
-                            "policy_path": "; ".join(policy_paths)
-                            if policy_paths
-                            else "N/A",  # 기존 호환성
+                            "policy_path": (
+                                "; ".join(policy_paths) if policy_paths else "N/A"
+                            ),  # 기존 호환성
                             "device_analyses": device_analyses,  # 장치별 상세 분석
                             "devices_count": len(device_analyses),
                             "scenario_id": scenario["id"],
@@ -1576,11 +1581,13 @@ def analyze_custom_scenario():
                     "port": int(data["port"]),
                     "protocol": data["protocol"],
                     "allowed": overall_allowed,
-                    "reason": "; ".join(reasons) if reasons else "FortiManager 분석 완료",
+                    "reason": (
+                        "; ".join(reasons) if reasons else "FortiManager 분석 완료"
+                    ),
                     "policy_paths": policy_paths,  # 다중 정책 경로
-                    "policy_path": "; ".join(policy_paths)
-                    if policy_paths
-                    else "N/A",  # 기존 호환성
+                    "policy_path": (
+                        "; ".join(policy_paths) if policy_paths else "N/A"
+                    ),  # 기존 호환성
                     "device_analyses": analysis_results,  # 장치별 상세 분석
                     "devices_count": len(analysis_results),
                     "scenario_id": "custom",
@@ -1804,7 +1811,7 @@ def analyze_packet_path():
         if not fm_client and not fg_client:
             return jsonify({"error": "No FortiGate/FortiManager client available"}), 503
 
-        from src.analysis.refactored_analyzer import RefactoredFirewallAnalyzer
+        from analysis.refactored_analyzer import RefactoredFirewallAnalyzer
 
         analyzer = RefactoredFirewallAnalyzer(fg_client, fm_client)
 
@@ -1839,7 +1846,7 @@ def analyze_policy_conflicts_basic():
         if not fm_client and not fg_client:
             return jsonify({"error": "No FortiGate/FortiManager client available"}), 503
 
-        from src.analysis.refactored_analyzer import RefactoredFirewallAnalyzer
+        from analysis.refactored_analyzer import RefactoredFirewallAnalyzer
 
         analyzer = RefactoredFirewallAnalyzer(fg_client, fm_client)
 

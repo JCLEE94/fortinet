@@ -21,11 +21,7 @@ if not hasattr(settings, "app_mode"):
 
 # 추가 설정 모듈 임포트 (하드코딩 제거를 위해 추가)
 try:
-    from .limits import *
-    from .network import *
-    from .paths import *
-    from .ports import *
-    from .services import *
+    pass
 except ImportError:
     # 새 설정 모듈이 없는 경우 무시 (기존 호환성)
     pass

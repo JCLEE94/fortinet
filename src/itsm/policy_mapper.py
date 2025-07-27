@@ -8,10 +8,10 @@ ITSM 요청을 실제 FortiGate 방화벽 정책으로 매핑
 
 import ipaddress
 import re
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 

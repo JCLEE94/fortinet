@@ -16,8 +16,13 @@ from typing import Any, Dict, List
 import psutil
 import requests
 
-from src.config.constants import (CHECK_INTERVALS, DEFAULT_PATHS,
-                                  DEFAULT_PORTS, SERVICE_URLS, TIMEOUTS)
+from config.constants import (
+    CHECK_INTERVALS,
+    DEFAULT_PATHS,
+    DEFAULT_PORTS,
+    SERVICE_URLS,
+    TIMEOUTS,
+)
 
 # 텔레그램 알림 시스템 제거됨
 
@@ -151,7 +156,6 @@ class TroubleshootingLoop:
         report_counter = 0
 
         # 모든 성능 모니터링 코드가 비활성화되었습니다 (무한프로세싱 방지)
-        pass
 
     def _diagnose_system(self) -> List[Dict[str, Any]]:
         """시스템 진단"""

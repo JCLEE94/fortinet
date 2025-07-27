@@ -6,7 +6,7 @@ Network configuration module
 """
 
 import os
-from typing import Dict, List
+from typing import Dict
 
 # 네트워크 존 설정
 NETWORK_ZONES: Dict[str, str] = {

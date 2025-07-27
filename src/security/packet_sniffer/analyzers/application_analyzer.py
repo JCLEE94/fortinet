@@ -5,12 +5,11 @@
 고레벨 애플리케이션 프로토콜 분석 및 보안 검사
 """
 
-import base64
 import logging
 import re
 import struct
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

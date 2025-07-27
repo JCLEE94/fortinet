@@ -48,7 +48,8 @@ ALERT_TEMPLATES = [
         "color": os.getenv("ALERT_CRITICAL_COLOR", "var(--danger)"),
         "title_template": os.getenv("ALERT_CRITICAL_TITLE", "높은 CPU 사용률"),
         "description_template": os.getenv(
-            "ALERT_CRITICAL_DESC", "{device}에서 CPU 사용률이 {threshold}%를 초과했습니다."
+            "ALERT_CRITICAL_DESC",
+            "{device}에서 CPU 사용률이 {threshold}%를 초과했습니다.",
         ),
         "threshold": int(os.getenv("CPU_CRITICAL_THRESHOLD", "85")),
     },
@@ -58,7 +59,8 @@ ALERT_TEMPLATES = [
         "color": os.getenv("ALERT_WARNING_COLOR", "var(--warning)"),
         "title_template": os.getenv("ALERT_WARNING_TITLE", "메모리 사용량 경고"),
         "description_template": os.getenv(
-            "ALERT_WARNING_DESC", "{device}에서 메모리 사용률이 {threshold}%를 초과했습니다."
+            "ALERT_WARNING_DESC",
+            "{device}에서 메모리 사용률이 {threshold}%를 초과했습니다.",
         ),
         "threshold": int(os.getenv("MEMORY_WARNING_THRESHOLD", "75")),
     },
@@ -145,7 +147,6 @@ def get_alert_template(alert_type: str) -> Dict[str, Any]:
 def generate_mock_alerts(count: int = 3) -> List[Dict[str, Any]]:
     """모의 알림 데이터 생성"""
     import random
-    from datetime import datetime, timedelta
 
     alerts = []
     devices = [

@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # Optional scientific computing libraries
 try:
@@ -33,9 +33,8 @@ except ImportError:
 
 import hashlib
 import statistics
-from collections import Counter, defaultdict
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -769,9 +768,11 @@ class AdvancedAnalyticsEngine:
             return {
                 "direction": direction,
                 "slope": float(slope),
-                "strength": abs(slope) / (max(values) - min(values))
-                if max(values) != min(values)
-                else 0,
+                "strength": (
+                    abs(slope) / (max(values) - min(values))
+                    if max(values) != min(values)
+                    else 0
+                ),
             }
 
         return {"direction": "unknown"}

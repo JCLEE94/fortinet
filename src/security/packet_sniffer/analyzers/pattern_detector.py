@@ -8,7 +8,7 @@
 import logging
 from collections import defaultdict
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -237,9 +237,11 @@ class PatternDetector:
                             "protocols": list(protocols),
                             "packet_count": min_packets,
                             "duration": time_diff,
-                            "intensity": min_packets / time_diff
-                            if time_diff > 0
-                            else float("inf"),
+                            "intensity": (
+                                min_packets / time_diff
+                                if time_diff > 0
+                                else float("inf")
+                            ),
                         }
 
                         # 확장된 버스트 확인 (더 많은 패킷이 같은 패턴인지)
@@ -376,14 +378,16 @@ class PatternDetector:
                             "src_ip": scan["src_ip"],
                             "dst_ip": scan["dst_ip"],
                             "port_count": port_count,
-                            "ports": sorted(list(scan["ports"]))[:20],  # 최대 20개 포트만 표시
+                            "ports": sorted(list(scan["ports"]))[
+                                :20
+                            ],  # 최대 20개 포트만 표시
                             "packet_count": scan["packet_count"],
                             "duration": duration,
                             "start_time": scan["start_time"],
                             "end_time": scan["end_time"],
-                            "scan_rate": port_count / duration
-                            if duration > 0
-                            else float("inf"),
+                            "scan_rate": (
+                                port_count / duration if duration > 0 else float("inf")
+                            ),
                         }
                     )
 
@@ -447,9 +451,9 @@ class PatternDetector:
                             "duration": duration,
                             "start_time": scan["start_time"],
                             "end_time": scan["end_time"],
-                            "scan_rate": host_count / duration
-                            if duration > 0
-                            else float("inf"),
+                            "scan_rate": (
+                                host_count / duration if duration > 0 else float("inf")
+                            ),
                         }
                     )
 
@@ -520,15 +524,19 @@ class PatternDetector:
                             "packet_count": target["count"],
                             "packet_ratio": packet_ratio,
                             "source_count": source_count,
-                            "sources": sorted(list(target["sources"]))[:5],  # 최대 5개 발신지
+                            "sources": sorted(list(target["sources"]))[
+                                :5
+                            ],  # 최대 5개 발신지
                             "protocols": list(target["protocols"]),
                             "total_bytes": target["total_bytes"],
                             "duration": duration,
                             "start_time": target["start_time"],
                             "end_time": target["end_time"],
-                            "traffic_intensity": target["count"] / duration
-                            if duration > 0
-                            else float("inf"),
+                            "traffic_intensity": (
+                                target["count"] / duration
+                                if duration > 0
+                                else float("inf")
+                            ),
                         }
                     )
 
@@ -738,7 +746,9 @@ class PatternDetector:
             # 보안 우려사항 식별
             if patterns.get("scan"):
                 summary["security_concerns"].append("포트/호스트 스캔 활동 탐지")
-                summary["recommendations"].append("방화벽 정책 검토 및 침입 탐지 시스템 강화")
+                summary["recommendations"].append(
+                    "방화벽 정책 검토 및 침입 탐지 시스템 강화"
+                )
 
             if patterns.get("unusual"):
                 summary["security_concerns"].append("비정상적인 네트워크 활동 탐지")
@@ -746,10 +756,14 @@ class PatternDetector:
 
             if patterns.get("targeted"):
                 summary["security_concerns"].append("표적화된 공격 패턴 의심")
-                summary["recommendations"].append("해당 대상의 보안 상태 점검 및 접근 제어 강화")
+                summary["recommendations"].append(
+                    "해당 대상의 보안 상태 점검 및 접근 제어 강화"
+                )
 
             if patterns.get("burst"):
-                summary["security_concerns"].append("버스트 트래픽으로 인한 DDoS 공격 가능성")
+                summary["security_concerns"].append(
+                    "버스트 트래픽으로 인한 DDoS 공격 가능성"
+                )
                 summary["recommendations"].append("트래픽 제한 및 부하 분산 검토")
 
             return summary

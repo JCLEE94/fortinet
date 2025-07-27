@@ -10,14 +10,14 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from .fortigate_api_client import FortiGateAPIClient
 from .fortimanager_api_client import FortiManagerAPIClient
 
 # 절대 임포트로 변경
 try:
-    from src.utils.redis_cache import redis_cache, redis_cached
+    from utils.redis_cache import redis_cache, redis_cached
 except ImportError:
     # 임포트 실패 시 더미 데코레이터 생성
     def redis_cached(*args, **kwargs):
@@ -170,9 +170,11 @@ class APIDataCollector:
                             "name": device.get("name", "Unknown"),
                             "type": "FortiGate (Managed)",
                             "ip": device.get("ip", "N/A"),
-                            "status": "online"
-                            if device.get("conn_status") == 1
-                            else "offline",
+                            "status": (
+                                "online"
+                                if device.get("conn_status") == 1
+                                else "offline"
+                            ),
                             "cpu_usage": 0,
                             "memory_usage": 0,
                             "sessions": 0,

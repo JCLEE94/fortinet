@@ -10,23 +10,18 @@ import json
 import os
 import sys
 import tempfile
-import threading
 import time
 import traceback
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
-from unittest.mock import MagicMock, patch
+from typing import Any, Callable, Dict, List, Optional
 
-import requests
 
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.config.unified_settings import UnifiedSettings
-from src.utils.unified_cache_manager import get_cache_manager
-from src.web_app import create_app
+from web_app import create_app
 
 
 @dataclass
@@ -219,9 +214,9 @@ class IntegrationTestFramework:
             "total": self.test_count,
             "passed": self.passed_count,
             "failed": self.failed_count,
-            "success_rate": self.passed_count / self.test_count
-            if self.test_count > 0
-            else 0,
+            "success_rate": (
+                self.passed_count / self.test_count if self.test_count > 0 else 0
+            ),
             "duration": total_time,
             "results": self.results,
         }

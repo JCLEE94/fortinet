@@ -18,9 +18,11 @@ class FixedPathAnalyzer:
     def __init__(self):
         # 네트워크 구성 정의
         self.network_zones = {
-            "internal": CONFIG.network.INTERNAL_NETWORKS[0]
-            if CONFIG.network.INTERNAL_NETWORKS
-            else "192.168.0.0/16",
+            "internal": (
+                CONFIG.network.INTERNAL_NETWORKS[0]
+                if CONFIG.network.INTERNAL_NETWORKS
+                else "192.168.0.0/16"
+            ),
             "dmz": CONFIG.network.DMZ_NETWORK,
             "external": "0.0.0.0/0",
             "guest": "10.10.0.0/16",
@@ -279,7 +281,9 @@ class FixedPathAnalyzer:
                 "firewall_name": f"FW-{i+1:02d}",
                 "src_ip": route["from"],
                 "dst_ip": route["to"],
-                "policy_id": policy_id if i == 0 else None,  # 첫 번째 홉에서만 정책 적용
+                "policy_id": (
+                    policy_id if i == 0 else None
+                ),  # 첫 번째 홉에서만 정책 적용
                 "policy": policy if i == 0 else None,
                 "action": policy["action"] if i == 0 else "forward",
                 "interface_in": route["interface"],
@@ -295,14 +299,16 @@ class FixedPathAnalyzer:
             "path": path,
             "allowed": allowed,
             "final_destination": dst_ip,
-            "blocked_by": {
-                "firewall": "FW-01",
-                "policy_id": policy_id,
-                "policy_name": policy["name"],
-                "reason": policy["description"],
-            }
-            if not allowed
-            else None,
+            "blocked_by": (
+                {
+                    "firewall": "FW-01",
+                    "policy_id": policy_id,
+                    "policy_name": policy["name"],
+                    "reason": policy["description"],
+                }
+                if not allowed
+                else None
+            ),
             "analysis_summary": {
                 "source_ip": src_ip,
                 "source_zone": self.get_zone_for_ip(src_ip),

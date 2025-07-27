@@ -6,14 +6,11 @@
 외부 ITSM에서 방화벽 정책 요청을 자동으로 수집하고 처리
 """
 
-import asyncio
-import json
 import re
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import requests
 
@@ -26,7 +23,7 @@ except ImportError:
     HAS_AIOHTTP = False
     aiohttp = None
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 

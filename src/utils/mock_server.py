@@ -3,16 +3,14 @@
 Fortinet Mock Server - Postman 컬렉션 기반 Mock API 서버
 """
 
-import json
-import random
 import secrets
 import time
 import uuid
 from datetime import datetime, timedelta
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request
 
-from src.config.constants import DEFAULT_PORTS, TRAFFIC_THRESHOLDS
+from config.constants import DEFAULT_PORTS, TRAFFIC_THRESHOLDS
 
 app = Flask(__name__)
 

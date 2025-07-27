@@ -6,14 +6,11 @@ Redis 캐싱 유틸리티 - 통합 캐시 매니저 래퍼
 기존 코드와의 하위 호환성을 위한 Redis 캐시 래퍼
 """
 
-import json
 import logging
-import os
-import time
 from functools import wraps
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional
 
-from src.utils.unified_cache_manager import get_cache_manager
+from utils.unified_cache_manager import get_cache_manager
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +41,9 @@ class RedisCache:
     def clear_pattern(self, pattern: str) -> int:
         """패턴에 맞는 모든 키 삭제 (통합 캐시 매니저에서는 전체 클리어)"""
         # 패턴 매칭은 복잡하므로 전체 클리어로 대체
-        logger.warning(f"패턴 매칭 삭제는 지원되지 않음 ({pattern}). 전체 캐시를 클리어합니다.")
+        logger.warning(
+            f"패턴 매칭 삭제는 지원되지 않음 ({pattern}). 전체 캐시를 클리어합니다."
+        )
         self.cache_manager.clear()
         return 1  # 일관성을 위해 1 반환
 

@@ -280,7 +280,6 @@ class AuthManager:
         """
         Authenticate using FortiManager session.
         """
-        import json
 
         import requests
 

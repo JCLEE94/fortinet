@@ -1,8 +1,9 @@
 """
 환경변수 기본값 및 설정 관리
 """
+
 import os
-from typing import Any, Dict, Union
+from typing import Dict
 
 
 class EnvironmentDefaults:

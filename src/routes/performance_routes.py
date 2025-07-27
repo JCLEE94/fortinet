@@ -19,14 +19,35 @@ def optimized_response(**kwargs):
     return decorator
 
 
-from src.utils.api_utils import get_data_source
-from src.utils.route_helpers import standard_api_response
-from src.utils.security import rate_limit
-# from src.utils.performance_cache import get_performance_cache, CacheWarmer  # 제거됨
-from src.utils.unified_cache_manager import get_cache_manager
-from src.utils.unified_logger import get_logger
+from utils.api_utils import get_data_source
+from utils.route_helpers import standard_api_response
+from utils.security import rate_limit
 
-# from src.monitoring.real_time_monitor import get_real_time_monitor  # 제거됨
+from utils.unified_cache_manager import get_cache_manager
+from utils.unified_logger import get_logger
+
+# Stub functions for removed modules
+def get_api_optimizer():
+    """Stub for removed api_optimizer"""
+    return type('obj', (object,), {'get_performance_metrics': lambda: {}})()
+
+def get_performance_cache():
+    """Stub for removed performance_cache"""
+    return get_cache_manager()
+
+class CacheWarmer:
+    """Stub for removed CacheWarmer"""
+    def __init__(self, cache): pass
+    def warm_cache(self): pass
+
+def get_real_time_monitor():
+    """Stub for removed real_time_monitor"""
+    return type('obj', (object,), {
+        'get_metrics': lambda: {},
+        'start_monitoring': lambda: None,
+        'stop_monitoring': lambda: None,
+        'get_monitoring_status': lambda: {}
+    })()
 
 logger = get_logger(__name__)
 
@@ -122,8 +143,7 @@ def warmup_performance_cache():
 
         def warm_dashboard_stats():
             try:
-                from src.api.integration.dashboard_collector import \
-                    DashboardDataCollector
+                from api.integration.dashboard_collector import DashboardDataCollector
 
                 api_manager, dummy_generator, test_mode = get_data_source()
                 if test_mode:

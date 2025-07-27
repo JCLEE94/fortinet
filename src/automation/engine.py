@@ -7,13 +7,11 @@
 """
 
 import asyncio
-import json
 import logging
 import os
-import shutil
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Callable, Dict, List, Optional
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 

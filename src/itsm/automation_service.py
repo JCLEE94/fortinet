@@ -13,8 +13,8 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.unified_logger import get_logger
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from utils.unified_logger import get_logger
 
 from .external_connector import ExternalITSMConnector, ITSMConfig, ITSMPlatform
 from .policy_automation import DeploymentReport, PolicyAutomationEngine
@@ -74,7 +74,7 @@ class ITSMAutomationService:
     def _get_default_itsm_url(self):
         """Get default ITSM URL from config"""
         try:
-            from src.config.services import EXTERNAL_SERVICES
+            from config.services import EXTERNAL_SERVICES
 
             return EXTERNAL_SERVICES["itsm"]
         except ImportError:
@@ -176,7 +176,6 @@ class ITSMAutomationService:
         """자동화 설정 적용"""
         # 여기서 자동화 엔진의 설정을 조정할 수 있음
         # 예: 리스크 레벨별 자동 승인 정책 등
-        pass
 
     async def start_service(self):
         """자동화 서비스 시작"""
@@ -326,9 +325,11 @@ class ITSMAutomationService:
         status = {
             "is_running": self.is_running,
             "uptime_seconds": uptime,
-            "last_check": self.service_stats["last_check"].isoformat()
-            if self.service_stats["last_check"]
-            else None,
+            "last_check": (
+                self.service_stats["last_check"].isoformat()
+                if self.service_stats["last_check"]
+                else None
+            ),
             "total_requests_processed": self.service_stats["total_requests_processed"],
             "successful_deployments": self.service_stats["successful_deployments"],
             "failed_deployments": self.service_stats["failed_deployments"],
@@ -340,19 +341,19 @@ class ITSMAutomationService:
             "last_error": self.service_stats["last_error"],
             "connector_status": {
                 "connected": self.connector.is_connected if self.connector else False,
-                "platform": self.connector.config.platform.value
-                if self.connector
-                else None,
+                "platform": (
+                    self.connector.config.platform.value if self.connector else None
+                ),
                 "base_url": self.connector.config.base_url if self.connector else None,
             },
             "automation_engine_status": {
                 "initialized": self.automation_engine is not None,
                 "fortimanager_enabled": self.fortimanager_client is not None,
-                "deployment_history_count": len(
-                    self.automation_engine.deployment_history
-                )
-                if self.automation_engine
-                else 0,
+                "deployment_history_count": (
+                    len(self.automation_engine.deployment_history)
+                    if self.automation_engine
+                    else 0
+                ),
             },
         }
 

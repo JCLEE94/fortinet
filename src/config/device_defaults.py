@@ -88,14 +88,26 @@ DEVICE_FILTERS = [
         "label": os.getenv("FILTER_FIREWALL_TEXT", "방화벽"),
         "active": False,
     },
-    {"key": "router", "label": os.getenv("FILTER_ROUTER_TEXT", "라우터"), "active": False},
-    {"key": "switch", "label": os.getenv("FILTER_SWITCH_TEXT", "스위치"), "active": False},
+    {
+        "key": "router",
+        "label": os.getenv("FILTER_ROUTER_TEXT", "라우터"),
+        "active": False,
+    },
+    {
+        "key": "switch",
+        "label": os.getenv("FILTER_SWITCH_TEXT", "스위치"),
+        "active": False,
+    },
     {
         "key": "client",
         "label": os.getenv("FILTER_CLIENT_TEXT", "클라이언트"),
         "active": False,
     },
-    {"key": "server", "label": os.getenv("FILTER_SERVER_TEXT", "서버"), "active": False},
+    {
+        "key": "server",
+        "label": os.getenv("FILTER_SERVER_TEXT", "서버"),
+        "active": False,
+    },
 ]
 
 # 테이블 컬럼 설정
@@ -145,9 +157,15 @@ TABLE_COLUMNS = {
 # 모달 설정
 MODAL_CONFIG = {
     "title": os.getenv("MODAL_DEVICE_DETAILS_TITLE", "장치 상세 정보"),
-    "loading_message": os.getenv("MODAL_LOADING_MESSAGE", "장치 정보를 불러오는 중입니다..."),
-    "error_message": os.getenv("MODAL_ERROR_MESSAGE", "장치 정보를 가져오는데 실패했습니다"),
-    "no_interfaces_message": os.getenv("MODAL_NO_INTERFACES", "인터페이스 정보가 없습니다."),
+    "loading_message": os.getenv(
+        "MODAL_LOADING_MESSAGE", "장치 정보를 불러오는 중입니다..."
+    ),
+    "error_message": os.getenv(
+        "MODAL_ERROR_MESSAGE", "장치 정보를 가져오는데 실패했습니다"
+    ),
+    "no_interfaces_message": os.getenv(
+        "MODAL_NO_INTERFACES", "인터페이스 정보가 없습니다."
+    ),
     "no_policies_message": os.getenv("MODAL_NO_POLICIES", "정책 정보가 없습니다."),
     "test_data_suffix": os.getenv("MODAL_TEST_DATA_SUFFIX", " (테스트 데이터)"),
 }
@@ -172,7 +190,8 @@ SEARCH_CONFIG = {
 # 테스트 모드 설정
 TEST_MODE_CONFIG = {
     "banner_message": os.getenv(
-        "TEST_MODE_BANNER_MESSAGE", "현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다."
+        "TEST_MODE_BANNER_MESSAGE",
+        "현재 테스트 모드로 실행 중입니다. 실제 장비 연결 시 이 메시지가 사라집니다.",
     ),
     "badge_text": os.getenv("TEST_MODE_BADGE_TEXT", "테스트"),
     "device_suffix": os.getenv("TEST_MODE_DEVICE_SUFFIX", " (테스트 데이터)"),
@@ -233,7 +252,9 @@ def get_status_badge(status: str) -> Dict[str, str]:
 def generate_device_table_html(devices: List[Dict[str, Any]]) -> str:
     """장치 목록 테이블 HTML 생성"""
     if not devices:
-        return '<tr><td colspan="8" style="text-align: center;">장치가 없습니다.</td></tr>'
+        return (
+            '<tr><td colspan="8" style="text-align: center;">장치가 없습니다.</td></tr>'
+        )
 
     html_rows = []
     for device in devices:

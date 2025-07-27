@@ -3,7 +3,6 @@
 통합 모니터링 관리자 - 모든 모니터링 모듈을 중앙에서 관리
 CLAUDE.md 지시사항에 따른 완전 자율적 모니터링 시스템의 중앙 제어기
 """
-import asyncio
 import json
 import logging
 import threading
@@ -11,14 +10,13 @@ import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 
-from src.config.unified_settings import CONFIG
-from src.utils.performance_optimizer import LRUCache, measure_time, profile
+from config.unified_settings import CONFIG
+from utils.performance_optimizer import LRUCache, measure_time
 
-from .base import (MonitoringBase, get_all_monitors, register_monitor,
-                   unregister_monitor)
-from .config import MonitoringConfig, get_config_manager
+from .base import MonitoringBase, register_monitor, unregister_monitor
+from .config import get_config_manager
 
 logger = logging.getLogger(__name__)
 
@@ -190,9 +188,11 @@ class DataIntegrator:
                         "description": "높은 시스템 리소스 사용률이 API 성능에 영향을 줄 수 있습니다",
                         "cpu_usage": cpu_usage,
                         "memory_usage": memory_usage,
-                        "severity": "warning"
-                        if max(cpu_usage, memory_usage) < 90
-                        else "critical",
+                        "severity": (
+                            "warning"
+                            if max(cpu_usage, memory_usage) < 90
+                            else "critical"
+                        ),
                     }
 
             # 보안 스캔과 시스템 상태 상관관계

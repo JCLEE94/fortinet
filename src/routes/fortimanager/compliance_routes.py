@@ -4,16 +4,18 @@ FortiManager 컴플라이언스 라우트
 컴플라이언스 검사, 정책 템플릿 적용, 규정 준수 보고서 등 컴플라이언스 관련 기능을 담당합니다.
 """
 
-import asyncio
 
 from flask import Blueprint, jsonify, request
 
-from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-from src.utils.api_utils import (get_api_manager, get_data_source,
-                                 get_dummy_generator, is_test_mode)
-from src.utils.security import rate_limit
-from src.utils.unified_cache_manager import cached
-from src.utils.unified_logger import setup_logger
+from fortimanager.advanced_hub import FortiManagerAdvancedHub
+from utils.api_utils import (
+    get_api_manager,
+    get_dummy_generator,
+    is_test_mode,
+)
+from utils.security import rate_limit
+from utils.unified_cache_manager import cached
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("compliance_routes")
 compliance_bp = Blueprint("compliance", __name__, url_prefix="/compliance")

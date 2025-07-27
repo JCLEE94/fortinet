@@ -5,19 +5,16 @@ Base API Client Module
 Provides a common base class for all API clients with shared functionality
 """
 
-import json
 import os
-import sys
 import threading
 import time
-from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from abc import ABC
+from typing import Any, Callable, Dict, Optional
 
-import requests
 from requests.exceptions import RequestException
 
-from src.core.connection_pool import connection_pool_manager
-from src.utils.unified_logger import get_logger
+from core.connection_pool import connection_pool_manager
+from utils.unified_logger import get_logger
 
 
 # 오프라인 모드 감지 - 클래스 속성으로 이동
@@ -365,7 +362,7 @@ class BaseApiClient(ABC):
                 else:
                     return (
                         False,
-                        f"Token authentication failed and no credentials available",
+                        "Token authentication failed and no credentials available",
                     )
         else:
             # Direct credential authentication
@@ -528,22 +525,18 @@ class RealtimeMonitoringMixin:
 class APIError(Exception):
     """Base API exception"""
 
-    pass
 
 
 class AuthenticationError(APIError):
     """Authentication specific errors"""
 
-    pass
 
 
 class ConnectionError(APIError):
     """Connection specific errors"""
 
-    pass
 
 
 class ConfigurationError(APIError):
     """Configuration specific errors"""
 
-    pass

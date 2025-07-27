@@ -3,8 +3,8 @@ Mock data generator for FortiGate Nextrade application.
 Provides dummy data for testing and development when real FortiManager/FortiGate is not available.
 """
 
+import os
 import random
-import time
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 

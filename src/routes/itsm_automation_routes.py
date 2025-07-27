@@ -7,14 +7,14 @@ ITSM 자동화 API 라우트
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
 
 from flask import Blueprint, jsonify, request
 
-from src.itsm.automation_service import get_automation_service
-from src.utils.security import rate_limit, validate_request
-from src.utils.unified_logger import get_logger
+from itsm.automation_service import get_automation_service
+from utils.security import rate_limit, validate_request
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -225,33 +225,45 @@ def get_automation_config():
         # 민감한 정보는 마스킹
         config_data = {
             "itsm": {
-                "platform": service.connector.config.platform.value
-                if service.connector
-                else None,
-                "base_url": service.connector.config.base_url
-                if service.connector
-                else None,
-                "poll_interval": service.connector.config.poll_interval
-                if service.connector
-                else None,
-                "username": "***"
-                if service.connector and service.connector.config.username
-                else None,
+                "platform": (
+                    service.connector.config.platform.value
+                    if service.connector
+                    else None
+                ),
+                "base_url": (
+                    service.connector.config.base_url if service.connector else None
+                ),
+                "poll_interval": (
+                    service.connector.config.poll_interval
+                    if service.connector
+                    else None
+                ),
+                "username": (
+                    "***"
+                    if service.connector and service.connector.config.username
+                    else None
+                ),
             },
             "fortimanager": {
                 "enabled": service.fortimanager_client is not None,
-                "host": service.fortimanager_client.host
-                if service.fortimanager_client
-                else None,
+                "host": (
+                    service.fortimanager_client.host
+                    if service.fortimanager_client
+                    else None
+                ),
             },
             "automation_engine": {
                 "initialized": service.automation_engine is not None,
-                "firewall_count": len(service.automation_engine.firewall_devices)
-                if service.automation_engine
-                else 0,
-                "zone_count": len(service.automation_engine.network_zones)
-                if service.automation_engine
-                else 0,
+                "firewall_count": (
+                    len(service.automation_engine.firewall_devices)
+                    if service.automation_engine
+                    else 0
+                ),
+                "zone_count": (
+                    len(service.automation_engine.network_zones)
+                    if service.automation_engine
+                    else 0
+                ),
             },
         }
 
@@ -383,7 +395,7 @@ def simulate_policy_request():
             )
 
         # 시뮬레이션용 요청 객체 생성
-        from src.itsm.external_connector import FirewallPolicyRequest
+        from itsm.external_connector import FirewallPolicyRequest
 
         sim_request = FirewallPolicyRequest(
             ticket_id=f"SIM_{datetime.now().strftime('%Y%m%d_%H%M%S')}",

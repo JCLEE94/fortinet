@@ -7,11 +7,10 @@ generic Exception 사용을 줄이고 의미있는 예외 처리를 장려합니
 
 import traceback
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Callable
 
-from src.utils.common_imports import (get_current_timestamp, jsonify, os,
-                                      requests)
-from src.utils.unified_logger import setup_logger as setup_module_logger
+from utils.common_imports import get_current_timestamp, jsonify, os, requests
+from utils.unified_logger import setup_logger as setup_module_logger
 
 
 # 유틸리티 함수 직접 정의
@@ -33,31 +32,26 @@ def format_error_response(error_message: str, status_code: int = 500):
 class FortiGateAPIException(Exception):
     """FortiGate API 관련 예외"""
 
-    pass
 
 
 class FortiManagerAPIException(Exception):
     """FortiManager API 관련 예외"""
 
-    pass
 
 
 class ValidationException(Exception):
     """데이터 검증 관련 예외"""
 
-    pass
 
 
 class ConfigurationException(Exception):
     """설정 관련 예외"""
 
-    pass
 
 
 class NetworkException(Exception):
     """네트워크 관련 예외"""
 
-    pass
 
 
 # 예외 매핑 테이블

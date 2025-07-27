@@ -6,7 +6,7 @@
 
 import ipaddress
 
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("path_tracer")
 
@@ -40,7 +40,11 @@ class PathTracer:
             # 라우팅 테이블 가져오기
             routing_table = self.data_loader.get_routing_tables(firewall_id)
             if not routing_table:
-                return {"success": False, "error": "라우팅 테이블 데이터가 없습니다.", "path": []}
+                return {
+                    "success": False,
+                    "error": "라우팅 테이블 데이터가 없습니다.",
+                    "path": [],
+                }
 
             # 소스 IP의 인터페이스 결정
             src_interface = self._determine_interface(src_ip, routing_table)
@@ -162,7 +166,9 @@ class PathTracer:
             if route_type == "connected":
                 description = f"목적지가 직접 연결된 네트워크 {destination}에 있음"
             elif gateway:
-                description = f"게이트웨이 {gateway}를 통해 {interface} 인터페이스로 라우팅"
+                description = (
+                    f"게이트웨이 {gateway}를 통해 {interface} 인터페이스로 라우팅"
+                )
             else:
                 description = f"{interface} 인터페이스로 직접 라우팅"
 

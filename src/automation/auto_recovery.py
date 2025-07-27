@@ -11,7 +11,7 @@ import threading
 import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, Optional
 
 import psutil
 import requests
@@ -339,7 +339,9 @@ class AutoRecoveryEngine:
                         # 중요하지 않은 프로세스만 종료
                         if proc.info["name"] in ["chrome", "firefox", "code"]:
                             proc.terminate()
-                            logger.info(f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}")
+                            logger.info(
+                                f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}"
+                            )
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
@@ -490,7 +492,7 @@ class AutoRecoveryEngine:
 
         try:
             # 로컬 서비스 테스트
-            from src.config.services import APP_CONFIG
+            from config.services import APP_CONFIG
 
             response = requests.get(
                 f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=5
@@ -504,7 +506,7 @@ class AutoRecoveryEngine:
     def _check_application_health(self) -> Dict:
         """애플리케이션 헬스 체크"""
         try:
-            from src.config.services import APP_CONFIG
+            from config.services import APP_CONFIG
 
             response = requests.get(
                 f'http://localhost:{APP_CONFIG["web_port"]}/api/settings', timeout=10

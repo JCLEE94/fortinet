@@ -2,6 +2,7 @@
 Constants and configuration values for FortiGate Nextrade.
 This file centralizes hardcoded values to improve maintainability.
 """
+
 import os
 
 # Port Configuration

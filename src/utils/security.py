@@ -11,8 +11,8 @@ from functools import wraps
 
 from flask import abort, jsonify, request, session
 
-from src.config.constants import RATE_LIMITS
-from src.config.constants import SECURITY_HEADERS as CONFIG_SECURITY
+from config.constants import RATE_LIMITS
+from config.constants import SECURITY_HEADERS as CONFIG_SECURITY
 
 # 보안 헤더 설정
 SECURITY_HEADERS = {
@@ -332,7 +332,7 @@ def verify_api_key(provided_key, stored_hash):
 import threading
 import time
 
-from src.config.constants import CHECK_INTERVALS
+from config.constants import CHECK_INTERVALS
 
 
 def start_cleanup_task():

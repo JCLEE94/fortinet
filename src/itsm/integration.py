@@ -7,14 +7,12 @@ FortiGate Nextrade와 ITSM2 시스템 간의 방화벽 정책 요청 연동
 """
 
 import ipaddress
-import json
-import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 import requests
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,7 +28,7 @@ class ITSMIntegration:
             itsm_base_url (str): ITSM 시스템 URL
             api_key (str): ITSM API 키 (옵션)
         """
-        from src.config.services import EXTERNAL_SERVICES
+        from config.services import EXTERNAL_SERVICES
 
         # Use default URL from config if not provided
         if itsm_base_url is None:
@@ -48,7 +46,7 @@ class ITSMIntegration:
             "web_firewall_apply": "웹방화벽 적용",
         }
 
-        from src.config.services import EXTERNAL_SERVICES
+        from config.services import EXTERNAL_SERVICES
 
         # Use default URL from config if not provided
         if itsm_base_url is None:
@@ -111,7 +109,9 @@ class ITSMIntegration:
                 ),
             }
 
-            logger.info(f"방화벽 요청 분석 완료: {src_ip}({src_zone}) -> {dst_ip}({dst_zone})")
+            logger.info(
+                f"방화벽 요청 분석 완료: {src_ip}({src_zone}) -> {dst_ip}({dst_zone})"
+            )
             return result
 
         except Exception as e:
@@ -592,7 +592,11 @@ class ITSMIntegration:
 
         except Exception as e:
             logger.error(f"ITSM 티켓 생성 오류: {str(e)}")
-            return {"success": False, "error": str(e), "message": "ITSM 티켓 생성에 실패했습니다."}
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "ITSM 티켓 생성에 실패했습니다.",
+            }
 
     def _generate_ticket_description(
         self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]

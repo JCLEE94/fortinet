@@ -5,23 +5,22 @@
 대용량 파일을 여러 모듈로 분산시킨 후 통합 인터페이스 제공
 """
 
-import json
 import logging
-import math
 import queue
 import threading
 import time
-import uuid
 from typing import Any, Callable, Dict, List, Optional
 
-from .packet_sniffer.base_sniffer import (MockDataGenerator, PacketInfo,
-                                          SnifferConfig)
+from .packet_sniffer.base_sniffer import SnifferConfig
 from .packet_sniffer.device_manager import DeviceManager
-from .packet_sniffer.packet_capturer import (CaptureFilter, PacketCapturer,
-                                             create_packet_capturer)
-from .packet_sniffer.session_manager import (SessionManager,
-                                             create_capture_session,
-                                             get_session_manager)
+from .packet_sniffer.packet_capturer import (
+    CaptureFilter,
+    create_packet_capturer,
+)
+from .packet_sniffer.session_manager import (
+    create_capture_session,
+    get_session_manager,
+)
 
 # 분석기들 - 선택적 import (의존성 문제가 있을 수 있음)
 try:
@@ -56,7 +55,7 @@ except ImportError:
     DataExporter = None
     HAS_DATA_EXPORTER = False
 try:
-    from src.utils.unified_logger import get_logger
+    from utils.unified_logger import get_logger
 except ImportError:
     # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
     import logging
@@ -370,11 +369,11 @@ class PacketSnifferAPI:
                 "success": True,
                 "packets": packets,
                 "count": len(packets),
-                "total_available": self.session_manager.get_session(
-                    session_id
-                ).get_packet_count()
-                if self.session_manager.get_session(session_id)
-                else 0,
+                "total_available": (
+                    self.session_manager.get_session(session_id).get_packet_count()
+                    if self.session_manager.get_session(session_id)
+                    else 0
+                ),
             }
 
         except Exception as e:
@@ -412,9 +411,9 @@ class PacketSnifferAPI:
 
             # 프로토콜 분석
             if self.protocol_analyzer:
-                analysis_result[
-                    "protocol_analysis"
-                ] = self.protocol_analyzer.analyze_packet(packet)
+                analysis_result["protocol_analysis"] = (
+                    self.protocol_analyzer.analyze_packet(packet)
+                )
 
             # HTTP 분석
             if (
@@ -514,9 +513,15 @@ class PacketSnifferAPI:
                     csv_data = self.data_exporter.export_to_csv(export_data)
                     return {"success": True, "format": "csv", "data": csv_data}
                 else:
-                    return {"success": False, "error": "CSV 내보내기 모듈을 사용할 수 없습니다"}
+                    return {
+                        "success": False,
+                        "error": "CSV 내보내기 모듈을 사용할 수 없습니다",
+                    }
             else:
-                return {"success": False, "error": f"지원하지 않는 형식: {export_format}"}
+                return {
+                    "success": False,
+                    "error": f"지원하지 않는 형식: {export_format}",
+                }
 
         except Exception as e:
             self.logger.error(f"데이터 내보내기 실패: {e}")

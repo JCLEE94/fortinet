@@ -1,6 +1,5 @@
-import json
 
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
 logger = setup_logger("visualizer")
 
@@ -276,14 +275,18 @@ class PathVisualizer:
                 "blocked_by": path_data.get("blocked_by"),
                 "summary": {
                     "total_hops": len(path_data.get("path", [])),
-                    "source_ip": path_data["path"][0]["src_ip"]
-                    if path_data.get("path")
-                    else None,
+                    "source_ip": (
+                        path_data["path"][0]["src_ip"]
+                        if path_data.get("path")
+                        else None
+                    ),
                     "destination_ip": path_data.get(
                         "final_destination",
-                        path_data["path"][-1]["dst_ip"]
-                        if path_data.get("path")
-                        else None,
+                        (
+                            path_data["path"][-1]["dst_ip"]
+                            if path_data.get("path")
+                            else None
+                        ),
                     ),
                 },
             }

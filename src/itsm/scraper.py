@@ -7,15 +7,14 @@ itsm2.nxtd.co.kr에서 실제 방화벽 정책 요청을 스크래핑하고 분�
 """
 
 import json
-import re
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import requests
 from bs4 import BeautifulSoup
 
-from src.utils.unified_logger import get_logger
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -32,7 +31,7 @@ class ITSMScraper:
             username (str): 로그인 사용자명
             password (str): 로그인 패스워드
         """
-        from src.config.services import EXTERNAL_SERVICES
+        from config.services import EXTERNAL_SERVICES
 
         # Use default URL from config if not provided
         if base_url is None:

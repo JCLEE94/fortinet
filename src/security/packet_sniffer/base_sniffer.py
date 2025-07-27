@@ -6,15 +6,15 @@
 
 import logging
 import os
+import secrets
 import threading
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
 try:
-    from src.utils.unified_logger import get_logger
+    from utils.unified_logger import get_logger
 except ImportError:
     # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
     import logging
@@ -173,22 +173,18 @@ class BaseSniffer(ABC):
     @abstractmethod
     def initialize(self) -> bool:
         """스니퍼 초기화 (추상 메서드)"""
-        pass
 
     @abstractmethod
     def start(self) -> bool:
         """스니퍼 시작 (추상 메서드)"""
-        pass
 
     @abstractmethod
     def stop(self) -> bool:
         """스니퍼 중지 (추상 메서드)"""
-        pass
 
     @abstractmethod
     def cleanup(self) -> None:
         """리소스 정리 (추상 메서드)"""
-        pass
 
     def _update_stats(self, stat_name: str, increment: int = 1) -> None:
         """통계 업데이트"""
@@ -309,7 +305,6 @@ class MockDataGenerator:
     @staticmethod
     def generate_packet_info(protocol: str = "TCP") -> PacketInfo:
         """가짜 패킷 정보 생성"""
-        import random
 
         protocols = ["TCP", "UDP", "ICMP"]
         if protocol not in protocols:

@@ -11,7 +11,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # 선택적 import - 없으면 Mock 모드로 동작
 try:
@@ -28,10 +28,10 @@ try:
 except ImportError:
     HAS_PSUTIL = False
 
-from .base_sniffer import MockDataGenerator, SnifferConfig
+from .base_sniffer import SnifferConfig
 
 try:
-    from src.utils.unified_logger import get_logger
+    from utils.unified_logger import get_logger
 except ImportError:
     # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
     import logging
@@ -140,7 +140,9 @@ class DeviceManager:
         """네트워크 인터페이스 초기화"""
         try:
             self._discover_network_interfaces()
-            self.logger.info(f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨")
+            self.logger.info(
+                f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨"
+            )
         except Exception as e:
             self.logger.error(f"네트워크 인터페이스 초기화 실패: {e}")
 
@@ -150,7 +152,9 @@ class DeviceManager:
             self.network_interfaces.clear()
 
             if not HAS_NETIFACES:
-                self.logger.warning("netifaces 모듈이 없습니다. 기본 인터페이스를 사용합니다.")
+                self.logger.warning(
+                    "netifaces 모듈이 없습니다. 기본 인터페이스를 사용합니다."
+                )
                 self._add_default_interfaces()
                 return
 
@@ -162,7 +166,9 @@ class DeviceManager:
                         if interface_info:
                             self.network_interfaces[interface_name] = interface_info
                     except Exception as e:
-                        self.logger.debug(f"인터페이스 {interface_name} 정보 획득 실패: {e}")
+                        self.logger.debug(
+                            f"인터페이스 {interface_name} 정보 획득 실패: {e}"
+                        )
 
             except Exception as e:
                 self.logger.error(f"인터페이스 발견 중 오류: {e}")
@@ -332,8 +338,7 @@ class DeviceManager:
         """FortiGate API 클라이언트 반환 (지연 초기화)"""
         if self._api_client is None and not self.config.offline_mode:
             try:
-                from src.api.clients.fortigate_api_client import \
-                    FortiGateAPIClient
+                from api.clients.fortigate_api_client import FortiGateAPIClient
 
                 self._api_client = FortiGateAPIClient(
                     host=self.config.fortigate_host,

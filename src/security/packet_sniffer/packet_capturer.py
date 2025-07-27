@@ -5,22 +5,18 @@
 """
 
 import queue
-import random
-import socket
-import struct
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .base_sniffer import (BaseSniffer, MockDataGenerator, PacketInfo,
-                           SnifferConfig)
+from .base_sniffer import BaseSniffer, MockDataGenerator, PacketInfo, SnifferConfig
 from .device_manager import DeviceManager
-from .session_manager import SessionManager, get_session_manager
+from .session_manager import get_session_manager
 
 try:
-    from src.utils.unified_logger import get_logger
+    from utils.unified_logger import get_logger
 except ImportError:
     # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
     import logging
@@ -207,7 +203,7 @@ class PacketCapturer(BaseSniffer):
     def _initialize_fortigate_client(self) -> None:
         """FortiGate API 클라이언트 초기화"""
         try:
-            from src.api.clients.fortigate_api_client import FortiGateAPIClient
+            from api.clients.fortigate_api_client import FortiGateAPIClient
 
             self._fortigate_client = FortiGateAPIClient(
                 host=self.config.fortigate_host, api_token=self.config.fortigate_token
@@ -306,7 +302,9 @@ class PacketCapturer(BaseSniffer):
                 return False
 
             capture_thread.start()
-            self.logger.info(f"캡처 세션 시작됨: {session_id} (인터페이스: {interface})")
+            self.logger.info(
+                f"캡처 세션 시작됨: {session_id} (인터페이스: {interface})"
+            )
             return True
 
         except Exception as e:
@@ -403,7 +401,9 @@ class PacketCapturer(BaseSniffer):
                 self.logger.error(f"가짜 패킷 생성 오류: {e}")
                 time.sleep(1)
 
-        self.logger.info(f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성")
+        self.logger.info(
+            f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성"
+        )
 
     def _fortigate_capture_loop(self, session_id: str, interface: str) -> None:
         """FortiGate를 통한 실제 패킷 캡처 루프"""
@@ -588,9 +588,11 @@ class PacketCapturer(BaseSniffer):
                 "filtered_out": self.capture_stats["filtered_out"],
                 "errors": self.capture_stats["errors"],
                 "buffer_stats": self.packet_buffer.get_stats(),
-                "start_time": self.capture_stats["start_time"].isoformat()
-                if self.capture_stats["start_time"]
-                else None,
+                "start_time": (
+                    self.capture_stats["start_time"].isoformat()
+                    if self.capture_stats["start_time"]
+                    else None
+                ),
             }
 
         return {}

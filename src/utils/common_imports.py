@@ -7,8 +7,12 @@
 
 import asyncio
 import datetime
+
+# 서드파티 라이브러리 임포트
+import ipaddress
 import json
 import logging
+
 # 표준 라이브러리 임포트
 import os
 import sys
@@ -20,24 +24,22 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-# 서드파티 라이브러리 임포트
+import requests
+from flask import Blueprint, Flask, jsonify, render_template, request, session
+
+# 선택적 의존성
 try:
-    import ipaddress
-
     import redis
-    import requests
-    from flask import (Blueprint, Flask, jsonify, render_template, request,
-                       session)
-except ImportError as e:
-    # 선택적 의존성 - 일부 모듈이 없어도 동작하도록
-    pass
+except ImportError:
+    redis = None
 
-from src.utils.security import rate_limit
-from src.utils.unified_cache_manager import cached
+from utils.security import rate_limit
+from utils.unified_cache_manager import cached
+
 # 프로젝트 공통 유틸리티 임포트
-from src.utils.unified_logger import setup_logger
+from utils.unified_logger import setup_logger
 
-# from src.utils.api_utils import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지
+# from utils.api_utils import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지
 
 # 상수 정의
 DEFAULT_TIMEOUT = 30
@@ -49,31 +51,26 @@ DEFAULT_CACHE_TTL = 300
 class FortiGateAPIException(Exception):
     """FortiGate API 관련 예외"""
 
-    pass
 
 
 class FortiManagerAPIException(Exception):
     """FortiManager API 관련 예외"""
 
-    pass
 
 
 class ValidationException(Exception):
     """데이터 검증 관련 예외"""
 
-    pass
 
 
 class ConfigurationException(Exception):
     """설정 관련 예외"""
 
-    pass
 
 
 class NetworkException(Exception):
     """네트워크 관련 예외"""
 
-    pass
 
 
 # 공통 데코레이터
