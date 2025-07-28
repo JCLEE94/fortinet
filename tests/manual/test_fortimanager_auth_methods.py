@@ -47,12 +47,12 @@ def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
                 print(f"Response: {json.dumps(json_response, indent=2)}")
 
                 # Check for specific error codes
-                if 'result' in json_response and isinstance(json_response['result'], list):
-                    if len(json_response['result']) > 0:
-                        result = json_response['result'][0]
-                        if 'status' in result:
-                            status = result['status']
-                            if 'code' in status:
+                if "result" in json_response and isinstance(json_response["result"], list):
+                    if len(json_response["result"]) > 0:
+                        result = json_response["result"][0]
+                        if "status" in result:
+                            status = result["status"]
+                            if "code" in status:
                                 print(f"\n⚠️  API Error Code: {status['code']}")
                                 print(f"   Message: {status.get('message', 'No message')}")
             except:

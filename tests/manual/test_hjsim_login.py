@@ -44,8 +44,8 @@ def login_and_test():
         result = response.json()
         print(f"로그인 응답: {json.dumps(result, indent=2)}")
 
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"\n✅ 로그인 성공!")
             print(f"세션 ID: {session_id}")
 
@@ -58,9 +58,9 @@ def login_and_test():
 
         else:
             print(f"\n❌ 로그인 실패")
-            if 'result' in result:
-                code = result['result'][0]['status']['code']
-                msg = result['result'][0]['status']['message']
+            if "result" in result:
+                code = result["result"][0]["status"]["code"]
+                msg = result["result"][0]["status"]["message"]
                 print(f"에러: {code} - {msg}")
 
     except Exception as e:
@@ -124,18 +124,18 @@ def test_api_with_session(session_id):
         print(f"\n테스트: {test['name']}")
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test['request'], verify=False)
+            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False)
 
             result = response.json()
-            if 'result' in result:
-                status = result['result'][0]['status']
-                if status['code'] == 0:
+            if "result" in result:
+                status = result["result"][0]["status"]
+                if status["code"] == 0:
                     print(f"  ✅ 성공!")
                     success_count += 1
 
                     # 데이터 출력
-                    if 'data' in result['result'][0]:
-                        data = result['result'][0]['data']
+                    if "data" in result["result"][0]:
+                        data = result["result"][0]["data"]
                         if isinstance(data, list):
                             print(f"  데이터: {len(data)}개 항목")
                             if len(data) > 0:
@@ -172,13 +172,13 @@ def check_api_user(session_id):
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
-            data = result['result'][0]['data']
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
+            data = result["result"][0]["data"]
             print(f"API 사용자 1411 설정:")
             print(json.dumps(data, indent=2))
 
             # ADOM 권한 확인
-            if 'adom' in data:
+            if "adom" in data:
                 print(f"\n✅ ADOM 권한: {data['adom']}")
             else:
                 print(f"\n⚠️  ADOM 권한이 설정되지 않음!")
@@ -200,7 +200,7 @@ def logout(session_id):
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=logout_request, verify=False)
 
         result = response.json()
-        if result['result'][0]['status']['code'] == 0:
+        if result["result"][0]["status"]["code"] == 0:
             print("✅ 로그아웃 성공")
 
     except Exception as e:

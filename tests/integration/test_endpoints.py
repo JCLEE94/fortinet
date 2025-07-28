@@ -10,122 +10,122 @@ from typing import Dict, List, Tuple
 import requests
 
 # 테스트 대상 포트
-PORTS = {'development': 6666, 'production': 7777}
+PORTS = {"development": 6666, "production": 7777}
 
 # 엔드포인트 정의
 ENDPOINTS = {
     # Main routes (페이지)
-    'main_pages': [
-        ('GET', '/'),
-        ('GET', '/batch'),
-        ('GET', '/topology'),
-        ('GET', '/compliance'),
-        ('GET', '/batch/results'),
-        ('GET', '/devices'),
-        ('GET', '/packet_sniffer'),
-        ('GET', '/settings'),
-        ('GET', '/monitoring'),
-        ('GET', '/text-overflow-test'),
-        ('GET', '/dashboard/modern'),
-        ('GET', '/dashboard'),
-        ('GET', '/result'),
-        ('GET', '/about'),
-        ('GET', '/help'),
-        ('GET', '/offline.html'),
+    "main_pages": [
+        ("GET", "/"),
+        ("GET", "/batch"),
+        ("GET", "/topology"),
+        ("GET", "/compliance"),
+        ("GET", "/batch/results"),
+        ("GET", "/devices"),
+        ("GET", "/packet_sniffer"),
+        ("GET", "/settings"),
+        ("GET", "/monitoring"),
+        ("GET", "/text-overflow-test"),
+        ("GET", "/dashboard/modern"),
+        ("GET", "/dashboard"),
+        ("GET", "/result"),
+        ("GET", "/about"),
+        ("GET", "/help"),
+        ("GET", "/offline.html"),
     ],
     # API routes
-    'api_routes': [
-        ('GET', '/api/settings'),
-        ('POST', '/api/settings'),
-        ('GET', '/api/system/stats'),
-        ('GET', '/api/devices'),
-        ('POST', '/api/test_connection'),
-        ('POST', '/api/settings/mode'),
-        ('GET', '/api/monitoring'),
-        ('GET', '/api/dashboard'),
+    "api_routes": [
+        ("GET", "/api/settings"),
+        ("POST", "/api/settings"),
+        ("GET", "/api/system/stats"),
+        ("GET", "/api/devices"),
+        ("POST", "/api/test_connection"),
+        ("POST", "/api/settings/mode"),
+        ("GET", "/api/monitoring"),
+        ("GET", "/api/dashboard"),
     ],
     # FortiManager API routes
-    'fortimanager_api': [
-        ('GET', '/api/fortimanager/dashboard'),
-        ('GET', '/api/fortimanager/devices'),
-        ('GET', '/api/fortimanager/device/test-device-01'),
-        ('GET', '/api/fortimanager/monitoring'),
-        ('GET', '/api/fortimanager/policies'),
-        ('POST', '/api/fortimanager/policies'),
-        ('GET', '/api/fortimanager/topology'),
-        ('POST', '/api/fortimanager/packet-capture/start'),
-        ('POST', '/api/fortimanager/packet-capture/stop'),
-        ('GET', '/api/fortimanager/packet-capture/results/test-capture-01'),
-        ('GET', '/api/fortimanager/device/test-device-01/interfaces'),
-        ('POST', '/api/fortimanager/analyze-packet-path'),
-        ('GET', '/api/fortimanager/mock/system-status'),
-        ('GET', '/api/fortimanager/mock/interfaces'),
-        ('GET', '/api/fortimanager/policies/1'),
-        ('PUT', '/api/fortimanager/policies/1'),
-        ('DELETE', '/api/fortimanager/policies/1'),
-        ('POST', '/api/fortimanager/test-policy-analysis'),
+    "fortimanager_api": [
+        ("GET", "/api/fortimanager/dashboard"),
+        ("GET", "/api/fortimanager/devices"),
+        ("GET", "/api/fortimanager/device/test-device-01"),
+        ("GET", "/api/fortimanager/monitoring"),
+        ("GET", "/api/fortimanager/policies"),
+        ("POST", "/api/fortimanager/policies"),
+        ("GET", "/api/fortimanager/topology"),
+        ("POST", "/api/fortimanager/packet-capture/start"),
+        ("POST", "/api/fortimanager/packet-capture/stop"),
+        ("GET", "/api/fortimanager/packet-capture/results/test-capture-01"),
+        ("GET", "/api/fortimanager/device/test-device-01/interfaces"),
+        ("POST", "/api/fortimanager/analyze-packet-path"),
+        ("GET", "/api/fortimanager/mock/system-status"),
+        ("GET", "/api/fortimanager/mock/interfaces"),
+        ("GET", "/api/fortimanager/policies/1"),
+        ("PUT", "/api/fortimanager/policies/1"),
+        ("DELETE", "/api/fortimanager/policies/1"),
+        ("POST", "/api/fortimanager/test-policy-analysis"),
     ],
     # ITSM routes (페이지)
-    'itsm_pages': [
-        ('GET', '/itsm/'),
-        ('GET', '/itsm/firewall-policy-request'),
-        ('GET', '/itsm/ci-management'),
-        ('GET', '/itsm/scraper'),
+    "itsm_pages": [
+        ("GET", "/itsm/"),
+        ("GET", "/itsm/firewall-policy-request"),
+        ("GET", "/itsm/ci-management"),
+        ("GET", "/itsm/scraper"),
     ],
     # ITSM API routes
-    'itsm_api': [
-        ('GET', '/api/itsm/scrape-requests'),
-        ('GET', '/api/itsm/request-detail/test-request-01'),
-        ('POST', '/api/itsm/map-to-fortigate'),
-        ('GET', '/api/itsm/bridge-status'),
-        ('POST', '/api/itsm/policy-request'),
-        ('GET', '/api/itsm/scraper/status'),
-        ('GET', '/api/itsm/demo-mapping'),
+    "itsm_api": [
+        ("GET", "/api/itsm/scrape-requests"),
+        ("GET", "/api/itsm/request-detail/test-request-01"),
+        ("POST", "/api/itsm/map-to-fortigate"),
+        ("GET", "/api/itsm/bridge-status"),
+        ("POST", "/api/itsm/policy-request"),
+        ("GET", "/api/itsm/scraper/status"),
+        ("GET", "/api/itsm/demo-mapping"),
     ],
     # Static resources
-    'static_resources': [
-        ('GET', '/static/css/nextrade-unified-system.css'),
-        ('GET', '/static/js/nextrade-unified.js'),
-        ('GET', '/static/favicon.ico'),
+    "static_resources": [
+        ("GET", "/static/css/nextrade-unified-system.css"),
+        ("GET", "/static/js/nextrade-unified.js"),
+        ("GET", "/static/favicon.ico"),
     ],
 }
 
 # 테스트 데이터
 TEST_DATA = {
-    '/api/settings': {'fortimanager': {'host': '192.168.1.100', 'username': 'test', 'password': 'test', 'port': 443}},
-    '/api/test_connection': {'host': '192.168.1.100', 'username': 'test', 'password': 'test', 'port': 443},
-    '/api/settings/mode': {'mode': 'test'},
-    '/api/fortimanager/policies': {
-        'name': 'Test Policy',
-        'srcintf': 'port1',
-        'dstintf': 'port2',
-        'srcaddr': ['192.168.1.0/24'],
-        'dstaddr': ['10.0.0.0/24'],
-        'service': ['HTTP', 'HTTPS'],
-        'action': 'accept',
+    "/api/settings": {"fortimanager": {"host": "192.168.1.100", "username": "test", "password": "test", "port": 443}},
+    "/api/test_connection": {"host": "192.168.1.100", "username": "test", "password": "test", "port": 443},
+    "/api/settings/mode": {"mode": "test"},
+    "/api/fortimanager/policies": {
+        "name": "Test Policy",
+        "srcintf": "port1",
+        "dstintf": "port2",
+        "srcaddr": ["192.168.1.0/24"],
+        "dstaddr": ["10.0.0.0/24"],
+        "service": ["HTTP", "HTTPS"],
+        "action": "accept",
     },
-    '/api/fortimanager/packet-capture/start': {
-        'device_id': 'test-device-01',
-        'interface': 'port1',
-        'filter': 'tcp',
-        'duration': 60,
+    "/api/fortimanager/packet-capture/start": {
+        "device_id": "test-device-01",
+        "interface": "port1",
+        "filter": "tcp",
+        "duration": 60,
     },
-    '/api/fortimanager/packet-capture/stop': {'device_id': 'test-device-01', 'capture_id': 'test-capture-01'},
-    '/api/fortimanager/analyze-packet-path': {
-        'src_ip': '192.168.1.100',
-        'dst_ip': '10.0.0.100',
-        'port': 80,
-        'protocol': 'tcp',
+    "/api/fortimanager/packet-capture/stop": {"device_id": "test-device-01", "capture_id": "test-capture-01"},
+    "/api/fortimanager/analyze-packet-path": {
+        "src_ip": "192.168.1.100",
+        "dst_ip": "10.0.0.100",
+        "port": 80,
+        "protocol": "tcp",
     },
-    '/api/fortimanager/policies/1': {'name': 'Updated Policy', 'action': 'accept'},
-    '/api/fortimanager/test-policy-analysis': {'scenarios': []},
-    '/api/itsm/map-to-fortigate': {'request_id': 'test-request-01'},
-    '/api/itsm/policy-request': {
-        'source_ip': '192.168.1.100',
-        'destination_ip': '10.0.0.100',
-        'port': 443,
-        'protocol': 'tcp',
-        'justification': 'Test request',
+    "/api/fortimanager/policies/1": {"name": "Updated Policy", "action": "accept"},
+    "/api/fortimanager/test-policy-analysis": {"scenarios": []},
+    "/api/itsm/map-to-fortigate": {"request_id": "test-request-01"},
+    "/api/itsm/policy-request": {
+        "source_ip": "192.168.1.100",
+        "destination_ip": "10.0.0.100",
+        "port": 443,
+        "protocol": "tcp",
+        "justification": "Test request",
     },
 }
 
@@ -142,22 +142,22 @@ class EndpointTester:
         url = f"http://localhost:{port}{path}"
 
         try:
-            if method == 'GET':
+            if method == "GET":
                 response = self.session.get(url, timeout=5)
-            elif method == 'POST':
+            elif method == "POST":
                 response = self.session.post(url, json=data, timeout=5)
-            elif method == 'PUT':
+            elif method == "PUT":
                 response = self.session.put(url, json=data, timeout=5)
-            elif method == 'DELETE':
+            elif method == "DELETE":
                 response = self.session.delete(url, timeout=5)
             else:
                 return 0, f"Unsupported method: {method}"
 
             # Response 내용 간단히 검증
             if response.status_code == 200:
-                if path.endswith('.css') or path.endswith('.js') or path.endswith('.ico'):
+                if path.endswith(".css") or path.endswith(".js") or path.endswith(".ico"):
                     message = "Static file served"
-                elif 'api' in path:
+                elif "api" in path:
                     try:
                         json_data = response.json()
                         message = "JSON response received"
@@ -188,7 +188,7 @@ class EndpointTester:
             print("-" * 100)
 
             # 서버 연결 확인
-            status, message = self.test_endpoint('GET', '/', port)
+            status, message = self.test_endpoint("GET", "/", port)
             if status == 0:
                 print(f"❌ 서버가 포트 {port}에서 실행되고 있지 않습니다: {message}")
                 continue
@@ -208,13 +208,13 @@ class EndpointTester:
                     # 결과 저장
                     self.results.append(
                         {
-                            'environment': env_name,
-                            'port': port,
-                            'category': category,
-                            'method': method,
-                            'path': path,
-                            'status': status,
-                            'message': message,
+                            "environment": env_name,
+                            "port": port,
+                            "category": category,
+                            "method": method,
+                            "path": path,
+                            "status": status,
+                            "message": message,
                         }
                     )
 
@@ -246,14 +246,14 @@ class EndpointTester:
         print("=" * 100)
 
         for env_name in PORTS.keys():
-            env_results = [r for r in self.results if r['environment'] == env_name]
+            env_results = [r for r in self.results if r["environment"] == env_name]
             if not env_results:
                 continue
 
             total = len(env_results)
-            success = len([r for r in env_results if r['status'] == 200])
-            not_found = len([r for r in env_results if r['status'] == 404])
-            error = len([r for r in env_results if r['status'] == 0])
+            success = len([r for r in env_results if r["status"] == 200])
+            not_found = len([r for r in env_results if r["status"] == 404])
+            error = len([r for r in env_results if r["status"] == 0])
             other = total - success - not_found - error
 
             print(f"\n{env_name.upper()} 환경:")
@@ -264,7 +264,7 @@ class EndpointTester:
             print(f"  - 기타 상태: {other} ({other/total*100:.1f}%)")
 
             # 문제가 있는 엔드포인트 목록
-            problems = [r for r in env_results if r['status'] != 200]
+            problems = [r for r in env_results if r["status"] != 200]
             if problems:
                 print(f"\n  문제가 있는 엔드포인트:")
                 for p in problems[:10]:  # 최대 10개만 표시
@@ -277,12 +277,12 @@ class EndpointTester:
         filename = f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
         report = {
-            'test_date': datetime.now().isoformat(),
-            'total_endpoints_tested': len(self.results),
-            'results': self.results,
+            "test_date": datetime.now().isoformat(),
+            "total_endpoints_tested": len(self.results),
+            "results": self.results,
         }
 
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2, ensure_ascii=False)
 
         print(f"\n📄 상세 보고서가 '{filename}'에 저장되었습니다.")

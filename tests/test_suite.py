@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "src"))
 
 
 class TestAPIClients(unittest.TestCase):
@@ -20,8 +20,8 @@ class TestAPIClients(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        os.environ['APP_MODE'] = 'test'
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["APP_MODE"] = "test"
+        os.environ["OFFLINE_MODE"] = "true"
 
     def test_base_api_client_import(self):
         """Test base API client import"""
@@ -34,14 +34,14 @@ class TestAPIClients(unittest.TestCase):
         """Test FortiGate API client creation"""
         # 완전한 환경 변수 격리를 위한 강력한 패치
         with patch.dict(
-            os.environ, {'OFFLINE_MODE': 'true', 'NO_INTERNET': 'false', 'DISABLE_EXTERNAL_CALLS': 'false'}, clear=False
+            os.environ, {"OFFLINE_MODE": "true", "NO_INTERNET": "false", "DISABLE_EXTERNAL_CALLS": "false"}, clear=False
         ):
             # 모든 관련 모듈을 새로 임포트하여 환경 변수 변경사항 반영
             import importlib
             import sys
 
             # 모듈 캐시에서 제거하여 완전히 새로 로드
-            modules_to_reload = ['src.api.clients.base_api_client', 'src.api.clients.fortigate_api_client']
+            modules_to_reload = ["src.api.clients.base_api_client", "src.api.clients.fortigate_api_client"]
 
             for module_name in modules_to_reload:
                 if module_name in sys.modules:
@@ -57,9 +57,9 @@ class TestAPIClients(unittest.TestCase):
             # OFFLINE_MODE는 동적으로 체크되므로 환경 변수가 'true'인지 확인
             offline_mode = any(
                 [
-                    os.getenv('OFFLINE_MODE', 'false').lower() == 'true',
-                    os.getenv('NO_INTERNET', 'false').lower() == 'true',
-                    os.getenv('DISABLE_EXTERNAL_CALLS', 'false').lower() == 'true',
+                    os.getenv("OFFLINE_MODE", "false").lower() == "true",
+                    os.getenv("NO_INTERNET", "false").lower() == "true",
+                    os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true",
                 ]
             )
             self.assertTrue(offline_mode, "Environment should be in offline mode")
@@ -86,7 +86,7 @@ class TestMonitoringSystem(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        os.environ['APP_MODE'] = 'test'
+        os.environ["APP_MODE"] = "test"
 
     def test_monitoring_base_import(self):
         """Test monitoring base import"""
@@ -118,7 +118,7 @@ class TestFortiManagerAdvanced(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        os.environ['APP_MODE'] = 'test'
+        os.environ["APP_MODE"] = "test"
 
     def test_advanced_hub_import(self):
         """Test advanced hub import"""
@@ -154,8 +154,8 @@ class TestFlaskApp(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
-        os.environ['APP_MODE'] = 'test'
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["APP_MODE"] = "test"
+        os.environ["OFFLINE_MODE"] = "true"
         from web_app import create_app
 
         self.app = create_app()
@@ -167,31 +167,31 @@ class TestFlaskApp(unittest.TestCase):
 
     def test_settings_endpoint(self):
         """Test settings endpoint"""
-        response = self.client.get('/api/settings')
+        response = self.client.get("/api/settings")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertEqual(data['app_mode'], 'test')
-        self.assertTrue(data['is_test_mode'])
+        self.assertEqual(data["app_mode"], "test")
+        self.assertTrue(data["is_test_mode"])
 
     def test_system_stats_endpoint(self):
         """Test system stats endpoint"""
-        response = self.client.get('/api/system/stats')
+        response = self.client.get("/api/system/stats")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertIn('total_devices', data)
+        self.assertIn("total_devices", data)
 
     def test_fortimanager_status_endpoint(self):
         """Test FortiManager status endpoint"""
-        response = self.client.get('/api/fortimanager/status')
+        response = self.client.get("/api/fortimanager/status")
         self.assertEqual(response.status_code, 200)
         data = response.get_json()
-        self.assertEqual(data['mode'], 'test')
+        self.assertEqual(data["mode"], "test")
 
     def test_packet_analysis_endpoint(self):
         """Test packet analysis endpoint"""
         test_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 443, "protocol": "tcp"}
         response = self.client.post(
-            '/api/fortimanager/analyze-packet-path', json=test_data, content_type='application/json'
+            "/api/fortimanager/analyze-packet-path", json=test_data, content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
 

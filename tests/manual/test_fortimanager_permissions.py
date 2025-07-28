@@ -39,15 +39,15 @@ def test_endpoint(name, method, url, data=None, verbose=True):
         if response.status_code == 200:
             result = response.json()
 
-            if 'result' in result and isinstance(result['result'], list):
-                res = result['result'][0]
-                if 'status' in res:
-                    code = res['status'].get('code', 0)
-                    message = res['status'].get('message', '')
+            if "result" in result and isinstance(result["result"], list):
+                res = result["result"][0]
+                if "status" in res:
+                    code = res["status"].get("code", 0)
+                    message = res["status"].get("message", "")
 
                     if code == 0:
                         print(f"✅ 성공! 데이터 받음")
-                        if 'data' in res:
+                        if "data" in res:
                             print(f"데이터: {json.dumps(res['data'], indent=2)[:200]}...")
                         return True, res
                     else:

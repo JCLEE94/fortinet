@@ -37,9 +37,9 @@ def test_fortimanager_direct():
     api_token = "8wy6xtig45xkn8oxukmiegf5yn18rn4c"
     base_url = f"https://{host}:{port}/jsonrpc"
 
-    headers = {'Content-Type': 'application/json', 'Authorization': f'Bearer {api_token}'}
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_token}"}
 
-    test_results = {'test_time': datetime.now().isoformat(), 'demo_host': f"{host}:{port}", 'tests': []}
+    test_results = {"test_time": datetime.now().isoformat(), "demo_host": f"{host}:{port}", "tests": []}
 
     print(f"=== FortiManager Demo Test ===")
     print(f"Host: {host}:{port}")
@@ -57,14 +57,14 @@ def test_fortimanager_direct():
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results['tests'].append({'name': 'system_status', 'status': 'success', 'response': result})
+            test_results["tests"].append({"name": "system_status", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results['tests'].append({'name': 'system_status', 'status': 'failed', 'error': response.text})
+            test_results["tests"].append({"name": "system_status", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results['tests'].append({'name': 'system_status', 'status': 'error', 'error': str(e)})
+        test_results["tests"].append({"name": "system_status", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
@@ -79,14 +79,14 @@ def test_fortimanager_direct():
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results['tests'].append({'name': 'adom_list', 'status': 'success', 'response': result})
+            test_results["tests"].append({"name": "adom_list", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results['tests'].append({'name': 'adom_list', 'status': 'failed', 'error': response.text})
+            test_results["tests"].append({"name": "adom_list", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results['tests'].append({'name': 'adom_list', 'status': 'error', 'error': str(e)})
+        test_results["tests"].append({"name": "adom_list", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
@@ -101,14 +101,14 @@ def test_fortimanager_direct():
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results['tests'].append({'name': 'managed_devices', 'status': 'success', 'response': result})
+            test_results["tests"].append({"name": "managed_devices", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results['tests'].append({'name': 'managed_devices', 'status': 'failed', 'error': response.text})
+            test_results["tests"].append({"name": "managed_devices", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results['tests'].append({'name': 'managed_devices', 'status': 'error', 'error': str(e)})
+        test_results["tests"].append({"name": "managed_devices", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
@@ -123,18 +123,18 @@ def test_fortimanager_direct():
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results['tests'].append({'name': 'address_objects', 'status': 'success', 'response': result})
+            test_results["tests"].append({"name": "address_objects", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results['tests'].append({'name': 'address_objects', 'status': 'failed', 'error': response.text})
+            test_results["tests"].append({"name": "address_objects", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results['tests'].append({'name': 'address_objects', 'status': 'error', 'error': str(e)})
+        test_results["tests"].append({"name": "address_objects", "status": "error", "error": str(e)})
 
     # Save results to file
     report_filename = f"fortimanager_demo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(report_filename, 'w') as f:
+    with open(report_filename, "w") as f:
         json.dump(test_results, f, indent=2, default=str)
 
     print(f"\nTest results saved to: {report_filename}")

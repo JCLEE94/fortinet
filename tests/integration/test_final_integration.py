@@ -49,14 +49,14 @@ class IntegrationTestRunner:
                 result = func()
                 duration = time.time() - start_time
 
-                self.results.append({'name': name, 'passed': True, 'duration': duration, 'result': result})
+                self.results.append({"name": name, "passed": True, "duration": duration, "result": result})
                 self.passed += 1
                 print(f"✅ {name} - PASSED ({duration:.3f}s)")
 
             except Exception as e:
                 duration = time.time() - start_time
 
-                self.results.append({'name': name, 'passed': False, 'duration': duration, 'error': str(e)})
+                self.results.append({"name": name, "passed": False, "duration": duration, "error": str(e)})
                 self.failed += 1
                 print(f"❌ {name} - FAILED ({duration:.3f}s)")
                 print(f"   Error: {str(e)}")
@@ -78,26 +78,26 @@ def test_core_imports():
 
     # 핵심 모듈들
     core_modules = [
-        'src.web_app',
-        'src.config.unified_settings',
-        'src.utils.unified_cache_manager',
-        'src.utils.unified_logger',
+        "src.web_app",
+        "src.config.unified_settings",
+        "src.utils.unified_cache_manager",
+        "src.utils.unified_logger",
     ]
 
     for module in core_modules:
         try:
             __import__(module)
-            import_results.append({'module': module, 'success': True})
+            import_results.append({"module": module, "success": True})
         except Exception as e:
-            import_results.append({'module': module, 'success': False, 'error': str(e)})
+            import_results.append({"module": module, "success": False, "error": str(e)})
 
-    successful_imports = [r for r in import_results if r['success']]
+    successful_imports = [r for r in import_results if r["success"]]
     runner.assert_eq(len(successful_imports), len(core_modules), f"All core modules should import: {import_results}")
 
     return {
-        'total_modules': len(core_modules),
-        'successful_imports': len(successful_imports),
-        'import_results': import_results,
+        "total_modules": len(core_modules),
+        "successful_imports": len(successful_imports),
+        "import_results": import_results,
     }
 
 
@@ -111,27 +111,27 @@ def test_config_integration():
     settings = UnifiedSettings()
 
     # 필수 속성 확인
-    runner.assert_ok(hasattr(settings, 'app_mode'), "Settings should have app_mode")
+    runner.assert_ok(hasattr(settings, "app_mode"), "Settings should have app_mode")
 
     # 설정 구조 확인
     config_attributes = []
     for attr in dir(settings):
-        if not attr.startswith('_'):
+        if not attr.startswith("_"):
             config_attributes.append(
                 {
-                    'name': attr,
-                    'type': type(getattr(settings, attr)).__name__,
-                    'value': str(getattr(settings, attr))[:100],  # 처음 100자만
+                    "name": attr,
+                    "type": type(getattr(settings, attr)).__name__,
+                    "value": str(getattr(settings, attr))[:100],  # 처음 100자만
                 }
             )
 
     runner.assert_ok(len(config_attributes) > 0, "Settings should have configuration attributes")
 
     return {
-        'settings_loaded': True,
-        'app_mode': getattr(settings, 'app_mode', 'unknown'),
-        'config_attributes': config_attributes,
-        'total_attributes': len(config_attributes),
+        "settings_loaded": True,
+        "app_mode": getattr(settings, "app_mode", "unknown"),
+        "config_attributes": config_attributes,
+        "total_attributes": len(config_attributes),
     }
 
 
@@ -147,7 +147,7 @@ def test_cache_integration():
     # 캐시 매니저 속성 확인
     cache_attributes = []
     for attr in dir(cache_manager):
-        if 'cache' in attr.lower() and not attr.startswith('_'):
+        if "cache" in attr.lower() and not attr.startswith("_"):
             cache_attributes.append(attr)
 
     runner.assert_ok(len(cache_attributes) > 0, "Cache manager should have cache-related attributes")
@@ -156,7 +156,7 @@ def test_cache_integration():
     test_operations = []
 
     # 메모리 캐시가 있는지 확인
-    if hasattr(cache_manager, 'memory_cache'):
+    if hasattr(cache_manager, "memory_cache"):
         try:
             memory_cache = cache_manager.memory_cache
 
@@ -168,17 +168,17 @@ def test_cache_integration():
             get_result = memory_cache.get(test_key)
 
             test_operations.append(
-                {'operation': 'memory_cache_set_get', 'success': set_result and get_result == test_value}
+                {"operation": "memory_cache_set_get", "success": set_result and get_result == test_value}
             )
 
         except Exception as e:
-            test_operations.append({'operation': 'memory_cache_test', 'success': False, 'error': str(e)})
+            test_operations.append({"operation": "memory_cache_test", "success": False, "error": str(e)})
 
     return {
-        'cache_manager_created': True,
-        'cache_attributes': cache_attributes,
-        'test_operations': test_operations,
-        'has_memory_cache': hasattr(cache_manager, 'memory_cache'),
+        "cache_manager_created": True,
+        "cache_attributes": cache_attributes,
+        "test_operations": test_operations,
+        "has_memory_cache": hasattr(cache_manager, "memory_cache"),
     }
 
 
@@ -191,39 +191,39 @@ def test_api_client_integration():
 
     # 기본 클라이언트 생성 (추상 클래스이므로 직접 인스턴스화는 안 될 수 있음)
     client_info = {
-        'class_name': BaseApiClient.__name__,
-        'is_abstract': hasattr(BaseApiClient, '__abstractmethods__'),
-        'methods': [],
-        'attributes': [],
+        "class_name": BaseApiClient.__name__,
+        "is_abstract": hasattr(BaseApiClient, "__abstractmethods__"),
+        "methods": [],
+        "attributes": [],
     }
 
     # 클래스 메서드 분석
     for attr_name in dir(BaseApiClient):
-        if not attr_name.startswith('_'):
+        if not attr_name.startswith("_"):
             attr = getattr(BaseApiClient, attr_name)
             if callable(attr):
-                client_info['methods'].append(attr_name)
+                client_info["methods"].append(attr_name)
             else:
-                client_info['attributes'].append(attr_name)
+                client_info["attributes"].append(attr_name)
 
     # 필수 메서드들이 있는지 확인
-    essential_methods = ['__init__']
+    essential_methods = ["__init__"]
     for method in essential_methods:
         runner.assert_ok(method in dir(BaseApiClient), f"BaseApiClient should have {method} method")
 
     # 다른 API 클라이언트들 확인
     client_modules = []
-    api_clients_dir = Path(__file__).parent.parent.parent / 'src' / 'api' / 'clients'
+    api_clients_dir = Path(__file__).parent.parent.parent / "src" / "api" / "clients"
 
     if api_clients_dir.exists():
-        for file_path in api_clients_dir.glob('*_client.py'):
-            if file_path.name != '__init__.py':
+        for file_path in api_clients_dir.glob("*_client.py"):
+            if file_path.name != "__init__.py":
                 client_modules.append(file_path.stem)
 
     return {
-        'base_client_info': client_info,
-        'client_modules': client_modules,
-        'architecture_valid': len(client_info['methods']) > 0,
+        "base_client_info": client_info,
+        "client_modules": client_modules,
+        "architecture_valid": len(client_info["methods"]) > 0,
     }
 
 
@@ -236,7 +236,7 @@ def test_flask_integration():
     # Flask 앱 생성 테스트
     try:
         # 테스트 환경 설정
-        test_config = {'TESTING': True, 'WTF_CSRF_ENABLED': False, 'APP_MODE': 'test'}
+        test_config = {"TESTING": True, "WTF_CSRF_ENABLED": False, "APP_MODE": "test"}
 
         # 환경변수 설정
         original_env = {}
@@ -248,16 +248,16 @@ def test_flask_integration():
             app = create_app()
 
             app_info = {
-                'app_created': app is not None,
-                'app_name': getattr(app, 'name', 'unknown'),
-                'blueprints': list(app.blueprints.keys()) if hasattr(app, 'blueprints') else [],
-                'config_keys': list(app.config.keys()) if hasattr(app, 'config') else [],
+                "app_created": app is not None,
+                "app_name": getattr(app, "name", "unknown"),
+                "blueprints": list(app.blueprints.keys()) if hasattr(app, "blueprints") else [],
+                "config_keys": list(app.config.keys()) if hasattr(app, "config") else [],
             }
 
             runner.assert_ok(app is not None, "Flask app should be created successfully")
 
             # Blueprint 등록 확인
-            if hasattr(app, 'blueprints'):
+            if hasattr(app, "blueprints"):
                 runner.assert_ok(len(app.blueprints) > 0, "App should have registered blueprints")
 
             return app_info
@@ -271,7 +271,7 @@ def test_flask_integration():
                     os.environ[key] = original_value
 
     except Exception as e:
-        return {'app_created': False, 'error': str(e), 'flask_integration_working': False}
+        return {"app_created": False, "error": str(e), "flask_integration_working": False}
 
 
 @runner.test("Route Blueprint Integration")
@@ -279,30 +279,30 @@ def test_route_integration():
     """라우트 Blueprint 통합 테스트"""
 
     route_modules = []
-    routes_dir = Path(__file__).parent.parent.parent / 'src' / 'routes'
+    routes_dir = Path(__file__).parent.parent.parent / "src" / "routes"
 
     if routes_dir.exists():
-        for file_path in routes_dir.glob('*.py'):
-            if file_path.name != '__init__.py':
+        for file_path in routes_dir.glob("*.py"):
+            if file_path.name != "__init__.py":
                 route_modules.append(file_path.stem)
 
     # 라우트 모듈 import 테스트
     import_results = []
     for module_name in route_modules:
         try:
-            module_path = f'src.routes.{module_name}'
+            module_path = f"src.routes.{module_name}"
             __import__(module_path)
-            import_results.append({'module': module_name, 'imported': True})
+            import_results.append({"module": module_name, "imported": True})
         except Exception as e:
-            import_results.append({'module': module_name, 'imported': False, 'error': str(e)})
+            import_results.append({"module": module_name, "imported": False, "error": str(e)})
 
-    successful_route_imports = [r for r in import_results if r['imported']]
+    successful_route_imports = [r for r in import_results if r["imported"]]
 
     return {
-        'route_modules_found': route_modules,
-        'import_results': import_results,
-        'successful_imports': len(successful_route_imports),
-        'total_route_modules': len(route_modules),
+        "route_modules_found": route_modules,
+        "import_results": import_results,
+        "successful_imports": len(successful_route_imports),
+        "total_route_modules": len(route_modules),
     }
 
 
@@ -311,37 +311,37 @@ def test_k8s_integration():
     """Kubernetes 통합 준비 상태 테스트"""
 
     project_root = Path(__file__).parent.parent.parent
-    k8s_dir = project_root / 'k8s' / 'manifests'
+    k8s_dir = project_root / "k8s" / "manifests"
 
     k8s_files = []
-    required_manifests = ['deployment.yaml', 'service.yaml', 'configmap.yaml', 'kustomization.yaml']
+    required_manifests = ["deployment.yaml", "service.yaml", "configmap.yaml", "kustomization.yaml"]
 
     if k8s_dir.exists():
         for manifest in required_manifests:
             manifest_path = k8s_dir / manifest
             k8s_files.append(
                 {
-                    'file': manifest,
-                    'exists': manifest_path.exists(),
-                    'size': manifest_path.stat().st_size if manifest_path.exists() else 0,
+                    "file": manifest,
+                    "exists": manifest_path.exists(),
+                    "size": manifest_path.stat().st_size if manifest_path.exists() else 0,
                 }
             )
 
-    existing_manifests = [f for f in k8s_files if f['exists']]
+    existing_manifests = [f for f in k8s_files if f["exists"]]
     runner.assert_ok(len(existing_manifests) > 0, "At least some Kubernetes manifests should exist")
 
     # ConfigMap 파일들 확인
     configmap_files = []
     if k8s_dir.exists():
-        for file_path in k8s_dir.glob('*configmap*.yaml'):
+        for file_path in k8s_dir.glob("*configmap*.yaml"):
             configmap_files.append(file_path.name)
 
     return {
-        'k8s_dir_exists': k8s_dir.exists(),
-        'manifest_files': k8s_files,
-        'existing_manifests': len(existing_manifests),
-        'configmap_files': configmap_files,
-        'k8s_ready': len(existing_manifests) >= 2,  # 최소 2개 매니페스트 필요
+        "k8s_dir_exists": k8s_dir.exists(),
+        "manifest_files": k8s_files,
+        "existing_manifests": len(existing_manifests),
+        "configmap_files": configmap_files,
+        "k8s_ready": len(existing_manifests) >= 2,  # 최소 2개 매니페스트 필요
     }
 
 
@@ -374,14 +374,14 @@ def main():
         print(f"📈 Success rate: {success_rate:.1f}%")
 
     # 실패한 테스트 상세 정보
-    failed_tests = [r for r in runner.results if not r['passed']]
+    failed_tests = [r for r in runner.results if not r["passed"]]
     if failed_tests:
         print(f"\n❌ Failed Tests ({len(failed_tests)}):")
         for test in failed_tests:
             print(f"  - {test['name']}: {test.get('error', 'Unknown error')}")
 
     # 성공한 테스트 요약
-    passed_tests = [r for r in runner.results if r['passed']]
+    passed_tests = [r for r in runner.results if r["passed"]]
     if passed_tests:
         print(f"\n✅ Passed Tests ({len(passed_tests)}):")
         for test in passed_tests:

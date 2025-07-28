@@ -9,7 +9,7 @@ import os
 import sys
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 # Mock fortigate is now integrated into device_manager
 # from src.mock.fortigate import mock_fortigate
@@ -22,32 +22,32 @@ def test_packet_path_analysis():
 
     test_scenarios = [
         {
-            'name': 'LAN to DMZ (Allowed)',
-            'src_ip': '192.168.1.100',
-            'dst_ip': '172.16.10.100',
-            'port': 80,
-            'protocol': 'tcp',
+            "name": "LAN to DMZ (Allowed)",
+            "src_ip": "192.168.1.100",
+            "dst_ip": "172.16.10.100",
+            "port": 80,
+            "protocol": "tcp",
         },
         {
-            'name': 'LAN to Internet (HTTPS)',
-            'src_ip': '192.168.1.100',
-            'dst_ip': '203.0.113.50',
-            'port': 443,
-            'protocol': 'tcp',
+            "name": "LAN to Internet (HTTPS)",
+            "src_ip": "192.168.1.100",
+            "dst_ip": "203.0.113.50",
+            "port": 443,
+            "protocol": "tcp",
         },
         {
-            'name': 'Guest to LAN (Blocked)',
-            'src_ip': '10.10.1.50',
-            'dst_ip': '192.168.1.100',
-            'port': 22,
-            'protocol': 'tcp',
+            "name": "Guest to LAN (Blocked)",
+            "src_ip": "10.10.1.50",
+            "dst_ip": "192.168.1.100",
+            "port": 22,
+            "protocol": "tcp",
         },
         {
-            'name': 'DMZ to Internet',
-            'src_ip': '172.16.10.100',
-            'dst_ip': '203.0.113.100',
-            'port': 80,
-            'protocol': 'tcp',
+            "name": "DMZ to Internet",
+            "src_ip": "172.16.10.100",
+            "dst_ip": "203.0.113.100",
+            "port": 80,
+            "protocol": "tcp",
         },
     ]
 
@@ -60,11 +60,11 @@ def test_packet_path_analysis():
 
         # Analyze packet path
         result = mock_fortigate.analyze_packet_path(
-            src_ip=scenario['src_ip'], dst_ip=scenario['dst_ip'], port=scenario['port'], protocol=scenario['protocol']
+            src_ip=scenario["src_ip"], dst_ip=scenario["dst_ip"], port=scenario["port"], protocol=scenario["protocol"]
         )
 
-        if result['status'] == 'success':
-            analysis = result['analysis']
+        if result["status"] == "success":
+            analysis = result["analysis"]
 
             # Show path summary
             print(f"결과: {analysis['result'].upper()}")
@@ -72,25 +72,25 @@ def test_packet_path_analysis():
 
             # Show detailed path
             print("\n경로 분석:")
-            for step in analysis['path']:
-                status_icon = "✅" if step['status'] == 'success' else "❌"
+            for step in analysis["path"]:
+                status_icon = "✅" if step["status"] == "success" else "❌"
                 print(f"  {status_icon} {step['step']}: {step['action']}")
-                if 'details' in step:
+                if "details" in step:
                     print(f"     상세: {step['details']}")
 
             # Show policy details if available
-            if 'policy' in analysis:
-                policy = analysis['policy']
+            if "policy" in analysis:
+                policy = analysis["policy"]
                 print(f"\n적용된 정책:")
                 print(f"  - ID: {policy['id']}")
                 print(f"  - 이름: {policy['name']}")
                 print(f"  - 액션: {policy['action']}")
-                if 'nat' in policy:
+                if "nat" in policy:
                     print(f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}")
 
             # Show route details
-            if 'route' in analysis:
-                route = analysis['route']
+            if "route" in analysis:
+                route = analysis["route"]
                 print(f"\n라우팅 정보:")
                 print(f"  - 게이트웨이: {route['gateway']}")
                 print(f"  - 인터페이스: {route['interface']}")

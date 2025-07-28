@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 """
 Nextrade Fortigate - 모듈화된 웹 애플리케이션
 Flask + Socket.IO 기반 웹 애플리케이션 (모듈화 버전)
-"""
+    """
 
 import os
 import time
 from datetime import datetime
+
+from flask import Flask, jsonify, render_template, request
+
+from routes.api_routes import api_bp
+from routes.fortimanager_routes import fortimanager_bp
+from routes.itsm_api_routes import itsm_api_bp
+from routes.itsm_routes import itsm_bp
+from routes.main_routes import main_bp
+from utils.security import (add_security_headers, csrf_protect,
+                            generate_csrf_token, rate_limit)
+from utils.unified_logger import get_logger
 
 # 오프라인 모드 감지
 OFFLINE_MODE = (
@@ -37,35 +47,25 @@ if not DISABLE_SOCKETIO:
 else:
     print("Socket.IO disabled by environment variable")
 
-from flask import (
-    Flask,
-    jsonify,
-    render_template,
-    request,
-)
-
-from routes.api_routes import api_bp
-from routes.fortimanager_routes import fortimanager_bp
-from routes.itsm_api_routes import itsm_api_bp
-from routes.itsm_routes import itsm_bp
-
 # Route imports
-from routes.main_routes import main_bp
-from utils.security import (
-    add_security_headers,
-    csrf_protect,
-    generate_csrf_token,
-    rate_limit,
-)
 
 # 모듈 임포트
-from utils.unified_logger import get_logger
 
 # Removed old cache_manager import - using unified_cache_manager instead
 
 
 def create_app():
     """Flask 애플리케이션 팩토리"""
+
+    from analysis.analyzer import FirewallRuleAnalyzer
+    from analysis.fixed_path_analyzer import FixedPathAnalyzer
+    from config.services import APP_CONFIG
+    from config.unified_settings import unified_settings
+    from routes.itsm_automation_routes import itsm_automation_bp
+    from routes.logs_routes import logs_bp
+    from routes.performance_routes import performance_bp
+    from utils.unified_cache_manager import get_cache_manager
+
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "your-secret-key-here")
 
@@ -86,8 +86,6 @@ def create_app():
         os.environ["REDIS_ENABLED"] = "false"
 
     try:
-        from utils.unified_cache_manager import get_cache_manager
-
         cache_manager = get_cache_manager()
         print(
             f"통합 캐시 매니저 로드 성공: {cache_manager.get_stats()['backends']}개 백엔드"
@@ -104,7 +102,6 @@ def create_app():
     # Context processor for global variables
     @app.context_processor
     def inject_global_vars():
-        from config.unified_settings import unified_settings
 
         # 운영 환경에서는 테스트 모드 숨김
         show_test_mode = unified_settings.app_mode != "production"
@@ -140,8 +137,6 @@ def create_app():
 
     # 성능 최적화 라우트 등록
     try:
-        from routes.performance_routes import performance_bp
-
         app.register_blueprint(performance_bp)
         logger.info("Performance optimization routes registered")
     except ImportError as e:
@@ -149,8 +144,6 @@ def create_app():
 
     # ITSM 자동화 라우트 등록
     try:
-        from routes.itsm_automation_routes import itsm_automation_bp
-
         app.register_blueprint(itsm_automation_bp)
         logger.info("ITSM automation routes registered")
     except ImportError as e:
@@ -158,22 +151,19 @@ def create_app():
 
     # 로그 관리 라우트 등록
     try:
-        from routes.logs_routes import logs_bp
-
         app.register_blueprint(logs_bp)
         logger.info("Docker logs management routes registered")
     except ImportError as e:
         logger.warning(f"Logs routes not available: {e}")
 
     # Legacy routes for backward compatibility
-    @rate_limit(max_requests=30, window=60)
+    @rate_limit(max_requests=30, _window=60)
     @csrf_protect
     @app.route("/analyze_path", methods=["POST"])
     def analyze_path():
         """경로 분석 (레거시 호환성)"""
         try:
             data = request.get_json()
-            from analysis.analyzer import FirewallRuleAnalyzer
 
             analyzer = FirewallRuleAnalyzer()
             result = analyzer.analyze_path(data)
@@ -182,18 +172,17 @@ def create_app():
             return jsonify({"error": str(e)}), 500
 
     # Firewall policy routes
-    @rate_limit(max_requests=30, window=60)
+    @rate_limit(max_requests=30, _window=60)
     @csrf_protect
     @app.route("/api/firewall-policy/analyze", methods=["POST"])
     def analyze_firewall_policy():
         """방화벽 정책 분석"""
         try:
             data = request.get_json()
-            from analysis.fixed_path_analyzer import FixedPathAnalyzer
 
             analyzer = FixedPathAnalyzer()
 
-            result = analyzer.analyze_path(
+            _result = analyzer.analyze_path(
                 src_ip=data.get("src_ip"),
                 dst_ip=data.get("dst_ip"),
                 protocol=data.get("protocol", "tcp"),
@@ -205,7 +194,7 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
-    @rate_limit(max_requests=30, window=60)
+    @rate_limit(max_requests=30, _window=60)
     @csrf_protect
     @app.route("/api/firewall-policy/create-ticket", methods=["POST"])
     def create_firewall_ticket():
@@ -231,9 +220,9 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
-    @rate_limit(max_requests=30, window=60)
+    @rate_limit(max_requests=30, _window=60)
     @csrf_protect
-    @rate_limit(max_requests=60, window=60)
+    @rate_limit(max_requests=60, _window=60)
     @app.route("/api/firewall-policy/zones")
     def get_firewall_zones():
         """방화벽 존 정보 조회"""
@@ -247,7 +236,6 @@ def create_app():
             ]
 
             return jsonify({"status": "success", "zones": zones})
-
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 

@@ -44,8 +44,8 @@ class ConfigIntegrationTester:
 
     def create_temp_config_file(self, config_data: Dict[str, Any]) -> str:
         """임시 설정 파일 생성"""
-        config_path = os.path.join(self.temp_dir, 'test_config.json')
-        with open(config_path, 'w') as f:
+        config_path = os.path.join(self.temp_dir, "test_config.json")
+        with open(config_path, "w") as f:
             json.dump(config_data, f, indent=2)
         return config_path
 
@@ -84,7 +84,7 @@ def test_default_settings():
     """기본 설정값 검증"""
 
     # 환경변수와 설정 파일 없이 기본값만 테스트
-    env_keys_to_backup = ['APP_MODE', 'WEB_APP_PORT', 'WEB_APP_HOST', 'OFFLINE_MODE', 'REDIS_ENABLED']
+    env_keys_to_backup = ["APP_MODE", "WEB_APP_PORT", "WEB_APP_HOST", "OFFLINE_MODE", "REDIS_ENABLED"]
     config_tester.backup_environment(env_keys_to_backup)
 
     # 환경변수 제거
@@ -95,9 +95,9 @@ def test_default_settings():
         settings = UnifiedSettings()
 
         # 기본값 검증
-        test_framework.assert_ok(hasattr(settings, 'app_mode'), "Settings should have app_mode attribute")
-        test_framework.assert_ok(hasattr(settings, 'web_app_port'), "Settings should have web_app_port attribute")
-        test_framework.assert_ok(hasattr(settings, 'web_app_host'), "Settings should have web_app_host attribute")
+        test_framework.assert_ok(hasattr(settings, "app_mode"), "Settings should have app_mode attribute")
+        test_framework.assert_ok(hasattr(settings, "web_app_port"), "Settings should have web_app_port attribute")
+        test_framework.assert_ok(hasattr(settings, "web_app_host"), "Settings should have web_app_host attribute")
 
         # 기본값 타입 검증
         test_framework.assert_ok(isinstance(settings.web_app_port, int), "web_app_port should be integer")
@@ -107,15 +107,15 @@ def test_default_settings():
         # 기본값 범위 검증
         test_framework.assert_ok(1024 <= settings.web_app_port <= 65535, "web_app_port should be valid port number")
         test_framework.assert_ok(
-            settings.app_mode in ['production', 'development', 'test'], "app_mode should be valid mode"
+            settings.app_mode in ["production", "development", "test"], "app_mode should be valid mode"
         )
 
         return {
-            'app_mode': settings.app_mode,
-            'web_app_port': settings.web_app_port,
-            'web_app_host': settings.web_app_host,
-            'offline_mode': getattr(settings, 'offline_mode', None),
-            'default_values_valid': True,
+            "app_mode": settings.app_mode,
+            "web_app_port": settings.web_app_port,
+            "web_app_host": settings.web_app_host,
+            "offline_mode": getattr(settings, "offline_mode", None),
+            "default_values_valid": True,
         }
 
     finally:
@@ -126,16 +126,16 @@ def test_default_settings():
 def test_environment_override():
     """환경변수 오버라이드 검증"""
 
-    env_keys_to_backup = ['APP_MODE', 'WEB_APP_PORT', 'WEB_APP_HOST', 'OFFLINE_MODE']
+    env_keys_to_backup = ["APP_MODE", "WEB_APP_PORT", "WEB_APP_HOST", "OFFLINE_MODE"]
     config_tester.backup_environment(env_keys_to_backup)
 
     try:
         # 환경변수로 설정 오버라이드
         test_env_vars = {
-            'APP_MODE': 'test',
-            'WEB_APP_PORT': '8888',
-            'WEB_APP_HOST': '127.0.0.1',
-            'OFFLINE_MODE': 'true',
+            "APP_MODE": "test",
+            "WEB_APP_PORT": "8888",
+            "WEB_APP_HOST": "127.0.0.1",
+            "OFFLINE_MODE": "true",
         }
 
         config_tester.set_test_environment(test_env_vars)
@@ -143,24 +143,24 @@ def test_environment_override():
         settings = UnifiedSettings()
 
         # 환경변수 값이 적용되었는지 검증
-        test_framework.assert_eq(settings.app_mode, 'test', "APP_MODE should be overridden by environment variable")
+        test_framework.assert_eq(settings.app_mode, "test", "APP_MODE should be overridden by environment variable")
         test_framework.assert_eq(settings.web_app_port, 8888, "WEB_APP_PORT should be overridden and converted to int")
-        test_framework.assert_eq(settings.web_app_host, '127.0.0.1', "WEB_APP_HOST should be overridden")
+        test_framework.assert_eq(settings.web_app_host, "127.0.0.1", "WEB_APP_HOST should be overridden")
 
         # 불린 값 변환 검증
-        offline_mode = getattr(settings, 'offline_mode', None)
+        offline_mode = getattr(settings, "offline_mode", None)
         if offline_mode is not None:
             test_framework.assert_eq(offline_mode, True, "OFFLINE_MODE should be converted to boolean True")
 
         return {
-            'environment_overrides': test_env_vars,
-            'applied_settings': {
-                'app_mode': settings.app_mode,
-                'web_app_port': settings.web_app_port,
-                'web_app_host': settings.web_app_host,
-                'offline_mode': offline_mode,
+            "environment_overrides": test_env_vars,
+            "applied_settings": {
+                "app_mode": settings.app_mode,
+                "web_app_port": settings.web_app_port,
+                "web_app_host": settings.web_app_host,
+                "offline_mode": offline_mode,
             },
-            'override_successful': True,
+            "override_successful": True,
         }
 
     finally:
@@ -171,7 +171,7 @@ def test_environment_override():
 def test_config_file_priority():
     """설정 파일 우선순위 시스템 검증"""
 
-    env_keys_to_backup = ['CONFIG_FILE_PATH', 'APP_MODE']
+    env_keys_to_backup = ["CONFIG_FILE_PATH", "APP_MODE"]
     config_tester.backup_environment(env_keys_to_backup)
 
     try:
@@ -185,7 +185,7 @@ def test_config_file_priority():
         config_file_path = config_tester.create_temp_config_file(config_file_data)
 
         # 설정 파일 경로를 환경변수로 지정
-        os.environ['CONFIG_FILE_PATH'] = config_file_path
+        os.environ["CONFIG_FILE_PATH"] = config_file_path
 
         settings = UnifiedSettings()
 
@@ -193,21 +193,21 @@ def test_config_file_priority():
         # 실제 구현에 따라 설정 파일 읽기 방식이 다를 수 있음
 
         # 환경변수가 설정 파일보다 우선순위가 높은지 테스트
-        os.environ['APP_MODE'] = 'development'  # 환경변수로 오버라이드
+        os.environ["APP_MODE"] = "development"  # 환경변수로 오버라이드
 
         settings_with_env_override = get_unified_settings()
 
         # 환경변수가 우선 적용되어야 함
         test_framework.assert_eq(
-            settings_with_env_override.app_mode, 'development', "Environment variable should override config file"
+            settings_with_env_override.app_mode, "development", "Environment variable should override config file"
         )
 
         return {
-            'config_file_path': config_file_path,
-            'config_file_data': config_file_data,
-            'settings_from_file': {'app_mode': settings.app_mode, 'web_app_port': settings.web_app_port},
-            'env_override_test': {'env_app_mode': 'development', 'final_app_mode': settings_with_env_override.app_mode},
-            'priority_system_working': True,
+            "config_file_path": config_file_path,
+            "config_file_data": config_file_data,
+            "settings_from_file": {"app_mode": settings.app_mode, "web_app_port": settings.web_app_port},
+            "env_override_test": {"env_app_mode": "development", "final_app_mode": settings_with_env_override.app_mode},
+            "priority_system_working": True,
         }
 
     finally:
@@ -219,36 +219,36 @@ def test_configuration_validation():
     """설정값 검증 로직 테스트"""
 
     validation_scenarios = [
-        {'name': 'valid_port_range', 'env_vars': {'WEB_APP_PORT': '7777'}, 'should_pass': True},
-        {'name': 'invalid_port_too_low', 'env_vars': {'WEB_APP_PORT': '100'}, 'should_pass': False},
-        {'name': 'invalid_port_too_high', 'env_vars': {'WEB_APP_PORT': '99999'}, 'should_pass': False},
-        {'name': 'invalid_port_not_number', 'env_vars': {'WEB_APP_PORT': 'not_a_number'}, 'should_pass': False},
-        {'name': 'valid_app_mode', 'env_vars': {'APP_MODE': 'production'}, 'should_pass': True},
-        {'name': 'invalid_app_mode', 'env_vars': {'APP_MODE': 'invalid_mode'}, 'should_pass': False},
+        {"name": "valid_port_range", "env_vars": {"WEB_APP_PORT": "7777"}, "should_pass": True},
+        {"name": "invalid_port_too_low", "env_vars": {"WEB_APP_PORT": "100"}, "should_pass": False},
+        {"name": "invalid_port_too_high", "env_vars": {"WEB_APP_PORT": "99999"}, "should_pass": False},
+        {"name": "invalid_port_not_number", "env_vars": {"WEB_APP_PORT": "not_a_number"}, "should_pass": False},
+        {"name": "valid_app_mode", "env_vars": {"APP_MODE": "production"}, "should_pass": True},
+        {"name": "invalid_app_mode", "env_vars": {"APP_MODE": "invalid_mode"}, "should_pass": False},
     ]
 
     validation_results = []
 
-    config_tester.backup_environment(['WEB_APP_PORT', 'APP_MODE'])
+    config_tester.backup_environment(["WEB_APP_PORT", "APP_MODE"])
 
     try:
         for scenario in validation_scenarios:
             # 환경변수 설정
-            config_tester.set_test_environment(scenario['env_vars'])
+            config_tester.set_test_environment(scenario["env_vars"])
 
             try:
                 settings = UnifiedSettings()
 
                 # 포트 검증
-                if 'WEB_APP_PORT' in scenario['env_vars']:
+                if "WEB_APP_PORT" in scenario["env_vars"]:
                     port_value = settings.web_app_port
                     port_valid = isinstance(port_value, int) and 1024 <= port_value <= 65535
                 else:
                     port_valid = True
 
                 # 앱 모드 검증
-                if 'APP_MODE' in scenario['env_vars']:
-                    mode_valid = settings.app_mode in ['production', 'development', 'test']
+                if "APP_MODE" in scenario["env_vars"]:
+                    mode_valid = settings.app_mode in ["production", "development", "test"]
                 else:
                     mode_valid = True
 
@@ -256,34 +256,34 @@ def test_configuration_validation():
 
                 validation_results.append(
                     {
-                        'scenario': scenario['name'],
-                        'env_vars': scenario['env_vars'],
-                        'expected_to_pass': scenario['should_pass'],
-                        'actually_passed': overall_valid,
-                        'port_valid': port_valid,
-                        'mode_valid': mode_valid,
-                        'validation_correct': overall_valid == scenario['should_pass'],
+                        "scenario": scenario["name"],
+                        "env_vars": scenario["env_vars"],
+                        "expected_to_pass": scenario["should_pass"],
+                        "actually_passed": overall_valid,
+                        "port_valid": port_valid,
+                        "mode_valid": mode_valid,
+                        "validation_correct": overall_valid == scenario["should_pass"],
                     }
                 )
 
             except Exception as e:
                 validation_results.append(
                     {
-                        'scenario': scenario['name'],
-                        'env_vars': scenario['env_vars'],
-                        'expected_to_pass': scenario['should_pass'],
-                        'actually_passed': False,
-                        'error': str(e),
-                        'validation_correct': not scenario['should_pass'],  # 예외가 발생하면 실패로 간주
+                        "scenario": scenario["name"],
+                        "env_vars": scenario["env_vars"],
+                        "expected_to_pass": scenario["should_pass"],
+                        "actually_passed": False,
+                        "error": str(e),
+                        "validation_correct": not scenario["should_pass"],  # 예외가 발생하면 실패로 간주
                     }
                 )
 
             # 환경변수 정리
-            for key in scenario['env_vars']:
+            for key in scenario["env_vars"]:
                 os.environ.pop(key, None)
 
         # 검증 결과 확인
-        correct_validations = [r for r in validation_results if r['validation_correct']]
+        correct_validations = [r for r in validation_results if r["validation_correct"]]
         validation_accuracy = len(correct_validations) / len(validation_results) if validation_results else 0
 
         test_framework.assert_ok(
@@ -292,10 +292,10 @@ def test_configuration_validation():
         )
 
         return {
-            'validation_scenarios': validation_scenarios,
-            'validation_results': validation_results,
-            'validation_accuracy': validation_accuracy,
-            'total_scenarios': len(validation_scenarios),
+            "validation_scenarios": validation_scenarios,
+            "validation_results": validation_results,
+            "validation_accuracy": validation_accuracy,
+            "total_scenarios": len(validation_scenarios),
         }
 
     finally:
@@ -306,18 +306,18 @@ def test_configuration_validation():
 def test_runtime_config_updates():
     """런타임 설정 업데이트 검증"""
 
-    config_tester.backup_environment(['APP_MODE'])
+    config_tester.backup_environment(["APP_MODE"])
 
     try:
         # 초기 설정
-        os.environ['APP_MODE'] = 'production'
+        os.environ["APP_MODE"] = "production"
         initial_settings = get_unified_settings()
         initial_mode = initial_settings.app_mode
 
-        test_framework.assert_eq(initial_mode, 'production', "Initial mode should be production")
+        test_framework.assert_eq(initial_mode, "production", "Initial mode should be production")
 
         # 런타임 환경변수 변경
-        os.environ['APP_MODE'] = 'development'
+        os.environ["APP_MODE"] = "development"
 
         # 새로운 설정 인스턴스 생성 (캐싱된 설정이 업데이트되는지 확인)
         updated_settings = get_unified_settings()
@@ -328,15 +328,16 @@ def test_runtime_config_updates():
 
         # 설정 변경 이력 추적
         config_changes = [
-            {'timestamp': 'initial', 'app_mode': initial_mode},
-            {'timestamp': 'updated', 'app_mode': updated_mode},
+            {"timestamp": "initial", "app_mode": initial_mode},
+            {"timestamp": "updated", "app_mode": updated_mode},
         ]
 
         return {
-            'initial_mode': initial_mode,
-            'updated_mode': updated_mode,
-            'config_changes': config_changes,
-            'runtime_update_supported': updated_mode != initial_mode or True,  # 캐싱으로 인해 즉시 변경되지 않을 수 있음
+            "initial_mode": initial_mode,
+            "updated_mode": updated_mode,
+            "config_changes": config_changes,
+            "runtime_update_supported": updated_mode != initial_mode
+            or True,  # 캐싱으로 인해 즉시 변경되지 않을 수 있음
         }
 
     finally:
@@ -351,38 +352,38 @@ def test_complex_config_scenarios():
         ConfigTestScenario(
             name="offline_development_mode",
             env_vars={
-                'APP_MODE': 'development',
-                'OFFLINE_MODE': 'true',
-                'WEB_APP_PORT': '8080',
-                'REDIS_ENABLED': 'false',
+                "APP_MODE": "development",
+                "OFFLINE_MODE": "true",
+                "WEB_APP_PORT": "8080",
+                "REDIS_ENABLED": "false",
             },
             config_file_data={
                 "app_settings": {"port": 7777, "mode": "production"},
                 "features": {"offline_support": True},
             },
             expected_values={
-                'app_mode': 'development',  # 환경변수가 우선
-                'web_app_port': 8080,  # 환경변수가 우선
-                'offline_mode': True,
-                'redis_enabled': False,
+                "app_mode": "development",  # 환경변수가 우선
+                "web_app_port": 8080,  # 환경변수가 우선
+                "offline_mode": True,
+                "redis_enabled": False,
             },
             description="Development mode with offline support",
         ),
         ConfigTestScenario(
             name="production_secure_mode",
-            env_vars={'APP_MODE': 'production', 'OFFLINE_MODE': 'false', 'WEB_APP_HOST': '0.0.0.0'},
+            env_vars={"APP_MODE": "production", "OFFLINE_MODE": "false", "WEB_APP_HOST": "0.0.0.0"},
             config_file_data={
                 "security": {"csrf_enabled": True, "rate_limiting": True},
                 "fortimanager": {"verify_ssl": True},
             },
-            expected_values={'app_mode': 'production', 'web_app_host': '0.0.0.0', 'offline_mode': False},
+            expected_values={"app_mode": "production", "web_app_host": "0.0.0.0", "offline_mode": False},
             description="Production mode with security features",
         ),
         ConfigTestScenario(
             name="test_mode_minimal",
-            env_vars={'APP_MODE': 'test', 'DISABLE_SOCKETIO': 'true', 'DISABLE_EXTERNAL_CALLS': 'true'},
+            env_vars={"APP_MODE": "test", "DISABLE_SOCKETIO": "true", "DISABLE_EXTERNAL_CALLS": "true"},
             config_file_data=None,  # 설정 파일 없음
-            expected_values={'app_mode': 'test'},
+            expected_values={"app_mode": "test"},
             description="Test mode with minimal configuration",
         ),
     ]
@@ -391,13 +392,13 @@ def test_complex_config_scenarios():
 
     config_tester.backup_environment(
         [
-            'APP_MODE',
-            'OFFLINE_MODE',
-            'WEB_APP_PORT',
-            'WEB_APP_HOST',
-            'REDIS_ENABLED',
-            'DISABLE_SOCKETIO',
-            'DISABLE_EXTERNAL_CALLS',
+            "APP_MODE",
+            "OFFLINE_MODE",
+            "WEB_APP_PORT",
+            "WEB_APP_HOST",
+            "REDIS_ENABLED",
+            "DISABLE_SOCKETIO",
+            "DISABLE_EXTERNAL_CALLS",
         ]
     )
 
@@ -410,36 +411,36 @@ def test_complex_config_scenarios():
             config_file_path = None
             if scenario.config_file_data:
                 config_file_path = config_tester.create_temp_config_file(scenario.config_file_data)
-                os.environ['CONFIG_FILE_PATH'] = config_file_path
+                os.environ["CONFIG_FILE_PATH"] = config_file_path
 
             try:
                 settings = UnifiedSettings()
 
                 # 예상값과 실제값 비교
                 scenario_result = {
-                    'scenario_name': scenario.name,
-                    'description': scenario.description,
-                    'env_vars': scenario.env_vars,
-                    'config_file_provided': scenario.config_file_data is not None,
-                    'expected_values': scenario.expected_values,
-                    'actual_values': {},
-                    'matches': {},
-                    'overall_match': True,
+                    "scenario_name": scenario.name,
+                    "description": scenario.description,
+                    "env_vars": scenario.env_vars,
+                    "config_file_provided": scenario.config_file_data is not None,
+                    "expected_values": scenario.expected_values,
+                    "actual_values": {},
+                    "matches": {},
+                    "overall_match": True,
                 }
 
                 for key, expected_value in scenario.expected_values.items():
                     actual_value = getattr(settings, key, None)
-                    scenario_result['actual_values'][key] = actual_value
+                    scenario_result["actual_values"][key] = actual_value
                     matches = actual_value == expected_value
-                    scenario_result['matches'][key] = matches
+                    scenario_result["matches"][key] = matches
 
                     if not matches:
-                        scenario_result['overall_match'] = False
+                        scenario_result["overall_match"] = False
 
                 # 기본적인 검증
                 test_framework.assert_eq(
                     settings.app_mode,
-                    scenario.expected_values['app_mode'],
+                    scenario.expected_values["app_mode"],
                     f"App mode should match expected for scenario {scenario.name}",
                 )
 
@@ -448,10 +449,10 @@ def test_complex_config_scenarios():
             except Exception as e:
                 scenario_results.append(
                     {
-                        'scenario_name': scenario.name,
-                        'description': scenario.description,
-                        'error': str(e),
-                        'overall_match': False,
+                        "scenario_name": scenario.name,
+                        "description": scenario.description,
+                        "error": str(e),
+                        "overall_match": False,
                     }
                 )
 
@@ -459,11 +460,11 @@ def test_complex_config_scenarios():
                 # 환경변수 정리
                 for key in scenario.env_vars:
                     os.environ.pop(key, None)
-                if config_file_path and 'CONFIG_FILE_PATH' in os.environ:
-                    os.environ.pop('CONFIG_FILE_PATH', None)
+                if config_file_path and "CONFIG_FILE_PATH" in os.environ:
+                    os.environ.pop("CONFIG_FILE_PATH", None)
 
         # 전체 시나리오 성공률 계산
-        successful_scenarios = [r for r in scenario_results if r.get('overall_match', False)]
+        successful_scenarios = [r for r in scenario_results if r.get("overall_match", False)]
         success_rate = len(successful_scenarios) / len(scenario_results) if scenario_results else 0
 
         test_framework.assert_ok(
@@ -471,10 +472,10 @@ def test_complex_config_scenarios():
         )
 
         return {
-            'complex_scenarios': complex_scenarios,
-            'scenario_results': scenario_results,
-            'success_rate': success_rate,
-            'total_scenarios': len(complex_scenarios),
+            "complex_scenarios": complex_scenarios,
+            "scenario_results": scenario_results,
+            "success_rate": success_rate,
+            "total_scenarios": len(complex_scenarios),
         }
 
     finally:
@@ -510,7 +511,7 @@ if __name__ == "__main__":
         print("  3. Default Values (lowest)")
 
         # 결과에 따른 종료 코드
-        if results['failed'] == 0:
+        if results["failed"] == 0:
             print(f"\n✅ All {results['total']} Configuration integration tests PASSED!")
             print("⚙️  Configuration management is working correctly")
             sys.exit(0)

@@ -35,9 +35,9 @@ def test_fortimanager():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=status_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ API 접근 성공!")
-            data = result['result'][0].get('data', {})
+            data = result["result"][0].get("data", {})
             print(f"FortiManager 버전: {data.get('version', 'Unknown')}")
             print(f"호스트명: {data.get('hostname', 'Unknown')}")
             print(f"시리얼: {data.get('serial', 'Unknown')}")
@@ -55,9 +55,9 @@ def test_fortimanager():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ ADOM 목록 조회 성공!")
-            adoms = result['result'][0].get('data', [])
+            adoms = result["result"][0].get("data", [])
             for adom in adoms:
                 print(f"  - {adom.get('name', 'Unknown')}")
         else:
@@ -74,9 +74,9 @@ def test_fortimanager():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=device_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ 장치 목록 조회 성공!")
-            devices = result['result'][0].get('data', [])
+            devices = result["result"][0].get("data", [])
             print(f"총 {len(devices)}개 장치 관리 중")
             for device in devices[:5]:  # 처음 5개만
                 print(f"  - {device.get('name', 'Unknown')} ({device.get('ip', 'Unknown')})")
@@ -94,9 +94,9 @@ def test_fortimanager():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=policy_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ 정책 조회 성공!")
-            policies = result['result'][0].get('data', [])
+            policies = result["result"][0].get("data", [])
             print(f"총 {len(policies)}개 정책")
             for policy in policies[:3]:  # 처음 3개만
                 print(f"  - Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}")
@@ -114,9 +114,9 @@ def test_fortimanager():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=address_request, verify=False)
 
         result = response.json()
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ 주소 객체 조회 성공!")
-            addresses = result['result'][0].get('data', [])
+            addresses = result["result"][0].get("data", [])
             print(f"총 {len(addresses)}개 주소 객체")
             for addr in addresses[:3]:  # 처음 3개만
                 print(f"  - {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}")

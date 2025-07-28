@@ -14,7 +14,7 @@ from urllib.parse import urljoin
 import requests
 
 # 로깅 설정
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -38,10 +38,10 @@ class EndpointTester:
         try:
             start_time = time.time()
 
-            if method.upper() == 'GET':
+            if method.upper() == "GET":
                 response = self.session.get(url, timeout=10)
-            elif method.upper() == 'POST':
-                headers = {'Content-Type': 'application/json'}
+            elif method.upper() == "POST":
+                headers = {"Content-Type": "application/json"}
                 response = self.session.post(url, json=data, headers=headers, timeout=10)
             else:
                 raise ValueError(f"Unsupported method: {method}")
@@ -51,14 +51,14 @@ class EndpointTester:
 
             # 결과 기록
             result = {
-                'endpoint': endpoint,
-                'method': method.upper(),
-                'status_code': response.status_code,
-                'response_time_ms': response_time,
-                'content_type': response.headers.get('Content-Type', 'N/A'),
-                'content_length': len(response.content),
-                'success': response.status_code == expected_status,
-                'error': None,
+                "endpoint": endpoint,
+                "method": method.upper(),
+                "status_code": response.status_code,
+                "response_time_ms": response_time,
+                "content_type": response.headers.get("Content-Type", "N/A"),
+                "content_length": len(response.content),
+                "success": response.status_code == expected_status,
+                "error": None,
             }
 
             if response.status_code == expected_status:
@@ -70,27 +70,27 @@ class EndpointTester:
                 )
 
             # JSON 응답 검증
-            if 'application/json' in response.headers.get('Content-Type', ''):
+            if "application/json" in response.headers.get("Content-Type", ""):
                 try:
                     json_data = response.json()
-                    result['json_valid'] = True
-                    result['json_keys'] = list(json_data.keys()) if isinstance(json_data, dict) else None
+                    result["json_valid"] = True
+                    result["json_keys"] = list(json_data.keys()) if isinstance(json_data, dict) else None
                 except:
-                    result['json_valid'] = False
+                    result["json_valid"] = False
             else:
-                result['json_valid'] = None
+                result["json_valid"] = None
 
         except Exception as e:
             result = {
-                'endpoint': endpoint,
-                'method': method.upper(),
-                'status_code': None,
-                'response_time_ms': None,
-                'content_type': None,
-                'content_length': None,
-                'success': False,
-                'error': str(e),
-                'json_valid': None,
+                "endpoint": endpoint,
+                "method": method.upper(),
+                "status_code": None,
+                "response_time_ms": None,
+                "content_type": None,
+                "content_length": None,
+                "success": False,
+                "error": str(e),
+                "json_valid": None,
             }
             logger.error(f"❌ {method} {endpoint} - ERROR: {str(e)}")
 
@@ -103,50 +103,50 @@ class EndpointTester:
 
         # 1. 메인 웹 페이지
         logger.info("\n📄 메인 웹 페이지 테스트")
-        web_pages = ['/', '/devices', '/topology', '/settings', '/itsm', '/itsm/scraper', '/help', '/about']
+        web_pages = ["/", "/devices", "/topology", "/settings", "/itsm", "/itsm/scraper", "/help", "/about"]
 
         for endpoint in web_pages:
-            self.test_endpoint('GET', endpoint)
+            self.test_endpoint("GET", endpoint)
 
         # 2. API 엔드포인트
         logger.info("\n🔗 API 엔드포인트 테스트")
-        api_endpoints = ['/api/settings', '/api/devices', '/api/system/stats', '/api/monitoring', '/api/dashboard']
+        api_endpoints = ["/api/settings", "/api/devices", "/api/system/stats", "/api/monitoring", "/api/dashboard"]
 
         for endpoint in api_endpoints:
-            self.test_endpoint('GET', endpoint)
+            self.test_endpoint("GET", endpoint)
 
         # 3. FortiManager API
         logger.info("\n🛡️ FortiManager API 테스트")
         fortimanager_endpoints = [
-            '/api/fortimanager/policies',
-            '/api/fortimanager/devices',
-            '/api/fortimanager/dashboard',
-            '/api/fortimanager/monitoring',
-            '/api/fortimanager/topology',
-            '/api/fortimanager/mock/system-status',
-            '/api/fortimanager/mock/interfaces',
+            "/api/fortimanager/policies",
+            "/api/fortimanager/devices",
+            "/api/fortimanager/dashboard",
+            "/api/fortimanager/monitoring",
+            "/api/fortimanager/topology",
+            "/api/fortimanager/mock/system-status",
+            "/api/fortimanager/mock/interfaces",
         ]
 
         for endpoint in fortimanager_endpoints:
-            self.test_endpoint('GET', endpoint)
+            self.test_endpoint("GET", endpoint)
 
         # FortiManager POST 요청
         logger.info("\n📤 FortiManager POST 요청 테스트")
         packet_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 80, "protocol": "tcp"}
-        self.test_endpoint('POST', '/api/fortimanager/analyze-packet-path', packet_data)
-        self.test_endpoint('POST', '/api/fortimanager/test-policy-analysis', {})
+        self.test_endpoint("POST", "/api/fortimanager/analyze-packet-path", packet_data)
+        self.test_endpoint("POST", "/api/fortimanager/test-policy-analysis", {})
 
         # 4. ITSM API
         logger.info("\n🎫 ITSM API 테스트")
         itsm_endpoints = [
-            '/api/itsm/scrape-requests',
-            '/api/itsm/bridge-status',
-            '/api/itsm/scraper/status',
-            '/api/itsm/demo-mapping',
+            "/api/itsm/scrape-requests",
+            "/api/itsm/bridge-status",
+            "/api/itsm/scraper/status",
+            "/api/itsm/demo-mapping",
         ]
 
         for endpoint in itsm_endpoints:
-            self.test_endpoint('GET', endpoint)
+            self.test_endpoint("GET", endpoint)
 
         logger.info("\n=== 테스트 완료 ===")
 
@@ -165,31 +165,31 @@ class EndpointTester:
         print(f"   성공률: {success_rate:.1f}%")
 
         # 성공한 엔드포인트
-        successful = [r for r in self.results if r['success']]
+        successful = [r for r in self.results if r["success"]]
         if successful:
             print(f"\n✅ 성공한 엔드포인트 ({len(successful)}개):")
             for result in successful:
                 content_type = (
-                    result['content_type'][:30] + "..."
-                    if result['content_type'] and len(result['content_type']) > 30
-                    else result['content_type']
+                    result["content_type"][:30] + "..."
+                    if result["content_type"] and len(result["content_type"]) > 30
+                    else result["content_type"]
                 )
                 print(
                     f"   {result['method']} {result['endpoint']} - {result['status_code']} ({result['response_time_ms']}ms) [{content_type}]"
                 )
 
         # 실패한 엔드포인트
-        failed = [r for r in self.results if not r['success']]
+        failed = [r for r in self.results if not r["success"]]
         if failed:
             print(f"\n❌ 실패한 엔드포인트 ({len(failed)}개):")
             for result in failed:
-                if result['error']:
+                if result["error"]:
                     print(f"   {result['method']} {result['endpoint']} - ERROR: {result['error']}")
                 else:
                     print(f"   {result['method']} {result['endpoint']} - {result['status_code']} (expected 200)")
 
         # 응답 시간 분석
-        response_times = [r['response_time_ms'] for r in self.results if r['response_time_ms'] is not None]
+        response_times = [r["response_time_ms"] for r in self.results if r["response_time_ms"] is not None]
         if response_times:
             avg_time = sum(response_times) / len(response_times)
             max_time = max(response_times)
@@ -200,8 +200,8 @@ class EndpointTester:
             print(f"   최소: {min_time:.1f}ms")
 
         # JSON API 분석
-        json_apis = [r for r in self.results if r['json_valid'] is not None]
-        json_valid = [r for r in json_apis if r['json_valid']]
+        json_apis = [r for r in self.results if r["json_valid"] is not None]
+        json_valid = [r for r in json_apis if r["json_valid"]]
         if json_apis:
             print(f"\n📋 JSON API 분석:")
             print(f"   JSON 응답 엔드포인트: {len(json_apis)}개")
@@ -211,8 +211,8 @@ class EndpointTester:
         # Content-Type 분석
         content_types = {}
         for result in self.results:
-            if result['content_type']:
-                ct = result['content_type'].split(';')[0]  # charset 등 제거
+            if result["content_type"]:
+                ct = result["content_type"].split(";")[0]  # charset 등 제거
                 content_types[ct] = content_types.get(ct, 0) + 1
 
         if content_types:
@@ -224,24 +224,24 @@ class EndpointTester:
         if failed:
             print(f"\n🔧 문제 해결 방안:")
             for result in failed:
-                if result['error']:
-                    if 'timeout' in result['error'].lower():
+                if result["error"]:
+                    if "timeout" in result["error"].lower():
                         print(f"   {result['endpoint']}: 응답 시간 초과 - 서버 성능 확인 필요")
-                    elif 'connection' in result['error'].lower():
+                    elif "connection" in result["error"].lower():
                         print(f"   {result['endpoint']}: 연결 오류 - 서버 상태 확인 필요")
                     else:
                         print(f"   {result['endpoint']}: {result['error']}")
-                elif result['status_code'] == 404:
+                elif result["status_code"] == 404:
                     print(f"   {result['endpoint']}: 404 Not Found - 라우팅 확인 필요")
-                elif result['status_code'] == 500:
+                elif result["status_code"] == 500:
                     print(f"   {result['endpoint']}: 500 Internal Error - 서버 로그 확인 필요")
-                elif result['status_code'] in [403, 401]:
+                elif result["status_code"] in [403, 401]:
                     print(f"   {result['endpoint']}: 인증/권한 오류")
 
         print("\n" + "=" * 80)
 
         # 상세 결과를 JSON 파일로 저장
-        with open('endpoint_test_results.json', 'w', encoding='utf-8') as f:
+        with open("endpoint_test_results.json", "w", encoding="utf-8") as f:
             json.dump(self.results, f, ensure_ascii=False, indent=2)
         print(f"📁 상세 결과가 'endpoint_test_results.json'에 저장되었습니다.")
 

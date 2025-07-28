@@ -35,17 +35,17 @@ def test_adom_access():
 
     for test in global_tests:
         print(f"\n테스트: {test['name']}")
-        request_data = {"id": 1, "method": "get", "params": [{"url": test['url']}]}
+        request_data = {"id": 1, "method": "get", "params": [{"url": test["url"]}]}
 
         try:
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
 
             result = response.json()
-            if 'result' in result:
-                code = result['result'][0]['status']['code']
+            if "result" in result:
+                code = result["result"][0]["status"]["code"]
                 if code == 0:
                     print(f"  ✅ 성공! 데이터 접근 가능")
-                    if 'data' in result['result'][0]:
+                    if "data" in result["result"][0]:
                         print(f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
                     print(f"  ❌ 에러 {code}: {result['result'][0]['status']['message']}")
@@ -80,8 +80,8 @@ def test_adom_access():
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_info, verify=False)
 
             result = response.json()
-            if 'result' in result:
-                code = result['result'][0]['status']['code']
+            if "result" in result:
+                code = result["result"][0]["status"]["code"]
                 if code == 0:
                     print(f"  ✅ ADOM '{adom}' 접근 가능!")
                 elif code == -3:
@@ -115,7 +115,7 @@ def test_adom_access():
     print("❓ 4. ADOM 권한 설정 필요:")
     print("\n   config system admin user")
     print("       edit 1411")
-    print("           set adom \"all_adoms\"  # 또는 특정 ADOM 지정")
+    print('           set adom "all_adoms"  # 또는 특정 ADOM 지정')
     print("       next")
     print("   end")
     print("\n또는 ADOM별 권한 설정:")

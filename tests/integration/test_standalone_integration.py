@@ -36,12 +36,12 @@ def run_test(test_name: str, test_func):
         result = test_func()
         duration = time.time() - start_time
         print(f"✅ {test_name} - PASSED ({duration:.3f}s)")
-        return {'name': test_name, 'passed': True, 'duration': duration, 'result': result}
+        return {"name": test_name, "passed": True, "duration": duration, "result": result}
     except Exception as e:
         duration = time.time() - start_time
         print(f"❌ {test_name} - FAILED ({duration:.3f}s)")
         print(f"   Error: {str(e)}")
-        return {'name': test_name, 'passed': False, 'duration': duration, 'error': str(e)}
+        return {"name": test_name, "passed": False, "duration": duration, "error": str(e)}
 
 
 def test_module_imports():
@@ -49,11 +49,11 @@ def test_module_imports():
 
     import_results = []
     modules_to_test = [
-        ('src.web_app', 'Flask application'),
-        ('src.config.unified_settings', 'Unified settings'),
-        ('src.utils.unified_cache_manager', 'Cache manager'),
-        ('src.api.clients.base_api_client', 'Base API client'),
-        ('src.routes.main_routes', 'Main routes'),
+        ("src.web_app", "Flask application"),
+        ("src.config.unified_settings", "Unified settings"),
+        ("src.utils.unified_cache_manager", "Cache manager"),
+        ("src.api.clients.base_api_client", "Base API client"),
+        ("src.routes.main_routes", "Main routes"),
     ]
 
     for module_name, description in modules_to_test:
@@ -64,20 +64,20 @@ def test_module_imports():
                 sys.path.insert(0, project_root)
 
             __import__(module_name)
-            import_results.append({'module': module_name, 'description': description, 'imported': True})
+            import_results.append({"module": module_name, "description": description, "imported": True})
         except Exception as e:
             import_results.append(
-                {'module': module_name, 'description': description, 'imported': False, 'error': str(e)}
+                {"module": module_name, "description": description, "imported": False, "error": str(e)}
             )
 
     # 모든 모듈이 성공적으로 import되어야 함
-    failed_imports = [r for r in import_results if not r['imported']]
+    failed_imports = [r for r in import_results if not r["imported"]]
     assert_eq(len(failed_imports), 0, f"All modules should import successfully: {failed_imports}")
 
     return {
-        'total_modules': len(modules_to_test),
-        'import_results': import_results,
-        'all_imported': len(failed_imports) == 0,
+        "total_modules": len(modules_to_test),
+        "import_results": import_results,
+        "all_imported": len(failed_imports) == 0,
     }
 
 
@@ -95,31 +95,31 @@ def test_configuration_system():
     settings = UnifiedSettings()
 
     # 기본 속성 확인
-    assert_ok(hasattr(settings, 'app_mode'), "Settings should have app_mode attribute")
+    assert_ok(hasattr(settings, "app_mode"), "Settings should have app_mode attribute")
 
     # 설정값 검증
-    if hasattr(settings, 'web_app_port'):
+    if hasattr(settings, "web_app_port"):
         port = settings.web_app_port
         assert_ok(isinstance(port, int), "Port should be integer")
         assert_ok(1024 <= port <= 65535, f"Port should be in valid range: {port}")
 
     # 환경변수 오버라이드 테스트
-    original_mode = os.environ.get('APP_MODE')
+    original_mode = os.environ.get("APP_MODE")
     try:
-        os.environ['APP_MODE'] = 'test'
+        os.environ["APP_MODE"] = "test"
         test_settings = UnifiedSettings()
-        assert_eq(test_settings.app_mode, 'test', "Environment variable should override setting")
+        assert_eq(test_settings.app_mode, "test", "Environment variable should override setting")
     finally:
         if original_mode:
-            os.environ['APP_MODE'] = original_mode
+            os.environ["APP_MODE"] = original_mode
         else:
-            os.environ.pop('APP_MODE', None)
+            os.environ.pop("APP_MODE", None)
 
     return {
-        'settings_created': True,
-        'app_mode': getattr(settings, 'app_mode', None),
-        'has_web_config': hasattr(settings, 'web_app_port'),
-        'env_override_works': True,
+        "settings_created": True,
+        "app_mode": getattr(settings, "app_mode", None),
+        "has_web_config": hasattr(settings, "web_app_port"),
+        "env_override_works": True,
     }
 
 
@@ -137,8 +137,8 @@ def test_cache_system():
     cache_manager = UnifiedCacheManager()
 
     # 기본 속성 확인
-    assert_ok(hasattr(cache_manager, 'memory_cache'), "Cache manager should have memory cache")
-    assert_ok(hasattr(cache_manager, 'redis_cache'), "Cache manager should have redis cache")
+    assert_ok(hasattr(cache_manager, "memory_cache"), "Cache manager should have memory cache")
+    assert_ok(hasattr(cache_manager, "redis_cache"), "Cache manager should have redis cache")
 
     # 메모리 캐시 기본 기능 테스트
     test_key = "integration_test_key"
@@ -161,10 +161,10 @@ def test_cache_system():
     assert_eq(get_after_delete, None, "Memory cache should return None after delete")
 
     return {
-        'cache_manager_created': True,
-        'memory_cache_working': True,
-        'basic_operations': ['set', 'get', 'delete'],
-        'test_completed': True,
+        "cache_manager_created": True,
+        "memory_cache_working": True,
+        "basic_operations": ["set", "get", "delete"],
+        "test_completed": True,
     }
 
 
@@ -182,7 +182,7 @@ def test_api_client_structure():
     client = BaseApiClient()
 
     # 필수 속성 확인
-    assert_ok(hasattr(client, 'session'), "API client should have session")
+    assert_ok(hasattr(client, "session"), "API client should have session")
     assert_ok(client.session is not None, "Session should be initialized")
 
     # 세션 타입 확인
@@ -191,14 +191,14 @@ def test_api_client_structure():
     assert_ok(isinstance(client.session, requests.Session), "Session should be requests.Session")
 
     # 기본 설정 확인
-    assert_ok(hasattr(client, 'verify_ssl'), "Client should have SSL verification setting")
-    assert_ok(hasattr(client, 'timeout'), "Client should have timeout setting")
+    assert_ok(hasattr(client, "verify_ssl"), "Client should have SSL verification setting")
+    assert_ok(hasattr(client, "timeout"), "Client should have timeout setting")
 
     return {
-        'base_client_created': True,
-        'session_initialized': True,
-        'has_ssl_config': hasattr(client, 'verify_ssl'),
-        'has_timeout_config': hasattr(client, 'timeout'),
+        "base_client_created": True,
+        "session_initialized": True,
+        "has_ssl_config": hasattr(client, "verify_ssl"),
+        "has_timeout_config": hasattr(client, "timeout"),
     }
 
 
@@ -208,30 +208,30 @@ def test_file_structure():
     project_root = Path(__file__).parent.parent.parent
 
     # 중요한 디렉토리 확인
-    important_dirs = ['src', 'src/config', 'src/utils', 'src/api/clients', 'src/routes', 'tests', 'k8s/manifests']
+    important_dirs = ["src", "src/config", "src/utils", "src/api/clients", "src/routes", "tests", "k8s/manifests"]
 
     dir_results = []
     for dir_path in important_dirs:
         full_path = project_root / dir_path
         dir_results.append(
             {
-                'path': dir_path,
-                'exists': full_path.exists(),
-                'is_dir': full_path.is_dir() if full_path.exists() else False,
+                "path": dir_path,
+                "exists": full_path.exists(),
+                "is_dir": full_path.is_dir() if full_path.exists() else False,
             }
         )
 
     # 모든 중요한 디렉토리가 존재해야 함
-    missing_dirs = [r for r in dir_results if not r['exists']]
+    missing_dirs = [r for r in dir_results if not r["exists"]]
     assert_eq(len(missing_dirs), 0, f"All important directories should exist: {missing_dirs}")
 
     # 중요한 파일 확인
     important_files = [
-        'src/web_app.py',
-        'src/main.py',
-        'src/config/unified_settings.py',
-        'requirements.txt',
-        'README.md',
+        "src/web_app.py",
+        "src/main.py",
+        "src/config/unified_settings.py",
+        "requirements.txt",
+        "README.md",
     ]
 
     file_results = []
@@ -239,21 +239,21 @@ def test_file_structure():
         full_path = project_root / file_path
         file_results.append(
             {
-                'path': file_path,
-                'exists': full_path.exists(),
-                'size': full_path.stat().st_size if full_path.exists() else 0,
+                "path": file_path,
+                "exists": full_path.exists(),
+                "size": full_path.stat().st_size if full_path.exists() else 0,
             }
         )
 
     # 모든 중요한 파일이 존재해야 함
-    missing_files = [r for r in file_results if not r['exists']]
+    missing_files = [r for r in file_results if not r["exists"]]
     assert_eq(len(missing_files), 0, f"All important files should exist: {missing_files}")
 
     return {
-        'project_root': str(project_root),
-        'dir_results': dir_results,
-        'file_results': file_results,
-        'structure_valid': len(missing_dirs) == 0 and len(missing_files) == 0,
+        "project_root": str(project_root),
+        "dir_results": dir_results,
+        "file_results": file_results,
+        "structure_valid": len(missing_dirs) == 0 and len(missing_files) == 0,
     }
 
 
@@ -289,8 +289,8 @@ def main():
     print("📊 Integration Test Results")
     print("=" * 50)
 
-    passed_tests = [r for r in results if r['passed']]
-    failed_tests = [r for r in results if not r['passed']]
+    passed_tests = [r for r in results if r["passed"]]
+    failed_tests = [r for r in results if not r["passed"]]
 
     print(f"Total tests: {len(results)}")
     print(f"Passed: {len(passed_tests)}")

@@ -47,15 +47,15 @@ def test_fortimanager_api():
         print(f"\n응답: {json.dumps(result, indent=2)}")
 
         # 세션 ID 확인
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"\n✅ 로그인 성공!")
             print(f"세션 ID: {session_id}")
 
             # 세션으로 테스트
             test_session_api(session_id)
 
-        elif 'result' in result and result['result'][0]['status']['code'] == -22:
+        elif "result" in result and result["result"][0]["status"]["code"] == -22:
             print("\n❌ 로그인 실패 - 사용자명 또는 패스워드가 올바르지 않음")
 
     except Exception as e:
@@ -140,11 +140,11 @@ def test_session_api(session_id):
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_payload, verify=False)
 
             result = response.json()
-            if 'result' in result:
-                status_code = result['result'][0]['status']['code']
+            if "result" in result:
+                status_code = result["result"][0]["status"]["code"]
                 if status_code == 0:
                     print(f"✅ 성공!")
-                    if 'data' in result['result'][0]:
+                    if "data" in result["result"][0]:
                         print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
                     print(f"❌ 에러 {status_code}: {result['result'][0]['status']['message']}")

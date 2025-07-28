@@ -37,12 +37,12 @@ class BlueprintIntegrationTester:
 
         for rule in app.url_map.iter_rules():
             endpoint = rule.endpoint
-            if '.' in endpoint:
-                blueprint_name = endpoint.split('.')[0]
+            if "." in endpoint:
+                blueprint_name = endpoint.split(".")[0]
                 if blueprint_name not in blueprint_routes:
                     blueprint_routes[blueprint_name] = []
                 blueprint_routes[blueprint_name].append(
-                    {'endpoint': endpoint, 'rule': str(rule.rule), 'methods': list(rule.methods)}
+                    {"endpoint": endpoint, "rule": str(rule.rule), "methods": list(rule.methods)}
                 )
 
         return blueprint_routes
@@ -54,21 +54,21 @@ class BlueprintIntegrationTester:
 
         for blueprint_name, routes in blueprint_routes.items():
             for route_info in routes:
-                rule = route_info['rule']
+                rule = route_info["rule"]
                 if rule in all_routes:
                     conflicts.append(
                         {
-                            'rule': rule,
-                            'blueprints': [all_routes[rule]['blueprint'], blueprint_name],
-                            'endpoints': [all_routes[rule]['endpoint'], route_info['endpoint']],
-                            'methods_conflict': bool(set(all_routes[rule]['methods']) & set(route_info['methods'])),
+                            "rule": rule,
+                            "blueprints": [all_routes[rule]["blueprint"], blueprint_name],
+                            "endpoints": [all_routes[rule]["endpoint"], route_info["endpoint"]],
+                            "methods_conflict": bool(set(all_routes[rule]["methods"]) & set(route_info["methods"])),
                         }
                     )
                 else:
                     all_routes[rule] = {
-                        'blueprint': blueprint_name,
-                        'endpoint': route_info['endpoint'],
-                        'methods': route_info['methods'],
+                        "blueprint": blueprint_name,
+                        "endpoint": route_info["endpoint"],
+                        "methods": route_info["methods"],
                     }
 
         return conflicts
@@ -85,14 +85,14 @@ def test_blueprint_registration():
     with test_framework.test_app() as (app, client):
         # 예상되는 Blueprint 목록
         expected_blueprints = {
-            'main',
-            'api',
-            'fortimanager',
-            'itsm',
-            'itsm_api',
-            'itsm_automation',
-            'logs',
-            'performance',
+            "main",
+            "api",
+            "fortimanager",
+            "itsm",
+            "itsm_api",
+            "itsm_automation",
+            "logs",
+            "performance",
         }
 
         # 등록된 Blueprint 확인
@@ -115,9 +115,9 @@ def test_blueprint_registration():
             test_framework.assert_ok(routes_count > 0, f"Blueprint {blueprint_name} should have at least one route")
 
         return {
-            'registered_blueprints': list(registered_blueprints),
-            'blueprint_route_counts': {bp: len(routes) for bp, routes in blueprint_routes.items()},
-            'total_routes': sum(len(routes) for routes in blueprint_routes.values()),
+            "registered_blueprints": list(registered_blueprints),
+            "blueprint_route_counts": {bp: len(routes) for bp, routes in blueprint_routes.items()},
+            "total_routes": sum(len(routes) for routes in blueprint_routes.values()),
         }
 
 
@@ -130,17 +130,17 @@ def test_route_conflicts():
         conflicts = blueprint_tester.check_route_conflicts(blueprint_routes)
 
         # 중요한 충돌이 없어야 함
-        critical_conflicts = [c for c in conflicts if c['methods_conflict']]
+        critical_conflicts = [c for c in conflicts if c["methods_conflict"]]
         test_framework.assert_eq(len(critical_conflicts), 0, f"Critical route conflicts found: {critical_conflicts}")
 
         # 정보성 충돌 로깅 (같은 경로, 다른 메서드는 허용)
-        info_conflicts = [c for c in conflicts if not c['methods_conflict']]
+        info_conflicts = [c for c in conflicts if not c["methods_conflict"]]
 
         return {
-            'total_conflicts': len(conflicts),
-            'critical_conflicts': critical_conflicts,
-            'info_conflicts': info_conflicts,
-            'route_analysis': blueprint_routes,
+            "total_conflicts": len(conflicts),
+            "critical_conflicts": critical_conflicts,
+            "info_conflicts": info_conflicts,
+            "route_analysis": blueprint_routes,
         }
 
 
@@ -153,32 +153,32 @@ def test_url_generation():
 
         # 주요 엔드포인트 URL 생성 테스트
         critical_endpoints = [
-            ('main.dashboard', {}),
-            ('main.index', {}),
-            ('api.health', {}),
-            ('api.get_settings', {}),
-            ('fortimanager.get_devices', {}),
-            ('logs.logs_management', {}),
+            ("main.dashboard", {}),
+            ("main.index", {}),
+            ("api.health", {}),
+            ("api.get_settings", {}),
+            ("fortimanager.get_devices", {}),
+            ("logs.logs_management", {}),
         ]
 
         for endpoint, params in critical_endpoints:
             try:
                 generated_url = url_for(endpoint, **params)
-                url_tests.append({'endpoint': endpoint, 'url': generated_url, 'status': 'success'})
+                url_tests.append({"endpoint": endpoint, "url": generated_url, "status": "success"})
 
                 # URL이 유효한 형식인지 검증
-                test_framework.assert_ok(generated_url.startswith('/'), f"URL should start with '/': {generated_url}")
+                test_framework.assert_ok(generated_url.startswith("/"), f"URL should start with '/': {generated_url}")
 
             except Exception as e:
-                url_tests.append({'endpoint': endpoint, 'error': str(e), 'status': 'failed'})
+                url_tests.append({"endpoint": endpoint, "error": str(e), "status": "failed"})
 
         # 실패한 URL 생성이 없어야 함
-        failed_urls = [test for test in url_tests if test['status'] == 'failed']
+        failed_urls = [test for test in url_tests if test["status"] == "failed"]
         test_framework.assert_eq(len(failed_urls), 0, f"Failed URL generations: {failed_urls}")
 
         return {
-            'url_tests': url_tests,
-            'successful_generations': len([t for t in url_tests if t['status'] == 'success']),
+            "url_tests": url_tests,
+            "successful_generations": len([t for t in url_tests if t["status"] == "success"]),
         }
 
 
@@ -190,12 +190,12 @@ def test_error_handler_precedence():
         error_tests = []
 
         # 404 에러 테스트 (존재하지 않는 경로)
-        response = client.get('/nonexistent-route-12345')
+        response = client.get("/nonexistent-route-12345")
         error_tests.append(
             {
-                'test': '404_nonexistent_route',
-                'status_code': response.status_code,
-                'has_content': len(response.get_data()) > 0,
+                "test": "404_nonexistent_route",
+                "status_code": response.status_code,
+                "has_content": len(response.get_data()) > 0,
             }
         )
 
@@ -203,12 +203,12 @@ def test_error_handler_precedence():
         test_framework.assert_eq(response.status_code, 404, "Nonexistent route should return 404")
 
         # 500 에러 테스트 (잘못된 파라미터)
-        response = client.get('/api/settings?invalid_param=trigger_error')
+        response = client.get("/api/settings?invalid_param=trigger_error")
         error_tests.append(
             {
-                'test': '500_invalid_param',
-                'status_code': response.status_code,
-                'response_size': len(response.get_data()),
+                "test": "500_invalid_param",
+                "status_code": response.status_code,
+                "response_size": len(response.get_data()),
             }
         )
 
@@ -216,20 +216,20 @@ def test_error_handler_precedence():
         test_framework.assert_ok(len(response.get_data()) > 0, "Error response should have content")
 
         # 메서드 오류 테스트
-        response = client.put('/')  # GET만 허용하는 경로에 PUT 요청
+        response = client.put("/")  # GET만 허용하는 경로에 PUT 요청
         error_tests.append(
             {
-                'test': '405_method_not_allowed',
-                'status_code': response.status_code,
-                'allowed_methods': response.headers.get('Allow', ''),
+                "test": "405_method_not_allowed",
+                "status_code": response.status_code,
+                "allowed_methods": response.headers.get("Allow", ""),
             }
         )
 
         test_framework.assert_eq(response.status_code, 405, "Wrong method should return 405")
 
         return {
-            'error_tests': error_tests,
-            'error_handling_working': all(test['status_code'] in [404, 405, 500] for test in error_tests),
+            "error_tests": error_tests,
+            "error_handling_working": all(test["status_code"] in [404, 405, 500] for test in error_tests),
         }
 
 
@@ -242,10 +242,10 @@ def test_template_context_isolation():
 
         # 다양한 페이지 접근하여 템플릿 렌더링 확인
         pages_to_test = [
-            ('/', 'main_dashboard'),
-            ('/dashboard', 'dashboard_page'),
-            ('/settings', 'settings_page'),
-            ('/logs', 'logs_page'),
+            ("/", "main_dashboard"),
+            ("/dashboard", "dashboard_page"),
+            ("/settings", "settings_page"),
+            ("/logs", "logs_page"),
         ]
 
         for url, test_name in pages_to_test:
@@ -253,12 +253,12 @@ def test_template_context_isolation():
                 response = client.get(url)
                 template_tests.append(
                     {
-                        'url': url,
-                        'test_name': test_name,
-                        'status_code': response.status_code,
-                        'content_length': len(response.get_data()),
-                        'has_html': b'<html' in response.get_data() or b'<!DOCTYPE' in response.get_data(),
-                        'status': 'success',
+                        "url": url,
+                        "test_name": test_name,
+                        "status_code": response.status_code,
+                        "content_length": len(response.get_data()),
+                        "has_html": b"<html" in response.get_data() or b"<!DOCTYPE" in response.get_data(),
+                        "status": "success",
                     }
                 )
 
@@ -266,15 +266,15 @@ def test_template_context_isolation():
                 test_framework.assert_ok(response.status_code in [200, 302], f"Page {url} should be accessible")
 
             except Exception as e:
-                template_tests.append({'url': url, 'test_name': test_name, 'error': str(e), 'status': 'failed'})
+                template_tests.append({"url": url, "test_name": test_name, "error": str(e), "status": "failed"})
 
         # 템플릿 렌더링 실패가 없어야 함
-        failed_templates = [test for test in template_tests if test['status'] == 'failed']
+        failed_templates = [test for test in template_tests if test["status"] == "failed"]
         test_framework.assert_eq(len(failed_templates), 0, f"Template rendering failures: {failed_templates}")
 
         return {
-            'template_tests': template_tests,
-            'successful_renders': len([t for t in template_tests if t['status'] == 'success']),
+            "template_tests": template_tests,
+            "successful_renders": len([t for t in template_tests if t["status"] == "success"]),
         }
 
 
@@ -282,15 +282,15 @@ def test_template_context_isolation():
 def test_security_context_propagation():
     """Blueprint 간 보안 컨텍스트 전파 검증"""
 
-    with test_framework.test_app({'WTF_CSRF_ENABLED': True}) as (app, client):
+    with test_framework.test_app({"WTF_CSRF_ENABLED": True}) as (app, client):
         security_tests = []
 
         # CSRF 보호가 활성화된 상태에서 테스트
         # GET 요청은 일반적으로 CSRF 검증하지 않음
         get_endpoints = [
-            '/api/health',
-            '/api/settings',
-            '/dashboard',
+            "/api/health",
+            "/api/settings",
+            "/dashboard",
         ]
 
         for endpoint in get_endpoints:
@@ -298,10 +298,10 @@ def test_security_context_propagation():
                 response = client.get(endpoint)
                 security_tests.append(
                     {
-                        'endpoint': endpoint,
-                        'method': 'GET',
-                        'status_code': response.status_code,
-                        'csrf_check': 'passed' if response.status_code != 400 else 'failed',
+                        "endpoint": endpoint,
+                        "method": "GET",
+                        "status_code": response.status_code,
+                        "csrf_check": "passed" if response.status_code != 400 else "failed",
                     }
                 )
 
@@ -311,20 +311,20 @@ def test_security_context_propagation():
                 )
 
             except Exception as e:
-                security_tests.append({'endpoint': endpoint, 'method': 'GET', 'error': str(e), 'csrf_check': 'error'})
+                security_tests.append({"endpoint": endpoint, "method": "GET", "error": str(e), "csrf_check": "error"})
 
         # 보안 헤더 확인
-        response = client.get('/')
+        response = client.get("/")
         security_headers = {
-            'X-Content-Type-Options': response.headers.get('X-Content-Type-Options'),
-            'X-Frame-Options': response.headers.get('X-Frame-Options'),
-            'X-XSS-Protection': response.headers.get('X-XSS-Protection'),
+            "X-Content-Type-Options": response.headers.get("X-Content-Type-Options"),
+            "X-Frame-Options": response.headers.get("X-Frame-Options"),
+            "X-XSS-Protection": response.headers.get("X-XSS-Protection"),
         }
 
         return {
-            'security_tests': security_tests,
-            'security_headers': security_headers,
-            'csrf_protection_active': app.config.get('WTF_CSRF_ENABLED', False),
+            "security_tests": security_tests,
+            "security_headers": security_headers,
+            "csrf_protection_active": app.config.get("WTF_CSRF_ENABLED", False),
         }
 
 
@@ -359,7 +359,7 @@ if __name__ == "__main__":
             print("\n✅ No route conflicts detected")
 
     # 결과에 따른 종료 코드
-    if results['failed'] == 0:
+    if results["failed"] == 0:
         print(f"\n✅ All {results['total']} Blueprint integration tests PASSED!")
         print("🎯 Blueprint integration is working correctly")
         sys.exit(0)

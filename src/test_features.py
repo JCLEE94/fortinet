@@ -25,7 +25,23 @@ def test_result(name: str, success: bool, details: str = "") -> Dict:
 def test_basic_imports() -> Dict:
     """Test basic imports and dependencies"""
     try:
-        pass
+        from analysis.analyzer import FirewallRuleAnalyzer
+        from analysis.visualizer import PathVisualizer
+        from api.clients.faz_client import FAZClient
+        from api.clients.fortigate_api_client import FortiGateAPIClient
+        from api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from fortimanager.advanced_hub import FortiManagerAdvancedHub
+        from itsm.automation_service import get_automation_service
+        from itsm.policy_automation import PolicyAutomationEngine
+        from monitoring.manager import get_unified_manager
+        from monitoring.realtime.alerts import RealtimeAlertSystem
+        from monitoring.realtime.monitor import get_monitor
+        from security.packet_sniffer_api import get_packet_sniffer_api
+        from security.scanner import get_security_scanner
+        from utils.data_transformer import DataTransformer
+        from utils.performance_optimizer import performance_monitor
+        from utils.unified_cache_manager import get_cache_manager
+        from web_app import create_app
 
         return test_result(
             "Basic Imports", True, "All core modules imported successfully"

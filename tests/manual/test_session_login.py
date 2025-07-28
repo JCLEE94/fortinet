@@ -47,8 +47,8 @@ def test_session_login():
         print(json.dumps(result, indent=2))
 
         # 세션 ID 확인
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"\n✅ 로그인 성공!")
             print(f"세션 ID: {session_id}")
 
@@ -65,15 +65,15 @@ def test_session_login():
 
             # API 사용자는 패스워드가 없을 수 있으므로 빈 패스워드로 시도
             print("\n빈 패스워드로 재시도...")
-            login_payload['params'][0]['data']['passwd'] = ""
+            login_payload["params"][0]["data"]["passwd"] = ""
 
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
             result = response.json()
             print(json.dumps(result, indent=2))
 
-            if 'session' in result:
-                session_id = result['session']
+            if "session" in result:
+                session_id = result["session"]
                 print(f"\n✅ 로그인 성공!")
                 test_with_session(session_id)
                 logout(session_id)
@@ -104,7 +104,7 @@ def test_with_session(session_id):
         request_payload = {
             "id": 1,
             "method": "get",
-            "params": [{"url": endpoint['url']}],
+            "params": [{"url": endpoint["url"]}],
             "session": session_id,  # 세션 ID 포함
         }
 
@@ -112,12 +112,12 @@ def test_with_session(session_id):
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_payload, verify=False)
 
             result = response.json()
-            if 'result' in result:
-                status = result['result'][0]['status']
-                if status['code'] == 0:
+            if "result" in result:
+                status = result["result"][0]["status"]
+                if status["code"] == 0:
                     print(f"  ✅ 성공!")
-                    if 'data' in result['result'][0]:
-                        data = result['result'][0]['data']
+                    if "data" in result["result"][0]:
+                        data = result["result"][0]["data"]
                         print(f"  데이터: {json.dumps(data, indent=2)[:200]}...")
                 else:
                     print(f"  ❌ 에러 {status['code']}: {status['message']}")
@@ -138,7 +138,7 @@ def logout(session_id):
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=logout_payload, verify=False)
 
         result = response.json()
-        if result['result'][0]['status']['code'] == 0:
+        if result["result"][0]["status"]["code"] == 0:
             print("✅ 로그아웃 성공")
         else:
             print(f"❌ 로그아웃 실패: {result}")

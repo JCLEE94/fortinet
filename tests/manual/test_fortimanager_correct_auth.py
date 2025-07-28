@@ -40,9 +40,9 @@ def test_with_correct_info():
         result = response.json()
         print(f"응답: {json.dumps(result, indent=2)}")
 
-        if 'result' in result:
-            status_code = result['result'][0]['status']['code']
-            status_msg = result['result'][0]['status']['message']
+        if "result" in result:
+            status_code = result["result"][0]["status"]["code"]
+            status_msg = result["result"][0]["status"]["message"]
 
             if status_code == -11:
                 print("\n⚠️  권한 문제 지속")

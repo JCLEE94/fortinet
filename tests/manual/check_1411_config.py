@@ -35,8 +35,8 @@ def check_user_config():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
         result = response.json()
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print("✅ 로그인 성공")
 
             # 2. 사용자 1411 정보 조회
@@ -51,8 +51,8 @@ def check_user_config():
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False)
 
             result = response.json()
-            if 'result' in result and result['result'][0]['status']['code'] == 0:
-                data = result['result'][0]['data']
+            if "result" in result and result["result"][0]["status"]["code"] == 0:
+                data = result["result"][0]["data"]
 
                 # 주요 설정 확인
                 print(f"\n주요 설정:")
@@ -64,7 +64,7 @@ def check_user_config():
                 print(f"- adom-access: {data.get('adom-access', 'Unknown')}")
 
                 # rpc-permit 값 해석
-                rpc = data.get('rpc-permit', 0)
+                rpc = data.get("rpc-permit", 0)
                 if rpc == 0:
                     print("\n⚠️  RPC 권한이 'none'으로 설정됨!")
                 elif rpc == 1:
@@ -73,7 +73,7 @@ def check_user_config():
                     print("\n✅ RPC 권한이 'read-write'로 설정됨!")
 
                 # ADOM 권한 확인
-                adom = data.get('adom', None)
+                adom = data.get("adom", None)
                 if adom is None or adom == "":
                     print("\n⚠️  ADOM 권한이 설정되지 않음!")
                     print("   설정 필요: set adom 'all_adoms'")

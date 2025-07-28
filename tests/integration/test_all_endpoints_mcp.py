@@ -89,15 +89,15 @@ class EndpointTester:
                 result["status"] = "SUCCESS"
 
                 # Check content type
-                content_type = response.headers.get('Content-Type', '')
-                if 'application/json' in content_type:
+                content_type = response.headers.get("Content-Type", "")
+                if "application/json" in content_type:
                     try:
                         result["response_data"] = response.json()
                         result["response_type"] = "json"
                     except:
                         result["response_type"] = "invalid_json"
                         result["error"] = "Invalid JSON response"
-                elif 'text/html' in content_type:
+                elif "text/html" in content_type:
                     result["response_type"] = "html"
                     result["response_size"] = len(response.content)
                 else:
@@ -129,7 +129,7 @@ class EndpointTester:
         print("=" * 60)
 
         for endpoint, description in ENDPOINTS.items():
-            method, path = endpoint.split(' ', 1)
+            method, path = endpoint.split(" ", 1)
             result = self.test_endpoint(method, path, description)
             self.results.append(result)
 
@@ -209,26 +209,26 @@ def main():
         print(f"  Success: {summary['successful']} ({summary['success_rate']}%)")
         print(f"  Failed: {summary['failed']}")
 
-        if summary['json_errors'] > 0:
+        if summary["json_errors"] > 0:
             print(f"  JSON Errors: {summary['json_errors']}")
-        if summary['timeout_errors'] > 0:
+        if summary["timeout_errors"] > 0:
             print(f"  Timeouts: {summary['timeout_errors']}")
-        if summary['mode_issues']:
+        if summary["mode_issues"]:
             print(f"  Mode Issues: {len(summary['mode_issues'])}")
-            for issue in summary['mode_issues']:
+            for issue in summary["mode_issues"]:
                 print(f"    - {issue['endpoint']}: {issue['issue']}")
 
     # Save detailed results
     report = {"test_date": datetime.now().isoformat(), "environments": all_summaries, "detailed_results": all_results}
 
     report_file = f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(report_file, 'w', encoding='utf-8') as f:
+    with open(report_file, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
     print(f"\nDetailed report saved to: {report_file}")
 
     # Overall status
-    total_failed = sum(s['failed'] for s in all_summaries.values())
+    total_failed = sum(s["failed"] for s in all_summaries.values())
     if total_failed == 0:
         print("\n✓ All endpoints passed!")
         return 0

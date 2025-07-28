@@ -9,7 +9,7 @@ from datetime import datetime
 import requests
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 
 def test_api_endpoints():
@@ -44,7 +44,7 @@ def test_api_endpoints():
 
         # Test /api/settings
         try:
-            response = client.get('/api/settings')
+            response = client.get("/api/settings")
             print(f"✅ GET /api/settings: {response.status_code}")
             if response.status_code == 200:
                 data = response.get_json()
@@ -54,21 +54,21 @@ def test_api_endpoints():
 
         # Test /api/system/stats
         try:
-            response = client.get('/api/system/stats')
+            response = client.get("/api/system/stats")
             print(f"✅ GET /api/system/stats: {response.status_code}")
         except Exception as e:
             print(f"❌ GET /api/system/stats failed: {e}")
 
         # Test /api/fortimanager/status
         try:
-            response = client.get('/api/fortimanager/status')
+            response = client.get("/api/fortimanager/status")
             print(f"✅ GET /api/fortimanager/status: {response.status_code}")
         except Exception as e:
             print(f"❌ GET /api/fortimanager/status failed: {e}")
 
         # Test /api/fortimanager/devices
         try:
-            response = client.get('/api/fortimanager/devices')
+            response = client.get("/api/fortimanager/devices")
             print(f"✅ GET /api/fortimanager/devices: {response.status_code}")
         except Exception as e:
             print(f"❌ GET /api/fortimanager/devices failed: {e}")
@@ -77,7 +77,7 @@ def test_api_endpoints():
         try:
             test_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 443, "protocol": "tcp"}
             response = client.post(
-                '/api/fortimanager/analyze-packet-path', json=test_data, content_type='application/json'
+                "/api/fortimanager/analyze-packet-path", json=test_data, content_type="application/json"
             )
             print(f"✅ POST /api/fortimanager/analyze-packet-path: {response.status_code}")
         except Exception as e:
@@ -90,7 +90,7 @@ def test_api_endpoints():
                 "time_range": {"start": "2024-01-01T00:00:00", "end": datetime.now().isoformat()},
             }
             response = client.post(
-                '/api/fortimanager/advanced/analytics/trends', json=test_data, content_type='application/json'
+                "/api/fortimanager/advanced/analytics/trends", json=test_data, content_type="application/json"
             )
             print(f"✅ POST /api/fortimanager/advanced/analytics/trends: {response.status_code}")
         except Exception as e:
@@ -100,7 +100,7 @@ def test_api_endpoints():
         try:
             test_data = {"devices": ["FW-01"], "frameworks": ["PCI-DSS"], "auto_remediate": False}
             response = client.post(
-                '/api/fortimanager/advanced/compliance/check', json=test_data, content_type='application/json'
+                "/api/fortimanager/advanced/compliance/check", json=test_data, content_type="application/json"
             )
             print(f"✅ POST /api/fortimanager/advanced/compliance/check: {response.status_code}")
         except Exception as e:

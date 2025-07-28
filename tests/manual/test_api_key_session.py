@@ -33,7 +33,7 @@ def test_api_without_session():
             "request": {
                 "id": 1,
                 "method": "get",
-                "params": [{"url": "/sys/status"}]
+                "params": [{"url": "/sys/status"}],
                 # 세션 필드 없음!
             },
         },
@@ -47,7 +47,7 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=test['request'], verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False, timeout=10
             )
 
             if response.status_code == 200:
@@ -67,15 +67,15 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=test['request'], verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False, timeout=10
             )
 
             result = response.json()
-            if 'result' in result:
-                status = result['result'][0]['status']
-                if status['code'] == 0:
+            if "result" in result:
+                status = result["result"][0]["status"]
+                if status["code"] == 0:
                     print(f"✅ 성공!")
-                    if 'data' in result['result'][0]:
+                    if "data" in result["result"][0]:
                         print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
                     print(f"❌ 에러 {status['code']}: {status['message']}")
@@ -91,13 +91,13 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             url = f"{BASE_URL}/jsonrpc?access_token={API_KEY}"
-            response = requests.post(url, headers=headers, json=test['request'], verify=False, timeout=10)
+            response = requests.post(url, headers=headers, json=test["request"], verify=False, timeout=10)
 
             if response.status_code == 200:
                 result = response.json()
-                if 'result' in result:
-                    status = result['result'][0]['status']
-                    if status['code'] == 0:
+                if "result" in result:
+                    status = result["result"][0]["status"]
+                    if status["code"] == 0:
                         print(f"✅ 성공!")
                     else:
                         print(f"❌ 에러 {status['code']}: {status['message']}")

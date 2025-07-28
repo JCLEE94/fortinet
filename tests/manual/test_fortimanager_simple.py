@@ -71,7 +71,7 @@ def simple_test():
             print(f"\nCommand: {cmd['params'][0]['url'] if cmd['params'] else 'empty'}")
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=cmd, verify=False, timeout=10)
             result = response.json()
-            if 'result' in result:
+            if "result" in result:
                 print(f"Result: {json.dumps(result['result'], indent=2)}")
             else:
                 print(f"Response: {json.dumps(result, indent=2)}")

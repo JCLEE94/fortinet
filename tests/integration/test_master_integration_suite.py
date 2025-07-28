@@ -43,32 +43,32 @@ class MasterIntegrationTestSuite:
     def __init__(self):
         self.test_modules = [
             {
-                'name': 'Blueprint Integration',
-                'file': 'test_blueprint_integration.py',
-                'description': 'Flask Blueprint routing, security context, error handling',
-                'phase': 1,
-                'priority': 'critical',
+                "name": "Blueprint Integration",
+                "file": "test_blueprint_integration.py",
+                "description": "Flask Blueprint routing, security context, error handling",
+                "phase": 1,
+                "priority": "critical",
             },
             {
-                'name': 'API Authentication Chain',
-                'file': 'test_api_auth_integration.py',
-                'description': 'FortiManager/FortiGate API authentication fallback chain',
-                'phase': 1,
-                'priority': 'critical',
+                "name": "API Authentication Chain",
+                "file": "test_api_auth_integration.py",
+                "description": "FortiManager/FortiGate API authentication fallback chain",
+                "phase": 1,
+                "priority": "critical",
             },
             {
-                'name': 'Cache Layer Consistency',
-                'file': 'test_cache_integration.py',
-                'description': 'Redis ↔ Memory ↔ File cache synchronization',
-                'phase': 1,
-                'priority': 'critical',
+                "name": "Cache Layer Consistency",
+                "file": "test_cache_integration.py",
+                "description": "Redis ↔ Memory ↔ File cache synchronization",
+                "phase": 1,
+                "priority": "critical",
             },
             {
-                'name': 'Configuration Management',
-                'file': 'test_config_integration.py',
-                'description': 'Environment variables, files, defaults priority',
-                'phase': 1,
-                'priority': 'critical',
+                "name": "Configuration Management",
+                "file": "test_config_integration.py",
+                "description": "Environment variables, files, defaults priority",
+                "phase": 1,
+                "priority": "critical",
             },
         ]
 
@@ -78,8 +78,8 @@ class MasterIntegrationTestSuite:
 
     def run_test_module(self, module_info: Dict[str, Any]) -> TestModuleResult:
         """개별 테스트 모듈 실행"""
-        module_name = module_info['name']
-        module_file = module_info['file']
+        module_name = module_info["name"]
+        module_file = module_info["file"]
 
         print(f"🧪 Running {module_name}...")
 
@@ -110,7 +110,7 @@ class MasterIntegrationTestSuite:
 
             # 결과 파싱
             success = result.returncode == 0
-            output_lines = result.stdout.split('\n') if result.stdout else []
+            output_lines = result.stdout.split("\n") if result.stdout else []
 
             # 테스트 결과 통계 파싱
             total_tests = 0
@@ -118,19 +118,19 @@ class MasterIntegrationTestSuite:
             failed_tests = 0
 
             for line in output_lines:
-                if 'Total tests:' in line:
+                if "Total tests:" in line:
                     try:
-                        total_tests = int(line.split(':')[1].strip())
+                        total_tests = int(line.split(":")[1].strip())
                     except:
                         pass
-                elif 'Passed:' in line:
+                elif "Passed:" in line:
                     try:
-                        passed_tests = int(line.split(':')[1].strip())
+                        passed_tests = int(line.split(":")[1].strip())
                     except:
                         pass
-                elif 'Failed:' in line:
+                elif "Failed:" in line:
                     try:
-                        failed_tests = int(line.split(':')[1].strip())
+                        failed_tests = int(line.split(":")[1].strip())
                     except:
                         pass
 
@@ -142,7 +142,7 @@ class MasterIntegrationTestSuite:
                 passed_tests=passed_tests,
                 failed_tests=failed_tests,
                 error_message=result.stderr if result.stderr and not success else None,
-                detailed_results={'stdout': result.stdout, 'stderr': result.stderr, 'returncode': result.returncode},
+                detailed_results={"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode},
             )
 
         except subprocess.TimeoutExpired:
@@ -226,7 +226,7 @@ class MasterIntegrationTestSuite:
                 except Exception as e:
                     # 예외 발생 시 실패 결과 생성
                     result = TestModuleResult(
-                        module_name=module_info['name'],
+                        module_name=module_info["name"],
                         success=False,
                         duration=0,
                         total_tests=0,
@@ -257,17 +257,17 @@ class MasterIntegrationTestSuite:
         test_pass_rate = total_passed / total_tests if total_tests > 0 else 0
 
         return {
-            'execution_time': total_duration,
-            'total_modules': len(self.test_modules),
-            'successful_modules': len(successful_modules),
-            'failed_modules': len(failed_modules),
-            'module_success_rate': success_rate,
-            'total_tests': total_tests,
-            'total_passed': total_passed,
-            'total_failed': total_failed,
-            'test_pass_rate': test_pass_rate,
-            'module_results': self.results,
-            'failed_modules_details': failed_modules,
+            "execution_time": total_duration,
+            "total_modules": len(self.test_modules),
+            "successful_modules": len(successful_modules),
+            "failed_modules": len(failed_modules),
+            "module_success_rate": success_rate,
+            "total_tests": total_tests,
+            "total_passed": total_passed,
+            "total_failed": total_failed,
+            "test_pass_rate": test_pass_rate,
+            "module_results": self.results,
+            "failed_modules_details": failed_modules,
         }
 
     def print_detailed_summary(self, summary: Dict[str, Any]):
@@ -286,7 +286,7 @@ class MasterIntegrationTestSuite:
         )
 
         print("\n📋 Module Results:")
-        for result in summary['module_results']:
+        for result in summary["module_results"]:
             status_icon = "✅" if result.success else "❌"
             print(f"  {status_icon} {result.module_name}")
             print(f"     Duration: {result.duration:.2f}s")
@@ -294,23 +294,23 @@ class MasterIntegrationTestSuite:
             if not result.success and result.error_message:
                 print(f"     Error: {result.error_message[:80]}...")
 
-        if summary['failed_modules_details']:
+        if summary["failed_modules_details"]:
             print(f"\n❌ Failed Modules ({len(summary['failed_modules_details'])}):")
-            for failed_module in summary['failed_modules_details']:
+            for failed_module in summary["failed_modules_details"]:
                 print(f"  - {failed_module.module_name}: {failed_module.error_message}")
 
         print("\n🎯 Integration Coverage:")
-        phase1_modules = [m for m in self.test_modules if m['phase'] == 1]
-        critical_modules = [m for m in self.test_modules if m['priority'] == 'critical']
+        phase1_modules = [m for m in self.test_modules if m["phase"] == 1]
+        critical_modules = [m for m in self.test_modules if m["priority"] == "critical"]
 
         phase1_passed = len(
-            [r for r in summary['module_results'] if r.success and r.module_name in [m['name'] for m in phase1_modules]]
+            [r for r in summary["module_results"] if r.success and r.module_name in [m["name"] for m in phase1_modules]]
         )
         critical_passed = len(
             [
                 r
-                for r in summary['module_results']
-                if r.success and r.module_name in [m['name'] for m in critical_modules]
+                for r in summary["module_results"]
+                if r.success and r.module_name in [m["name"] for m in critical_modules]
             ]
         )
 
@@ -319,11 +319,11 @@ class MasterIntegrationTestSuite:
 
         # 전체 시스템 상태 평가
         print(f"\n🏆 Overall System Integration Status:")
-        if summary['module_success_rate'] >= 0.9 and summary['test_pass_rate'] >= 0.9:
+        if summary["module_success_rate"] >= 0.9 and summary["test_pass_rate"] >= 0.9:
             print("  🟢 EXCELLENT - System integration is highly reliable")
-        elif summary['module_success_rate'] >= 0.8 and summary['test_pass_rate'] >= 0.8:
+        elif summary["module_success_rate"] >= 0.8 and summary["test_pass_rate"] >= 0.8:
             print("  🟡 GOOD - System integration is mostly reliable")
-        elif summary['module_success_rate'] >= 0.6 and summary['test_pass_rate'] >= 0.6:
+        elif summary["module_success_rate"] >= 0.6 and summary["test_pass_rate"] >= 0.6:
             print("  🟠 FAIR - System integration has some issues")
         else:
             print("  🔴 POOR - System integration needs significant work")
@@ -338,20 +338,20 @@ def test_framework_validation():
     """통합 테스트 프레임워크 자체 검증"""
 
     # 프레임워크 기본 기능 테스트
-    test_framework.assert_ok(hasattr(test_framework, 'test'), "Framework should have test decorator")
-    test_framework.assert_ok(hasattr(test_framework, 'assert_eq'), "Framework should have assert_eq")
-    test_framework.assert_ok(hasattr(test_framework, 'assert_ok'), "Framework should have assert_ok")
-    test_framework.assert_ok(hasattr(test_framework, 'test_app'), "Framework should have test_app context manager")
+    test_framework.assert_ok(hasattr(test_framework, "test"), "Framework should have test decorator")
+    test_framework.assert_ok(hasattr(test_framework, "assert_eq"), "Framework should have assert_eq")
+    test_framework.assert_ok(hasattr(test_framework, "assert_ok"), "Framework should have assert_ok")
+    test_framework.assert_ok(hasattr(test_framework, "test_app"), "Framework should have test_app context manager")
 
     # 결과 추적 검증
-    test_framework.assert_ok(hasattr(test_framework, 'results'), "Framework should track results")
+    test_framework.assert_ok(hasattr(test_framework, "results"), "Framework should track results")
     test_framework.assert_ok(isinstance(test_framework.results, list), "Results should be a list")
 
     return {
-        'framework_version': '1.0.0',
-        'supported_assertions': ['assert_eq', 'assert_ne', 'assert_ok', 'assert_err'],
-        'context_managers': ['test_app', 'temp_config_file'],
-        'validation_passed': True,
+        "framework_version": "1.0.0",
+        "supported_assertions": ["assert_eq", "assert_ne", "assert_ok", "assert_err"],
+        "context_managers": ["test_app", "temp_config_file"],
+        "validation_passed": True,
     }
 
 
@@ -363,17 +363,17 @@ def test_module_discovery():
     discovered_modules = []
 
     for module_info in master_suite.test_modules:
-        module_file = module_info['file']
+        module_file = module_info["file"]
         module_path = test_dir / module_file
 
         discovered_modules.append(
             {
-                'name': module_info['name'],
-                'file': module_file,
-                'exists': module_path.exists(),
-                'size': module_path.stat().st_size if module_path.exists() else 0,
-                'phase': module_info['phase'],
-                'priority': module_info['priority'],
+                "name": module_info["name"],
+                "file": module_file,
+                "exists": module_path.exists(),
+                "size": module_path.stat().st_size if module_path.exists() else 0,
+                "phase": module_info["phase"],
+                "priority": module_info["priority"],
             }
         )
 
@@ -385,16 +385,16 @@ def test_module_discovery():
             test_framework.assert_ok(module_path.stat().st_size > 0, f"Test module should not be empty: {module_file}")
 
     # 모든 모듈이 발견되어야 함
-    existing_modules = [m for m in discovered_modules if m['exists']]
+    existing_modules = [m for m in discovered_modules if m["exists"]]
     test_framework.assert_eq(
         len(existing_modules), len(master_suite.test_modules), "All test modules should be discovered"
     )
 
     return {
-        'total_modules': len(master_suite.test_modules),
-        'discovered_modules': discovered_modules,
-        'existing_modules_count': len(existing_modules),
-        'discovery_successful': len(existing_modules) == len(master_suite.test_modules),
+        "total_modules": len(master_suite.test_modules),
+        "discovered_modules": discovered_modules,
+        "existing_modules_count": len(existing_modules),
+        "discovery_successful": len(existing_modules) == len(master_suite.test_modules),
     }
 
 
@@ -411,7 +411,7 @@ if __name__ == "__main__":
     # 프레임워크 검증 테스트 먼저 실행
     framework_results = test_framework.run_all_tests()
 
-    if framework_results['failed'] > 0:
+    if framework_results["failed"] > 0:
         print("❌ Test framework validation failed!")
         print("Cannot proceed with integration tests.")
         sys.exit(1)
@@ -420,9 +420,9 @@ if __name__ == "__main__":
     print()
 
     # 실행 모드 결정
-    execution_mode = os.getenv('INTEGRATION_TEST_MODE', 'sequential').lower()
+    execution_mode = os.getenv("INTEGRATION_TEST_MODE", "sequential").lower()
 
-    if execution_mode == 'parallel':
+    if execution_mode == "parallel":
         print("🔄 Running tests in parallel mode...")
         summary = master_suite.run_parallel(max_workers=2)
     else:
@@ -433,7 +433,7 @@ if __name__ == "__main__":
     master_suite.print_detailed_summary(summary)
 
     # 결과에 따른 종료 코드
-    if summary['module_success_rate'] >= 0.8 and summary['test_pass_rate'] >= 0.8:
+    if summary["module_success_rate"] >= 0.8 and summary["test_pass_rate"] >= 0.8:
         print(f"\n🎉 Integration test suite PASSED!")
         print(f"🚀 System is ready for production deployment")
         sys.exit(0)

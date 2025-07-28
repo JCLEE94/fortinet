@@ -7,7 +7,7 @@ import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 class TestWebAppCoverage(unittest.TestCase):
@@ -18,11 +18,11 @@ class TestWebAppCoverage(unittest.TestCase):
         from src.web_app import create_app
 
         # 오프라인 모드 설정
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["OFFLINE_MODE"] = "true"
 
         app = create_app()
         self.assertIsNotNone(app)
-        self.assertEqual(app.name, 'src.web_app')
+        self.assertEqual(app.name, "src.web_app")
 
     def test_blueprint_registration(self):
         """블루프린트 등록 테스트"""
@@ -48,7 +48,7 @@ class TestConfigurationCoverage(unittest.TestCase):
         # 설정 객체 생성
         settings = get_settings()
         self.assertIsNotNone(settings)
-        self.assertTrue(hasattr(settings, 'data'))
+        self.assertTrue(hasattr(settings, "data"))
 
     def test_config_migration(self):
         """설정 마이그레이션 테스트"""
@@ -67,7 +67,7 @@ class TestAnalyticsCoverage(unittest.TestCase):
         from src.analysis.analyzer import PolicyAnalyzer, TopologyAnalyzer
 
         # 오프라인 모드 설정
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["OFFLINE_MODE"] = "true"
 
         # 정책 분석기 생성
         policy_analyzer = PolicyAnalyzer()
@@ -82,7 +82,7 @@ class TestAnalyticsCoverage(unittest.TestCase):
         from src.analysis.visualizer import create_topology_visualization
 
         # 빈 토폴로지 데이터로 테스트
-        topology_data = {'devices': [], 'connections': []}
+        topology_data = {"devices": [], "connections": []}
         result = create_topology_visualization(topology_data)
         self.assertIsNotNone(result)
 
@@ -199,14 +199,14 @@ class TestSecurityCoverage(unittest.TestCase):
 
         # 보안 헤더 상수 확인
         self.assertIsInstance(SECURITY_HEADERS, dict)
-        self.assertIn('X-XSS-Protection', SECURITY_HEADERS)
+        self.assertIn("X-XSS-Protection", SECURITY_HEADERS)
 
     def test_packet_sniffer_basic(self):
         """패킷 스니퍼 기본 기능 테스트"""
         from src.security.packet_sniffer import PacketAnalyzer
 
         # 오프라인 모드에서는 실제 패킷 캡처 안 함
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["OFFLINE_MODE"] = "true"
 
         analyzer = PacketAnalyzer()
         self.assertIsNotNone(analyzer)
@@ -234,5 +234,5 @@ class TestCoreCoverage(unittest.TestCase):
         self.assertIsNotNone(auth_manager)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

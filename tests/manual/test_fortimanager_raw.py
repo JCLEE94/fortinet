@@ -49,13 +49,13 @@ def raw_test():
         print(f"\n테스트: {combo['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=combo['headers'], json=test_payload, verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc", headers=combo["headers"], json=test_payload, verify=False, timeout=10
             )
 
             if response.status_code == 200:
                 result = response.json()
-                if 'result' in result:
-                    code = result['result'][0]['status']['code']
+                if "result" in result:
+                    code = result["result"][0]["status"]["code"]
                     if code != -11:
                         print(f"✅ 다른 응답! Code: {code}")
                         print(f"전체 응답: {json.dumps(result, indent=2)}")
@@ -120,7 +120,7 @@ def raw_test():
                 verify=False,
             )
             result = response.json()
-            if 'result' in result and result['result'][0]['status']['code'] != -11:
+            if "result" in result and result["result"][0]["status"]["code"] != -11:
                 print(f"✅ 성공! 다른 형식 작동")
                 print(f"결과: {result}")
             else:

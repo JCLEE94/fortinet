@@ -37,8 +37,8 @@ def test_with_session():
         response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
         result = response.json()
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"✅ 로그인 성공")
             print(f"세션 ID: {session_id[:50]}...")
 
@@ -82,8 +82,8 @@ def get_system_info(session_id):
     )
 
     result = response.json()
-    if result['result'][0]['status']['code'] == 0:
-        data = result['result'][0]['data']
+    if result["result"][0]["status"]["code"] == 0:
+        data = result["result"][0]["data"]
         print(f"  - FortiManager 버전: {data.get('Version', 'Unknown')}")
         print(f"  - 호스트명: {data.get('Hostname', 'Unknown')}")
         print(f"  - 시리얼: {data.get('Serial Number', 'Unknown')}")
@@ -102,8 +102,8 @@ def work_with_adom(session_id):
     )
 
     result = response.json()
-    if result['result'][0]['status']['code'] == 0:
-        adoms = result['result'][0]['data']
+    if result["result"][0]["status"]["code"] == 0:
+        adoms = result["result"][0]["data"]
         print(f"  - 총 {len(adoms)}개 ADOM")
         for adom in adoms[:3]:
             print(f"    • {adom.get('name', 'Unknown')} - {adom.get('desc', 'No description')}")
@@ -125,8 +125,8 @@ def get_device_info(session_id):
     )
 
     result = response.json()
-    if result['result'][0]['status']['code'] == 0:
-        devices = result['result'][0]['data']
+    if result["result"][0]["status"]["code"] == 0:
+        devices = result["result"][0]["data"]
         print(f"  - 총 {len(devices)}개 장치 관리 중")
         for device in devices[:3]:
             print(
@@ -151,8 +151,8 @@ def get_policies(session_id):
     )
 
     result = response.json()
-    if result['result'][0]['status']['code'] == 0:
-        policies = result['result'][0].get('data', [])
+    if result["result"][0]["status"]["code"] == 0:
+        policies = result["result"][0].get("data", [])
         print(f"  - root ADOM에 {len(policies)}개 정책")
         for policy in policies[:3]:
             print(f"    • Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}")
@@ -175,8 +175,8 @@ def get_address_objects(session_id):
     )
 
     result = response.json()
-    if result['result'][0]['status']['code'] == 0:
-        addresses = result['result'][0]['data']
+    if result["result"][0]["status"]["code"] == 0:
+        addresses = result["result"][0]["data"]
         print(f"  - 총 {len(addresses)}개 주소 객체")
         for addr in addresses[:3]:
             print(f"    • {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}")

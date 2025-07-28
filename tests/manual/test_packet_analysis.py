@@ -61,7 +61,7 @@ def test_packet_path_analysis():
         print(f"  프로토콜: {test_case['protocol'].upper()}")
 
         # 시뮬레이션 결과
-        if test_case['name'] == "인터넷 접속 (내부 → 외부)":
+        if test_case["name"] == "인터넷 접속 (내부 → 외부)":
             result = {
                 "status": "allowed",
                 "path": [
@@ -73,7 +73,7 @@ def test_packet_path_analysis():
                 "security_profiles": ["AV", "IPS", "Web Filter", "Application Control"],
                 "route": "0.0.0.0/0 via 203.0.113.254",
             }
-        elif test_case['name'] == "웹 서버 접속 (외부 → DMZ)":
+        elif test_case["name"] == "웹 서버 접속 (외부 → DMZ)":
             result = {
                 "status": "allowed",
                 "path": [
@@ -85,7 +85,7 @@ def test_packet_path_analysis():
                 "security_profiles": ["AV", "IPS", "WAF"],
                 "route": "10.10.10.0/24 via dmz interface",
             }
-        elif test_case['name'] == "내부 서버 간 통신":
+        elif test_case["name"] == "내부 서버 간 통신":
             result = {
                 "status": "allowed",
                 "path": [
@@ -115,16 +115,16 @@ def test_packet_path_analysis():
         print(f"     상태: {'✅ 허용됨' if result['status'] == 'allowed' else '❌ 차단됨'}")
         print(f"     경로: ", end="")
         path_str = ""
-        for j, hop in enumerate(result['path']):
-            if 'interface' in hop:
+        for j, hop in enumerate(result["path"]):
+            if "interface" in hop:
                 path_str += f"{hop['interface']} → "
-            elif 'policy' in hop:
+            elif "policy" in hop:
                 path_str += f"[정책: {hop['policy']}] → "
         print(path_str.rstrip(" → "))
 
-        if result['nat']['type'] != 'none':
+        if result["nat"]["type"] != "none":
             print(f"     NAT: {result['nat']['type']}")
-            if 'translated_ip' in result['nat']:
+            if "translated_ip" in result["nat"]:
                 print(f"          변환 IP: {result['nat']['translated_ip']}")
 
         print(f"     보안 프로파일: {', '.join(result['security_profiles'])}")

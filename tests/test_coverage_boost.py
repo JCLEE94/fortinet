@@ -7,7 +7,7 @@ import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 class TestCoverageBoost(unittest.TestCase):
@@ -45,12 +45,12 @@ class TestCoverageBoost(unittest.TestCase):
         from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         # 오프라인 모드 테스트를 위한 환경 설정
-        os.environ['OFFLINE_MODE'] = 'true'
+        os.environ["OFFLINE_MODE"] = "true"
 
         # 클라이언트 생성 테스트 (오프라인 모드)
         fortigate_client = FortiGateAPIClient(host="localhost")
         self.assertIsNotNone(fortigate_client)
-        self.assertTrue(hasattr(fortigate_client, 'OFFLINE_MODE'))
+        self.assertTrue(hasattr(fortigate_client, "OFFLINE_MODE"))
 
         fortimanager_client = FortiManagerAPIClient(host="localhost")
         self.assertIsNotNone(fortimanager_client)
@@ -174,5 +174,5 @@ class TestCoverageBoost(unittest.TestCase):
         self.assertIn("merge_timestamp", merged)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

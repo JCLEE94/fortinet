@@ -39,8 +39,8 @@ def test_with_username_1411():
         print(f"로그인 응답: {json.dumps(result, indent=2)}")
 
         # 세션 ID 확인
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"\n✅ 로그인 성공! 세션 ID: {session_id}")
 
             # 세션 ID로 테스트
@@ -92,11 +92,11 @@ def test_with_username_1411():
             )
 
             result = response.json()
-            if 'result' in result:
-                code = result['result'][0]['status']['code']
+            if "result" in result:
+                code = result["result"][0]["status"]["code"]
                 if code == 0:
                     print(f"✅ 로그인 성공! 패스워드: {pwd}")
-                    if 'session' in result:
+                    if "session" in result:
                         print(f"세션 ID: {result['session']}")
                     break
                 elif code == -22:

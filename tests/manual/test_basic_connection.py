@@ -50,8 +50,8 @@ try:
     response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_request, verify=False)
 
     result = response.json()
-    code = result['result'][0]['status']['code']
-    message = result['result'][0]['status']['message']
+    code = result["result"][0]["status"]["code"]
+    message = result["result"][0]["status"]["message"]
 
     print(f"응답 코드: {code}")
     print(f"메시지: {message}")

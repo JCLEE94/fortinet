@@ -48,10 +48,10 @@ def test_api_user():
         print(f"Response: {json.dumps(result, indent=2)}")
 
         # 성공 확인
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("\n✅ API 인증 성공!")
             print("데이터를 가져올 수 있습니다.")
-        elif 'result' in result and result['result'][0]['status']['code'] == -11:
+        elif "result" in result and result["result"][0]["status"]["code"] == -11:
             print("\n⚠️  인증은 되었지만 권한이 없습니다.")
             print("사용자의 rpc-permit 설정을 확인하세요.")
 
@@ -87,12 +87,12 @@ def test_api_user():
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
 
             result = response.json()
-            if 'result' in result:
-                code = result['result'][0]['status']['code']
-                msg = result['result'][0]['status']['message']
+            if "result" in result:
+                code = result["result"][0]["status"]["code"]
+                msg = result["result"][0]["status"]["message"]
                 print(f"  결과: Code {code} - {msg}")
 
-                if code == 0 and 'data' in result['result'][0]:
+                if code == 0 and "data" in result["result"][0]:
                     print(f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:100]}...")
 
         except Exception as e:

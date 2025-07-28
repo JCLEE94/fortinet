@@ -55,8 +55,8 @@ def debug_test():
         print(f"세션 응답: {result}")
 
         # 세션 ID 추출 시도
-        if 'session' in result:
-            session_id = result['session']
+        if "session" in result:
+            session_id = result["session"]
             print(f"세션 ID: {session_id}")
 
             # 세션 ID로 요청
@@ -79,7 +79,7 @@ def debug_test():
         try:
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False)
             result = response.json()
-            if 'result' in result and result['result'][0]['status']['code'] != -11:
+            if "result" in result and result["result"][0]["status"]["code"] != -11:
                 print(f"✅ 성공! ADOM '{adom['adom']}' 작동함")
                 print(f"결과: {result}")
                 break
@@ -112,7 +112,7 @@ def debug_test():
         result = response.json()
         print(f"Lock 결과: {result}")
 
-        if 'result' in result and result['result'][0]['status']['code'] == 0:
+        if "result" in result and result["result"][0]["status"]["code"] == 0:
             print("✅ Lock 성공! 이제 수정 가능")
 
             # Lock 후 테스트
@@ -152,11 +152,11 @@ def debug_test():
         try:
             response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
             result = response.json()
-            if 'result' in result and result['result'][0]['status']['code'] == 0:
+            if "result" in result and result["result"][0]["status"]["code"] == 0:
                 print(f"✅ 성공: {url}")
                 print(f"   데이터: {json.dumps(result['result'][0].get('data', 'No data'), indent=2)[:100]}...")
             else:
-                code = result['result'][0]['status']['code']
+                code = result["result"][0]["status"]["code"]
                 if code != -11:
                     print(f"⚠️  다른 에러 ({code}): {url} - {result['result'][0]['status']['message']}")
         except Exception as e:

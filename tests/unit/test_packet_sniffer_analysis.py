@@ -72,11 +72,11 @@ class ProtocolAnalyzer:
         self.cache_max_size = 1000
 
         # 통계
-        self.stats = {'total_analyzed': 0, 'cache_hits': 0, 'analysis_errors': 0, 'analyzer_usage': {}}
+        self.stats = {"total_analyzed": 0, "cache_hits": 0, "analysis_errors": 0, "analyzer_usage": {}}
 
         # HTTP 분석기 등록
-        self.analyzers['http'] = HttpAnalyzer()
-        self.stats['analyzer_usage']['http'] = 0
+        self.analyzers["http"] = HttpAnalyzer()
+        self.stats["analyzer_usage"]["http"] = 0
 
         self.logger.info(f"프로토콜 분석기 초기화됨 ({len(self.analyzers)}개 분석기)")
 
@@ -85,68 +85,68 @@ class ProtocolAnalyzer:
         try:
             # 기본 분석 결과
             result = {
-                'protocol': 'HTTP' if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else 'Unknown',
-                'confidence': 0.8 if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else 0.3,
-                'details': {'detection_method': 'port_based'},
-                'flags': {'encrypted': False, 'suspicious': False},
-                'hierarchy': ['TCP', 'HTTP'] if packet.dst_port in [80, 8080] else ['TCP'],
-                'security_flags': {},
-                'anomalies': [],
+                "protocol": "HTTP" if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else "Unknown",
+                "confidence": 0.8 if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else 0.3,
+                "details": {"detection_method": "port_based"},
+                "flags": {"encrypted": False, "suspicious": False},
+                "hierarchy": ["TCP", "HTTP"] if packet.dst_port in [80, 8080] else ["TCP"],
+                "security_flags": {},
+                "anomalies": [],
             }
 
             # 페이로드 기반 분석
             if packet.payload:
-                payload_str = packet.payload.decode('utf-8', errors='ignore')
+                payload_str = packet.payload.decode("utf-8", errors="ignore")
 
                 # HTTP 시그니처 확인
-                http_methods = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']
+                http_methods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"]
                 for method in http_methods:
-                    if payload_str.startswith(f'{method} '):
-                        result['protocol'] = 'HTTP'
-                        result['confidence'] = 0.9
-                        result['details']['method'] = method
+                    if payload_str.startswith(f"{method} "):
+                        result["protocol"] = "HTTP"
+                        result["confidence"] = 0.9
+                        result["details"]["method"] = method
                         break
 
                 # HTTP 응답 확인
-                if payload_str.startswith('HTTP/'):
-                    result['protocol'] = 'HTTP'
-                    result['confidence'] = 0.9
-                    result['details']['type'] = 'response'
+                if payload_str.startswith("HTTP/"):
+                    result["protocol"] = "HTTP"
+                    result["confidence"] = 0.9
+                    result["details"]["type"] = "response"
 
                 # 보안 패턴 감지
-                if 'union select' in payload_str.lower() or 'drop table' in payload_str.lower():
-                    result['flags']['suspicious'] = True
-                    result['anomalies'].append('Potential SQL injection pattern detected')
+                if "union select" in payload_str.lower() or "drop table" in payload_str.lower():
+                    result["flags"]["suspicious"] = True
+                    result["anomalies"].append("Potential SQL injection pattern detected")
 
             # 통계 업데이트
-            self.stats['total_analyzed'] += 1
+            self.stats["total_analyzed"] += 1
 
             return result
 
         except Exception as e:
             self.logger.error(f"심층 패킷 검사 실패: {e}")
-            self.stats['analysis_errors'] += 1
+            self.stats["analysis_errors"] += 1
             return {
-                'protocol': 'Error',
-                'confidence': 0.0,
-                'details': {'error': str(e)},
-                'flags': {},
-                'hierarchy': [],
-                'security_flags': {},
-                'anomalies': [f"Analysis error: {str(e)}"],
+                "protocol": "Error",
+                "confidence": 0.0,
+                "details": {"error": str(e)},
+                "flags": {},
+                "hierarchy": [],
+                "security_flags": {},
+                "anomalies": [f"Analysis error: {str(e)}"],
             }
 
     def get_analyzer_stats(self) -> Dict[str, Any]:
         """분석기 통계 조회"""
         return {
-            'total_analyzed': self.stats['total_analyzed'],
-            'cache_hits': self.stats['cache_hits'],
-            'cache_hit_rate': self.stats['cache_hits'] / max(self.stats['total_analyzed'], 1) * 100,
-            'analysis_errors': self.stats['analysis_errors'],
-            'error_rate': self.stats['analysis_errors'] / max(self.stats['total_analyzed'], 1) * 100,
-            'analyzer_usage': self.stats['analyzer_usage'].copy(),
-            'cache_size': len(self.analysis_cache),
-            'registered_analyzers': list(self.analyzers.keys()),
+            "total_analyzed": self.stats["total_analyzed"],
+            "cache_hits": self.stats["cache_hits"],
+            "cache_hit_rate": self.stats["cache_hits"] / max(self.stats["total_analyzed"], 1) * 100,
+            "analysis_errors": self.stats["analysis_errors"],
+            "error_rate": self.stats["analysis_errors"] / max(self.stats["total_analyzed"], 1) * 100,
+            "analyzer_usage": self.stats["analyzer_usage"].copy(),
+            "cache_size": len(self.analysis_cache),
+            "registered_analyzers": list(self.analyzers.keys()),
         }
 
     def analyze_packet_batch(self, packets: List[PacketInfo]) -> List[Dict[str, Any]]:
@@ -162,10 +162,10 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
     """HTTP/HTTPS 프로토콜 분석기"""
 
     def __init__(self):
-        super().__init__('http')
+        super().__init__("http")
 
         # HTTP 메서드
-        self.http_methods = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH', 'TRACE', 'CONNECT']
+        self.http_methods = ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH", "TRACE", "CONNECT"]
 
     def can_analyze(self, packet: PacketInfo) -> bool:
         """HTTP 패킷 분석 가능 여부 확인"""
@@ -181,7 +181,7 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
         # 페이로드에서 HTTP 시그니처 확인
         if packet.payload:
             try:
-                payload_str = packet.payload.decode('utf-8', errors='ignore')
+                payload_str = packet.payload.decode("utf-8", errors="ignore")
                 return self._has_http_signature(payload_str)
             except:
                 return False
@@ -192,11 +192,11 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
         """HTTP 시그니처 확인"""
         # HTTP 요청 시그니처
         for method in self.http_methods:
-            if payload.startswith(f'{method} '):
+            if payload.startswith(f"{method} "):
                 return True
 
         # HTTP 응답 시그니처
-        if payload.startswith('HTTP/'):
+        if payload.startswith("HTTP/"):
             return True
 
         return False
@@ -207,38 +207,38 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
             return None
 
         try:
-            payload_str = packet.payload.decode('utf-8', errors='ignore')
+            payload_str = packet.payload.decode("utf-8", errors="ignore")
 
             # HTTP 요청 분석
             for method in self.http_methods:
-                if payload_str.startswith(f'{method} '):
-                    lines = payload_str.split('\n')
-                    uri = lines[0].split(' ')[1] if len(lines[0].split(' ')) > 1 else '/'
+                if payload_str.startswith(f"{method} "):
+                    lines = payload_str.split("\n")
+                    uri = lines[0].split(" ")[1] if len(lines[0].split(" ")) > 1 else "/"
 
                     return ProtocolAnalysisResult(
-                        protocol='HTTP',
+                        protocol="HTTP",
                         confidence=0.9,
                         details={
-                            'type': 'request',
-                            'method': method,
-                            'uri': uri,
-                            'headers': self._parse_headers(lines[1:]),
+                            "type": "request",
+                            "method": method,
+                            "uri": uri,
+                            "headers": self._parse_headers(lines[1:]),
                         },
-                        flags={'is_request': True},
+                        flags={"is_request": True},
                         security_flags=self._analyze_security_aspects(payload_str),
                     )
 
             # HTTP 응답 분석
-            if payload_str.startswith('HTTP/'):
-                lines = payload_str.split('\n')
-                status_parts = lines[0].split(' ', 2)
+            if payload_str.startswith("HTTP/"):
+                lines = payload_str.split("\n")
+                status_parts = lines[0].split(" ", 2)
                 status_code = int(status_parts[1]) if len(status_parts) > 1 else 200
 
                 return ProtocolAnalysisResult(
-                    protocol='HTTP',
+                    protocol="HTTP",
                     confidence=0.9,
-                    details={'type': 'response', 'status_code': status_code, 'headers': self._parse_headers(lines[1:])},
-                    flags={'is_response': True},
+                    details={"type": "response", "status_code": status_code, "headers": self._parse_headers(lines[1:])},
+                    flags={"is_response": True},
                     security_flags=self._analyze_security_aspects(payload_str),
                 )
 
@@ -256,8 +256,8 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
             if not line:  # 빈 줄 (헤더 끝)
                 break
 
-            if ':' in line:
-                key, value = line.split(':', 1)
+            if ":" in line:
+                key, value = line.split(":", 1)
                 headers[key.strip().lower()] = value.strip()
 
         return headers
@@ -267,15 +267,15 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
         security_flags = {}
 
         # 민감한 정보 패턴
-        if 'password' in payload.lower():
-            security_flags['contains_password'] = True
+        if "password" in payload.lower():
+            security_flags["contains_password"] = True
 
         # 잠재적 공격 패턴
-        if 'union select' in payload.lower() or 'drop table' in payload.lower():
-            security_flags['potential_sql_injection'] = True
+        if "union select" in payload.lower() or "drop table" in payload.lower():
+            security_flags["potential_sql_injection"] = True
 
-        if '<script>' in payload.lower():
-            security_flags['potential_xss'] = True
+        if "<script>" in payload.lower():
+            security_flags["potential_xss"] = True
 
         return security_flags
 
@@ -285,15 +285,15 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
             return 0.0
 
         try:
-            payload_str = packet.payload.decode('utf-8', errors='ignore')
+            payload_str = packet.payload.decode("utf-8", errors="ignore")
 
             # HTTP 요청 확인
             for method in self.http_methods:
-                if payload_str.startswith(f'{method} '):
+                if payload_str.startswith(f"{method} "):
                     return 0.9
 
             # HTTP 응답 확인
-            if payload_str.startswith('HTTP/'):
+            if payload_str.startswith("HTTP/"):
                 return 0.9
 
         except:
@@ -330,7 +330,7 @@ class TestProtocolAnalyzer(unittest.TestCase):
             protocol="TCP",
             payload=b"GET / HTTP/1.1\r\nHost: example.com\r\nUser-Agent: Test/1.0\r\n\r\n",
             timestamp=datetime.now(),
-            flags={'syn': False, 'ack': True},
+            flags={"syn": False, "ack": True},
         )
 
         self.test_https_packet = PacketInfo(
@@ -341,7 +341,7 @@ class TestProtocolAnalyzer(unittest.TestCase):
             protocol="TCP",
             payload=b"\x16\x03\x01\x00\x40\x01\x00\x00\x3c\x03\x03",  # TLS handshake
             timestamp=datetime.now(),
-            flags={'syn': False, 'ack': True},
+            flags={"syn": False, "ack": True},
         )
 
         self.test_dns_packet = PacketInfo(
@@ -360,18 +360,18 @@ class TestProtocolAnalyzer(unittest.TestCase):
         self.assertIsInstance(self.analyzer, ProtocolAnalyzer)
         self.assertIsInstance(self.analyzer.analyzers, dict)
         self.assertGreater(len(self.analyzer.analyzers), 0)
-        self.assertIn('http', self.analyzer.analyzers)
+        self.assertIn("http", self.analyzer.analyzers)
 
     def test_http_packet_analysis(self):
         """HTTP 패킷 분석 테스트"""
         result = self.analyzer.perform_deep_packet_inspection(self.test_http_packet)
 
         self.assertIsInstance(result, dict)
-        self.assertEqual(result['protocol'], 'HTTP')
-        self.assertGreaterEqual(result['confidence'], 0.8)
-        self.assertIn('details', result)
-        self.assertIn('flags', result)
-        self.assertIn('hierarchy', result)
+        self.assertEqual(result["protocol"], "HTTP")
+        self.assertGreaterEqual(result["confidence"], 0.8)
+        self.assertIn("details", result)
+        self.assertIn("flags", result)
+        self.assertIn("hierarchy", result)
 
     def test_https_packet_detection(self):
         """HTTPS 패킷 감지 테스트"""
@@ -379,8 +379,8 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         self.assertIsInstance(result, dict)
         # HTTPS는 TLS 또는 암호화된 트래픽으로 감지될 수 있음
-        self.assertIn(result['protocol'], ['TLS', 'HTTPS', 'SSL'])
-        self.assertTrue(result['flags'].get('encrypted', False))
+        self.assertIn(result["protocol"], ["TLS", "HTTPS", "SSL"])
+        self.assertTrue(result["flags"].get("encrypted", False))
 
     def test_dns_packet_analysis(self):
         """DNS 패킷 분석 테스트"""
@@ -388,11 +388,11 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         self.assertIsInstance(result, dict)
         # DNS 분석기가 등록되어 있다면 DNS로 감지되어야 함
-        if 'dns' in self.analyzer.analyzers:
-            self.assertEqual(result['protocol'], 'DNS')
+        if "dns" in self.analyzer.analyzers:
+            self.assertEqual(result["protocol"], "DNS")
         else:
             # DNS 분석기가 없다면 포트 기반으로 감지
-            self.assertIn('UDP', result['hierarchy'])
+            self.assertIn("UDP", result["hierarchy"])
 
     def test_cache_functionality(self):
         """캐시 기능 테스트"""
@@ -404,7 +404,7 @@ class TestProtocolAnalyzer(unittest.TestCase):
         result2 = self.analyzer.perform_deep_packet_inspection(self.test_http_packet)
 
         self.assertEqual(result1, result2)
-        self.assertGreater(self.analyzer.stats['cache_hits'], 0)
+        self.assertGreater(self.analyzer.stats["cache_hits"], 0)
 
     def test_security_flag_detection(self):
         """보안 플래그 감지 테스트"""
@@ -422,18 +422,18 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         result = self.analyzer.perform_deep_packet_inspection(sql_injection_packet)
 
-        self.assertTrue(result['flags'].get('suspicious', False))
-        self.assertGreater(len(result['anomalies']), 0)
-        self.assertTrue(any('SQL injection' in anomaly for anomaly in result['anomalies']))
+        self.assertTrue(result["flags"].get("suspicious", False))
+        self.assertGreater(len(result["anomalies"]), 0)
+        self.assertTrue(any("SQL injection" in anomaly for anomaly in result["anomalies"]))
 
     def test_protocol_hierarchy(self):
         """프로토콜 계층 구조 테스트"""
         result = self.analyzer.perform_deep_packet_inspection(self.test_http_packet)
 
-        hierarchy = result['hierarchy']
+        hierarchy = result["hierarchy"]
         self.assertIsInstance(hierarchy, list)
-        self.assertIn('TCP', hierarchy)
-        self.assertIn('HTTP', hierarchy)
+        self.assertIn("TCP", hierarchy)
+        self.assertIn("HTTP", hierarchy)
 
     def test_analyzer_stats(self):
         """분석기 통계 테스트"""
@@ -444,10 +444,10 @@ class TestProtocolAnalyzer(unittest.TestCase):
         stats = self.analyzer.get_analyzer_stats()
 
         self.assertIsInstance(stats, dict)
-        self.assertIn('total_analyzed', stats)
-        self.assertIn('cache_hit_rate', stats)
-        self.assertIn('analyzer_usage', stats)
-        self.assertGreaterEqual(stats['total_analyzed'], 2)
+        self.assertIn("total_analyzed", stats)
+        self.assertIn("cache_hit_rate", stats)
+        self.assertIn("analyzer_usage", stats)
+        self.assertGreaterEqual(stats["total_analyzed"], 2)
 
     def test_batch_analysis(self):
         """배치 분석 테스트"""
@@ -456,7 +456,7 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         self.assertEqual(len(results), 3)
         self.assertTrue(all(isinstance(result, dict) for result in results))
-        self.assertTrue(all('protocol' in result for result in results))
+        self.assertTrue(all("protocol" in result for result in results))
 
     def test_error_handling(self):
         """에러 처리 테스트"""
@@ -476,7 +476,7 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         # 에러가 발생해도 결과는 반환되어야 함
         self.assertIsInstance(result, dict)
-        self.assertIn('protocol', result)
+        self.assertIn("protocol", result)
 
 
 class TestHttpAnalyzer(unittest.TestCase):
@@ -492,7 +492,7 @@ class TestHttpAnalyzer(unittest.TestCase):
             src_port=45678,
             dst_port=80,
             protocol="TCP",
-            payload=b"POST /api/login HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nContent-Length: 35\r\n\r\n{\"username\":\"admin\",\"password\":\"test\"}",
+            payload=b'POST /api/login HTTP/1.1\r\nHost: example.com\r\nContent-Type: application/json\r\nContent-Length: 35\r\n\r\n{"username":"admin","password":"test"}',
             timestamp=datetime.now(),
             flags={},
         )
@@ -518,23 +518,23 @@ class TestHttpAnalyzer(unittest.TestCase):
         result = self.analyzer.analyze(self.test_http_request)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.protocol, 'HTTP')
+        self.assertEqual(result.protocol, "HTTP")
         self.assertGreaterEqual(result.confidence, 0.8)
-        self.assertEqual(result.details['type'], 'request')
-        self.assertEqual(result.details['method'], 'POST')
-        self.assertIn('uri', result.details)
-        self.assertIn('headers', result.details)
+        self.assertEqual(result.details["type"], "request")
+        self.assertEqual(result.details["method"], "POST")
+        self.assertIn("uri", result.details)
+        self.assertIn("headers", result.details)
 
     def test_http_response_analysis(self):
         """HTTP 응답 분석 테스트"""
         result = self.analyzer.analyze(self.test_http_response)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.protocol, 'HTTP')
+        self.assertEqual(result.protocol, "HTTP")
         self.assertGreaterEqual(result.confidence, 0.8)
-        self.assertEqual(result.details['type'], 'response')
-        self.assertEqual(result.details['status_code'], 200)
-        self.assertIn('headers', result.details)
+        self.assertEqual(result.details["type"], "response")
+        self.assertEqual(result.details["status_code"], 200)
+        self.assertIn("headers", result.details)
 
     def test_sensitive_data_detection(self):
         """민감한 데이터 감지 테스트"""
@@ -542,9 +542,9 @@ class TestHttpAnalyzer(unittest.TestCase):
         result = self.analyzer.analyze(self.test_http_request)
 
         self.assertIsNotNone(result)
-        if 'body_analysis' in result.details:
-            sensitive_data = result.details['body_analysis'].get('sensitive_data_detected', [])
-            self.assertTrue(any('password' in item.lower() for item in sensitive_data))
+        if "body_analysis" in result.details:
+            sensitive_data = result.details["body_analysis"].get("sensitive_data_detected", [])
+            self.assertTrue(any("password" in item.lower() for item in sensitive_data))
 
     def test_security_headers_analysis(self):
         """보안 헤더 분석 테스트"""
@@ -563,10 +563,10 @@ class TestHttpAnalyzer(unittest.TestCase):
         result = self.analyzer.analyze(secure_response)
 
         self.assertIsNotNone(result)
-        if 'security_headers' in result.details:
-            security_headers = result.details['security_headers']
-            self.assertIn('strict-transport-security', security_headers)
-            self.assertIn('x-frame-options', security_headers)
+        if "security_headers" in result.details:
+            security_headers = result.details["security_headers"]
+            self.assertIn("strict-transport-security", security_headers)
+            self.assertIn("x-frame-options", security_headers)
 
     def test_confidence_calculation(self):
         """신뢰도 계산 테스트"""
@@ -589,6 +589,6 @@ class TestGlobalFunctions(unittest.TestCase):
         self.assertIsInstance(analyzer1, ProtocolAnalyzer)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # 테스트 실행
     unittest.main(verbosity=2)

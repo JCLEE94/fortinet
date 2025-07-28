@@ -8,13 +8,13 @@ Provides communication with FortiGate devices using REST API
 import time
 from typing import Any, Dict, Optional
 
-
 from utils.api_utils import ConnectionTestMixin
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
 
-class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
+class FortiGateAPIClient(
+                         BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
     """
     FortiGate API Client for communicating with FortiGate devices
     Inherits common functionality from BaseApiClient and includes real-time monitoring
@@ -25,15 +25,15 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
     DEFAULT_PORT = 443
 
     def __init__(
-        self,
-        host=None,
-        api_token=None,
-        username=None,
-        password=None,
-        port=None,
-        use_https=True,
-        verify_ssl=False,
-    ):
+                 self,
+                     host=None,
+            api_token=None,
+                username=None,
+                password=None,
+                port=None,
+                use_https=True,
+                verify_ssl=False,
+                ):
         """
         Initialize the FortiGate API client
 
@@ -48,16 +48,16 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         """
         # Initialize base class with environment prefix
         super().__init__(
-            host=host,
-            api_token=api_token,
-            username=username,
-            password=password,
-            port=port,
-            use_https=use_https,
-            verify_ssl=verify_ssl,
-            logger_name="fortigate_api",
-            env_prefix="FORTIGATE",
-        )
+              host=host,
+                  api_token=api_token,
+                username=username,
+                password=password,
+                port=port,
+                use_https=use_https,
+                verify_ssl=verify_ssl,
+                logger_name="fortigate_api",
+                env_prefix="FORTIGATE",
+                )
 
         # Initialize all mixins
         RealtimeMonitoringMixin.__init__(self)
@@ -91,13 +91,13 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         """Set cached data with TTL (simplified implementation)"""
         self._cache[key] = data
 
-    def make_request_with_retry(self, method, url, headers=None, retries=3):
+    def make_request_with_retry(
+                                self, method, url, headers=None, retries=3):
         """Make request with retry logic"""
         for attempt in range(retries):
             try:
                 return self._make_request(
-                    method, url, None, None, headers or self.headers
-                )
+                                          method, url, None, None, headers or self.headers)
             except Exception as e:
                 if attempt == retries - 1:
                     return False, str(e), 500
@@ -117,17 +117,18 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         return data
 
     # Override _test_with_credentials for FortiGate-specific authentication
+
     def _test_with_credentials(self):
         """
         Test connection using credentials with FortiGate-specific login flow
 
         Returns:
             tuple: (success, result, status_code)
-        """
+                """
         return self.perform_credential_auth_test("/authentication")
 
-    def get_firewall_policies(self):
-        """
+           def get_firewall_policies(self):
+                """
         Get all firewall policies
 
         Returns:
@@ -135,30 +136,30 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         """
         cache_key = "firewall_policies"
         cached_data = self.get_cached_data(cache_key)
-        if cached_data:
-            return cached_data
+           if cached_data:
+                return cached_data
 
         try:
             success, result, status_code = self.make_request_with_retry(
-                "GET", f"{self.base_url}/cmdb/firewall/policy", headers=self.headers
-            )
+                                                                        "GET", f"{self.base_url}/cmdb/firewall/policy", headers=self.headers
+                )
 
             if success:
                 policies = result.get("results", [])
-                self.set_cached_data(cache_key, policies, ttl=60)  # 1분 캐시
-                return policies
+                   self.set_cached_data(cache_key, policies, ttl=60)  # 1분 캐시
+                    return policies
             else:
                 self.handle_api_error(
-                    Exception(f"HTTP {status_code}: {result}"), "get_firewall_policies"
-                )
+                                      Exception(f"HTTP {status_code}: {result}"),
+                                          "get_firewall_policies")
+                   return []
+
+                    except Exception as e:
+                        self.handle_api_error(e, "get_firewall_policies")
                 return []
 
-        except Exception as e:
-            self.handle_api_error(e, "get_firewall_policies")
-            return []
-
-    def get_routes(self):
-        """
+                def get_routes(self):
+                    """
         Get routing table
 
         Returns:
@@ -166,158 +167,160 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         """
         cache_key = "routes"
         cached_data = self.get_cached_data(cache_key)
-        if cached_data:
-            return cached_data
+           if cached_data:
+                return cached_data
 
         try:
             success, result, status_code = self.make_request_with_retry(
-                "GET", f"{self.base_url}/cmdb/router/static", headers=self.headers
-            )
+                                                                        "GET", f"{self.base_url}/cmdb/router/static", headers=self.headers
+                )
 
             if success:
                 routes = result.get("results", [])
-                self.set_cached_data(cache_key, routes, ttl=120)  # 2분 캐시
-                return routes
+                   self.set_cached_data(cache_key, routes, ttl=120)  # 2분 캐시
+                    return routes
             else:
                 self.handle_api_error(
-                    Exception(f"HTTP {status_code}: {result}"), "get_routes"
-                )
+                                      Exception(f"HTTP {status_code}: {result}"), "get_routes")
+                   return []
+
+                    except Exception as e:
+                        self.handle_api_error(e, "get_routes")
                 return []
 
-        except Exception as e:
-            self.handle_api_error(e, "get_routes")
-            return []
-
-    def get_interfaces(self):
-        """
+                def get_interfaces(self):
+                    """
         Get network interfaces
 
         Returns:
             list: Network interfaces or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/cmdb/system/interface", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/cmdb/system/interface", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(f"Failed to get interfaces: {status_code} - {result}")
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get interfaces: {status_code} - {result}")
+                return []
 
-    def get_services(self):
-        """
+                def get_services(self):
+                    """
         Get available services
 
         Returns:
             list: Services or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/cmdb/firewall/service", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/cmdb/firewall/service", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(f"Failed to get services: {status_code} - {result}")
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get services: {status_code} - {result}")
+                return []
 
-    def get_address_objects(self):
-        """
+                def get_address_objects(self):
+                    """
         Get address objects
 
         Returns:
             list: Address objects or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/cmdb/firewall/address", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/cmdb/firewall/address", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(
-                f"Failed to get address objects: {status_code} - {result}"
-            )
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get address objects: {status_code} - {result}")
+                return []
 
-    def get_service_groups(self):
-        """
+                def get_service_groups(self):
+                    """
         Get service groups
 
         Returns:
             list: Service groups or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/cmdb/firewall/service/group",
-            None,
-            None,
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/cmdb/firewall/service/group",
+                None,
+                None,
+                self.headers,
+                )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(f"Failed to get service groups: {status_code} - {result}")
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get service groups: {status_code} - {result}")
+                return []
 
-    def get_address_groups(self):
-        """
+                def get_address_groups(self):
+                    """
         Get address groups
 
         Returns:
             list: Address groups or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/cmdb/firewall/addrgrp", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/cmdb/firewall/addrgrp", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(f"Failed to get address groups: {status_code} - {result}")
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get address groups: {status_code} - {result}")
+                return []
 
-    def get_system_status(self):
-        """
+                def get_system_status(self):
+                    """
         Get system status and hardware information
 
         Returns:
             dict: System status or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/monitor/system/status", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/monitor/system/status", None, None, self.headers
+            )
 
         if success:
             return result.get("results", {})
-        else:
-            self.logger.error(f"Failed to get system status: {status_code} - {result}")
-            return None
+               else:
+                    self.logger.error(
+                                      f"Failed to get system status: {status_code} - {result}")
+                return None
 
     def get_system_performance(self):
         """
         Get system performance metrics (CPU, memory, sessions)
 
-        Returns:
+            Returns:
             dict: Performance metrics or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/monitor/system/performance",
-            None,
-            None,
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/monitor/system/performance",
+                None,
+                None,
+                self.headers,
+                )
 
         if success:
             return result.get("results", {})
-        else:
-            self.logger.error(
-                f"Failed to get system performance: {status_code} - {result}"
-            )
-            return None
+               else:
+                    self.logger.error(
+                                      f"Failed to get system performance: {status_code} - {result}")
+                return None
 
     def get_interface_stats(self):
         """
@@ -327,54 +330,55 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             list: Interface statistics or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/monitor/system/interface", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/monitor/system/interface", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(
-                f"Failed to get interface stats: {status_code} - {result}"
-            )
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get interface stats: {status_code} - {result}")
+                return []
 
-    def get_sessions(self):
-        """
+                def get_sessions(self):
+                    """
         Get active sessions
 
         Returns:
             list: Active sessions or empty list on failure
         """
         success, result, status_code = self._make_request(
-            "GET", f"{self.base_url}/monitor/firewall/session", None, None, self.headers
-        )
+                                                          "GET", f"{self.base_url}/monitor/firewall/session", None, None, self.headers
+            )
 
         if success:
             return result.get("results", [])
-        else:
-            self.logger.error(f"Failed to get sessions: {status_code} - {result}")
-            return []
+               else:
+                    self.logger.error(
+                                      f"Failed to get sessions: {status_code} - {result}")
+                return []
 
-    def get_cpu_usage(self):
-        """
+                def get_cpu_usage(self):
+                    """
         Get CPU usage information
 
         Returns:
             dict: CPU usage or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/monitor/system/resource/usage",
-            None,
-            {"resource": "cpu"},
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/monitor/system/resource/usage",
+                None,
+                {"resource": "cpu"},
+                self.headers,
+                )
 
         if success:
             return result.get("results", {})
-        else:
-            self.logger.error(f"Failed to get CPU usage: {status_code} - {result}")
-            return None
+               else:
+                    self.logger.error(
+                                      f"Failed to get CPU usage: {status_code} - {result}")
+                return None
 
     def get_memory_usage(self):
         """
@@ -384,20 +388,22 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             dict: Memory usage or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/monitor/system/resource/usage",
-            None,
-            {"resource": "memory"},
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/monitor/system/resource/usage",
+                None,
+                {"resource": "memory"},
+                self.headers,
+                )
 
         if success:
             return result.get("results", {})
-        else:
-            self.logger.error(f"Failed to get memory usage: {status_code} - {result}")
-            return None
+               else:
+                    self.logger.error(
+                                      f"Failed to get memory usage: {status_code} - {result}")
+                return None
 
     # Monitoring mixin implementation
+
     def _get_monitoring_data(self) -> Optional[Dict[str, Any]]:
         """
         Get monitoring data for real-time monitoring
@@ -409,75 +415,77 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             base_data = self.collect_base_monitoring_data()
 
             # FortiGate 특화 모니터링 데이터 추가
-            fortigate_data = {
-                "cpu_usage": self.get_cpu_usage(),
-                "memory_usage": self.get_memory_usage(),
-                "interface_stats": self.get_interface_stats(),
-                "active_sessions": len(self.get_sessions()),
-            }
+               fortigate_data = {
+                   "cpu_usage": self.get_cpu_usage(),
+                                                    "memory_usage": self.get_memory_usage(),
+                                                          "interface_stats": self.get_interface_stats(),
+                                                                "active_sessions": len(self.get_sessions()),
+                                                                    }
 
             # 시스템 상태 추가
             system_status = self.get_system_status()
-            if system_status:
-                fortigate_data["system_status"] = {
-                    "hostname": system_status.get("hostname"),
-                    "version": system_status.get("version"),
-                    "build": system_status.get("build"),
-                    "serial": system_status.get("serial"),
-                }
+               if system_status:
+                    fortigate_data["system_status"] = {
+                        "hostname": system_status.get("hostname"),
+                                                      "version": system_status.get("version"),
+                                                          "build": system_status.get("build"),
+                                                         "serial": system_status.get("serial"),
+                                                    }
 
             # 민감한 정보 마스킹
             sanitized_data = self.sanitize_sensitive_data(fortigate_data)
 
             # 모니터링 데이터 업데이트
-            self.update_monitoring_data(sanitized_data)
+               self.update_monitoring_data(sanitized_data)
 
-            return base_data
+                return base_data
 
         except Exception as e:
             self.handle_api_error(e, "_get_monitoring_data")
-            return None
+               return None
 
     # Packet capture methods
+
     def start_packet_capture(self, interface, filter_str="", max_packets=1000):
         """
         Start packet capture on specified interface
 
         Args:
             interface (str): Interface name
-            filter_str (str, optional): BPF filter string
-            max_packets (int, optional): Maximum packets to capture
+                filter_str (str, optional): BPF filter string
+                max_packets (int, optional): Maximum packets to capture
 
-        Returns:
+                Returns:
             dict: Capture info or None on failure
         """
         capture_data = {
             "interface": interface,
-            "filter": filter_str,
-            "max_packets": max_packets,
-        }
+                "filter": filter_str,
+                "max_packets": max_packets,
+                }
 
         success, result, status_code = self._make_request(
-            "POST",
-            f"{self.base_url}/monitor/system/packet-capture/start",
-            capture_data,
-            None,
-            self.headers,
-        )
+                                                          "POST",
+                                                              f"{self.base_url}/monitor/system/packet-capture/start",
+                capture_data,
+                None,
+                self.headers,
+                )
 
         if success:
             capture_id = result.get("results", {}).get("capture_id")
-            if capture_id:
-                self.active_captures[capture_id] = {
-                    "interface": interface,
-                    "filter": filter_str,
-                    "start_time": time.time(),
-                    "max_packets": max_packets,
-                }
+               if capture_id:
+                    self.active_captures[capture_id] = {
+                        "interface": interface,
+                            "filter": filter_str,
+                            "start_time": time.time(),
+                                                "max_packets": max_packets,
+                                                    }
                 return {"capture_id": capture_id, "status": "started"}
 
-        self.logger.error(f"Failed to start packet capture: {status_code} - {result}")
-        return None
+        self.logger.error(
+                          f"Failed to start packet capture: {status_code} - {result}")
+           return None
 
     def stop_packet_capture(self, capture_id):
         """
@@ -486,26 +494,25 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         Args:
             capture_id (str): Capture ID
 
-        Returns:
+                Returns:
             dict: Result or None on failure
         """
         success, result, status_code = self._make_request(
-            "POST",
-            f"{self.base_url}/monitor/system/packet-capture/stop",
-            {"capture_id": capture_id},
-            None,
-            self.headers,
-        )
+                                                          "POST",
+                                                              f"{self.base_url}/monitor/system/packet-capture/stop",
+                {"capture_id": capture_id},
+                None,
+                self.headers,
+                )
 
         if success:
             if capture_id in self.active_captures:
                 del self.active_captures[capture_id]
-            return result.get("results", {})
-        else:
-            self.logger.error(
-                f"Failed to stop packet capture: {status_code} - {result}"
-            )
-            return None
+                   return result.get("results", {})
+                else:
+                    self.logger.error(
+                                      f"Failed to stop packet capture: {status_code} - {result}")
+                return None
 
     def get_packet_capture_status(self, capture_id):
         """
@@ -514,24 +521,23 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         Args:
             capture_id (str): Capture ID
 
-        Returns:
+                Returns:
             dict: Status or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/monitor/system/packet-capture/status",
-            None,
-            {"capture_id": capture_id},
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/monitor/system/packet-capture/status",
+                None,
+                {"capture_id": capture_id},
+                self.headers,
+                )
 
         if success:
             return result.get("results", {})
-        else:
-            self.logger.error(
-                f"Failed to get packet capture status: {status_code} - {result}"
-            )
-            return None
+               else:
+                    self.logger.error(
+                                      f"Failed to get packet capture status: {status_code} - {result}")
+                return None
 
     def download_packet_capture(self, capture_id):
         """
@@ -540,22 +546,21 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         Args:
             capture_id (str): Capture ID
 
-        Returns:
+                Returns:
             bytes: Capture file data or None on failure
         """
         success, result, status_code = self._make_request(
-            "GET",
-            f"{self.base_url}/monitor/system/packet-capture/download",
-            None,
-            {"capture_id": capture_id},
-            self.headers,
-        )
+                                                          "GET",
+                                                              f"{self.base_url}/monitor/system/packet-capture/download",
+                None,
+                {"capture_id": capture_id},
+                self.headers,
+                )
 
         if success:
             # Return raw data for pcap file
             return result
         else:
             self.logger.error(
-                f"Failed to download packet capture: {status_code} - {result}"
-            )
-            return None
+                              f"Failed to download packet capture: {status_code} - {result}")
+               return None

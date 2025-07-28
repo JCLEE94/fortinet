@@ -18,7 +18,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
     def setUp(self):
         """Set up test environment"""
         self.client = FortiManagerAPIClient(
-            host='192.168.1.100', username='admin', password='password', verify_ssl=False
+            host="192.168.1.100", username="admin", password="password", verify_ssl=False
         )
 
     def test_json_rpc_request_format(self):
@@ -99,7 +99,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
     def test_device_global_settings_url(self):
         """Test device global settings URL structure"""
-        with patch.object(self.client, '_make_api_request') as mock_request:
+        with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"name": "port1", "ip": "192.168.1.1"}])
 
             result = self.client.get_device_global_settings(device_name="FGT-001", cli_path="system/interface")
@@ -109,7 +109,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
     def test_device_vdom_settings_url(self):
         """Test device VDOM settings URL structure"""
-        with patch.object(self.client, '_make_api_request') as mock_request:
+        with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"policyid": 1, "action": "accept"}])
 
             result = self.client.get_device_vdom_settings(
@@ -123,7 +123,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
     def test_firewall_policies_url_corrected(self):
         """Test firewall policies use device-centric URL"""
-        with patch.object(self.client, '_make_api_request') as mock_request:
+        with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"policyid": 1}])
 
             result = self.client.get_firewall_policies(device_name="FGT-001", vdom="root")
@@ -135,9 +135,9 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
     def test_packet_path_analysis_integration(self):
         """Test packet path analysis with real FortiManager APIs"""
-        with patch.object(self.client, 'get_routes') as mock_routes, patch.object(
-            self.client, 'get_interfaces'
-        ) as mock_interfaces, patch.object(self.client, 'get_firewall_policies') as mock_policies:
+        with patch.object(self.client, "get_routes") as mock_routes, patch.object(
+            self.client, "get_interfaces"
+        ) as mock_interfaces, patch.object(self.client, "get_firewall_policies") as mock_policies:
             # Mock API responses
             mock_interfaces.return_value = [{"name": "port1", "ip": "192.168.1.1", "netmask": "255.255.255.0"}]
             mock_routes.return_value = [{"dst": "10.0.0.0", "netmask": "255.0.0.0", "device": "port2"}]
@@ -156,14 +156,14 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
             )
 
             # Verify analysis structure
-            self.assertIn('analysis_result', result)
-            self.assertIn('applied_policies', result['analysis_result'])
-            self.assertIn('final_action', result['analysis_result'])
-            self.assertEqual(result['analysis_result']['path_status'], 'completed')
+            self.assertIn("analysis_result", result)
+            self.assertIn("applied_policies", result["analysis_result"])
+            self.assertIn("final_action", result["analysis_result"])
+            self.assertEqual(result["analysis_result"]["path_status"], "completed")
 
     def test_policy_package_vs_device_settings(self):
         """Test distinction between policy package and device settings"""
-        with patch.object(self.client, '_make_api_request') as mock_request:
+        with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"policyid": 1}])
 
             # Test policy package URL (ADOM level)
@@ -176,14 +176,14 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
             self.client.get_device_vdom_settings("FGT-001", "root", "firewall/policy")
             mock_request.assert_called_with(method="get", url="/pm/config/device/FGT-001/vdom/root/firewall/policy")
 
-    @patch('requests.Session')
+    @patch("requests.Session")
     def test_authentication_flows(self, mock_session_class):
         """Test both session and token-based authentication"""
         mock_session = Mock()
         mock_session_class.return_value = mock_session
 
         # Test session-based authentication
-        with patch.object(self.client, '_make_request') as mock_request:
+        with patch.object(self.client, "_make_request") as mock_request:
             mock_request.return_value = (True, {"result": [{"status": {"code": 0}}], "session": "test_session_id"}, 200)
 
             success = self.client.login()
@@ -193,60 +193,60 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
             # Verify login request format
             call_args = mock_request.call_args
-            payload = call_args[1]['data']
-            self.assertEqual(payload['method'], 'exec')
-            self.assertEqual(payload['params'][0]['url'], '/sys/login/user')
+            payload = call_args[1]["data"]
+            self.assertEqual(payload["method"], "exec")
+            self.assertEqual(payload["params"][0]["url"], "/sys/login/user")
 
         # Test token-based authentication
-        token_client = FortiManagerAPIClient(host='192.168.1.100', api_token='test_api_token')
+        token_client = FortiManagerAPIClient(host="192.168.1.100", api_token="test_api_token")
 
-        with patch.object(token_client, '_make_request') as mock_request:
+        with patch.object(token_client, "_make_request") as mock_request:
             mock_request.return_value = (True, {"result": [{"status": {"code": 0}}]}, 200)
 
             success = token_client.test_token_auth()
 
             # Verify Authorization header
             call_args = mock_request.call_args
-            headers = call_args[1]['headers']
-            self.assertIn('Authorization', headers)
-            self.assertEqual(headers['Authorization'], 'Bearer test_api_token')
+            headers = call_args[1]["headers"]
+            self.assertIn("Authorization", headers)
+            self.assertEqual(headers["Authorization"], "Bearer test_api_token")
 
     def test_url_structure_compliance(self):
         """Test URL structures comply with official documentation"""
         test_cases = [
             # Device Global Settings
             {
-                'method': 'get_device_global_settings',
-                'args': ['FGT-001', 'system/interface'],
-                'expected_url': '/pm/config/device/FGT-001/global/system/interface',
+                "method": "get_device_global_settings",
+                "args": ["FGT-001", "system/interface"],
+                "expected_url": "/pm/config/device/FGT-001/global/system/interface",
             },
             # Device VDOM Settings
             {
-                'method': 'get_device_vdom_settings',
-                'args': ['FGT-001', 'root', 'firewall/policy'],
-                'expected_url': '/pm/config/device/FGT-001/vdom/root/firewall/policy',
+                "method": "get_device_vdom_settings",
+                "args": ["FGT-001", "root", "firewall/policy"],
+                "expected_url": "/pm/config/device/FGT-001/vdom/root/firewall/policy",
             },
             # Policy Package Settings
             {
-                'method': 'get_policy_package_settings',
-                'args': ['default', 'firewall/address'],
-                'expected_url': '/pm/config/adom/root/pkg/default/firewall/address',
+                "method": "get_policy_package_settings",
+                "args": ["default", "firewall/address"],
+                "expected_url": "/pm/config/adom/root/pkg/default/firewall/address",
             },
             # ADOM Management
-            {'method': 'get_adom_list', 'args': [], 'expected_url': '/dvmdb/adom'},
+            {"method": "get_adom_list", "args": [], "expected_url": "/dvmdb/adom"},
         ]
 
         for case in test_cases:
-            with patch.object(self.client, '_make_api_request') as mock_request:
+            with patch.object(self.client, "_make_api_request") as mock_request:
                 mock_request.return_value = (True, [])
 
-                method = getattr(self.client, case['method'])
-                method(*case['args'])
+                method = getattr(self.client, case["method"])
+                method(*case["args"])
 
                 mock_request.assert_called_once()
                 call_args = mock_request.call_args[1]
-                self.assertEqual(call_args['url'], case['expected_url'])
+                self.assertEqual(call_args["url"], case["expected_url"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

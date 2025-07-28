@@ -44,7 +44,7 @@ def test_api_key():
     for test in tests:
         print(f"\n테스트: {test['name']}")
 
-        request_payload = {"id": 1, "method": "get", "params": [{"url": test['url']}]}
+        request_payload = {"id": 1, "method": "get", "params": [{"url": test["url"]}]}
 
         try:
             response = requests.post(
@@ -52,24 +52,24 @@ def test_api_key():
             )
 
             result = response.json()
-            if 'result' in result:
-                status = result['result'][0]['status']
-                if status['code'] == 0:
+            if "result" in result:
+                status = result["result"][0]["status"]
+                if status["code"] == 0:
                     print(f"  ✅ 성공!")
                     success_count += 1
 
                     # 데이터 샘플 출력
-                    if 'data' in result['result'][0]:
-                        data = result['result'][0]['data']
+                    if "data" in result["result"][0]:
+                        data = result["result"][0]["data"]
                         if isinstance(data, list):
                             print(f"  데이터: {len(data)}개 항목")
                         else:
                             # 주요 정보 추출
-                            if test['name'] == "시스템 상태":
+                            if test["name"] == "시스템 상태":
                                 print(f"  버전: {data.get('Version', 'Unknown')}")
                                 print(f"  시리얼: {data.get('Serial Number', 'Unknown')}")
                                 print(f"  호스트명: {data.get('Hostname', 'Unknown')}")
-                            elif test['name'] == "FortiManager 버전":
+                            elif test["name"] == "FortiManager 버전":
                                 print(f"  플랫폼: {data.get('Platform Type', 'Unknown')}")
                                 print(f"  버전: {data.get('Version', 'Unknown')}")
                 else:
