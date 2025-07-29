@@ -1012,7 +1012,7 @@ class FortiManagerAPIClient(
             if success and result:
                 return result.get("data", [])
             else:
-                self.logger.warning(f"No security events found or failed to retrieve")
+                self.logger.warning("No security events found or failed to retrieve")
                 return []
 
         except Exception as e:
@@ -1054,7 +1054,7 @@ class FortiManagerAPIClient(
                     "quarantined_percentage": stats.get("quarantined_percent", 3),
                 }
             else:
-                self.logger.warning(f"No threat statistics found")
+                self.logger.warning("No threat statistics found")
                 return {}
 
         except Exception as e:

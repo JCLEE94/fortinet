@@ -22,32 +22,44 @@ def optimized_response(**kwargs):
 from utils.api_utils import get_data_source
 from utils.route_helpers import standard_api_response
 from utils.security import rate_limit
-
 from utils.unified_cache_manager import get_cache_manager
 from utils.unified_logger import get_logger
+
 
 # Stub functions for removed modules
 def get_api_optimizer():
     """Stub for removed api_optimizer"""
-    return type('obj', (object,), {'get_performance_metrics': lambda: {}})()
+    return type("obj", (object,), {"get_performance_metrics": lambda: {}})()
+
 
 def get_performance_cache():
     """Stub for removed performance_cache"""
     return get_cache_manager()
 
+
 class CacheWarmer:
     """Stub for removed CacheWarmer"""
-    def __init__(self, cache): pass
-    def warm_cache(self): pass
+
+    def __init__(self, cache):
+        pass
+
+    def warm_cache(self):
+        pass
+
 
 def get_real_time_monitor():
     """Stub for removed real_time_monitor"""
-    return type('obj', (object,), {
-        'get_metrics': lambda: {},
-        'start_monitoring': lambda: None,
-        'stop_monitoring': lambda: None,
-        'get_monitoring_status': lambda: {}
-    })()
+    return type(
+        "obj",
+        (object,),
+        {
+            "get_metrics": lambda: {},
+            "start_monitoring": lambda: None,
+            "stop_monitoring": lambda: None,
+            "get_monitoring_status": lambda: {},
+        },
+    )()
+
 
 logger = get_logger(__name__)
 
@@ -386,7 +398,7 @@ def get_recent_alerts():
         limit = request.args.get("limit", 50, type=int)
         limit = min(limit, 200)  # 최대 200개
 
-        cache = get_performance_cache()
+        get_performance_cache()
 
         # 캐시에서 최근 알림들 조회 (간단한 구현)
         alerts = []

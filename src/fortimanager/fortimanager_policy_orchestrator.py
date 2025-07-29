@@ -83,8 +83,8 @@ class PolicyOrchestrationEngine:
             rules=[
                 {
                     "name": "{app_name}_https_access",
-                    "srcintf": ["any"],
-                    "dstintf": ["any"],
+                    "srcint": ["any"],
+                    "dstint": ["any"],
                     "srcaddr": "{allowed_sources}",
                     "dstaddr": "{app_servers}",
                     "service": ["HTTPS"],
@@ -100,8 +100,8 @@ class PolicyOrchestrationEngine:
                 },
                 {
                     "name": "{app_name}_http_redirect",
-                    "srcintf": ["any"],
-                    "dstintf": ["any"],
+                    "srcint": ["any"],
+                    "dstint": ["any"],
                     "srcaddr": "{allowed_sources}",
                     "dstaddr": "{app_servers}",
                     "service": ["HTTP"],
@@ -130,8 +130,8 @@ class PolicyOrchestrationEngine:
             rules=[
                 {
                     "name": "{resource_name}_ztna_policy",
-                    "srcintf": ["ssl.root"],
-                    "dstintf": ["any"],
+                    "srcint": ["ssl.root"],
+                    "dstint": ["any"],
                     "srcaddr": ["all"],
                     "dstaddr": "{resource_servers}",
                     "service": ["ALL"],
@@ -614,7 +614,7 @@ class PolicyOrchestrationEngine:
                     "type": "action_conflict",
                     "policy1": policy1["policyid"],
                     "policy2": policy2["policyid"],
-                    "description": f"Policies have opposite actions for overlapping traffic",
+                    "description": "Policies have opposite actions for overlapping traffic",
                 }
 
         return None
@@ -744,8 +744,8 @@ class PolicyOrchestrationEngine:
         updates = update.get("updates", {})
         valid_fields = [
             "name",
-            "srcintf",
-            "dstintf",
+            "srcint",
+            "dstint",
             "srcaddr",
             "dstaddr",
             "service",

@@ -426,7 +426,7 @@ class AdvancedFilterRule:
         """시퀀스 패턴 매칭"""
         try:
             pattern = pattern_params.get("pattern", [])
-            window = pattern_params.get("window", 10)
+            pattern_params.get("window", 10)
 
             recent_packets = context.get("recent_packets", [])
 

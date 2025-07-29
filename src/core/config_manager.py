@@ -16,7 +16,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-
 class ConfigFormat(Enum):
     """Configuration file formats."""
 
@@ -36,8 +35,6 @@ class ConfigSource:
     reload_on_change: bool = False
     priority: int = 0  # Higher number = higher priority
 
-
-import os
 
 from config.constants import BATCH_SETTINGS, DEFAULT_PORTS, DEFAULTS, TIMEOUTS
 

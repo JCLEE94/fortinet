@@ -6,11 +6,7 @@ FortiManager 장치 관리 라우트
 
 from flask import Blueprint, jsonify
 
-from utils.api_utils import (
-    get_api_manager,
-    get_dummy_generator,
-    is_test_mode,
-)
+from utils.api_utils import get_api_manager, get_dummy_generator, is_test_mode
 from utils.unified_cache_manager import cached
 from utils.unified_logger import setup_logger
 

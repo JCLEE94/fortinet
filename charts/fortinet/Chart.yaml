@@ -2,8 +2,8 @@ apiVersion: v2
 name: fortinet
 description: Fortinet microservice on jclee.me infrastructure
 type: application
-version: 1.0.0-20250727-235741-37900ce8
-appVersion: "1.0.0-20250727-235741-37900ce8"
+version: 1.0.5
+appVersion: "1.0.5"
 keywords:
   - microservice
   - jclee.me

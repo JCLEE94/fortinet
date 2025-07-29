@@ -9,11 +9,7 @@ import time
 from flask import Blueprint, jsonify, request
 
 from fortimanager.advanced_hub import FortiManagerAdvancedHub
-from utils.api_utils import (
-    get_api_manager,
-    get_dummy_generator,
-    is_test_mode,
-)
+from utils.api_utils import get_api_manager, get_dummy_generator, is_test_mode
 from utils.security import rate_limit
 from utils.unified_cache_manager import cached
 from utils.unified_logger import setup_logger

@@ -134,7 +134,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 return False
 
             # QR 비트와 opcode 확인
-            qr = (flags >> 15) & 1
+            (flags >> 15) & 1
             opcode = (flags >> 11) & 15
 
             # 유효한 opcode 범위

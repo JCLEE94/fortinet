@@ -677,7 +677,7 @@ class ComplianceAutomationFramework:
             max_age = rule.parameters.get("max_age", 90)
             current_max_age = settings.get("password_max_age", 0)
             if current_max_age == 0 or current_max_age > max_age:
-                issues.append(f"Password max age not properly configured")
+                issues.append("Password max age not properly configured")
 
             if issues:
                 return ComplianceCheckResult(

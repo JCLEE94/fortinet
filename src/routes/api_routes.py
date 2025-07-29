@@ -452,7 +452,7 @@ def test_fortimanager_connection(data):
                         "device_count": len(devices) if devices else 0,
                         "version": "API Access",
                     }
-                except Exception as e:
+                except Exception:
                     # 토큰 인증은 성공했지만 추가 정보 수집 실패
                     connection_data = {
                         "auth_method": "token",

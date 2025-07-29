@@ -13,7 +13,6 @@ from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-
 from .monitoring_base import MonitoringBase, ThresholdMixin
 from .monitoring_config import get_config
 

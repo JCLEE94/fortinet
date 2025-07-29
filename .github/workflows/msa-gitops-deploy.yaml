@@ -1,0 +1,386 @@
+name: MSA GitOps Deployment Pipeline (jclee.me)
+
+on:
+  push:
+    branches: 
+      - main
+      - master
+      - develop
+      - staging
+    paths:
+      - 'microservices/**'
+      - 'msa-gitops/**'
+      - '.github/workflows/msa-gitops-deploy.yaml'
+  pull_request:
+    branches: 
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      service:
+        description: 'Service to deploy (all for all services)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - user-service
+          - product-service
+          - order-service
+          - notification-service
+      force_deploy:
+        description: 'Force deployment'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: registry.jclee.me
+  CHARTMUSEUM: https://charts.jclee.me
+  ARGOCD_URL: https://argo.jclee.me
+
+jobs:
+  # 환경 및 서비스 결정
+  determine-deployment:
+    runs-on: [self-hosted, jclee]
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+      services: ${{ steps.env.outputs.services }}
+      should-deploy: ${{ steps.env.outputs.should-deploy }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Environment and Services
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            SERVICES="${{ github.event.inputs.service }}"
+            SHOULD_DEPLOY="true"
+          elif [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.ref }}" = "refs/heads/master" ]; then
+            ENVIRONMENT="production"
+            SERVICES="all"
+            SHOULD_DEPLOY="true"
+          elif [ "${{ github.ref }}" = "refs/heads/staging" ]; then
+            ENVIRONMENT="staging"
+            SERVICES="all"
+            SHOULD_DEPLOY="true"
+          elif [ "${{ github.ref }}" = "refs/heads/develop" ]; then
+            ENVIRONMENT="development"
+            SERVICES="all"
+            SHOULD_DEPLOY="true"
+          else
+            ENVIRONMENT="development"
+            SERVICES="all"
+            SHOULD_DEPLOY="false"
+          fi
+          
+          # 변경된 서비스 감지
+          if [ "${SERVICES}" = "all" ] && [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED_SERVICES=$(git diff --name-only HEAD~1 HEAD | grep "^microservices/" | cut -d'/' -f2 | sort -u | tr '\n' ',' | sed 's/,$//')
+            if [ -n "${CHANGED_SERVICES}" ]; then
+              SERVICES="${CHANGED_SERVICES}"
+            fi
+          fi
+          
+          echo "environment=${ENVIRONMENT}" >> $GITHUB_OUTPUT
+          echo "services=${SERVICES}" >> $GITHUB_OUTPUT
+          echo "should-deploy=${SHOULD_DEPLOY}" >> $GITHUB_OUTPUT
+          echo "🎯 Target Environment: ${ENVIRONMENT}"
+          echo "📱 Services to deploy: ${SERVICES}"
+          echo "🚀 Should Deploy: ${SHOULD_DEPLOY}"
+
+  # MSA 서비스 빌드 (병렬)
+  build-msa-services:
+    runs-on: [self-hosted, jclee]
+    needs: determine-deployment
+    if: needs.determine-deployment.outputs.should-deploy == 'true'
+    strategy:
+      matrix:
+        service: [user-service, product-service, order-service, notification-service]
+    outputs:
+      image-tags: ${{ steps.meta.outputs.tags }}
+      chart-version: ${{ steps.version.outputs.chart-version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if service changed
+        id: changes
+        run: |
+          if [ "${{ needs.determine-deployment.outputs.services }}" = "all" ]; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          elif echo "${{ needs.determine-deployment.outputs.services }}" | grep -q "${{ matrix.service }}"; then
+            echo "build=true" >> $GITHUB_OUTPUT
+          else
+            echo "build=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Docker Buildx
+        if: steps.changes.outputs.build == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Registry
+        if: steps.changes.outputs.build == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: admin
+          password: bingogo1
+
+      - name: Generate version
+        if: steps.changes.outputs.build == 'true'
+        id: version
+        run: |
+          COMMIT_SHA="${{ github.sha }}"
+          BRANCH_NAME="${{ github.ref_name }}"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          CHART_VERSION="1.0.0-${COMMIT_SHA:0:8}-${TIMESTAMP}"
+          echo "chart-version=${CHART_VERSION}" >> $GITHUB_OUTPUT
+          echo "📊 Chart Version: ${CHART_VERSION}"
+
+      - name: Extract metadata
+        if: steps.changes.outputs.build == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/jclee/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-,enable={{is_default_branch}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.determine-deployment.outputs.environment }}
+
+      - name: Build and push Docker image
+        if: steps.changes.outputs.build == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./microservices/${{ matrix.service }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/jclee/${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/jclee/${{ matrix.service }}:buildcache,mode=max
+
+      - name: Package Helm Chart
+        if: steps.changes.outputs.build == 'true'
+        run: |
+          if [ -d "charts/${{ matrix.service }}" ]; then
+            echo "📊 Helm Chart 패키징: ${{ matrix.service }}"
+            
+            # Chart 버전 업데이트
+            sed -i "s/^version:.*/version: ${{ steps.version.outputs.chart-version }}/" charts/${{ matrix.service }}/Chart.yaml
+            sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.chart-version }}\"/" charts/${{ matrix.service }}/Chart.yaml
+            
+            # Chart 패키징
+            helm package charts/${{ matrix.service }} --destination ./
+            
+            # ChartMuseum 업로드
+            CHART_FILE="${{ matrix.service }}-${{ steps.version.outputs.chart-version }}.tgz"
+            echo "📤 ChartMuseum 업로드: ${CHART_FILE}"
+            
+            HTTP_CODE=$(curl -w "%{http_code}" -s -o /tmp/upload_response.txt \
+              -u admin:bingogo1 \
+              --data-binary "@${CHART_FILE}" \
+              ${{ env.CHARTMUSEUM }}/api/charts)
+            
+            if [ "${HTTP_CODE}" = "201" ] || [ "${HTTP_CODE}" = "409" ]; then
+              echo "✅ Chart 업로드 성공: ${{ matrix.service }}"
+            else
+              echo "❌ Chart 업로드 실패 (HTTP ${HTTP_CODE})"
+              cat /tmp/upload_response.txt
+              exit 1
+            fi
+          fi
+
+  # MSA GitOps 배포
+  msa-gitops-deploy:
+    runs-on: [self-hosted, jclee]
+    needs: [determine-deployment, build-msa-services]
+    environment: ${{ needs.determine-deployment.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'v3.14.0'
+
+      - name: Setup ArgoCD CLI
+        run: |
+          if ! command -v argocd &> /dev/null; then
+            curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+            sudo install -m 555 argocd /usr/local/bin/argocd
+            rm argocd
+          fi
+          argocd version --client
+
+      - name: MSA GitOps Deployment
+        env:
+          ENVIRONMENT: ${{ needs.determine-deployment.outputs.environment }}
+          SERVICES: ${{ needs.determine-deployment.outputs.services }}
+          CHART_VERSION: ${{ needs.build-msa-services.outputs.chart-version }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -e
+          
+          echo "🚀 MSA GitOps 배포 시작..."
+          echo "  - Environment: ${ENVIRONMENT}"
+          echo "  - Services: ${SERVICES}"
+          echo "  - Chart Version: ${CHART_VERSION}"
+          echo "  - Image Tag: ${IMAGE_TAG}"
+          
+          # ArgoCD 로그인
+          echo "🔐 ArgoCD 로그인..."
+          argocd login argo.jclee.me --username admin --password bingogo1 --insecure --grpc-web
+          
+          # 환경별 설정
+          case ${ENVIRONMENT} in
+            "development")
+              NAMESPACE="microservices-dev"
+              DOMAIN_SUFFIX="-dev.jclee.me"
+              REPLICA_COUNT=1
+              ;;
+            "staging")
+              NAMESPACE="microservices-staging"
+              DOMAIN_SUFFIX="-staging.jclee.me"
+              REPLICA_COUNT=2
+              ;;
+            "production")
+              NAMESPACE="microservices"
+              DOMAIN_SUFFIX=".jclee.me"
+              REPLICA_COUNT=3
+              ;;
+          esac
+          
+          # MSA 서비스 목록
+          MSA_SERVICES=("user-service" "product-service" "order-service" "notification-service")
+          
+          # 인프라 컴포넌트 배포
+          echo "🏗️ 인프라 컴포넌트 확인/배포..."
+          
+          # Istio 배포
+          envsubst < msa-gitops/applications/istio-application.yaml > /tmp/istio-${ENVIRONMENT}.yaml
+          argocd app create -f /tmp/istio-${ENVIRONMENT}.yaml --upsert || true
+          argocd app sync istio-${ENVIRONMENT} --timeout 300 || true
+          
+          # Monitoring 배포
+          envsubst < msa-gitops/applications/monitoring-application.yaml > /tmp/monitoring-${ENVIRONMENT}.yaml
+          argocd app create -f /tmp/monitoring-${ENVIRONMENT}.yaml --upsert || true
+          argocd app sync monitoring-${ENVIRONMENT} --timeout 300 || true
+          
+          # 배포할 서비스 결정
+          if [ "${SERVICES}" = "all" ]; then
+            SERVICES_TO_DEPLOY=("${MSA_SERVICES[@]}")
+          else
+            IFS=',' read -ra SERVICES_TO_DEPLOY <<< "${SERVICES}"
+          fi
+          
+          # MSA 서비스 배포
+          for SVC in "${SERVICES_TO_DEPLOY[@]}"; do
+            echo "📱 MSA 서비스 배포: ${SVC}"
+            
+            # Application YAML 생성
+            envsubst < msa-gitops/applications/${SVC}-application.yaml > /tmp/${SVC}-${ENVIRONMENT}.yaml
+            
+            # ArgoCD Application 생성/업데이트
+            argocd app create -f /tmp/${SVC}-${ENVIRONMENT}.yaml --upsert
+            
+            # 동기화 실행
+            echo "🔄 ArgoCD 동기화 실행: ${SVC}-${ENVIRONMENT}"
+            argocd app sync ${SVC}-${ENVIRONMENT} --timeout 300
+            
+            # 배포 완료 대기
+            echo "⏳ 배포 완료 대기: ${SVC}-${ENVIRONMENT}"
+            argocd app wait ${SVC}-${ENVIRONMENT} --timeout 300
+          done
+          
+          # 전체 MSA 상태 확인
+          echo "📊 MSA 전체 상태 확인..."
+          for SVC in "${SERVICES_TO_DEPLOY[@]}"; do
+            STATUS=$(argocd app get ${SVC}-${ENVIRONMENT} -o json | jq -r '.status.health.status')
+            echo "  📱 ${SVC}: ${STATUS}"
+          done
+          
+          echo "🎉 MSA GitOps 배포 완료!"
+          echo ""
+          echo "🌐 MSA 서비스 URLs:"
+          for SVC in "${SERVICES_TO_DEPLOY[@]}"; do
+            echo "  - ${SVC}: https://${SVC}${DOMAIN_SUFFIX}"
+          done
+          echo ""
+          echo "📊 모니터링:"
+          echo "  - ArgoCD: https://argo.jclee.me/applications"
+          echo "  - Grafana: https://grafana${DOMAIN_SUFFIX}"
+          echo "  - K8s Dashboard: https://k8s.jclee.me"
+
+  # MSA 배포 검증
+  verify-msa-deployment:
+    runs-on: [self-hosted, jclee]
+    needs: [determine-deployment, msa-gitops-deploy]
+    steps:
+      - name: Verify MSA Deployment
+        env:
+          ENVIRONMENT: ${{ needs.determine-deployment.outputs.environment }}
+          SERVICES: ${{ needs.determine-deployment.outputs.services }}
+        run: |
+          # 환경별 URL 설정
+          case ${ENVIRONMENT} in
+            "development")
+              DOMAIN_SUFFIX="-dev.jclee.me"
+              ;;
+            "staging") 
+              DOMAIN_SUFFIX="-staging.jclee.me"
+              ;;
+            "production")
+              DOMAIN_SUFFIX=".jclee.me"
+              ;;
+          esac
+          
+          echo "🔍 MSA 배포 검증 시작..."
+          
+          # 배포할 서비스 결정
+          MSA_SERVICES=("user-service" "product-service" "order-service" "notification-service")
+          if [ "${SERVICES}" = "all" ]; then
+            SERVICES_TO_VERIFY=("${MSA_SERVICES[@]}")
+          else
+            IFS=',' read -ra SERVICES_TO_VERIFY <<< "${SERVICES}"
+          fi
+          
+          # 각 MSA 서비스 Health Check
+          for SVC in "${SERVICES_TO_VERIFY[@]}"; do
+            SERVICE_URL="https://${SVC}${DOMAIN_SUFFIX}"
+            echo "🔍 검증 중: ${SERVICE_URL}"
+            
+            # Health Check (최대 10분 대기)
+            for i in {1..20}; do
+              if curl -f -s ${SERVICE_URL}/health > /dev/null 2>&1; then
+                echo "✅ Health Check 성공: ${SVC}"
+                break
+              else
+                echo "⏳ Health Check 대기 중: ${SVC} ($i/20)"
+                sleep 30
+              fi
+            done
+            
+            # API Endpoint 테스트
+            curl -f ${SERVICE_URL}/api/v1/health || echo "⚠ API Health Check 실패: ${SVC}"
+          done
+          
+          echo "🎯 MSA 배포 검증 완료!"

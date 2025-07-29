@@ -96,7 +96,6 @@ class BatchProcessor:
         """
         start_time = time.time()
         total_items = len(items)
-        completed_items = 0
 
         logger.info(
             f"Starting batch processing: {total_items} items, type={self.operation_type.value}"

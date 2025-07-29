@@ -177,7 +177,7 @@ class DataIntegrator:
             # 시스템 메트릭과 API 성능 상관관계
             if "system_metrics" in data and "api_performance" in data:
                 system_data = data["system_metrics"].get("data", {})
-                api_data = data["api_performance"].get("data", {})
+                data["api_performance"].get("data", {})
 
                 cpu_usage = system_data.get("cpu", {}).get("usage_percent", 0)
                 memory_usage = system_data.get("memory", {}).get("usage_percent", 0)

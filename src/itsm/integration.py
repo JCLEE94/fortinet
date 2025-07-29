@@ -79,7 +79,7 @@ class ITSMIntegration:
             dst_ip = request_data.get("destination_ip", "")
             port = request_data.get("port", 80)
             protocol = request_data.get("protocol", "tcp")
-            service = request_data.get("service", "")
+            request_data.get("service", "")
 
             # IP 주소 분석
             src_zone = self._determine_network_zone(src_ip)
@@ -602,7 +602,7 @@ class ITSMIntegration:
         self, analysis_result: Dict[str, Any], request_data: Dict[str, Any]
     ) -> str:
         """티켓 설명 생성"""
-        description = f"""
+        description = """
 방화벽 정책 추가 요청
 
 == 요청 정보 ==
@@ -626,7 +626,7 @@ class ITSMIntegration:
         for fw in analysis_result.get("recommended_firewalls", []):
             description += f"- {fw.get('firewall_name', '')} ({fw.get('location', '')}) - {fw.get('action', '')}\n"
 
-        description += f"""
+        description += """
 == 보안 고려사항 ==
 """
 

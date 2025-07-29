@@ -679,7 +679,7 @@ class SecurityScanner:
             # 3. 디스크 암호화 상태 (간단한 확인)
             try:
                 result = subprocess.run(
-                    ["lsblk", "-f"], capture_output=True, text=True, timeout=10
+                    ["lsblk", "-"], capture_output=True, text=True, timeout=10
                 )
                 security_config["disk_encryption"] = {
                     "encrypted_partitions": "crypt" in result.stdout,
@@ -896,7 +896,7 @@ class SecurityScanner:
                 f"금지된 사용자 계정을 삭제하세요: sudo userdel {vuln.get('user', '')}"
             )
         elif vuln_type == "suspicious_process":
-            return f"의심스러운 프로세스를 종료하고 원인을 조사하세요"
+            return "의심스러운 프로세스를 종료하고 원인을 조사하세요"
         else:
             return "해당 취약점에 대한 보안 정책을 검토하고 적절한 조치를 취하세요."
 

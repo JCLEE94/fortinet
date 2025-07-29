@@ -182,7 +182,7 @@ class NetworkAnalyzer:
             version_ihl = packet_data[0]
             version = (version_ihl >> 4) & 0xF
             ihl = version_ihl & 0xF
-            header_length = ihl * 4
+            ihl * 4
 
             if version == 4:
                 return self._analyze_ipv4(packet_data, packet_info)
@@ -270,7 +270,7 @@ class NetworkAnalyzer:
 
             # IPv6 헤더 파싱
             version_class_label = struct.unpack(">I", packet_data[0:4])[0]
-            version = (version_class_label >> 28) & 0xF
+            (version_class_label >> 28) & 0xF
             traffic_class = (version_class_label >> 20) & 0xFF
             flow_label = version_class_label & 0xFFFFF
 
@@ -890,7 +890,7 @@ class NetworkAnalyzer:
         try:
             # 길이 검증
             length = udp_info.get("length", 0)
-            payload_size = udp_info.get("payload_size", 0)
+            udp_info.get("payload_size", 0)
 
             if length < 8:
                 anomalies.append(

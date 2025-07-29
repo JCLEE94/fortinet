@@ -13,10 +13,10 @@ from typing import Any, Dict
 
 from dotenv import load_dotenv
 
+from .constants import DEFAULT_PORTS, TIMEOUTS
+
 # .env 파일 로드
 load_dotenv()
-
-from .constants import DEFAULT_PORTS, TIMEOUTS
 
 
 @dataclass

@@ -22,7 +22,7 @@ spec:
           pullPolicy: Always
         service:
           type: NodePort
-          nodePort: 30779
+          nodePort: 30777
         resources:
           limits:
             cpu: 1000m

@@ -302,7 +302,7 @@ class RealtimeAlertSystem:
             try:
                 # 알림 큐 처리
                 while self.alert_queue:
-                    alert = self.alert_queue.popleft()
+                    self.alert_queue.popleft()
                     # 추가 처리 로직
 
                 # 자동 해결 검사

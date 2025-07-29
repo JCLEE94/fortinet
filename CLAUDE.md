@@ -104,7 +104,7 @@ docker run -d --name fortigate-nextrade \
 ### Deployment & Monitoring
 ```bash
 # Check deployment status
-curl http://192.168.50.110:30779/api/health  # Current NodePort
+curl http://192.168.50.110:30777/api/health  # Current NodePort
 curl http://fortinet.jclee.me/api/health     # Domain (needs /etc/hosts entry)
 
 
@@ -161,7 +161,7 @@ hub = FortiManagerAdvancedHub(api_client)
 1. **Test Stage**: pytest, flake8, safety, bandit (parallel)
 2. **Build Stage**: Docker buildx → Harbor Registry
 3. **Helm Deploy**: Package → ChartMuseum upload → ArgoCD sync
-4. **Verify Stage**: Health checks on NodePort 30779
+4. **Verify Stage**: Health checks on NodePort 30777
 
 ### Required GitHub Secrets
 - `REGISTRY_URL`: registry.jclee.me
@@ -170,10 +170,10 @@ hub = FortiManagerAdvancedHub(api_client)
 - `CHARTMUSEUM_USERNAME`, `CHARTMUSEUM_PASSWORD`
 - `APP_NAME`: fortinet
 - `DEPLOYMENT_HOST`: 192.168.50.110
-- `DEPLOYMENT_PORT`: 30779
+- `DEPLOYMENT_PORT`: 30777
 
 ### Current Deployment
-- **Active NodePort**: 30779 (resolved from port conflict)
+- **Active NodePort**: 30777 (standard configuration)
 - **Domain**: http://fortinet.jclee.me (HTTP only, TLS issues)
 - **DNS Fix**: Add `192.168.50.110 fortinet.jclee.me` to `/etc/hosts`
 
@@ -264,7 +264,7 @@ gh run cancel <run-id>
 
 ### Common Pipeline Issues
 - **Verification timeout**: Health check may take 5-10 minutes due to ArgoCD sync delays
-- **NodePort conflicts**: Use `kubectl get svc --all-namespaces | grep 30779` to check port usage
+- **NodePort conflicts**: Use `kubectl get svc --all-namespaces | grep 30777` to check port usage
 - **Service updates**: May require manual service recreation for NodePort changes
 
 ## Development Guidelines
@@ -290,9 +290,25 @@ gh run cancel <run-id>
 - TLS is currently disabled due to certificate issues
 - GitHub Actions uses self-hosted runners
 - Harbor Registry image path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
-- Helm chart version: 1.0.4 (NodePort updated to 30779)
+- Helm chart version: 1.0.5 (NodePort standardized to 30777)
 
 ## Recent Updates & Fixes Applied
+
+### MSA Infrastructure Implementation (v2.1.0 - July 28, 2025)
+- **Complete MSA Architecture**: Implemented full microservice architecture with 7 independent services
+- **Kong API Gateway**: Centralized API routing on port 8000 with admin interface on 8001
+- **Service Discovery**: Consul-based service registry and discovery on port 8500
+- **Message Queue**: RabbitMQ integration for asynchronous service communication (5672, 15672)
+- **MSA Development Environment**: Complete `docker-compose.msa.yml` for local MSA development
+
+### MSA Service Architecture
+- **Auth Service (8081)**: JWT authentication, user management, API key validation
+- **FortiManager Service (8082)**: Device management, policy orchestration, compliance automation
+- **ITSM Service (8083)**: Ticket automation, policy requests, approval workflows
+- **Monitoring Service (8084)**: Real-time metrics, alerting, log aggregation
+- **Security Service (8085)**: Packet analysis, threat detection, security scanning
+- **Analysis Service (8086)**: Policy analysis, path tracing, network visualization
+- **Configuration Service (8087)**: Centralized config management, settings synchronization
 
 ### Code Quality Improvements (Completed)
 - **Black Formatting**: Applied to 52 files for consistent code style
@@ -319,17 +335,39 @@ gh run cancel <run-id>
 - **Chart Version**: Bumped to 1.0.3 with proper versioning
 
 ### GitOps Pipeline Validation
-- **Health Checks**: Automated deployment verification on NodePort 30779
+- **Health Checks**: Automated deployment verification on NodePort 30777
 - **Build Optimization**: Multi-stage Docker builds with caching
 - **Registry Integration**: Seamless Harbor → ChartMuseum → ArgoCD flow
 
 ### Recent System Fixes (Latest)
 - **Import Path Resolution**: Fixed 79 files with absolute→relative import conversion
 - **Feature Testing Framework**: Comprehensive 10-module test suite achieving 100% success rate
-- **ArgoCD Port Resolution**: Resolved 30777→30779 port conflict for stable deployment
+- **ArgoCD Port Configuration**: Standardized on NodePort 30777 for stable deployment
 - **Configuration System**: Added ThresholdConfig to unified settings for monitoring compatibility
 - **Cache Manager**: Fixed stats reporting for proper metrics display
 - **System Status**: All 10 core features verified working (Basic Imports, Flask App, API Clients, FortiManager Hub, ITSM Automation, Monitoring, Security, Data Pipeline, Caching, API Endpoints)
+
+### MSA Development Commands
+```bash
+# MSA 전체 환경 실행
+docker-compose -f docker-compose.msa.yml up -d
+
+# Kong Gateway 라우트 설정
+./scripts/setup-kong-routes.sh
+
+# 서비스 상태 확인
+docker-compose -f docker-compose.msa.yml ps
+
+# 개별 서비스 로그 확인
+docker-compose -f docker-compose.msa.yml logs auth-service
+docker-compose -f docker-compose.msa.yml logs fortimanager-service
+
+# MSA 엔드포인트 테스트
+curl http://localhost:8000/auth/health          # Kong 통한 Auth 서비스
+curl http://localhost:8000/fortimanager/devices # Kong 통한 FortiManager 서비스
+curl http://localhost:8500/ui/                  # Consul UI
+curl http://localhost:15672/                    # RabbitMQ Management UI
+```
 
 ### Feature Testing Command
 ```bash

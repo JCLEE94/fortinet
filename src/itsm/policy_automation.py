@@ -292,7 +292,7 @@ class PolicyAutomationEngine:
                     target_firewalls.append(fw)
         else:
             # 교차 존 통신 - 경로상 모든 방화벽 필요
-            required_zones = {src_zone.name, dst_zone.name}
+            {src_zone.name, dst_zone.name}
 
             # 출발지 존의 방화벽
             for fw in self.firewall_devices:

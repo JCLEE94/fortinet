@@ -2,7 +2,6 @@
 ITSM API routes
 """
 
-
 from flask import Blueprint, jsonify, request
 
 itsm_api_bp = Blueprint("itsm_api", __name__, url_prefix="/api/itsm")

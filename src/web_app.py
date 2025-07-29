@@ -16,8 +16,12 @@ from routes.fortimanager_routes import fortimanager_bp
 from routes.itsm_api_routes import itsm_api_bp
 from routes.itsm_routes import itsm_bp
 from routes.main_routes import main_bp
-from utils.security import (add_security_headers, csrf_protect,
-                            generate_csrf_token, rate_limit)
+from utils.security import (
+    add_security_headers,
+    csrf_protect,
+    generate_csrf_token,
+    rate_limit,
+)
 from utils.unified_logger import get_logger
 
 # 오프라인 모드 감지
@@ -59,7 +63,6 @@ def create_app():
 
     from analysis.analyzer import FirewallRuleAnalyzer
     from analysis.fixed_path_analyzer import FixedPathAnalyzer
-    from config.services import APP_CONFIG
     from config.unified_settings import unified_settings
     from routes.itsm_automation_routes import itsm_automation_bp
     from routes.logs_routes import logs_bp
@@ -189,7 +192,7 @@ def create_app():
                 port=data.get("port"),
             )
 
-            return jsonify({"status": "success", "analysis": result})
+            return jsonify({"status": "success", "analysis": _result})
 
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500

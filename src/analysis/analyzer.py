@@ -882,8 +882,8 @@ class FirewallRuleAnalyzer:
         """
         try:
             # 네트워크 토폴로지 정보 분석 및 방화벽 경로 결정
-            src_ip_obj = ipaddress.ip_address(src_ip)
-            dst_ip_obj = ipaddress.ip_address(dst_ip)
+            ipaddress.ip_address(src_ip)
+            ipaddress.ip_address(dst_ip)
 
             # 네트워크 구간은 라우팅 테이블 참조를 위한 보조 정보로만 사용
             src_zone = self._determine_network_zone(src_ip)
@@ -1685,7 +1685,6 @@ class FirewallRuleAnalyzer:
                     relevant_firewalls.append(all_firewalls[0])
 
             # 목적지까지의 라우팅 경로 찾기
-            current_ip = src_ip
             max_hops = 10  # 최대 홉 제한
             visited_firewalls = set(relevant_firewalls)
 
@@ -1727,7 +1726,6 @@ class FirewallRuleAnalyzer:
                     if next_firewall and next_firewall not in visited_firewalls:
                         relevant_firewalls.append(next_firewall)
                         visited_firewalls.add(next_firewall)
-                        current_ip = next_hop
                     else:
                         # 다음 방화벽을 찾지 못하거나 이미 방문한 방화벽인 경우
                         break

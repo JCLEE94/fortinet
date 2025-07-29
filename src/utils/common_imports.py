@@ -52,25 +52,20 @@ class FortiGateAPIException(Exception):
     """FortiGate API 관련 예외"""
 
 
-
 class FortiManagerAPIException(Exception):
     """FortiManager API 관련 예외"""
-
 
 
 class ValidationException(Exception):
     """데이터 검증 관련 예외"""
 
 
-
 class ConfigurationException(Exception):
     """설정 관련 예외"""
 
 
-
 class NetworkException(Exception):
     """네트워크 관련 예외"""
-
 
 
 # 공통 데코레이터

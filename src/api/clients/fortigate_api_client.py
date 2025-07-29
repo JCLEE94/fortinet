@@ -8,7 +8,6 @@ Provides communication with FortiGate devices using REST API
 import time
 from typing import Any, Dict, Optional
 
-
 from utils.api_utils import ConnectionTestMixin
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin

@@ -153,7 +153,6 @@ class TroubleshootingLoop:
 
         # 원래 무한루프 코드는 주석 처리됨
         # 정기 리포트 카운터
-        report_counter = 0
 
         # 모든 성능 모니터링 코드가 비활성화되었습니다 (무한프로세싱 방지)
 

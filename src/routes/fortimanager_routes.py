@@ -1013,7 +1013,7 @@ def get_policy_scenarios():
     try:
         # 실제 FortiManager API 사용
         api_manager = get_api_manager()
-        fm_client = api_manager.get_fortimanager_client()
+        api_manager.get_fortimanager_client()
 
         scenarios = [
             {

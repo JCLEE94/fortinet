@@ -354,7 +354,7 @@ class AutomationEngine:
             ]
 
             # 파일로 저장
-            report_file = f"reports/{report['report_id']}.json"
+            f"reports/{report['report_id']}.json"
             # 실제로는 파일로 저장
 
             return report

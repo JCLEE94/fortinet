@@ -11,59 +11,63 @@ from typing import Any, Dict, Optional
 
 def get_web_port() -> int:
     """Get web application port from configuration"""
-
-    from .constants import DEFAULT_PATHS
-    from .network import GATEWAY_IPS, NETWORK_RANGES, TEST_ADDRESSES
-    from .services import (API_VERSIONS, APP_CONFIG, EXTERNAL_SERVICES,
-                           FORTINET_PRODUCTS)
+    from .services import APP_CONFIG
 
     return int(os.getenv("PORT", APP_CONFIG["web_port"]))
 
 
 def get_mock_port() -> int:
     """Get mock server port from configuration"""
+    from .services import APP_CONFIG
 
     return int(os.getenv("MOCK_SERVER_PORT", APP_CONFIG["mock_port"]))
 
 
 def get_api_endpoint(service: str) -> str:
     """Get API endpoint for a service"""
+    from .services import API_VERSIONS
 
     return API_VERSIONS.get(service, "/api/v2")
 
 
 def get_network_range(network_type: str) -> str:
     """Get network range for a specific type"""
+    from .network import NETWORK_RANGES
 
     return NETWORK_RANGES.get(network_type, "192.168.0.0/16")
 
 
 def get_gateway_ip(network_type: str) -> str:
     """Get gateway IP for a network type"""
+    from .network import GATEWAY_IPS
 
     return GATEWAY_IPS.get(network_type, "192.168.1.1")
 
 
 def get_test_address(address_type: str) -> str:
     """Get test address for a specific type"""
+    from .network import TEST_ADDRESSES
 
     return TEST_ADDRESSES.get(address_type, "192.168.1.100")
 
 
 def get_external_service_url(service: str) -> str:
     """Get external service URL"""
+    from .services import EXTERNAL_SERVICES
 
     return EXTERNAL_SERVICES.get(service, "")
 
 
 def get_fortinet_product_config(product: str) -> Dict[str, Any]:
     """Get configuration for a Fortinet product"""
+    from .services import FORTINET_PRODUCTS
 
     return FORTINET_PRODUCTS.get(product, {})
 
 
 def get_data_path(path_type: str) -> str:
     """Get data path with fallback to current directory"""
+    from .constants import DEFAULT_PATHS
 
     return DEFAULT_PATHS.get(path_type, os.getcwd())
 

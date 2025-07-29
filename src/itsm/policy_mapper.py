@@ -464,28 +464,28 @@ class PolicyMapper:
 
         # 주소 객체 생성 명령
         for addr in src_addresses + dst_addresses:
-            commands.append(f"config firewall address")
-            commands.append(f"    edit \"{addr['name']}\"")
+            commands.append("config firewall address")
+            commands.append("    edit \"{addr['name']}\"")
             commands.append(f"        set subnet {addr['subnet']}")
-            commands.append(f"    next")
-            commands.append(f"end")
+            commands.append("    next")
+            commands.append("end")
 
         # 서비스 객체 생성 명령
         for svc in service_objects:
-            commands.append(f"config firewall service custom")
-            commands.append(f"    edit \"{svc['name']}\"")
+            commands.append("config firewall service custom")
+            commands.append("    edit \"{svc['name']}\"")
             commands.append(f"        set protocol {svc['protocol']}")
             if "-" in svc["port_range"]:
                 start, end = svc["port_range"].split("-")
                 commands.append(f"        set tcp-portrange {start}-{end}")
             else:
                 commands.append(f"        set tcp-portrange {svc['port_range']}")
-            commands.append(f"    next")
-            commands.append(f"end")
+            commands.append("    next")
+            commands.append("end")
 
         # 방화벽 정책 생성 명령
-        commands.append(f"config firewall policy")
-        commands.append(f"    edit 0")
+        commands.append("config firewall policy")
+        commands.append("    edit 0")
         commands.append(f'        set name "{policy_name}"')
         commands.append(f'        set srcintf "{src_zone}"')
         commands.append(f'        set dstintf "{dst_zone}"')
@@ -504,9 +504,9 @@ class PolicyMapper:
 
         # 액션
         commands.append(f"        set action {action.lower()}")
-        commands.append(f"        set logtraffic all")
-        commands.append(f"    next")
-        commands.append(f"end")
+        commands.append("        set logtraffic all")
+        commands.append("    next")
+        commands.append("end")
 
         return commands
 
@@ -582,7 +582,7 @@ class PolicyMapper:
             for dst_net in destination_networks[:1]:  # 첫 번째 목적지만
                 for port in service_info.get("ports", [])[:1]:  # 첫 번째 포트만
                     test = {
-                        "test_name": f"연결성 테스트",
+                        "test_name": "연결성 테스트",
                         "source": src_net.split("/")[0],
                         "destination": dst_net.split("/")[0],
                         "port": port.split("-")[0] if "-" in port else port,

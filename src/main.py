@@ -12,12 +12,7 @@ import argparse
 from pathlib import Path
 
 # 공통 임포트 사용
-from utils.common_imports import (
-    json,
-    os,
-    setup_module_logger,
-    sys,
-)
+from utils.common_imports import json, os, setup_module_logger, sys
 
 # Handle different execution contexts
 if __name__ == "__main__":

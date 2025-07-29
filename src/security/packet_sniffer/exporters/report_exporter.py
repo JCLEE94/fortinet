@@ -505,7 +505,7 @@ class ReportExporter:
             <h1>FortiGate Nextrade 패킷 분석 보고서</h1>
             <p class="subtitle">생성 시간: {generation_time}</p>
         </header>
-        
+
         <div class="summary-section">
             <h2>요약</h2>
             <div class="summary-grid">
@@ -527,27 +527,27 @@ class ReportExporter:
                 </div>
             </div>
         </div>
-        
+
         <div class="protocol-section">
             <h2>프로토콜 분석</h2>
             {protocol_content}
         </div>
-        
+
         <div class="security-section">
             <h2>보안 분석</h2>
             {security_content}
         </div>
-        
+
         <div class="time-section">
             <h2>시간 분석</h2>
             {time_content}
         </div>
-        
+
         <div class="anomaly-section">
             <h2>이상 징후 분석</h2>
             {anomaly_content}
         </div>
-        
+
         <footer>
             <p>FortiGate Nextrade Packet Sniffer Report Generator</p>
         </footer>
@@ -638,7 +638,7 @@ class ReportExporter:
             return "<p>시간 분석 데이터가 없습니다.</p>"
 
         period = time_stats.get("analysis_period", {})
-        hourly_dist = time_stats.get("hourly_distribution", {})
+        time_stats.get("hourly_distribution", {})
 
         content = f"""
         <p>분석 기간: {period.get('start', '')} ~ {period.get('end', '')}</p>
@@ -677,7 +677,7 @@ class ReportExporter:
             background-color: #f5f5f5;
             color: #333;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -685,31 +685,31 @@ class ReportExporter:
             background-color: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        
+
         header {
             text-align: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #007acc;
             padding-bottom: 20px;
         }
-        
+
         h1 {
             color: #007acc;
             margin: 0;
         }
-        
+
         .subtitle {
             color: #666;
             margin: 10px 0;
         }
-        
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin: 20px 0;
         }
-        
+
         .summary-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -717,38 +717,38 @@ class ReportExporter:
             border-radius: 8px;
             text-align: center;
         }
-        
+
         .summary-card h3 {
             margin: 0 0 10px 0;
             font-size: 14px;
             opacity: 0.9;
         }
-        
+
         .metric {
             font-size: 28px;
             font-weight: bold;
             margin: 0;
         }
-        
+
         .protocol-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
-        
+
         .protocol-card {
             border: 1px solid #ddd;
             padding: 15px;
             border-radius: 5px;
             background-color: #f9f9f9;
         }
-        
+
         .protocol-card h4 {
             margin: 0 0 10px 0;
             color: #007acc;
         }
-        
+
         .good-news {
             color: #28a745;
             font-weight: bold;
@@ -757,7 +757,7 @@ class ReportExporter:
             border: 1px solid #c3e6cb;
             border-radius: 5px;
         }
-        
+
         footer {
             text-align: center;
             margin-top: 40px;
@@ -765,7 +765,7 @@ class ReportExporter:
             border-top: 1px solid #ddd;
             color: #666;
         }
-        
+
         h2 {
             color: #007acc;
             border-bottom: 1px solid #ddd;
@@ -827,7 +827,7 @@ class ReportExporter:
                 <div class="executive-summary">
                     <h2>핵심 지표</h2>
                     <p>전체 위험도: <strong>{summary_data.get('risk_assessment', 'UNKNOWN')}</strong></p>
-                    
+
                     <h2>권장사항</h2>
                     <ul>
         """
@@ -910,7 +910,7 @@ class ReportExporter:
 
             # HTML 파일 읽기
             with open(html_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
+                f.read()
 
             # 간단한 PDF 헤더 (실제로는 더 복잡한 PDF 구조 필요)
             pdf_header = b"%PDF-1.4\n"

@@ -96,7 +96,7 @@ class ConnectionTestMixin:
         success, result, status_code = self._make_request("GET", test_url, auth=auth)
 
         if success:
-            return True, f"Basic authentication successful", status_code
+            return True, "Basic authentication successful", status_code
         else:
             return False, f"Basic authentication failed: {status_code}", status_code
 

@@ -118,7 +118,7 @@ async def manual_process():
         return jsonify(
             {
                 "status": "success",
-                "message": f"Manual processing completed",
+                "message": "Manual processing completed",
                 "data": {
                     "total_processed": len(reports),
                     "successful": successful,

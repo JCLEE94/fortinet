@@ -172,7 +172,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             # 성능 최적화: interval=1 제거로 3초 단축
             cpu_percent = psutil.cpu_percent(interval=None)  # 빠른 측정
             cpu_times = psutil.cpu_times()
-            cpu_count = psutil.cpu_count()
+            psutil.cpu_count()
 
             return {
                 "usage_percent": cpu_percent,

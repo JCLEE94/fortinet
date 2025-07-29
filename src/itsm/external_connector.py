@@ -402,7 +402,7 @@ class ExternalITSMConnector:
 
     def _parse_nextrade_ticket(self, ticket: Dict) -> Optional[FirewallPolicyRequest]:
         """Nextrade ITSM 티켓 파싱"""
-        description = f"{ticket.get('title', '')} {ticket.get('description', '')}"
+        f"{ticket.get('title', '')} {ticket.get('description', '')}"
 
         # 구조화된 데이터가 있는 경우 직접 사용
         if "firewall_request" in ticket:

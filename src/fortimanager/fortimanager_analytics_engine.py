@@ -783,7 +783,7 @@ class AdvancedAnalyticsEngine:
         if len(data) < 24:  # Need at least 24 hours for daily seasonality
             return {"seasonal": False}
 
-        values = [d.get("value", 0) for d in data]
+        [d.get("value", 0) for d in data]
 
         # Simple seasonality detection using autocorrelation
         # This is a simplified version - production would use more sophisticated methods

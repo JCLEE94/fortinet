@@ -526,17 +526,13 @@ class APIError(Exception):
     """Base API exception"""
 
 
-
 class AuthenticationError(APIError):
     """Authentication specific errors"""
-
 
 
 class ConnectionError(APIError):
     """Connection specific errors"""
 
 
-
 class ConfigurationError(APIError):
     """Configuration specific errors"""
-
