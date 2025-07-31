@@ -30,7 +30,13 @@ def simple_test():
 
     try:
         print("\n1. 빈 요청 테스트...")
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_data, verify=False, timeout=10)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers,
+            json=test_data,
+            verify=False,
+            timeout=10,
+        )
         print(f"Status: {response.status_code}")
         print(f"Response: {response.text}")
 
@@ -50,7 +56,9 @@ def simple_test():
     for endpoint in endpoints:
         try:
             print(f"\nTesting: {endpoint}")
-            response = requests.get(f"{BASE_URL}{endpoint}", headers=headers, verify=False, timeout=5)
+            response = requests.get(
+                f"{BASE_URL}{endpoint}", headers=headers, verify=False, timeout=5
+            )
             print(f"Status: {response.status_code}")
             if response.status_code != 404:
                 print(f"Response: {response.text[:200]}")
@@ -69,7 +77,13 @@ def simple_test():
     for cmd in direct_commands:
         try:
             print(f"\nCommand: {cmd['params'][0]['url'] if cmd['params'] else 'empty'}")
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=cmd, verify=False, timeout=10)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=cmd,
+                verify=False,
+                timeout=10,
+            )
             result = response.json()
             if "result" in result:
                 print(f"Result: {json.dumps(result['result'], indent=2)}")

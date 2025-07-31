@@ -92,8 +92,20 @@ ENDPOINTS = {
 
 # 테스트 데이터
 TEST_DATA = {
-    "/api/settings": {"fortimanager": {"host": "192.168.1.100", "username": "test", "password": "test", "port": 443}},
-    "/api/test_connection": {"host": "192.168.1.100", "username": "test", "password": "test", "port": 443},
+    "/api/settings": {
+        "fortimanager": {
+            "host": "192.168.1.100",
+            "username": "test",
+            "password": "test",
+            "port": 443,
+        }
+    },
+    "/api/test_connection": {
+        "host": "192.168.1.100",
+        "username": "test",
+        "password": "test",
+        "port": 443,
+    },
     "/api/settings/mode": {"mode": "test"},
     "/api/fortimanager/policies": {
         "name": "Test Policy",
@@ -110,7 +122,10 @@ TEST_DATA = {
         "filter": "tcp",
         "duration": 60,
     },
-    "/api/fortimanager/packet-capture/stop": {"device_id": "test-device-01", "capture_id": "test-capture-01"},
+    "/api/fortimanager/packet-capture/stop": {
+        "device_id": "test-device-01",
+        "capture_id": "test-capture-01",
+    },
     "/api/fortimanager/analyze-packet-path": {
         "src_ip": "192.168.1.100",
         "dst_ip": "10.0.0.100",
@@ -137,7 +152,9 @@ class EndpointTester:
         # Disable SSL warnings for local testing
         self.session.verify = False
 
-    def test_endpoint(self, method: str, path: str, port: int, data: dict = None) -> Tuple[int, str]:
+    def test_endpoint(
+        self, method: str, path: str, port: int, data: dict = None
+    ) -> Tuple[int, str]:
         """단일 엔드포인트 테스트"""
         url = f"http://localhost:{port}{path}"
 
@@ -155,7 +172,11 @@ class EndpointTester:
 
             # Response 내용 간단히 검증
             if response.status_code == 200:
-                if path.endswith(".css") or path.endswith(".js") or path.endswith(".ico"):
+                if (
+                    path.endswith(".css")
+                    or path.endswith(".js")
+                    or path.endswith(".ico")
+                ):
                     message = "Static file served"
                 elif "api" in path:
                     try:
@@ -268,13 +289,17 @@ class EndpointTester:
             if problems:
                 print(f"\n  문제가 있는 엔드포인트:")
                 for p in problems[:10]:  # 최대 10개만 표시
-                    print(f"    - {p['method']} {p['path']} → {p['status']} {p['message']}")
+                    print(
+                        f"    - {p['method']} {p['path']} → {p['status']} {p['message']}"
+                    )
                 if len(problems) > 10:
                     print(f"    ... 그 외 {len(problems) - 10}개")
 
     def save_report(self):
         """상세 보고서 저장"""
-        filename = f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = (
+            f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         report = {
             "test_date": datetime.now().isoformat(),

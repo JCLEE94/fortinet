@@ -42,16 +42,26 @@ def test_fortigate_session_management():
     client = FortiGateAPIClient()
 
     # 1. 초기 세션 생성
-    test_framework.assert_ok(hasattr(client, "session"), "Client should have session attribute")
-    test_framework.assert_ok(client.session is not None, "Session should be initialized")
+    test_framework.assert_ok(
+        hasattr(client, "session"), "Client should have session attribute"
+    )
+    test_framework.assert_ok(
+        client.session is not None, "Session should be initialized"
+    )
 
     # 2. 로그인 시뮬레이션
     with patch.object(client, "_make_request") as mock_request:
-        mock_request.return_value = {"success": True, "session": "test-session-12345", "csrf_token": "csrf-token-67890"}
+        mock_request.return_value = {
+            "success": True,
+            "session": "test-session-12345",
+            "csrf_token": "csrf-token-67890",
+        }
 
         login_result = client.login()
         test_framework.assert_ok(login_result.get("success"), "Login should succeed")
-        test_framework.assert_ok(client.session_id == "test-session-12345", "Session ID should be stored")
+        test_framework.assert_ok(
+            client.session_id == "test-session-12345", "Session ID should be stored"
+        )
 
     # 3. API 호출 중 세션 유지
     with patch.object(client, "_make_request") as mock_request:
@@ -60,7 +70,9 @@ def test_fortigate_session_management():
         # 여러 API 호출
         for _ in range(3):
             result = client.get_firewall_policies()
-            test_framework.assert_ok(result.get("success"), "API calls should maintain session")
+            test_framework.assert_ok(
+                result.get("success"), "API calls should maintain session"
+            )
 
     # 4. 세션 만료 및 자동 재연결
     client.session_expiry = time.time() - 100  # 강제 만료
@@ -72,7 +84,9 @@ def test_fortigate_session_management():
             mock_request.return_value = {"success": True}
 
             result = client.get_system_status()
-            test_framework.assert_ok(mock_login.called, "Should auto-relogin on expired session")
+            test_framework.assert_ok(
+                mock_login.called, "Should auto-relogin on expired session"
+            )
 
 
 @test_framework.test("fortigate_error_handling_comprehensive")
@@ -86,7 +100,9 @@ def test_fortigate_error_scenarios():
         mock_request.side_effect = ConnectionError("Network unreachable")
 
         result = client.get_firewall_policies()
-        test_framework.assert_eq(result.get("success"), False, "Should handle network errors")
+        test_framework.assert_eq(
+            result.get("success"), False, "Should handle network errors"
+        )
         test_framework.assert_ok("error" in result, "Should include error message")
 
     # 2. 타임아웃 처리
@@ -125,7 +141,9 @@ def test_fortigate_mock_mode():
     # 1. Mock 데이터 반환 확인
     policies = client.get_firewall_policies()
     test_framework.assert_ok(policies.get("success"), "Mock mode should return success")
-    test_framework.assert_ok(isinstance(policies.get("data"), list), "Should return mock policy list")
+    test_framework.assert_ok(
+        isinstance(policies.get("data"), list), "Should return mock policy list"
+    )
 
     # 2. Mock 데이터 일관성
     policies1 = client.get_firewall_policies()
@@ -133,7 +151,8 @@ def test_fortigate_mock_mode():
 
     # Mock 데이터는 동일해야 함 (또는 의도적으로 다르게 설계)
     test_framework.assert_ok(
-        len(policies1.get("data", [])) == len(policies2.get("data", [])), "Mock data should be consistent"
+        len(policies1.get("data", [])) == len(policies2.get("data", [])),
+        "Mock data should be consistent",
     )
 
 
@@ -156,11 +175,19 @@ def test_fortimanager_advanced_hub():
 
     # 2. Policy Orchestrator 테스트
     with patch.object(hub.policy_orchestrator, "analyze_policies") as mock_analyze:
-        mock_analyze.return_value = {"total_policies": 150, "conflicts": 3, "optimizations": 12}
+        mock_analyze.return_value = {
+            "total_policies": 150,
+            "conflicts": 3,
+            "optimizations": 12,
+        }
 
         analysis = hub.policy_orchestrator.analyze_policies()
-        test_framework.assert_ok("total_policies" in analysis, "Should analyze policies")
-        test_framework.assert_ok(analysis.get("conflicts", 0) >= 0, "Should detect conflicts")
+        test_framework.assert_ok(
+            "total_policies" in analysis, "Should analyze policies"
+        )
+        test_framework.assert_ok(
+            analysis.get("conflicts", 0) >= 0, "Should detect conflicts"
+        )
 
     # 3. Compliance Framework 테스트
     with patch.object(hub.compliance_framework, "check_compliance") as mock_check:
@@ -168,14 +195,18 @@ def test_fortimanager_advanced_hub():
 
         compliance = hub.compliance_framework.check_compliance()
         test_framework.assert_ok(compliance.get("compliant"), "Should check compliance")
-        test_framework.assert_ok(compliance.get("score", 0) > 90, "Compliance score should be high")
+        test_framework.assert_ok(
+            compliance.get("score", 0) > 90, "Compliance score should be high"
+        )
 
     # 4. Security Fabric 테스트
     with patch.object(hub.security_fabric, "get_topology") as mock_topology:
         mock_topology.return_value = {"nodes": 25, "connections": 48, "health": "good"}
 
         topology = hub.security_fabric.get_topology()
-        test_framework.assert_ok(topology.get("nodes", 0) > 0, "Should have fabric nodes")
+        test_framework.assert_ok(
+            topology.get("nodes", 0) > 0, "Should have fabric nodes"
+        )
 
 
 @test_framework.test("fortimanager_packet_path_analysis_integration")
@@ -185,7 +216,12 @@ def test_fortimanager_packet_analysis():
     client = FortiManagerAPIClient()
 
     # 패킷 경로 분석 요청
-    packet_info = {"src_ip": "192.168.1.100", "dst_ip": "10.0.0.50", "dst_port": 443, "protocol": "tcp"}
+    packet_info = {
+        "src_ip": "192.168.1.100",
+        "dst_ip": "10.0.0.50",
+        "dst_port": 443,
+        "protocol": "tcp",
+    }
 
     with patch.object(client, "analyze_packet_path") as mock_analyze:
         mock_analyze.return_value = {
@@ -200,9 +236,16 @@ def test_fortimanager_packet_analysis():
 
         result = client.analyze_packet_path(**packet_info)
 
-        test_framework.assert_ok(result.get("success"), "Packet path analysis should succeed")
-        test_framework.assert_ok(len(result.get("path", [])) > 0, "Should return packet path")
-        test_framework.assert_ok(len(result.get("policies_matched", [])) > 0, "Should identify matched policies")
+        test_framework.assert_ok(
+            result.get("success"), "Packet path analysis should succeed"
+        )
+        test_framework.assert_ok(
+            len(result.get("path", [])) > 0, "Should return packet path"
+        )
+        test_framework.assert_ok(
+            len(result.get("policies_matched", [])) > 0,
+            "Should identify matched policies",
+        )
 
 
 # =============================================================================
@@ -232,10 +275,14 @@ def test_faz_realtime_logs():
             "total": 1245,
         }
 
-        logs = client.query_logs(log_type="traffic", start_time=time.time() - 3600, end_time=time.time())
+        logs = client.query_logs(
+            log_type="traffic", start_time=time.time() - 3600, end_time=time.time()
+        )
 
         test_framework.assert_ok(logs.get("success"), "Log query should succeed")
-        test_framework.assert_ok(len(logs.get("logs", [])) > 0, "Should return log entries")
+        test_framework.assert_ok(
+            len(logs.get("logs", [])) > 0, "Should return log entries"
+        )
 
 
 # =============================================================================
@@ -272,12 +319,24 @@ def test_concurrent_api_access():
         # FortiGate 동시 요청
         for i in range(5):
             futures.append(
-                executor.submit(make_concurrent_calls, "FortiGate", fg_client, fg_client.get_firewall_policies)
+                executor.submit(
+                    make_concurrent_calls,
+                    "FortiGate",
+                    fg_client,
+                    fg_client.get_firewall_policies,
+                )
             )
 
         # FortiManager 동시 요청
         for i in range(5):
-            futures.append(executor.submit(make_concurrent_calls, "FortiManager", fm_client, fm_client.get_adom_list))
+            futures.append(
+                executor.submit(
+                    make_concurrent_calls,
+                    "FortiManager",
+                    fm_client,
+                    fm_client.get_adom_list,
+                )
+            )
 
         # 모든 요청 완료 대기
         for future in futures:
@@ -285,7 +344,9 @@ def test_concurrent_api_access():
 
     # 결과 검증
     test_framework.assert_eq(results["errors"], 0, "No errors in concurrent access")
-    test_framework.assert_eq(results["success"], 10, "All concurrent requests should succeed")
+    test_framework.assert_eq(
+        results["success"], 10, "All concurrent requests should succeed"
+    )
 
 
 @test_framework.test("api_clients_performance_benchmark")
@@ -309,7 +370,8 @@ def test_api_client_performance():
     avg_response_time = sum(response_times) / len(response_times)
 
     test_framework.assert_ok(
-        avg_response_time < 0.1, f"Average response time should be fast ({avg_response_time:.3f}s)"  # 100ms 미만
+        avg_response_time < 0.1,
+        f"Average response time should be fast ({avg_response_time:.3f}s)",  # 100ms 미만
     )
 
     # 캐시 효율성 테스트
@@ -327,7 +389,9 @@ def test_api_client_performance():
         second_call_time = time.time() - start
 
         # 캐시된 호출이 더 빨라야 함
-        test_framework.assert_ok(second_call_time <= first_call_time, "Cached calls should be faster")
+        test_framework.assert_ok(
+            second_call_time <= first_call_time, "Cached calls should be faster"
+        )
 
 
 # =============================================================================
@@ -350,17 +414,26 @@ def test_cross_platform_integration():
         mock_create.return_value = {"success": True, "policy_id": "POL-TEST-123"}
 
         policy_result = fm_client.create_policy(
-            {"name": "Test Policy", "srcintf": "port1", "dstintf": "port2", "action": "accept"}
+            {
+                "name": "Test Policy",
+                "srcintf": "port1",
+                "dstintf": "port2",
+                "action": "accept",
+            }
         )
 
-        test_framework.assert_ok(policy_result.get("success"), "Policy creation should succeed")
+        test_framework.assert_ok(
+            policy_result.get("success"), "Policy creation should succeed"
+        )
 
     # 2. FortiGate에 정책 배포
     with patch.object(fg_client, "install_policy") as mock_install:
         mock_install.return_value = {"success": True, "status": "installed"}
 
         install_result = fg_client.install_policy("POL-TEST-123")
-        test_framework.assert_ok(install_result.get("success"), "Policy installation should succeed")
+        test_framework.assert_ok(
+            install_result.get("success"), "Policy installation should succeed"
+        )
 
     # 3. FortiAnalyzer에서 로그 확인
     with patch.object(faz_client, "query_logs") as mock_logs:
@@ -374,7 +447,9 @@ def test_cross_platform_integration():
 
         logs = faz_client.query_logs(filter={"policyid": "POL-TEST-123"})
 
-        test_framework.assert_ok(len(logs.get("logs", [])) > 0, "Should find logs for new policy")
+        test_framework.assert_ok(
+            len(logs.get("logs", [])) > 0, "Should find logs for new policy"
+        )
 
 
 if __name__ == "__main__":

@@ -25,7 +25,8 @@ class TestAPIClients(unittest.TestCase):
 
     def test_base_api_client_import(self):
         """Test base API client import"""
-        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+        from src.api.clients.base_api_client import (BaseApiClient,
+                                                     RealtimeMonitoringMixin)
 
         self.assertTrue(BaseApiClient)
         self.assertTrue(RealtimeMonitoringMixin)
@@ -34,14 +35,23 @@ class TestAPIClients(unittest.TestCase):
         """Test FortiGate API client creation"""
         # 완전한 환경 변수 격리를 위한 강력한 패치
         with patch.dict(
-            os.environ, {"OFFLINE_MODE": "true", "NO_INTERNET": "false", "DISABLE_EXTERNAL_CALLS": "false"}, clear=False
+            os.environ,
+            {
+                "OFFLINE_MODE": "true",
+                "NO_INTERNET": "false",
+                "DISABLE_EXTERNAL_CALLS": "false",
+            },
+            clear=False,
         ):
             # 모든 관련 모듈을 새로 임포트하여 환경 변수 변경사항 반영
             import importlib
             import sys
 
             # 모듈 캐시에서 제거하여 완전히 새로 로드
-            modules_to_reload = ["src.api.clients.base_api_client", "src.api.clients.fortigate_api_client"]
+            modules_to_reload = [
+                "src.api.clients.base_api_client",
+                "src.api.clients.fortigate_api_client",
+            ]
 
             for module_name in modules_to_reload:
                 if module_name in sys.modules:
@@ -66,9 +76,12 @@ class TestAPIClients(unittest.TestCase):
 
     def test_fortimanager_client_creation(self):
         """Test FortiManager API client creation"""
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import \
+            FortiManagerAPIClient
 
-        client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
+        client = FortiManagerAPIClient(
+            host="192.168.1.2", username="admin", password="test"
+        )
         self.assertIsNotNone(client)
         self.assertEqual(client.host, "192.168.1.2")
 
@@ -90,7 +103,8 @@ class TestMonitoringSystem(unittest.TestCase):
 
     def test_monitoring_base_import(self):
         """Test monitoring base import"""
-        from monitoring.base import MonitoringBase, get_monitor, register_monitor
+        from monitoring.base import (MonitoringBase, get_monitor,
+                                     register_monitor)
 
         self.assertTrue(MonitoringBase)
         self.assertTrue(register_monitor)
@@ -131,14 +145,17 @@ class TestFortiManagerAdvanced(unittest.TestCase):
         import asyncio
 
         from fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import \
+            FortiManagerAPIClient
 
         # Set up event loop for async components
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         try:
-            client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
+            client = FortiManagerAPIClient(
+                host="192.168.1.2", username="admin", password="test"
+            )
             hub = FortiManagerAdvancedHub(api_client=client)
             self.assertIsNotNone(hub)
             self.assertIsNotNone(hub.policy_orchestrator)
@@ -189,9 +206,16 @@ class TestFlaskApp(unittest.TestCase):
 
     def test_packet_analysis_endpoint(self):
         """Test packet analysis endpoint"""
-        test_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 443, "protocol": "tcp"}
+        test_data = {
+            "src_ip": "192.168.1.100",
+            "dst_ip": "172.16.10.100",
+            "port": 443,
+            "protocol": "tcp",
+        }
         response = self.client.post(
-            "/api/fortimanager/analyze-packet-path", json=test_data, content_type="application/json"
+            "/api/fortimanager/analyze-packet-path",
+            json=test_data,
+            content_type="application/json",
         )
         self.assertEqual(response.status_code, 200)
 

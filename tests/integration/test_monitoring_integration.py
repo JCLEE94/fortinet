@@ -82,16 +82,37 @@ def test_realtime_metrics_collection():
     with patch.object(metrics_collector, "collect_system_metrics") as mock_collect:
         mock_collect.return_value = {
             "timestamp": datetime.now().isoformat(),
-            "cpu": {"usage_percent": 45.2, "core_count": 8, "load_average": [1.5, 1.2, 0.9]},
-            "memory": {"total_gb": 32, "used_gb": 18.5, "percent": 57.8, "available_gb": 13.5},
-            "disk": {"total_gb": 500, "used_gb": 380, "percent": 76.0, "io_read_mb": 125.5, "io_write_mb": 89.3},
+            "cpu": {
+                "usage_percent": 45.2,
+                "core_count": 8,
+                "load_average": [1.5, 1.2, 0.9],
+            },
+            "memory": {
+                "total_gb": 32,
+                "used_gb": 18.5,
+                "percent": 57.8,
+                "available_gb": 13.5,
+            },
+            "disk": {
+                "total_gb": 500,
+                "used_gb": 380,
+                "percent": 76.0,
+                "io_read_mb": 125.5,
+                "io_write_mb": 89.3,
+            },
         }
 
         metrics = metrics_collector.collect_system_metrics()
 
         test_framework.assert_ok("cpu" in metrics, "Should collect CPU metrics")
-        test_framework.assert_ok(metrics.get("memory", {}).get("percent", 0) < 80, "Memory usage should be reasonable")
-        test_framework.assert_ok(metrics.get("disk", {}).get("percent", 0) < 90, "Disk usage should not be critical")
+        test_framework.assert_ok(
+            metrics.get("memory", {}).get("percent", 0) < 80,
+            "Memory usage should be reasonable",
+        )
+        test_framework.assert_ok(
+            metrics.get("disk", {}).get("percent", 0) < 90,
+            "Disk usage should not be critical",
+        )
 
     # 2. 네트워크 메트릭 수집
     with patch.object(metrics_collector, "collect_network_metrics") as mock_network:
@@ -114,15 +135,24 @@ def test_realtime_metrics_collection():
 
         network_metrics = metrics_collector.collect_network_metrics()
 
-        test_framework.assert_ok(len(network_metrics.get("interfaces", [])) > 0, "Should have network interfaces")
         test_framework.assert_ok(
-            network_metrics.get("connections", {}).get("tcp", 0) > 0, "Should have active TCP connections"
+            len(network_metrics.get("interfaces", [])) > 0,
+            "Should have network interfaces",
+        )
+        test_framework.assert_ok(
+            network_metrics.get("connections", {}).get("tcp", 0) > 0,
+            "Should have active TCP connections",
         )
 
     # 3. 애플리케이션 메트릭 수집
     with patch.object(metrics_collector, "collect_app_metrics") as mock_app:
         mock_app.return_value = {
-            "api_requests": {"total": 10000, "success": 9850, "errors": 150, "avg_response_time_ms": 125},
+            "api_requests": {
+                "total": 10000,
+                "success": 9850,
+                "errors": 150,
+                "avg_response_time_ms": 125,
+            },
             "active_sessions": 85,
             "queue_sizes": {"task_queue": 12, "event_queue": 5, "alert_queue": 0},
             "cache_stats": {"hits": 8500, "misses": 1500, "hit_rate": 0.85},
@@ -130,9 +160,13 @@ def test_realtime_metrics_collection():
 
         app_metrics = metrics_collector.collect_app_metrics()
 
-        test_framework.assert_ok(app_metrics.get("api_requests", {}).get("success", 0) > 0, "Should track API success")
         test_framework.assert_ok(
-            app_metrics.get("cache_stats", {}).get("hit_rate", 0) > 0.8, "Cache hit rate should be good"
+            app_metrics.get("api_requests", {}).get("success", 0) > 0,
+            "Should track API success",
+        )
+        test_framework.assert_ok(
+            app_metrics.get("cache_stats", {}).get("hit_rate", 0) > 0.8,
+            "Cache hit rate should be good",
         )
 
 
@@ -163,11 +197,16 @@ def test_metrics_aggregation_and_windowing():
             "requests": {"total": 36000, "avg_per_second": 120, "peak_per_second": 150},
         }
 
-        aggregated = metrics_collector.aggregate_metrics(time_series_data, window="5_minutes")
+        aggregated = metrics_collector.aggregate_metrics(
+            time_series_data, window="5_minutes"
+        )
 
-        test_framework.assert_ok(aggregated.get("cpu", {}).get("avg", 0) > 0, "Should calculate average CPU")
         test_framework.assert_ok(
-            aggregated.get("cpu", {}).get("max", 0) > aggregated.get("cpu", {}).get("avg", 0),
+            aggregated.get("cpu", {}).get("avg", 0) > 0, "Should calculate average CPU"
+        )
+        test_framework.assert_ok(
+            aggregated.get("cpu", {}).get("max", 0)
+            > aggregated.get("cpu", {}).get("avg", 0),
             "Max should be greater than average",
         )
 
@@ -215,11 +254,19 @@ def test_threshold_based_alerting():
     normal_metrics = {"cpu_usage": 45, "memory_percent": 65, "disk_free_gb": 120}
 
     with patch.object(alert_engine, "check_alerts") as mock_check:
-        mock_check.return_value = {"alerts_triggered": [], "alerts_cleared": [], "active_alerts": 0}
+        mock_check.return_value = {
+            "alerts_triggered": [],
+            "alerts_cleared": [],
+            "active_alerts": 0,
+        }
 
         result = alert_engine.check_alerts(normal_metrics, alert_rules)
 
-        test_framework.assert_eq(len(result.get("alerts_triggered", [])), 0, "Normal metrics should not trigger alerts")
+        test_framework.assert_eq(
+            len(result.get("alerts_triggered", [])),
+            0,
+            "Normal metrics should not trigger alerts",
+        )
 
     # 2. 임계값 초과 - 알림 발생
     high_metrics = {"cpu_usage": 95, "memory_percent": 92, "disk_free_gb": 8}
@@ -252,9 +299,14 @@ def test_threshold_based_alerting():
 
         alerts = alert_engine.check_alerts(high_metrics, alert_rules)
 
-        test_framework.assert_eq(len(alerts.get("alerts_triggered", [])), 3, "Should trigger 3 alerts")
+        test_framework.assert_eq(
+            len(alerts.get("alerts_triggered", [])), 3, "Should trigger 3 alerts"
+        )
         test_framework.assert_ok(
-            any(a["severity"] == "critical" for a in alerts.get("alerts_triggered", [])), "Should have critical alert"
+            any(
+                a["severity"] == "critical" for a in alerts.get("alerts_triggered", [])
+            ),
+            "Should have critical alert",
         )
 
     # 3. 알림 에스컬레이션
@@ -266,12 +318,20 @@ def test_threshold_based_alerting():
             "escalation_level": 2,
         }
 
-        critical_alert = {"rule_id": "memory_critical", "severity": "critical", "duration_minutes": 15}
+        critical_alert = {
+            "rule_id": "memory_critical",
+            "severity": "critical",
+            "duration_minutes": 15,
+        }
 
         escalation = alert_engine.escalate_alert(critical_alert)
 
-        test_framework.assert_ok(escalation.get("escalated"), "Critical alert should escalate")
-        test_framework.assert_ok(escalation.get("oncall_paged"), "Should page on-call for critical alerts")
+        test_framework.assert_ok(
+            escalation.get("escalated"), "Critical alert should escalate"
+        )
+        test_framework.assert_ok(
+            escalation.get("oncall_paged"), "Should page on-call for critical alerts"
+        )
 
 
 @test_framework.test("monitoring_alert_suppression_dedup")
@@ -303,7 +363,8 @@ def test_alert_suppression_and_deduplication():
         result = alert_engine.process_alerts_with_suppression(repeated_alerts)
 
         test_framework.assert_ok(
-            result.get("suppressed", 0) > result.get("sent", 0), "Should suppress most repeated alerts"
+            result.get("suppressed", 0) > result.get("sent", 0),
+            "Should suppress most repeated alerts",
         )
         test_framework.assert_eq(result.get("sent"), 2, "Should send limited alerts")
 
@@ -334,7 +395,10 @@ def test_realtime_log_streaming():
                 "severity": random.choice(severity_levels),
                 "source": f"system-{random.randint(1, 5)}",
                 "message": f"Test log entry {i}",
-                "metadata": {"request_id": f"req-{i}", "user": f"user{random.randint(1, 10)}"},
+                "metadata": {
+                    "request_id": f"req-{i}",
+                    "user": f"user{random.randint(1, 10)}",
+                },
             }
             log_queue.put(log_entry)
             time.sleep(0.01)  # 10ms 간격
@@ -353,11 +417,18 @@ def test_realtime_log_streaming():
             log = log_queue.get()
             streamed_logs.append(log)
 
-    test_framework.assert_ok(len(streamed_logs) > 40, f"Should stream most logs in real-time ({len(streamed_logs)}/50)")
+    test_framework.assert_ok(
+        len(streamed_logs) > 40,
+        f"Should stream most logs in real-time ({len(streamed_logs)}/50)",
+    )
 
     # 로그 필터링 테스트
-    error_logs = [l for l in streamed_logs if l.get("severity") in ["error", "critical"]]
-    test_framework.assert_ok(len(error_logs) > 0, "Should have some error/critical logs")
+    error_logs = [
+        l for l in streamed_logs if l.get("severity") in ["error", "critical"]
+    ]
+    test_framework.assert_ok(
+        len(error_logs) > 0, "Should have some error/critical logs"
+    )
 
 
 @test_framework.test("monitoring_log_analysis_patterns")
@@ -395,14 +466,21 @@ def test_log_pattern_analysis():
                     "recommendation": "Possible scanning activity",
                 },
             ],
-            "trends": {"error_rate": "increasing", "request_volume": "stable", "response_time": "degrading"},
+            "trends": {
+                "error_rate": "increasing",
+                "request_volume": "stable",
+                "response_time": "degrading",
+            },
         }
 
         analysis = log_manager.analyze_patterns(log_samples)
 
-        test_framework.assert_ok(len(analysis.get("anomalies", [])) > 0, "Should detect anomalies")
         test_framework.assert_ok(
-            any(a["severity"] == "high" for a in analysis.get("anomalies", [])), "Should detect high severity anomaly"
+            len(analysis.get("anomalies", [])) > 0, "Should detect anomalies"
+        )
+        test_framework.assert_ok(
+            any(a["severity"] == "high" for a in analysis.get("anomalies", [])),
+            "Should detect high severity anomaly",
         )
 
 
@@ -421,7 +499,11 @@ def test_dashboard_realtime_updates():
     with patch.object(monitoring_manager, "get_dashboard_data") as mock_dashboard:
         mock_dashboard.return_value = {
             "widgets": {
-                "system_health": {"status": "healthy", "score": 95, "last_updated": datetime.now().isoformat()},
+                "system_health": {
+                    "status": "healthy",
+                    "score": 95,
+                    "last_updated": datetime.now().isoformat(),
+                },
                 "traffic_overview": {
                     "inbound_mbps": 125.5,
                     "outbound_mbps": 89.3,
@@ -445,9 +527,14 @@ def test_dashboard_realtime_updates():
         dashboard_data = monitoring_manager.get_dashboard_data()
 
         test_framework.assert_ok(
-            dashboard_data.get("widgets", {}).get("system_health", {}).get("score", 0) > 90, "System should be healthy"
+            dashboard_data.get("widgets", {}).get("system_health", {}).get("score", 0)
+            > 90,
+            "System should be healthy",
         )
-        test_framework.assert_ok("top_threats" in dashboard_data.get("widgets", {}), "Should include threat data")
+        test_framework.assert_ok(
+            "top_threats" in dashboard_data.get("widgets", {}),
+            "Should include threat data",
+        )
 
     # 시계열 차트 데이터
     with patch.object(monitoring_manager, "get_timeseries_data") as mock_timeseries:
@@ -469,7 +556,9 @@ def test_dashboard_realtime_updates():
         timeseries = monitoring_manager.get_timeseries_data("24_hours")
 
         test_framework.assert_eq(
-            len(timeseries.get("cpu_usage", {}).get("data", [])), 24, "Should have 24 hours of data"
+            len(timeseries.get("cpu_usage", {}).get("data", [])),
+            24,
+            "Should have 24 hours of data",
         )
 
 
@@ -501,7 +590,10 @@ def test_dashboard_websocket_streaming():
     update_thread.start()
     update_thread.join(timeout=2)
 
-    test_framework.assert_ok(len(update_events) >= 8, f"Should receive most updates ({len(update_events)}/10)")
+    test_framework.assert_ok(
+        len(update_events) >= 8,
+        f"Should receive most updates ({len(update_events)}/10)",
+    )
 
     # 업데이트 빈도 확인
     if len(update_events) >= 2:
@@ -510,7 +602,9 @@ def test_dashboard_websocket_streaming():
             - datetime.fromisoformat(update_events[0]["timestamp"])
         ).total_seconds()
 
-        test_framework.assert_ok(time_diff < 0.2, "Updates should be frequent")  # 200ms 이내
+        test_framework.assert_ok(
+            time_diff < 0.2, "Updates should be frequent"
+        )  # 200ms 이내
 
 
 # =============================================================================
@@ -559,17 +653,29 @@ def test_api_performance_monitoring():
                 }
             ],
             "error_prone_endpoints": [
-                {"endpoint": "/api/logs/search", "error_rate": 0.05, "recommendation": "Investigate timeout issues"}
+                {
+                    "endpoint": "/api/logs/search",
+                    "error_rate": 0.05,
+                    "recommendation": "Investigate timeout issues",
+                }
             ],
-            "sla_compliance": {"target_p95_ms": 1000, "compliant_endpoints": 2, "non_compliant_endpoints": 1},
+            "sla_compliance": {
+                "target_p95_ms": 1000,
+                "compliant_endpoints": 2,
+                "non_compliant_endpoints": 1,
+            },
             "overall_health": "degraded",
         }
 
         analysis = performance_monitor.analyze_performance(api_metrics)
 
-        test_framework.assert_ok(len(analysis.get("slowest_endpoints", [])) > 0, "Should identify slow endpoints")
         test_framework.assert_ok(
-            analysis.get("sla_compliance", {}).get("non_compliant_endpoints", 0) > 0, "Should detect SLA violations"
+            len(analysis.get("slowest_endpoints", [])) > 0,
+            "Should identify slow endpoints",
+        )
+        test_framework.assert_ok(
+            analysis.get("sla_compliance", {}).get("non_compliant_endpoints", 0) > 0,
+            "Should detect SLA violations",
         )
 
 
@@ -586,9 +692,15 @@ def test_resource_usage_trend_analysis():
             weekly_data.append(
                 {
                     "timestamp": datetime.now() - timedelta(days=day, hours=hour),
-                    "cpu_percent": 30 + (10 if 9 <= hour <= 17 else 0) + random.randint(-5, 5),
-                    "memory_percent": 50 + (15 if 9 <= hour <= 17 else 0) + random.randint(-5, 5),
-                    "disk_io_mbps": 20 + (30 if 9 <= hour <= 17 else 0) + random.randint(-10, 10),
+                    "cpu_percent": 30
+                    + (10 if 9 <= hour <= 17 else 0)
+                    + random.randint(-5, 5),
+                    "memory_percent": 50
+                    + (15 if 9 <= hour <= 17 else 0)
+                    + random.randint(-5, 5),
+                    "disk_io_mbps": 20
+                    + (30 if 9 <= hour <= 17 else 0)
+                    + random.randint(-10, 10),
                 }
             )
 
@@ -604,16 +716,25 @@ def test_resource_usage_trend_analysis():
                 "capacity_warning": "Memory may exceed 80% during next peak",
                 "recommended_action": "Consider scaling up memory by 8GB",
             },
-            "anomalies": [{"timestamp": "2024-07-23 03:00", "type": "unusual_cpu_spike", "value": 85, "expected": 35}],
+            "anomalies": [
+                {
+                    "timestamp": "2024-07-23 03:00",
+                    "type": "unusual_cpu_spike",
+                    "value": 85,
+                    "expected": 35,
+                }
+            ],
         }
 
         trend_analysis = performance_monitor.analyze_trends(weekly_data)
 
         test_framework.assert_ok(
-            len(trend_analysis.get("patterns", {}).get("daily_peak_hours", [])) > 0, "Should identify peak hours"
+            len(trend_analysis.get("patterns", {}).get("daily_peak_hours", [])) > 0,
+            "Should identify peak hours",
         )
         test_framework.assert_ok(
-            "capacity_warning" in trend_analysis.get("predictions", {}), "Should predict capacity issues"
+            "capacity_warning" in trend_analysis.get("predictions", {}),
+            "Should predict capacity issues",
         )
 
 
@@ -695,12 +816,16 @@ def test_event_correlation_and_root_cause():
 
         correlation = event_correlator.correlate_events(events)
 
-        test_framework.assert_ok(correlation.get("correlation_found"), "Should find event correlation")
         test_framework.assert_ok(
-            correlation.get("root_cause", {}).get("confidence", 0) > 0.8, "Should have high confidence in root cause"
+            correlation.get("correlation_found"), "Should find event correlation"
         )
         test_framework.assert_ok(
-            len(correlation.get("recommended_actions", [])) > 0, "Should provide actionable recommendations"
+            correlation.get("root_cause", {}).get("confidence", 0) > 0.8,
+            "Should have high confidence in root cause",
+        )
+        test_framework.assert_ok(
+            len(correlation.get("recommended_actions", [])) > 0,
+            "Should provide actionable recommendations",
         )
 
 
@@ -745,7 +870,9 @@ def test_predictive_monitoring_and_alerting():
 
         predictions = monitoring_manager.predict_issues(historical_patterns)
 
-        test_framework.assert_ok(len(predictions.get("predictions", [])) > 0, "Should make predictions")
+        test_framework.assert_ok(
+            len(predictions.get("predictions", [])) > 0, "Should make predictions"
+        )
         test_framework.assert_ok(
             any(p["probability"] > 0.8 for p in predictions.get("predictions", [])),
             "Should have high-probability predictions",
@@ -805,7 +932,9 @@ def test_full_stack_monitoring_scenario():
             "notified": ["ops-team@company.com"],
         }
 
-        alert = alert_engine.trigger_alert({"metric": "response_time", "value": 200, "threshold": 150})
+        alert = alert_engine.trigger_alert(
+            {"metric": "response_time", "value": 200, "threshold": 150}
+        )
         scenario_timeline.append(("T+10min", "alert_triggered", alert))
 
     # 4. 근본 원인 분석 (T+12분)
@@ -818,7 +947,10 @@ def test_full_stack_monitoring_scenario():
                 "Long-running queries not optimized",
                 "Connection timeout too high (30s)",
             ],
-            "resolution": {"immediate": "Increase connection pool size", "long_term": "Optimize database queries"},
+            "resolution": {
+                "immediate": "Increase connection pool size",
+                "long_term": "Optimize database queries",
+            },
         }
 
         root_cause = event_correlator.analyze_root_cause(scenario_timeline)
@@ -839,20 +971,32 @@ def test_full_stack_monitoring_scenario():
     test_framework.assert_eq(len(scenario_timeline), 5, "Should have 5 timeline events")
 
     # 성능 저하 감지 확인
-    degradation_event = next((e for e in scenario_timeline if e[1] == "degradation_start"), None)
+    degradation_event = next(
+        (e for e in scenario_timeline if e[1] == "degradation_start"), None
+    )
     test_framework.assert_ok(
-        degradation_event and degradation_event[2].get("degradation_detected"), "Should detect performance degradation"
+        degradation_event and degradation_event[2].get("degradation_detected"),
+        "Should detect performance degradation",
     )
 
     # 근본 원인 분석 확인
-    root_cause_event = next((e for e in scenario_timeline if e[1] == "root_cause_identified"), None)
+    root_cause_event = next(
+        (e for e in scenario_timeline if e[1] == "root_cause_identified"), None
+    )
     test_framework.assert_ok(
-        root_cause_event and root_cause_event[2].get("root_cause_found"), "Should identify root cause"
+        root_cause_event and root_cause_event[2].get("root_cause_found"),
+        "Should identify root cause",
     )
 
     # 자동 복구 확인
-    remediation_event = next((e for e in scenario_timeline if e[1] == "auto_remediation"), None)
-    test_framework.assert_eq(remediation_event[2].get("result"), "successful", "Auto-remediation should succeed")
+    remediation_event = next(
+        (e for e in scenario_timeline if e[1] == "auto_remediation"), None
+    )
+    test_framework.assert_eq(
+        remediation_event[2].get("result"),
+        "successful",
+        "Auto-remediation should succeed",
+    )
 
 
 if __name__ == "__main__":

@@ -103,7 +103,10 @@ class MasterIntegrationTestSuite:
 
             # 서브프로세스로 테스트 실행
             result = subprocess.run(
-                [sys.executable, str(module_path)], capture_output=True, text=True, timeout=300  # 5분 타임아웃
+                [sys.executable, str(module_path)],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5분 타임아웃
             )
 
             duration = time.time() - start_time
@@ -142,7 +145,11 @@ class MasterIntegrationTestSuite:
                 passed_tests=passed_tests,
                 failed_tests=failed_tests,
                 error_message=result.stderr if result.stderr and not success else None,
-                detailed_results={"stdout": result.stdout, "stderr": result.stderr, "returncode": result.returncode},
+                detailed_results={
+                    "stdout": result.stdout,
+                    "stderr": result.stderr,
+                    "returncode": result.returncode,
+                },
             )
 
         except subprocess.TimeoutExpired:
@@ -195,7 +202,9 @@ class MasterIntegrationTestSuite:
 
     def run_parallel(self, max_workers: int = 2) -> Dict[str, Any]:
         """병렬로 테스트 모듈 실행 (안전성을 위해 제한적 병렬성)"""
-        print(f"🚀 Starting Master Integration Test Suite (Parallel - {max_workers} workers)")
+        print(
+            f"🚀 Starting Master Integration Test Suite (Parallel - {max_workers} workers)"
+        )
         print("=" * 70)
 
         self.start_time = time.time()
@@ -203,7 +212,8 @@ class MasterIntegrationTestSuite:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # 테스트 제출
             future_to_module = {
-                executor.submit(self.run_test_module, module_info): module_info for module_info in self.test_modules
+                executor.submit(self.run_test_module, module_info): module_info
+                for module_info in self.test_modules
             }
 
             # 완료되는 대로 결과 수집
@@ -215,10 +225,16 @@ class MasterIntegrationTestSuite:
 
                     # 즉시 결과 출력
                     if result.success:
-                        print(f"✅ {result.module_name} - PASSED ({result.duration:.2f}s)")
-                        print(f"   Tests: {result.passed_tests}/{result.total_tests} passed")
+                        print(
+                            f"✅ {result.module_name} - PASSED ({result.duration:.2f}s)"
+                        )
+                        print(
+                            f"   Tests: {result.passed_tests}/{result.total_tests} passed"
+                        )
                     else:
-                        print(f"❌ {result.module_name} - FAILED ({result.duration:.2f}s)")
+                        print(
+                            f"❌ {result.module_name} - FAILED ({result.duration:.2f}s)"
+                        )
                         if result.error_message:
                             print(f"   Error: {result.error_message[:100]}...")
                     print()
@@ -244,7 +260,9 @@ class MasterIntegrationTestSuite:
 
     def _generate_summary(self) -> Dict[str, Any]:
         """테스트 결과 요약 생성"""
-        total_duration = self.end_time - self.start_time if self.end_time and self.start_time else 0
+        total_duration = (
+            self.end_time - self.start_time if self.end_time and self.start_time else 0
+        )
 
         successful_modules = [r for r in self.results if r.success]
         failed_modules = [r for r in self.results if not r.success]
@@ -253,7 +271,9 @@ class MasterIntegrationTestSuite:
         total_passed = sum(r.passed_tests for r in self.results)
         total_failed = sum(r.failed_tests for r in self.results)
 
-        success_rate = len(successful_modules) / len(self.results) if self.results else 0
+        success_rate = (
+            len(successful_modules) / len(self.results) if self.results else 0
+        )
         test_pass_rate = total_passed / total_tests if total_tests > 0 else 0
 
         return {
@@ -282,7 +302,8 @@ class MasterIntegrationTestSuite:
             f"({summary['module_success_rate']:.1%})"
         )
         print(
-            f"🧪 Tests: {summary['total_passed']}/{summary['total_tests']} passed " f"({summary['test_pass_rate']:.1%})"
+            f"🧪 Tests: {summary['total_passed']}/{summary['total_tests']} passed "
+            f"({summary['test_pass_rate']:.1%})"
         )
 
         print("\n📋 Module Results:")
@@ -304,7 +325,11 @@ class MasterIntegrationTestSuite:
         critical_modules = [m for m in self.test_modules if m["priority"] == "critical"]
 
         phase1_passed = len(
-            [r for r in summary["module_results"] if r.success and r.module_name in [m["name"] for m in phase1_modules]]
+            [
+                r
+                for r in summary["module_results"]
+                if r.success and r.module_name in [m["name"] for m in phase1_modules]
+            ]
         )
         critical_passed = len(
             [
@@ -315,7 +340,9 @@ class MasterIntegrationTestSuite:
         )
 
         print(f"  Phase 1 (Critical): {phase1_passed}/{len(phase1_modules)} passed")
-        print(f"  Critical Components: {critical_passed}/{len(critical_modules)} passed")
+        print(
+            f"  Critical Components: {critical_passed}/{len(critical_modules)} passed"
+        )
 
         # 전체 시스템 상태 평가
         print(f"\n🏆 Overall System Integration Status:")
@@ -338,14 +365,27 @@ def test_framework_validation():
     """통합 테스트 프레임워크 자체 검증"""
 
     # 프레임워크 기본 기능 테스트
-    test_framework.assert_ok(hasattr(test_framework, "test"), "Framework should have test decorator")
-    test_framework.assert_ok(hasattr(test_framework, "assert_eq"), "Framework should have assert_eq")
-    test_framework.assert_ok(hasattr(test_framework, "assert_ok"), "Framework should have assert_ok")
-    test_framework.assert_ok(hasattr(test_framework, "test_app"), "Framework should have test_app context manager")
+    test_framework.assert_ok(
+        hasattr(test_framework, "test"), "Framework should have test decorator"
+    )
+    test_framework.assert_ok(
+        hasattr(test_framework, "assert_eq"), "Framework should have assert_eq"
+    )
+    test_framework.assert_ok(
+        hasattr(test_framework, "assert_ok"), "Framework should have assert_ok"
+    )
+    test_framework.assert_ok(
+        hasattr(test_framework, "test_app"),
+        "Framework should have test_app context manager",
+    )
 
     # 결과 추적 검증
-    test_framework.assert_ok(hasattr(test_framework, "results"), "Framework should track results")
-    test_framework.assert_ok(isinstance(test_framework.results, list), "Results should be a list")
+    test_framework.assert_ok(
+        hasattr(test_framework, "results"), "Framework should track results"
+    )
+    test_framework.assert_ok(
+        isinstance(test_framework.results, list), "Results should be a list"
+    )
 
     return {
         "framework_version": "1.0.0",
@@ -378,16 +418,23 @@ def test_module_discovery():
         )
 
         # 모듈 파일이 존재해야 함
-        test_framework.assert_ok(module_path.exists(), f"Test module should exist: {module_file}")
+        test_framework.assert_ok(
+            module_path.exists(), f"Test module should exist: {module_file}"
+        )
 
         # 파일이 비어있지 않아야 함
         if module_path.exists():
-            test_framework.assert_ok(module_path.stat().st_size > 0, f"Test module should not be empty: {module_file}")
+            test_framework.assert_ok(
+                module_path.stat().st_size > 0,
+                f"Test module should not be empty: {module_file}",
+            )
 
     # 모든 모듈이 발견되어야 함
     existing_modules = [m for m in discovered_modules if m["exists"]]
     test_framework.assert_eq(
-        len(existing_modules), len(master_suite.test_modules), "All test modules should be discovered"
+        len(existing_modules),
+        len(master_suite.test_modules),
+        "All test modules should be discovered",
     )
 
     return {

@@ -32,11 +32,18 @@ def debug_test():
     workspace_check = {
         "id": 1,
         "method": "get",
-        "params": [{"url": "/cli/global/system/global", "fields": ["workspace-mode", "adom-status"]}],
+        "params": [
+            {
+                "url": "/cli/global/system/global",
+                "fields": ["workspace-mode", "adom-status"],
+            }
+        ],
     }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=workspace_check, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=workspace_check, verify=False
+        )
         print(f"응답: {response.json()}")
     except Exception as e:
         print(f"에러: {e}")
@@ -46,11 +53,15 @@ def debug_test():
     session_create = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": "api_user", "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": "api_user", "passwd": API_KEY}}
+        ],
     }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_create, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=session_create, verify=False
+        )
         result = response.json()
         print(f"세션 응답: {result}")
 
@@ -60,9 +71,19 @@ def debug_test():
             print(f"세션 ID: {session_id}")
 
             # 세션 ID로 요청
-            session_request = {"id": 1, "session": session_id, "method": "get", "params": [{"url": "/sys/status"}]}
+            session_request = {
+                "id": 1,
+                "session": session_id,
+                "method": "get",
+                "params": [{"url": "/sys/status"}],
+            }
 
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_request, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=session_request,
+                verify=False,
+            )
             print(f"세션 요청 결과: {response.json()}")
 
     except Exception as e:
@@ -70,14 +91,25 @@ def debug_test():
 
     # 3. ADOM 명시적 지정
     print("\n3. ADOM 지정 테스트")
-    adom_tests = [{"adom": "root"}, {"adom": "global"}, {"adom": "FortiManager"}, {"adom": ""}]
+    adom_tests = [
+        {"adom": "root"},
+        {"adom": "global"},
+        {"adom": "FortiManager"},
+        {"adom": ""},
+    ]
 
     for adom in adom_tests:
         print(f"\nADOM: {adom['adom'] or '(empty)'}")
-        adom_request = {"id": 1, "method": "get", "params": [{"url": "/dvmdb/device", **adom}]}
+        adom_request = {
+            "id": 1,
+            "method": "get",
+            "params": [{"url": "/dvmdb/device", **adom}],
+        }
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False
+            )
             result = response.json()
             if "result" in result and result["result"][0]["status"]["code"] != -11:
                 print(f"✅ 성공! ADOM '{adom['adom']}' 작동함")
@@ -98,17 +130,25 @@ def debug_test():
     }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=verbose_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=verbose_request, verify=False
+        )
         print(f"Verbose 응답: {response.json()}")
     except Exception as e:
         print(f"에러: {e}")
 
     # 5. Lock ADOM 시도
     print("\n5. ADOM Lock 시도")
-    lock_request = {"id": 1, "method": "exec", "params": [{"url": "/dvmdb/adom/root/workspace/lock"}]}
+    lock_request = {
+        "id": 1,
+        "method": "exec",
+        "params": [{"url": "/dvmdb/adom/root/workspace/lock"}],
+    }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=lock_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=lock_request, verify=False
+        )
         result = response.json()
         print(f"Lock 결과: {result}")
 
@@ -122,13 +162,27 @@ def debug_test():
                 "params": [{"url": "/pm/config/adom/root/obj/firewall/address"}],
             }
 
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_after_lock, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=test_after_lock,
+                verify=False,
+            )
             print(f"Lock 후 조회: {response.json()}")
 
             # Unlock
-            unlock_request = {"id": 1, "method": "exec", "params": [{"url": "/dvmdb/adom/root/workspace/unlock"}]}
+            unlock_request = {
+                "id": 1,
+                "method": "exec",
+                "params": [{"url": "/dvmdb/adom/root/workspace/unlock"}],
+            }
 
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=unlock_request, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=unlock_request,
+                verify=False,
+            )
             print(f"Unlock 결과: {response.json()}")
 
     except Exception as e:
@@ -150,15 +204,21 @@ def debug_test():
         request_data = {"id": 1, "method": "get", "params": [{"url": url}]}
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False
+            )
             result = response.json()
             if "result" in result and result["result"][0]["status"]["code"] == 0:
                 print(f"✅ 성공: {url}")
-                print(f"   데이터: {json.dumps(result['result'][0].get('data', 'No data'), indent=2)[:100]}...")
+                print(
+                    f"   데이터: {json.dumps(result['result'][0].get('data', 'No data'), indent=2)[:100]}..."
+                )
             else:
                 code = result["result"][0]["status"]["code"]
                 if code != -11:
-                    print(f"⚠️  다른 에러 ({code}): {url} - {result['result'][0]['status']['message']}")
+                    print(
+                        f"⚠️  다른 에러 ({code}): {url} - {result['result'][0]['status']['message']}"
+                    )
         except Exception as e:
             print(f"❌ 예외: {url} - {str(e)[:50]}")
 

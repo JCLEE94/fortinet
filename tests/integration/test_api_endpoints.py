@@ -75,11 +75,20 @@ def test_api_endpoints():
 
         # Test packet analysis endpoint with mock data
         try:
-            test_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 443, "protocol": "tcp"}
+            test_data = {
+                "src_ip": "192.168.1.100",
+                "dst_ip": "172.16.10.100",
+                "port": 443,
+                "protocol": "tcp",
+            }
             response = client.post(
-                "/api/fortimanager/analyze-packet-path", json=test_data, content_type="application/json"
+                "/api/fortimanager/analyze-packet-path",
+                json=test_data,
+                content_type="application/json",
             )
-            print(f"✅ POST /api/fortimanager/analyze-packet-path: {response.status_code}")
+            print(
+                f"✅ POST /api/fortimanager/analyze-packet-path: {response.status_code}"
+            )
         except Exception as e:
             print(f"❌ POST /api/fortimanager/analyze-packet-path failed: {e}")
 
@@ -87,22 +96,37 @@ def test_api_endpoints():
         try:
             test_data = {
                 "metric_id": "cpu_usage",
-                "time_range": {"start": "2024-01-01T00:00:00", "end": datetime.now().isoformat()},
+                "time_range": {
+                    "start": "2024-01-01T00:00:00",
+                    "end": datetime.now().isoformat(),
+                },
             }
             response = client.post(
-                "/api/fortimanager/advanced/analytics/trends", json=test_data, content_type="application/json"
+                "/api/fortimanager/advanced/analytics/trends",
+                json=test_data,
+                content_type="application/json",
             )
-            print(f"✅ POST /api/fortimanager/advanced/analytics/trends: {response.status_code}")
+            print(
+                f"✅ POST /api/fortimanager/advanced/analytics/trends: {response.status_code}"
+            )
         except Exception as e:
             print(f"❌ POST /api/fortimanager/advanced/analytics/trends failed: {e}")
 
         # Test compliance check endpoint
         try:
-            test_data = {"devices": ["FW-01"], "frameworks": ["PCI-DSS"], "auto_remediate": False}
+            test_data = {
+                "devices": ["FW-01"],
+                "frameworks": ["PCI-DSS"],
+                "auto_remediate": False,
+            }
             response = client.post(
-                "/api/fortimanager/advanced/compliance/check", json=test_data, content_type="application/json"
+                "/api/fortimanager/advanced/compliance/check",
+                json=test_data,
+                content_type="application/json",
             )
-            print(f"✅ POST /api/fortimanager/advanced/compliance/check: {response.status_code}")
+            print(
+                f"✅ POST /api/fortimanager/advanced/compliance/check: {response.status_code}"
+            )
         except Exception as e:
             print(f"❌ POST /api/fortimanager/advanced/compliance/check failed: {e}")
 

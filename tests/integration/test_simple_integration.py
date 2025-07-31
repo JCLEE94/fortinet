@@ -29,9 +29,15 @@ def test_basic_app():
 
         # 기본 라우트 테스트
         response = client.get("/")
-        test_framework.assert_ok(response.status_code in [200, 302], "Home route should be accessible")
+        test_framework.assert_ok(
+            response.status_code in [200, 302], "Home route should be accessible"
+        )
 
-        return {"app_created": True, "testing_mode": app.testing, "home_route_status": response.status_code}
+        return {
+            "app_created": True,
+            "testing_mode": app.testing,
+            "home_route_status": response.status_code,
+        }
 
 
 @test_framework.test("health_endpoint_check")
@@ -42,18 +48,28 @@ def test_health_endpoint():
         response = client.get("/api/health")
 
         # 헬스 체크 엔드포인트가 작동하는지 확인
-        test_framework.assert_ok(response.status_code == 200, "Health endpoint should return 200")
+        test_framework.assert_ok(
+            response.status_code == 200, "Health endpoint should return 200"
+        )
 
         # JSON 응답인지 확인
         try:
             data = response.get_json()
-            test_framework.assert_ok(data is not None, "Health endpoint should return JSON")
-            test_framework.assert_ok("status" in data, "Health response should contain status")
+            test_framework.assert_ok(
+                data is not None, "Health endpoint should return JSON"
+            )
+            test_framework.assert_ok(
+                "status" in data, "Health response should contain status"
+            )
         except:
             # JSON 파싱 실패해도 응답은 받았으므로 부분적 성공
             data = None
 
-        return {"status_code": response.status_code, "has_json": data is not None, "response_data": data}
+        return {
+            "status_code": response.status_code,
+            "has_json": data is not None,
+            "response_data": data,
+        }
 
 
 @test_framework.test("settings_endpoint_check")
@@ -65,10 +81,14 @@ def test_settings_endpoint():
 
         # 설정 엔드포인트 접근 가능한지 확인
         test_framework.assert_ok(
-            response.status_code in [200, 404], "Settings endpoint should be accessible or return 404"
+            response.status_code in [200, 404],
+            "Settings endpoint should be accessible or return 404",
         )
 
-        return {"status_code": response.status_code, "accessible": response.status_code != 500}
+        return {
+            "status_code": response.status_code,
+            "accessible": response.status_code != 500,
+        }
 
 
 @test_framework.test("multiple_routes_check")
@@ -92,11 +112,15 @@ def test_multiple_routes():
                     }
                 )
             except Exception as e:
-                route_results.append({"route": route, "error": str(e), "accessible": False})
+                route_results.append(
+                    {"route": route, "error": str(e), "accessible": False}
+                )
 
     # 적어도 하나의 라우트는 접근 가능해야 함
     accessible_routes = [r for r in route_results if r.get("accessible", False)]
-    test_framework.assert_ok(len(accessible_routes) > 0, "At least one route should be accessible")
+    test_framework.assert_ok(
+        len(accessible_routes) > 0, "At least one route should be accessible"
+    )
 
     return {
         "total_routes": len(routes_to_test),
@@ -115,11 +139,16 @@ def test_config_loading():
         settings = UnifiedSettings()
 
         # 기본 설정이 로드되었는지 확인
-        test_framework.assert_ok(hasattr(settings, "app_mode"), "Settings should have app_mode")
+        test_framework.assert_ok(
+            hasattr(settings, "app_mode"), "Settings should have app_mode"
+        )
 
         # 기본값들이 합리적인지 확인
         if hasattr(settings, "web_app_port"):
-            test_framework.assert_ok(1024 <= settings.web_app_port <= 65535, "Web app port should be in valid range")
+            test_framework.assert_ok(
+                1024 <= settings.web_app_port <= 65535,
+                "Web app port should be in valid range",
+            )
 
         return {
             "settings_loaded": True,
@@ -147,5 +176,7 @@ if __name__ == "__main__":
         print(f"\n✅ All {results['total']} simple integration tests PASSED!")
         sys.exit(0)
     else:
-        print(f"\n❌ {results['failed']}/{results['total']} simple integration tests FAILED")
+        print(
+            f"\n❌ {results['failed']}/{results['total']} simple integration tests FAILED"
+        )
         sys.exit(1)

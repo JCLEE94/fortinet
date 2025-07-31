@@ -101,13 +101,22 @@ def test_ticket_creation_and_automation():
             "success": True,
             "ticket_id": firewall_ticket["ticket_id"],
             "status": "in_progress",
-            "automated_actions": ["validate_request", "check_compliance", "create_policy_draft"],
+            "automated_actions": [
+                "validate_request",
+                "check_compliance",
+                "create_policy_draft",
+            ],
         }
 
         result = automation_service.process_ticket(firewall_ticket)
 
-        test_framework.assert_ok(result.get("success"), "Ticket processing should succeed")
-        test_framework.assert_ok(len(result.get("automated_actions", [])) > 0, "Should perform automated actions")
+        test_framework.assert_ok(
+            result.get("success"), "Ticket processing should succeed"
+        )
+        test_framework.assert_ok(
+            len(result.get("automated_actions", [])) > 0,
+            "Should perform automated actions",
+        )
 
     # 2. 긴급 보안 차단 요청
     security_ticket = {
@@ -127,16 +136,24 @@ def test_ticket_creation_and_automation():
         mock_urgent.return_value = {
             "success": True,
             "immediate_action": True,
-            "actions_taken": ["create_block_policy", "deploy_to_all_firewalls", "notify_soc_team"],
+            "actions_taken": [
+                "create_block_policy",
+                "deploy_to_all_firewalls",
+                "notify_soc_team",
+            ],
             "deployment_time": 0.5,  # 초
         }
 
         urgent_result = automation_service.process_urgent_ticket(security_ticket)
 
         test_framework.assert_ok(
-            urgent_result.get("immediate_action"), "Critical tickets should trigger immediate action"
+            urgent_result.get("immediate_action"),
+            "Critical tickets should trigger immediate action",
         )
-        test_framework.assert_ok(urgent_result.get("deployment_time", 999) < 1.0, "Emergency deployment should be fast")
+        test_framework.assert_ok(
+            urgent_result.get("deployment_time", 999) < 1.0,
+            "Emergency deployment should be fast",
+        )
 
 
 @test_framework.test("itsm_ticket_validation_compliance")
@@ -164,8 +181,12 @@ def test_ticket_validation_and_compliance():
 
         validation = compliance_checker.validate_request(valid_request)
 
-        test_framework.assert_ok(validation.get("valid"), "Valid request should pass validation")
-        test_framework.assert_eq(validation.get("risk_level"), "low", "Internal traffic should be low risk")
+        test_framework.assert_ok(
+            validation.get("valid"), "Valid request should pass validation"
+        )
+        test_framework.assert_eq(
+            validation.get("risk_level"), "low", "Internal traffic should be low risk"
+        )
 
     # 2. 위험한 요청 검증
     risky_request = {
@@ -190,9 +211,14 @@ def test_ticket_validation_and_compliance():
 
         risky_validation = compliance_checker.validate_request(risky_request)
 
-        test_framework.assert_eq(risky_validation.get("risk_level"), "high", "Any-source RDP/SSH should be high risk")
+        test_framework.assert_eq(
+            risky_validation.get("risk_level"),
+            "high",
+            "Any-source RDP/SSH should be high risk",
+        )
         test_framework.assert_ok(
-            len(risky_validation.get("recommendations", [])) > 0, "Should provide security recommendations"
+            len(risky_validation.get("recommendations", [])) > 0,
+            "Should provide security recommendations",
         )
 
 
@@ -215,7 +241,12 @@ def test_policy_change_management_workflow():
         "requested_by": "network_admin@company.com",
         "affected_devices": ["FG-HQ-001", "FG-BR-001"],
         "changes": [
-            {"policy_id": "POL-123", "field": "destination", "old_value": "10.0.0.0/24", "new_value": "10.0.0.0/23"}
+            {
+                "policy_id": "POL-123",
+                "field": "destination",
+                "old_value": "10.0.0.0/24",
+                "new_value": "10.0.0.0/23",
+            }
         ],
         "impact_analysis": {
             "affected_users": 250,
@@ -237,9 +268,13 @@ def test_policy_change_management_workflow():
         impact_analysis = change_mgmt.analyze_impact(change_request)
 
         test_framework.assert_ok(
-            impact_analysis.get("requires_approval"), "Medium risk changes should require approval"
+            impact_analysis.get("requires_approval"),
+            "Medium risk changes should require approval",
         )
-        test_framework.assert_ok(impact_analysis.get("rollback_plan", {}).get("available"), "Should have rollback plan")
+        test_framework.assert_ok(
+            impact_analysis.get("rollback_plan", {}).get("available"),
+            "Should have rollback plan",
+        )
 
     # 2. 변경 시뮬레이션
     with patch.object(policy_automation, "simulate_change") as mock_simulate:
@@ -255,8 +290,12 @@ def test_policy_change_management_workflow():
 
         simulation = policy_automation.simulate_change(change_request)
 
-        test_framework.assert_ok(simulation.get("simulation_success"), "Change simulation should succeed")
-        test_framework.assert_eq(simulation.get("conflicts_detected"), 0, "Should detect no policy conflicts")
+        test_framework.assert_ok(
+            simulation.get("simulation_success"), "Change simulation should succeed"
+        )
+        test_framework.assert_eq(
+            simulation.get("conflicts_detected"), 0, "Should detect no policy conflicts"
+        )
 
     # 3. 변경 구현
     with patch.object(change_mgmt, "implement_change") as mock_implement:
@@ -268,11 +307,18 @@ def test_policy_change_management_workflow():
             "verification_passed": True,
         }
 
-        implementation = change_mgmt.implement_change(change_request, approval_token="MGR-APPROVED-12345")
+        implementation = change_mgmt.implement_change(
+            change_request, approval_token="MGR-APPROVED-12345"
+        )
 
-        test_framework.assert_eq(implementation.get("status"), "completed", "Change should be implemented successfully")
+        test_framework.assert_eq(
+            implementation.get("status"),
+            "completed",
+            "Change should be implemented successfully",
+        )
         test_framework.assert_ok(
-            implementation.get("verification_passed"), "Post-implementation verification should pass"
+            implementation.get("verification_passed"),
+            "Post-implementation verification should pass",
         )
 
 
@@ -288,7 +334,9 @@ def test_policy_rollback_capabilities():
         "implementation_id": str(uuid.uuid4()),
         "failure_reason": "Connectivity lost to branch office",
         "affected_devices": ["FG-BR-001"],
-        "original_state": {"policies": [{"id": "POL-123", "config": {"dst": "10.0.0.0/24"}}]},
+        "original_state": {
+            "policies": [{"id": "POL-123", "config": {"dst": "10.0.0.0/24"}}]
+        },
     }
 
     # 자동 롤백 실행
@@ -296,19 +344,27 @@ def test_policy_rollback_capabilities():
         mock_rollback.return_value = {
             "rollback_success": True,
             "restored_policies": 1,
-            "verification_results": {"connectivity_restored": True, "service_availability": "all_services_up"},
+            "verification_results": {
+                "connectivity_restored": True,
+                "service_availability": "all_services_up",
+            },
             "rollback_duration": 30,  # seconds
         }
 
         rollback_result = change_mgmt.execute_rollback(failed_change)
 
-        test_framework.assert_ok(rollback_result.get("rollback_success"), "Rollback should succeed")
         test_framework.assert_ok(
-            rollback_result.get("verification_results", {}).get("connectivity_restored"),
+            rollback_result.get("rollback_success"), "Rollback should succeed"
+        )
+        test_framework.assert_ok(
+            rollback_result.get("verification_results", {}).get(
+                "connectivity_restored"
+            ),
             "Connectivity should be restored after rollback",
         )
         test_framework.assert_ok(
-            rollback_result.get("rollback_duration", 999) < 60, "Rollback should complete within 1 minute"
+            rollback_result.get("rollback_duration", 999) < 60,
+            "Rollback should complete within 1 minute",
         )
 
 
@@ -348,14 +404,28 @@ def test_multilevel_approval_workflow():
         approval_chain = approval_workflow.initialize_approval_chain(high_risk_request)
 
         test_framework.assert_eq(
-            approval_chain.get("total_approvals_needed"), 3, "High risk should require 3 approvals"
+            approval_chain.get("total_approvals_needed"),
+            3,
+            "High risk should require 3 approvals",
         )
 
     # 2. 순차적 승인 처리
     approvals = [
-        {"approver": "team_lead@company.com", "decision": "approved", "comments": "Verified requirements"},
-        {"approver": "sec_mgr@company.com", "decision": "approved", "comments": "Security review passed"},
-        {"approver": "ciso@company.com", "decision": "approved", "comments": "Final approval granted"},
+        {
+            "approver": "team_lead@company.com",
+            "decision": "approved",
+            "comments": "Verified requirements",
+        },
+        {
+            "approver": "sec_mgr@company.com",
+            "decision": "approved",
+            "comments": "Security review passed",
+        },
+        {
+            "approver": "ciso@company.com",
+            "decision": "approved",
+            "comments": "Final approval granted",
+        },
     ]
 
     for i, approval in enumerate(approvals):
@@ -368,12 +438,19 @@ def test_multilevel_approval_workflow():
                 "next_approver": None if i == 2 else f"Level {i+2}",
             }
 
-            result = approval_workflow.process_approval(approval_chain.get("approval_chain_id"), approval)
+            result = approval_workflow.process_approval(
+                approval_chain.get("approval_chain_id"), approval
+            )
 
-            test_framework.assert_ok(result.get("approval_recorded"), f"Approval {i+1} should be recorded")
+            test_framework.assert_ok(
+                result.get("approval_recorded"), f"Approval {i+1} should be recorded"
+            )
 
             if i == 2:  # 마지막 승인
-                test_framework.assert_ok(result.get("all_approvals_complete"), "All approvals should be complete")
+                test_framework.assert_ok(
+                    result.get("all_approvals_complete"),
+                    "All approvals should be complete",
+                )
 
     # 3. 승인 거부 시나리오
     rejection_scenario = {
@@ -389,13 +466,25 @@ def test_multilevel_approval_workflow():
             "workflow_status": "rejected",
             "rejection_reason": rejection_scenario["comments"],
             "can_resubmit": True,
-            "required_changes": ["Narrow source IP range", "Add additional authentication"],
+            "required_changes": [
+                "Narrow source IP range",
+                "Add additional authentication",
+            ],
         }
 
-        rejection_result = approval_workflow.process_approval("rejection-chain-id", rejection_scenario)
+        rejection_result = approval_workflow.process_approval(
+            "rejection-chain-id", rejection_scenario
+        )
 
-        test_framework.assert_eq(rejection_result.get("workflow_status"), "rejected", "Workflow should be rejected")
-        test_framework.assert_ok(rejection_result.get("can_resubmit"), "Should allow resubmission after changes")
+        test_framework.assert_eq(
+            rejection_result.get("workflow_status"),
+            "rejected",
+            "Workflow should be rejected",
+        )
+        test_framework.assert_ok(
+            rejection_result.get("can_resubmit"),
+            "Should allow resubmission after changes",
+        )
 
 
 # =============================================================================
@@ -425,14 +514,23 @@ def test_servicenow_integration_workflow():
         mock_webhook.return_value = {
             "processed": True,
             "internal_ticket_id": str(uuid.uuid4()),
-            "automated_actions": ["create_security_incident", "analyze_threat_intelligence", "create_block_policy"],
+            "automated_actions": [
+                "create_security_incident",
+                "analyze_threat_intelligence",
+                "create_block_policy",
+            ],
             "servicenow_update_sent": True,
         }
 
         webhook_result = external_connector.handle_servicenow_webhook(sn_incident)
 
-        test_framework.assert_ok(webhook_result.get("processed"), "ServiceNow webhook should be processed")
-        test_framework.assert_ok(webhook_result.get("servicenow_update_sent"), "Should send update back to ServiceNow")
+        test_framework.assert_ok(
+            webhook_result.get("processed"), "ServiceNow webhook should be processed"
+        )
+        test_framework.assert_ok(
+            webhook_result.get("servicenow_update_sent"),
+            "Should send update back to ServiceNow",
+        )
 
     # 2. ServiceNow API 직접 호출
     with patch.object(external_connector, "create_servicenow_ticket") as mock_create:
@@ -453,7 +551,9 @@ def test_servicenow_integration_workflow():
             }
         )
 
-        test_framework.assert_ok(new_ticket.get("success"), "Should create ServiceNow ticket")
+        test_framework.assert_ok(
+            new_ticket.get("success"), "Should create ServiceNow ticket"
+        )
         test_framework.assert_ok(new_ticket.get("url"), "Should return ticket URL")
 
 
@@ -499,8 +599,12 @@ def test_jira_integration_and_sync():
 
         sync_result = external_connector.sync_jira_status("SECURITY-1234")
 
-        test_framework.assert_ok(sync_result.get("synced"), "Status sync should succeed")
-        test_framework.assert_ok(sync_result.get("comments_synced", 0) > 0, "Should sync comments")
+        test_framework.assert_ok(
+            sync_result.get("synced"), "Status sync should succeed"
+        )
+        test_framework.assert_ok(
+            sync_result.get("comments_synced", 0) > 0, "Should sync comments"
+        )
 
 
 # =============================================================================
@@ -522,7 +626,11 @@ def test_automated_incident_response():
         "source_ips": ["203.0.113.10", "203.0.113.11"],
         "target_service": "SSH",
         "detection_time": datetime.now().isoformat(),
-        "attack_pattern": {"attempts_per_minute": 50, "unique_usernames": 100, "duration_minutes": 15},
+        "attack_pattern": {
+            "attempts_per_minute": 50,
+            "unique_usernames": 100,
+            "duration_minutes": 15,
+        },
     }
 
     with patch.object(incident_handler, "handle_security_incident") as mock_handle:
@@ -535,8 +643,17 @@ def test_automated_incident_response():
                     "duration": "24_hours",
                     "success": True,
                 },
-                {"action": "enable_rate_limiting", "service": "SSH", "limit": "3_per_minute", "success": True},
-                {"action": "notify_soc", "method": ["email", "sms", "slack"], "success": True},
+                {
+                    "action": "enable_rate_limiting",
+                    "service": "SSH",
+                    "limit": "3_per_minute",
+                    "success": True,
+                },
+                {
+                    "action": "notify_soc",
+                    "method": ["email", "sms", "slack"],
+                    "success": True,
+                },
             ],
             "response_time_seconds": 2.5,
             "containment_achieved": True,
@@ -544,9 +661,16 @@ def test_automated_incident_response():
 
         response = incident_handler.handle_security_incident(security_incident)
 
-        test_framework.assert_ok(response.get("response_initiated"), "Incident response should initiate")
-        test_framework.assert_ok(response.get("containment_achieved"), "Should achieve containment")
-        test_framework.assert_ok(response.get("response_time_seconds", 999) < 5, "Should respond within 5 seconds")
+        test_framework.assert_ok(
+            response.get("response_initiated"), "Incident response should initiate"
+        )
+        test_framework.assert_ok(
+            response.get("containment_achieved"), "Should achieve containment"
+        )
+        test_framework.assert_ok(
+            response.get("response_time_seconds", 999) < 5,
+            "Should respond within 5 seconds",
+        )
 
     # 2. 인시던트 에스컬레이션
     major_incident = {
@@ -562,8 +686,16 @@ def test_automated_incident_response():
         mock_escalate.return_value = {
             "escalation_success": True,
             "notifications_sent": [
-                {"recipient": "ciso@company.com", "method": "phone", "acknowledged": True},
-                {"recipient": "security-team@company.com", "method": "pager", "acknowledged": True},
+                {
+                    "recipient": "ciso@company.com",
+                    "method": "phone",
+                    "acknowledged": True,
+                },
+                {
+                    "recipient": "security-team@company.com",
+                    "method": "pager",
+                    "acknowledged": True,
+                },
             ],
             "war_room_created": True,
             "conference_bridge": "https://meet.company.com/incident-12345",
@@ -571,8 +703,13 @@ def test_automated_incident_response():
 
         escalation = incident_handler.escalate_incident(major_incident)
 
-        test_framework.assert_ok(escalation.get("escalation_success"), "Critical incident should escalate")
-        test_framework.assert_ok(escalation.get("war_room_created"), "Should create war room for critical incidents")
+        test_framework.assert_ok(
+            escalation.get("escalation_success"), "Critical incident should escalate"
+        )
+        test_framework.assert_ok(
+            escalation.get("war_room_created"),
+            "Should create war room for critical incidents",
+        )
 
 
 @test_framework.test("itsm_incident_correlation_analysis")
@@ -583,8 +720,18 @@ def test_incident_correlation_and_analysis():
 
     # 여러 관련 인시던트
     related_incidents = [
-        {"id": "INC-001", "type": "port_scan", "source": "203.0.113.10", "time": datetime.now() - timedelta(hours=2)},
-        {"id": "INC-002", "type": "brute_force", "source": "203.0.113.10", "time": datetime.now() - timedelta(hours=1)},
+        {
+            "id": "INC-001",
+            "type": "port_scan",
+            "source": "203.0.113.10",
+            "time": datetime.now() - timedelta(hours=2),
+        },
+        {
+            "id": "INC-002",
+            "type": "brute_force",
+            "source": "203.0.113.10",
+            "time": datetime.now() - timedelta(hours=1),
+        },
         {
             "id": "INC-003",
             "type": "suspicious_download",
@@ -613,10 +760,17 @@ def test_incident_correlation_and_analysis():
 
         correlation = incident_handler.correlate_incidents(related_incidents)
 
-        test_framework.assert_ok(correlation.get("attack_chain_detected"), "Should detect attack chain")
-        test_framework.assert_eq(len(correlation.get("attack_stages", [])), 3, "Should identify 3 attack stages")
         test_framework.assert_ok(
-            "threat_hunt" in correlation.get("recommended_response", []), "Should recommend threat hunting"
+            correlation.get("attack_chain_detected"), "Should detect attack chain"
+        )
+        test_framework.assert_eq(
+            len(correlation.get("attack_stages", [])),
+            3,
+            "Should identify 3 attack stages",
+        )
+        test_framework.assert_ok(
+            "threat_hunt" in correlation.get("recommended_response", []),
+            "Should recommend threat hunting",
         )
 
 
@@ -661,14 +815,21 @@ def test_change_advisory_board_process():
                 "operations_manager",
                 "business_representative",
             ],
-            "pre_review_tasks": ["technical_review_complete", "risk_assessment_documented", "rollback_plan_tested"],
+            "pre_review_tasks": [
+                "technical_review_complete",
+                "risk_assessment_documented",
+                "rollback_plan_tested",
+            ],
         }
 
         cab_schedule = change_mgmt.schedule_cab_review(major_change)
 
-        test_framework.assert_ok(cab_schedule.get("meeting_scheduled"), "CAB meeting should be scheduled")
         test_framework.assert_ok(
-            len(cab_schedule.get("required_attendees", [])) >= 4, "Should include all key stakeholders"
+            cab_schedule.get("meeting_scheduled"), "CAB meeting should be scheduled"
+        )
+        test_framework.assert_ok(
+            len(cab_schedule.get("required_attendees", [])) >= 4,
+            "Should include all key stakeholders",
         )
 
     # 2. CAB 결정 프로세스
@@ -681,21 +842,33 @@ def test_change_advisory_board_process():
             "Perform health check after each phase",
             "Have rollback ready at each phase",
         ],
-        "implementation_window": {"start": "2024-07-27 02:00", "end": "2024-07-27 06:00"},
+        "implementation_window": {
+            "start": "2024-07-27 02:00",
+            "end": "2024-07-27 06:00",
+        },
     }
 
     with patch.object(change_mgmt, "record_cab_decision") as mock_decision:
         mock_decision.return_value = {
             "decision_recorded": True,
             "change_status": "approved_conditional",
-            "next_steps": ["update_implementation_plan", "schedule_resources", "notify_stakeholders"],
+            "next_steps": [
+                "update_implementation_plan",
+                "schedule_resources",
+                "notify_stakeholders",
+            ],
             "automated_tasks_created": 5,
         }
 
         decision_result = change_mgmt.record_cab_decision(cab_decision)
 
-        test_framework.assert_ok(decision_result.get("decision_recorded"), "CAB decision should be recorded")
-        test_framework.assert_ok(decision_result.get("automated_tasks_created", 0) > 0, "Should create follow-up tasks")
+        test_framework.assert_ok(
+            decision_result.get("decision_recorded"), "CAB decision should be recorded"
+        )
+        test_framework.assert_ok(
+            decision_result.get("automated_tasks_created", 0) > 0,
+            "Should create follow-up tasks",
+        )
 
 
 @test_framework.test("itsm_emergency_change_process")
@@ -728,10 +901,12 @@ def test_emergency_change_management():
         emergency_approval = change_mgmt.process_emergency_change(emergency_change)
 
         test_framework.assert_ok(
-            emergency_approval.get("fast_track_approved"), "Emergency change should be fast-tracked"
+            emergency_approval.get("fast_track_approved"),
+            "Emergency change should be fast-tracked",
         )
         test_framework.assert_ok(
-            emergency_approval.get("approval_time_seconds", 999) < 300, "Should approve within 5 minutes"
+            emergency_approval.get("approval_time_seconds", 999) < 300,
+            "Should approve within 5 minutes",
         )
 
     # 2. 긴급 구현 및 검증
@@ -745,13 +920,18 @@ def test_emergency_change_management():
             "rollback_needed": False,
         }
 
-        implementation = change_mgmt.implement_emergency_change(emergency_change, approval_token="EMRG-APPROVED")
+        implementation = change_mgmt.implement_emergency_change(
+            emergency_change, approval_token="EMRG-APPROVED"
+        )
 
         test_framework.assert_ok(
-            implementation.get("implementation_success"), "Emergency implementation should succeed"
+            implementation.get("implementation_success"),
+            "Emergency implementation should succeed",
         )
         test_framework.assert_eq(
-            len(implementation.get("services_impacted", ["dummy"])), 0, "Should have minimal service impact"
+            len(implementation.get("services_impacted", ["dummy"])),
+            0,
+            "Should have minimal service impact",
         )
 
 
@@ -777,29 +957,49 @@ def test_complete_itsm_workflow_scenario():
     incident = {
         "type": "suspicious_traffic",
         "source": "external",
-        "details": {"src_ip": "203.0.113.100", "pattern": "sql_injection_attempts", "frequency": "high"},
+        "details": {
+            "src_ip": "203.0.113.100",
+            "pattern": "sql_injection_attempts",
+            "frequency": "high",
+        },
     }
 
     # 2. 자동 티켓 생성
     with patch.object(automation_service, "create_ticket_from_incident") as mock_ticket:
-        mock_ticket.return_value = {"ticket_id": "INC-AUTO-001", "priority": "high", "auto_generated": True}
+        mock_ticket.return_value = {
+            "ticket_id": "INC-AUTO-001",
+            "priority": "high",
+            "auto_generated": True,
+        }
 
         ticket = automation_service.create_ticket_from_incident(incident)
-        test_framework.assert_ok(ticket.get("auto_generated"), "Should auto-generate ticket from incident")
+        test_framework.assert_ok(
+            ticket.get("auto_generated"), "Should auto-generate ticket from incident"
+        )
 
     # 3. 정책 변경 제안
     with patch.object(policy_automation, "suggest_policy_change") as mock_suggest:
         mock_suggest.return_value = {
             "suggestion": "block_source_ip",
             "confidence": 0.95,
-            "policy_draft": {"action": "deny", "source": "203.0.113.100/32", "destination": "any", "service": "any"},
+            "policy_draft": {
+                "action": "deny",
+                "source": "203.0.113.100/32",
+                "destination": "any",
+                "service": "any",
+            },
         }
 
         suggestion = policy_automation.suggest_policy_change(ticket)
-        test_framework.assert_ok(suggestion.get("confidence", 0) > 0.9, "Should have high confidence suggestion")
+        test_framework.assert_ok(
+            suggestion.get("confidence", 0) > 0.9,
+            "Should have high confidence suggestion",
+        )
 
     # 4. 변경 승인 프로세스
-    with patch.object(approval_workflow, "fast_track_security_approval") as mock_approve:
+    with patch.object(
+        approval_workflow, "fast_track_security_approval"
+    ) as mock_approve:
         mock_approve.return_value = {
             "approved": True,
             "approval_time": 300,  # 5분
@@ -807,7 +1007,9 @@ def test_complete_itsm_workflow_scenario():
         }
 
         approval = approval_workflow.fast_track_security_approval(suggestion)
-        test_framework.assert_ok(approval.get("approved"), "Security response should be approved")
+        test_framework.assert_ok(
+            approval.get("approved"), "Security response should be approved"
+        )
 
     # 5. 구현 및 검증
     with patch.object(change_mgmt, "implement_security_change") as mock_implement:
@@ -818,9 +1020,13 @@ def test_complete_itsm_workflow_scenario():
             "incident_contained": True,
         }
 
-        result = change_mgmt.implement_security_change(suggestion.get("policy_draft"), approval.get("approval_token"))
+        result = change_mgmt.implement_security_change(
+            suggestion.get("policy_draft"), approval.get("approval_token")
+        )
 
-        test_framework.assert_ok(result.get("incident_contained"), "Incident should be contained")
+        test_framework.assert_ok(
+            result.get("incident_contained"), "Incident should be contained"
+        )
 
 
 if __name__ == "__main__":

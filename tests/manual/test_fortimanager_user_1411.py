@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-FortiManager 사용자명 1411로 테스트
+FortiManager 사용자명 테스트
 """
 
 import json
+import os
 
 import requests
 import urllib3
@@ -11,29 +12,40 @@ import urllib3
 # SSL 경고 비활성화
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-BASE_URL = "https://hjsim-1034-451984.fortidemo.fortinet.com:14005"
-API_KEY = "o5a7bdmmsni3uwdpj8wnnpj6tkanyk81"
-USERNAME = "1411"
+# 환경변수에서 설정 가져오기
+HOST = os.environ.get("FORTIMANAGER_TEST_HOST", "test.fortimanager.local")
+PORT = int(os.environ.get("FORTIMANAGER_TEST_PORT", "443"))
+BASE_URL = f"https://{HOST}:{PORT}"
+API_KEY = os.environ.get("FORTIMANAGER_TEST_API_KEY", "test_api_key_placeholder")
+USERNAME = os.environ.get("FORTIMANAGER_TEST_USERNAME", "test_user")
 
 
 def test_with_username_1411():
-    """사용자명 1411로 다양한 인증 시도"""
+    """사용자명으로 다양한 인증 시도"""
 
     print(f"🔐 FortiManager 인증 테스트 - 사용자명: {USERNAME}")
     print("=" * 80)
 
     # 1. 사용자명/API키로 로그인
-    print("\n1. 로그인 시도 (username: 1411, password: API key)")
+    print(f"\n1. 로그인 시도 (username: {USERNAME}, password: API key)")
     login_request = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_request, verify=False, timeout=10)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers,
+            json=login_request,
+            verify=False,
+            timeout=10,
+        )
 
         result = response.json()
         print(f"로그인 응답: {json.dumps(result, indent=2)}")
@@ -45,9 +57,16 @@ def test_with_username_1411():
 
             # 세션 ID로 테스트
             print("\n2. 세션 ID로 상태 조회")
-            session_test = {"id": 1, "session": session_id, "method": "get", "params": [{"url": "/sys/status"}]}
+            session_test = {
+                "id": 1,
+                "session": session_id,
+                "method": "get",
+                "params": [{"url": "/sys/status"}],
+            }
 
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_test, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=session_test, verify=False
+            )
 
             print(f"세션 테스트 결과: {json.dumps(response.json(), indent=2)}")
 
@@ -66,7 +85,12 @@ def test_with_username_1411():
     test_request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers_with_user, json=test_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers_with_user,
+            json=test_request,
+            verify=False,
+        )
 
         result = response.json()
         print(f"응답: {json.dumps(result, indent=2)}")
@@ -76,26 +100,31 @@ def test_with_username_1411():
 
     # 3. 다른 패스워드 시도
     print("\n\n4. 다른 패스워드 조합 시도")
-    passwords = [API_KEY, "1411", "password", "admin", "", "fortinet"]
+    passwords = [API_KEY, USERNAME, "password", "admin", "", "fortinet"]
 
     for pwd in passwords:
         print(f"\n패스워드 시도: {pwd[:10]}...")
         login_attempt = {
             "id": 1,
             "method": "exec",
-            "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": pwd}}],
+            "params": [
+                {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": pwd}}
+            ],
         }
 
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=login_attempt, verify=False
+                f"{BASE_URL}/jsonrpc",
+                headers={"Content-Type": "application/json"},
+                json=login_attempt,
+                verify=False,
             )
 
             result = response.json()
             if "result" in result:
                 code = result["result"][0]["status"]["code"]
                 if code == 0:
-                    print(f"✅ 로그인 성공! 패스워드: {pwd}")
+                    print(f"✅ 로그인 성공!")
                     if "session" in result:
                         print(f"세션 ID: {result['session']}")
                     break

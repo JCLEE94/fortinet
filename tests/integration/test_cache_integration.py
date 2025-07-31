@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.utils.integration_test_framework import test_framework
 from src.utils.redis_cache import RedisCache
-from src.utils.unified_cache_manager import UnifiedCacheManager, get_cache_manager
+from src.utils.unified_cache_manager import (UnifiedCacheManager,
+                                             get_cache_manager)
 
 
 class MockRedisClient:
@@ -109,7 +110,9 @@ class CacheIntegrationTester:
         self.temp_dir = tempfile.mkdtemp()
         self.cache_operations = []
 
-    def create_test_cache_manager(self, redis_enabled: bool = True) -> UnifiedCacheManager:
+    def create_test_cache_manager(
+        self, redis_enabled: bool = True
+    ) -> UnifiedCacheManager:
         """테스트용 캐시 매니저 생성"""
         # 임시 디렉토리에서 캐시 매니저 생성
         cache_manager = UnifiedCacheManager()
@@ -138,7 +141,13 @@ class CacheIntegrationTester:
     def log_cache_operation(self, operation: str, key: str, backend: str, result: Any):
         """캐시 작업 로깅"""
         self.cache_operations.append(
-            {"operation": operation, "key": key, "backend": backend, "result": result, "timestamp": time.time()}
+            {
+                "operation": operation,
+                "key": key,
+                "backend": backend,
+                "result": result,
+                "timestamp": time.time(),
+            }
         )
 
 
@@ -153,13 +162,21 @@ def test_cache_manager_init():
     cache_manager = cache_tester.create_test_cache_manager()
 
     # 기본 속성 확인
-    test_framework.assert_ok(hasattr(cache_manager, "backends"), "Cache manager should have backends")
-    test_framework.assert_ok(hasattr(cache_manager, "redis_cache"), "Cache manager should have Redis cache")
-    test_framework.assert_ok(hasattr(cache_manager, "memory_cache"), "Cache manager should have memory cache")
+    test_framework.assert_ok(
+        hasattr(cache_manager, "backends"), "Cache manager should have backends"
+    )
+    test_framework.assert_ok(
+        hasattr(cache_manager, "redis_cache"), "Cache manager should have Redis cache"
+    )
+    test_framework.assert_ok(
+        hasattr(cache_manager, "memory_cache"), "Cache manager should have memory cache"
+    )
 
     # 백엔드 순서 확인 (Redis -> Memory -> File)
     backends = getattr(cache_manager, "backends", [])
-    test_framework.assert_ok(len(backends) >= 2, "Should have at least memory and file backends")
+    test_framework.assert_ok(
+        len(backends) >= 2, "Should have at least memory and file backends"
+    )
 
     # 각 백엔드 기능 확인
     test_cache_key = "test_init_key"
@@ -170,7 +187,11 @@ def test_cache_manager_init():
     test_framework.assert_ok(memory_set_result, "Memory cache set should succeed")
 
     memory_get_result = cache_manager.memory_cache.get(test_cache_key)
-    test_framework.assert_eq(memory_get_result, test_cache_value, "Memory cache get should return stored value")
+    test_framework.assert_eq(
+        memory_get_result,
+        test_cache_value,
+        "Memory cache get should return stored value",
+    )
 
     return {
         "backends_count": len(backends),
@@ -197,21 +218,33 @@ def test_cache_tier_operations():
         # 2단계: Redis로 승격 시뮬레이션
         try:
             redis_set = cache_manager.redis_cache.set(key, value, ttl=300)
-            cache_tester.log_cache_operation("promote_to_redis", key, "redis", redis_set)
+            cache_tester.log_cache_operation(
+                "promote_to_redis", key, "redis", redis_set
+            )
         except Exception as e:
-            cache_tester.log_cache_operation("promote_to_redis", key, "redis", f"failed: {e}")
+            cache_tester.log_cache_operation(
+                "promote_to_redis", key, "redis", f"failed: {e}"
+            )
             redis_set = False
 
         # 3단계: 통합 캐시에서 조회 (계층 순서 확인)
         unified_get = cache_manager.get(key)
-        cache_tester.log_cache_operation("unified_get", key, "unified", unified_get is not None)
+        cache_tester.log_cache_operation(
+            "unified_get", key, "unified", unified_get is not None
+        )
 
         # 검증: 데이터가 올바르게 저장/조회되는지 확인
-        test_framework.assert_ok(memory_set, f"Memory cache set should succeed for {key}")
-        test_framework.assert_ok(unified_get is not None, f"Unified cache get should return data for {key}")
+        test_framework.assert_ok(
+            memory_set, f"Memory cache set should succeed for {key}"
+        )
+        test_framework.assert_ok(
+            unified_get is not None, f"Unified cache get should return data for {key}"
+        )
 
         if unified_get:
-            test_framework.assert_eq(unified_get, value, f"Retrieved data should match stored data for {key}")
+            test_framework.assert_eq(
+                unified_get, value, f"Retrieved data should match stored data for {key}"
+            )
 
         promotion_demotion_results.append(
             {
@@ -224,8 +257,12 @@ def test_cache_tier_operations():
         )
 
     # 전체 작업 결과 검증
-    successful_operations = [r for r in promotion_demotion_results if r["unified_get_success"]]
-    test_framework.assert_ok(len(successful_operations) > 0, "At least some cache operations should succeed")
+    successful_operations = [
+        r for r in promotion_demotion_results if r["unified_get_success"]
+    ]
+    test_framework.assert_ok(
+        len(successful_operations) > 0, "At least some cache operations should succeed"
+    )
 
     return {
         "test_data_size": len(test_data),
@@ -251,7 +288,9 @@ def test_redis_failure_fallback():
     normal_get = cache_manager.get(test_key)
 
     test_framework.assert_ok(normal_set, "Normal cache set should succeed")
-    test_framework.assert_eq(normal_get, test_value, "Normal cache get should return stored value")
+    test_framework.assert_eq(
+        normal_get, test_value, "Normal cache get should return stored value"
+    )
 
     # 2단계: Redis 장애 시뮬레이션
     cache_tester.mock_redis.simulate_failure()
@@ -264,8 +303,13 @@ def test_redis_failure_fallback():
     failure_get = cache_manager.get(failure_test_key)
 
     # Memory cache로 폴백되어 동작해야 함
-    test_framework.assert_ok(failure_set, "Cache set should succeed even with Redis failure (memory fallback)")
-    test_framework.assert_eq(failure_get, failure_test_value, "Cache get should work with memory fallback")
+    test_framework.assert_ok(
+        failure_set,
+        "Cache set should succeed even with Redis failure (memory fallback)",
+    )
+    test_framework.assert_eq(
+        failure_get, failure_test_value, "Cache get should work with memory fallback"
+    )
 
     # 3단계: Redis 복구 시뮬레이션
     cache_tester.mock_redis.simulate_recovery()
@@ -277,13 +321,23 @@ def test_redis_failure_fallback():
     recovery_set = cache_manager.set(recovery_test_key, recovery_test_value, ttl=300)
     recovery_get = cache_manager.get(recovery_test_key)
 
-    test_framework.assert_ok(recovery_set, "Cache set should succeed after Redis recovery")
-    test_framework.assert_eq(recovery_get, recovery_test_value, "Cache get should work after Redis recovery")
+    test_framework.assert_ok(
+        recovery_set, "Cache set should succeed after Redis recovery"
+    )
+    test_framework.assert_eq(
+        recovery_get, recovery_test_value, "Cache get should work after Redis recovery"
+    )
 
     return {
         "normal_operation": {"set": normal_set, "get": normal_get == test_value},
-        "failure_fallback": {"set": failure_set, "get": failure_get == failure_test_value},
-        "recovery_operation": {"set": recovery_set, "get": recovery_get == recovery_test_value},
+        "failure_fallback": {
+            "set": failure_set,
+            "get": failure_get == failure_test_value,
+        },
+        "recovery_operation": {
+            "set": recovery_set,
+            "get": recovery_get == recovery_test_value,
+        },
         "redis_failure_handled": True,
     }
 
@@ -299,7 +353,10 @@ def test_cache_consistency():
         {"key": "consistency_test_1", "value": {"data": "test1", "type": "string"}},
         {"key": "consistency_test_2", "value": {"data": 12345, "type": "number"}},
         {"key": "consistency_test_3", "value": {"data": [1, 2, 3], "type": "array"}},
-        {"key": "consistency_test_4", "value": {"data": {"nested": True}, "type": "object"}},
+        {
+            "key": "consistency_test_4",
+            "value": {"data": {"nested": True}, "type": "object"},
+        },
     ]
 
     consistency_results = []
@@ -339,12 +396,18 @@ def test_cache_consistency():
         )
 
         # 각 테스트 케이스에 대한 검증
-        test_framework.assert_ok(unified_set, f"Unified cache set should succeed for {key}")
-        test_framework.assert_ok(unified_consistent, f"Data should be consistent in unified cache for {key}")
+        test_framework.assert_ok(
+            unified_set, f"Unified cache set should succeed for {key}"
+        )
+        test_framework.assert_ok(
+            unified_consistent, f"Data should be consistent in unified cache for {key}"
+        )
 
     # 전체 일관성 검증
     all_consistent = all(result["overall_consistent"] for result in consistency_results)
-    test_framework.assert_ok(all_consistent, "All cache backends should maintain data consistency")
+    test_framework.assert_ok(
+        all_consistent, "All cache backends should maintain data consistency"
+    )
 
     return {
         "consistency_tests": consistency_tests,
@@ -413,7 +476,9 @@ def test_concurrent_cache_access():
     operations_per_worker = 10
 
     for worker_id in range(num_workers):
-        thread = threading.Thread(target=concurrent_cache_worker, args=(worker_id, operations_per_worker))
+        thread = threading.Thread(
+            target=concurrent_cache_worker, args=(worker_id, operations_per_worker)
+        )
         cache_access_threads.append(thread)
 
     # 모든 스레드 시작
@@ -429,16 +494,21 @@ def test_concurrent_cache_access():
 
     # 결과 분석
     total_operations = num_workers * operations_per_worker
-    successful_operations = [r for r in shared_results if r["set_success"] and r["get_success"]]
+    successful_operations = [
+        r for r in shared_results if r["set_success"] and r["get_success"]
+    ]
     consistent_operations = [r for r in shared_results if r["data_consistent"]]
 
     # 검증
     test_framework.assert_eq(
-        len(shared_results), total_operations, f"All {total_operations} operations should complete"
+        len(shared_results),
+        total_operations,
+        f"All {total_operations} operations should complete",
     )
 
     test_framework.assert_ok(
-        len(successful_operations) > total_operations * 0.9, "At least 90% of operations should succeed"
+        len(successful_operations) > total_operations * 0.9,
+        "At least 90% of operations should succeed",
     )
 
     test_framework.assert_ok(
@@ -479,11 +549,15 @@ def test_cache_ttl_expiration():
 
         # TTL과 함께 데이터 저장
         set_result = cache_manager.set(key, value, ttl=ttl)
-        test_framework.assert_ok(set_result, f"Cache set with TTL should succeed for {key}")
+        test_framework.assert_ok(
+            set_result, f"Cache set with TTL should succeed for {key}"
+        )
 
         # 즉시 조회 (만료 전)
         immediate_get = cache_manager.get(key)
-        test_framework.assert_eq(immediate_get, value, f"Immediate get should return stored value for {key}")
+        test_framework.assert_eq(
+            immediate_get, value, f"Immediate get should return stored value for {key}"
+        )
 
         ttl_results.append(
             {
@@ -508,12 +582,17 @@ def test_cache_ttl_expiration():
     # TTL 설정 검증
     for result in ttl_results:
         test_framework.assert_ok(result["set_success"], f"TTL cache set should succeed")
-        test_framework.assert_ok(result["immediate_get_success"], f"Immediate get should work before expiration")
+        test_framework.assert_ok(
+            result["immediate_get_success"],
+            f"Immediate get should work before expiration",
+        )
 
     return {
         "ttl_tests": ttl_tests,
         "ttl_results": ttl_results,
-        "short_ttl_expiration_tested": any(r.get("properly_expired") is not None for r in ttl_results),
+        "short_ttl_expiration_tested": any(
+            r.get("properly_expired") is not None for r in ttl_results
+        ),
     }
 
 
@@ -532,7 +611,9 @@ if __name__ == "__main__":
     print("\n📋 Cache System Analysis:")
     print(f"🔄 Total cache operations logged: {len(cache_tester.cache_operations)}")
     print(f"📊 Mock Redis operations: {cache_tester.mock_redis.operation_count}")
-    print(f"🔗 Redis connection status: {'Active' if cache_tester.mock_redis.connection_active else 'Failed'}")
+    print(
+        f"🔗 Redis connection status: {'Active' if cache_tester.mock_redis.connection_active else 'Failed'}"
+    )
 
     # 캐시 작업 유형별 분석
     operation_types = {}
@@ -541,7 +622,9 @@ if __name__ == "__main__":
         operation_types[op_type] = operation_types.get(op_type, 0) + 1
 
     if operation_types:
-        print(f"🎯 Operation types tested: {', '.join(f'{k}({v})' for k, v in operation_types.items())}")
+        print(
+            f"🎯 Operation types tested: {', '.join(f'{k}({v})' for k, v in operation_types.items())}"
+        )
 
     # 결과에 따른 종료 코드
     if results["failed"] == 0:
@@ -549,6 +632,8 @@ if __name__ == "__main__":
         print("💾 Cache layer consistency is working correctly")
         sys.exit(0)
     else:
-        print(f"\n❌ {results['failed']}/{results['total']} Cache integration tests FAILED")
+        print(
+            f"\n❌ {results['failed']}/{results['total']} Cache integration tests FAILED"
+        )
         print("🔧 Cache integration needs attention")
         sys.exit(1)

@@ -28,13 +28,17 @@ def test_with_session():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
+        "params": [
+            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False
+        )
 
         result = response.json()
         if "session" in result:
@@ -75,10 +79,18 @@ def get_system_info(session_id):
     """시스템 정보 조회"""
     print("\n1. 시스템 정보")
 
-    request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}], "session": session_id}
+    request = {
+        "id": 1,
+        "method": "get",
+        "params": [{"url": "/sys/status"}],
+        "session": session_id,
+    }
 
     response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=request,
+        verify=False,
     )
 
     result = response.json()
@@ -95,10 +107,18 @@ def work_with_adom(session_id):
     print("\n2. ADOM 관리")
 
     # ADOM 목록 조회
-    request = {"id": 1, "method": "get", "params": [{"url": "/dvmdb/adom"}], "session": session_id}
+    request = {
+        "id": 1,
+        "method": "get",
+        "params": [{"url": "/dvmdb/adom"}],
+        "session": session_id,
+    }
 
     response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=request,
+        verify=False,
     )
 
     result = response.json()
@@ -106,7 +126,9 @@ def work_with_adom(session_id):
         adoms = result["result"][0]["data"]
         print(f"  - 총 {len(adoms)}개 ADOM")
         for adom in adoms[:3]:
-            print(f"    • {adom.get('name', 'Unknown')} - {adom.get('desc', 'No description')}")
+            print(
+                f"    • {adom.get('name', 'Unknown')} - {adom.get('desc', 'No description')}"
+            )
 
 
 def get_device_info(session_id):
@@ -121,7 +143,10 @@ def get_device_info(session_id):
     }
 
     response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=request,
+        verify=False,
     )
 
     result = response.json()
@@ -142,12 +167,20 @@ def get_policies(session_id):
     request = {
         "id": 1,
         "method": "get",
-        "params": [{"url": "/pm/config/adom/root/pkg/default/firewall/policy", "option": ["get meta"]}],
+        "params": [
+            {
+                "url": "/pm/config/adom/root/pkg/default/firewall/policy",
+                "option": ["get meta"],
+            }
+        ],
         "session": session_id,
     }
 
     response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=request,
+        verify=False,
     )
 
     result = response.json()
@@ -155,8 +188,12 @@ def get_policies(session_id):
         policies = result["result"][0].get("data", [])
         print(f"  - root ADOM에 {len(policies)}개 정책")
         for policy in policies[:3]:
-            print(f"    • Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}")
-            print(f"      {policy.get('srcintf', ['Unknown'])} → {policy.get('dstintf', ['Unknown'])}")
+            print(
+                f"    • Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}"
+            )
+            print(
+                f"      {policy.get('srcintf', ['Unknown'])} → {policy.get('dstintf', ['Unknown'])}"
+            )
 
 
 def get_address_objects(session_id):
@@ -171,7 +208,10 @@ def get_address_objects(session_id):
     }
 
     response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=request,
+        verify=False,
     )
 
     result = response.json()
@@ -179,7 +219,9 @@ def get_address_objects(session_id):
         addresses = result["result"][0]["data"]
         print(f"  - 총 {len(addresses)}개 주소 객체")
         for addr in addresses[:3]:
-            print(f"    • {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}")
+            print(
+                f"    • {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}"
+            )
 
 
 def simulate_packet_analysis(session_id):
@@ -196,10 +238,18 @@ def simulate_packet_analysis(session_id):
 
 def logout(session_id):
     """로그아웃"""
-    logout_request = {"id": 1, "method": "exec", "params": [{"url": "/sys/logout"}], "session": session_id}
+    logout_request = {
+        "id": 1,
+        "method": "exec",
+        "params": [{"url": "/sys/logout"}],
+        "session": session_id,
+    }
 
     requests.post(
-        f"{BASE_URL}/jsonrpc", headers={"Content-Type": "application/json"}, json=logout_request, verify=False
+        f"{BASE_URL}/jsonrpc",
+        headers={"Content-Type": "application/json"},
+        json=logout_request,
+        verify=False,
     )
     print("\n✅ 로그아웃 완료")
 

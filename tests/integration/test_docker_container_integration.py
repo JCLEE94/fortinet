@@ -64,14 +64,18 @@ class DockerTestManager:
 
         try:
             # 실행 중인 테스트 컨테이너 정지 및 제거
-            containers = self.client.containers.list(all=True, filters={"name": self.test_container_name})
+            containers = self.client.containers.list(
+                all=True, filters={"name": self.test_container_name}
+            )
             for container in containers:
                 try:
                     container.stop(timeout=10)
                     container.remove()
                     logger.info(f"Removed test container: {container.name}")
                 except Exception as e:
-                    logger.warning(f"Failed to remove container {container.name}: {str(e)}")
+                    logger.warning(
+                        f"Failed to remove container {container.name}: {str(e)}"
+                    )
         except Exception as e:
             logger.warning(f"Cleanup failed: {str(e)}")
 
@@ -85,7 +89,9 @@ class DockerTestManager:
                 if container.status == "running":
                     # 헬스체크 시도
                     try:
-                        response = requests.get(f"http://localhost:{self.test_port}/api/health", timeout=5)
+                        response = requests.get(
+                            f"http://localhost:{self.test_port}/api/health", timeout=5
+                        )
                         if response.status_code == 200:
                             return True
                     except requests.RequestException:
@@ -110,13 +116,19 @@ def test_docker_image_build():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping build test", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping build test",
+            "docker_available": False,
+        }
 
     # 프로젝트 루트 디렉토리 확인
     project_root = Path(__file__).parent.parent.parent
     dockerfile_path = project_root / "Dockerfile.production"
 
-    test_framework.assert_ok(dockerfile_path.exists(), f"Dockerfile.production should exist at {dockerfile_path}")
+    test_framework.assert_ok(
+        dockerfile_path.exists(),
+        f"Dockerfile.production should exist at {dockerfile_path}",
+    )
 
     try:
         # Docker 이미지 빌드
@@ -137,7 +149,9 @@ def test_docker_image_build():
             if "stream" in log_entry:
                 build_log_messages.append(log_entry["stream"].strip())
 
-        test_framework.assert_ok(image is not None, "Docker image should be built successfully")
+        test_framework.assert_ok(
+            image is not None, "Docker image should be built successfully"
+        )
 
         return {
             "image_id": image.id,
@@ -150,7 +164,9 @@ def test_docker_image_build():
     except docker.errors.BuildError as e:
         test_framework.assert_ok(False, f"Docker build failed: {str(e)}")
     except Exception as e:
-        test_framework.assert_ok(False, f"Unexpected error during Docker build: {str(e)}")
+        test_framework.assert_ok(
+            False, f"Unexpected error during Docker build: {str(e)}"
+        )
 
 
 @test_framework.test("docker_image_layers_analysis")
@@ -159,13 +175,18 @@ def test_docker_image_layers():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping layer analysis", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping layer analysis",
+            "docker_available": False,
+        }
 
     try:
         # 빌드된 이미지 검색
         images = docker_manager.client.images.list(name=docker_manager.test_image_name)
 
-        test_framework.assert_ok(len(images) > 0, f"Test image {docker_manager.test_image_name} should exist")
+        test_framework.assert_ok(
+            len(images) > 0, f"Test image {docker_manager.test_image_name} should exist"
+        )
 
         image = images[0]
 
@@ -214,7 +235,10 @@ def test_docker_container_startup():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping container test", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping container test",
+            "docker_available": False,
+        }
 
     # 기존 테스트 컨테이너 정리
     docker_manager.cleanup_test_containers()
@@ -250,7 +274,9 @@ def test_docker_container_startup():
         # 컨테이너가 준비될 때까지 대기
         is_ready = docker_manager.wait_for_container_ready(container, timeout=60)
 
-        test_framework.assert_ok(is_ready, "Container should start and become ready within 60 seconds")
+        test_framework.assert_ok(
+            is_ready, "Container should start and become ready within 60 seconds"
+        )
 
         # 컨테이너 상태 확인
         container.reload()
@@ -277,21 +303,31 @@ def test_docker_container_health():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping health check", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping health check",
+            "docker_available": False,
+        }
 
     try:
         # 실행 중인 테스트 컨테이너 찾기
-        containers = docker_manager.client.containers.list(filters={"name": docker_manager.test_container_name})
+        containers = docker_manager.client.containers.list(
+            filters={"name": docker_manager.test_container_name}
+        )
 
         test_framework.assert_ok(
-            len(containers) > 0, f"Test container {docker_manager.test_container_name} should be running"
+            len(containers) > 0,
+            f"Test container {docker_manager.test_container_name} should be running",
         )
 
         container = containers[0]
 
         # 컨테이너 상태 확인
         container.reload()
-        test_framework.assert_eq(container.status, "running", f"Container should be running, got {container.status}")
+        test_framework.assert_eq(
+            container.status,
+            "running",
+            f"Container should be running, got {container.status}",
+        )
 
         # 헬스체크 엔드포인트 테스트
         health_url = f"http://localhost:{docker_manager.test_port}/api/health"
@@ -299,13 +335,17 @@ def test_docker_container_health():
         response = requests.get(health_url, timeout=10)
 
         test_framework.assert_eq(
-            response.status_code, 200, f"Health endpoint should return 200, got {response.status_code}"
+            response.status_code,
+            200,
+            f"Health endpoint should return 200, got {response.status_code}",
         )
 
         health_data = response.json()
 
         # 기본 헬스체크 데이터 검증
-        test_framework.assert_ok("status" in health_data, "Health response should contain status field")
+        test_framework.assert_ok(
+            "status" in health_data, "Health response should contain status field"
+        )
 
         # 컨테이너 리소스 사용량 확인
         stats = container.stats(stream=False)
@@ -342,7 +382,10 @@ def test_docker_container_api():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping API test", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping API test",
+            "docker_available": False,
+        }
 
     base_url = f"http://localhost:{docker_manager.test_port}"
 
@@ -387,13 +430,18 @@ def test_docker_container_api():
             test_results.append(result)
 
         except requests.RequestException as e:
-            test_results.append({"endpoint": endpoint["path"], "success": False, "error": str(e)})
+            test_results.append(
+                {"endpoint": endpoint["path"], "success": False, "error": str(e)}
+            )
 
     # 최소한 헬스체크 엔드포인트는 작동해야 함
-    health_test = next((r for r in test_results if r["endpoint"] == "/api/health"), None)
+    health_test = next(
+        (r for r in test_results if r["endpoint"] == "/api/health"), None
+    )
 
     test_framework.assert_ok(
-        health_test and health_test["success"], "Health endpoint should be accessible in container"
+        health_test and health_test["success"],
+        "Health endpoint should be accessible in container",
     )
 
     successful_endpoints = len([r for r in test_results if r.get("success", False)])
@@ -417,13 +465,20 @@ def test_docker_container_logs():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping log analysis", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping log analysis",
+            "docker_available": False,
+        }
 
     try:
         # 실행 중인 테스트 컨테이너 찾기
-        containers = docker_manager.client.containers.list(filters={"name": docker_manager.test_container_name})
+        containers = docker_manager.client.containers.list(
+            filters={"name": docker_manager.test_container_name}
+        )
 
-        test_framework.assert_ok(len(containers) > 0, f"Test container should be running for log analysis")
+        test_framework.assert_ok(
+            len(containers) > 0, f"Test container should be running for log analysis"
+        )
 
         container = containers[0]
 
@@ -438,9 +493,17 @@ def test_docker_container_logs():
         info_count = len([line for line in log_lines if "INFO" in line.upper()])
 
         # 애플리케이션 시작 메시지 확인
-        startup_messages = ["Flask", "Running on", "Starting", "Application initialized"]
+        startup_messages = [
+            "Flask",
+            "Running on",
+            "Starting",
+            "Application initialized",
+        ]
 
-        startup_found = any(any(msg.lower() in line.lower() for msg in startup_messages) for line in log_lines)
+        startup_found = any(
+            any(msg.lower() in line.lower() for msg in startup_messages)
+            for line in log_lines
+        )
 
         # 에러가 너무 많으면 문제가 있을 수 있음
         test_framework.assert_ok(
@@ -473,9 +536,17 @@ def test_docker_cleanup():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping cleanup", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping cleanup",
+            "docker_available": False,
+        }
 
-    cleanup_results = {"containers_removed": 0, "images_removed": 0, "cleanup_success": True, "errors": []}
+    cleanup_results = {
+        "containers_removed": 0,
+        "images_removed": 0,
+        "cleanup_success": True,
+        "errors": [],
+    }
 
     try:
         # 테스트 컨테이너 정리
@@ -491,26 +562,33 @@ def test_docker_cleanup():
                 cleanup_results["containers_removed"] += 1
                 logger.info(f"Removed container: {container.name}")
             except Exception as e:
-                cleanup_results["errors"].append(f"Failed to remove container {container.name}: {str(e)}")
+                cleanup_results["errors"].append(
+                    f"Failed to remove container {container.name}: {str(e)}"
+                )
                 cleanup_results["cleanup_success"] = False
 
         # 테스트 이미지 정리 (선택적)
         try:
-            images = docker_manager.client.images.list(name=docker_manager.test_image_name)
+            images = docker_manager.client.images.list(
+                name=docker_manager.test_image_name
+            )
             for image in images:
                 try:
                     docker_manager.client.images.remove(image.id, force=True)
                     cleanup_results["images_removed"] += 1
                     logger.info(f"Removed image: {image.id}")
                 except Exception as e:
-                    cleanup_results["errors"].append(f"Failed to remove image {image.id}: {str(e)}")
+                    cleanup_results["errors"].append(
+                        f"Failed to remove image {image.id}: {str(e)}"
+                    )
         except Exception as e:
             # 이미지 제거 실패는 치명적이지 않음
             cleanup_results["errors"].append(f"Image cleanup failed: {str(e)}")
 
         # 정리 성공 여부 확인
         test_framework.assert_ok(
-            cleanup_results["cleanup_success"], f"Cleanup should succeed, errors: {cleanup_results['errors']}"
+            cleanup_results["cleanup_success"],
+            f"Cleanup should succeed, errors: {cleanup_results['errors']}",
         )
 
         return cleanup_results
@@ -530,10 +608,15 @@ def test_production_image_from_registry():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {"message": "Docker not available - skipping registry test", "docker_available": False}
+        return {
+            "message": "Docker not available - skipping registry test",
+            "docker_available": False,
+        }
 
     # 레지스트리 이미지 이름
-    registry_image = f"{docker_manager.registry_url}/jclee94/{docker_manager.app_name}:latest"
+    registry_image = (
+        f"{docker_manager.registry_url}/jclee94/{docker_manager.app_name}:latest"
+    )
 
     try:
         # 레지스트리 로그인 시도 (인증이 필요한 경우)
@@ -542,9 +625,13 @@ def test_production_image_from_registry():
 
         try:
             docker_manager.client.login(
-                username=registry_username, password=registry_password, registry=docker_manager.registry_url
+                username=registry_username,
+                password=registry_password,
+                registry=docker_manager.registry_url,
             )
-            logger.info(f"Successfully logged in to registry {docker_manager.registry_url}")
+            logger.info(
+                f"Successfully logged in to registry {docker_manager.registry_url}"
+            )
         except Exception as e:
             logger.warning(f"Registry login failed (may not be required): {str(e)}")
 
@@ -553,7 +640,9 @@ def test_production_image_from_registry():
             logger.info(f"Pulling image from registry: {registry_image}")
             image = docker_manager.client.images.pull(registry_image)
 
-            test_framework.assert_ok(image is not None, f"Should be able to pull image from registry")
+            test_framework.assert_ok(
+                image is not None, f"Should be able to pull image from registry"
+            )
 
             return {
                 "registry_image": registry_image,

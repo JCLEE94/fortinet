@@ -41,7 +41,9 @@ class APITester:
             # 응답 내용 확인 (JSON 형태인 경우)
             response_data = None
             try:
-                if response.headers.get("content-type", "").startswith("application/json"):
+                if response.headers.get("content-type", "").startswith(
+                    "application/json"
+                ):
                     response_data = response.json()
                 elif "text/html" in response.headers.get("content-type", ""):
                     response_data = f"HTML response ({len(response.text)} chars)"
@@ -110,7 +112,12 @@ class APITester:
             (
                 "/api/test_connection",
                 "POST",
-                {"host": "127.0.0.1", "username": "test", "password": "test", "port": 443},
+                {
+                    "host": "127.0.0.1",
+                    "username": "test",
+                    "password": "test",
+                    "port": 443,
+                },
                 "Test FortiManager connection",
             ),
             (
@@ -128,7 +135,12 @@ class APITester:
             (
                 "/api/fortimanager/analyze-packet-path",
                 "POST",
-                {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 80, "protocol": "tcp"},
+                {
+                    "src_ip": "192.168.1.100",
+                    "dst_ip": "172.16.10.100",
+                    "port": 80,
+                    "protocol": "tcp",
+                },
                 "Analyze packet path",
             ),
         ]
@@ -159,7 +171,10 @@ class APITester:
                     else:
                         failed_tests += 1
 
-                self.results[base_url][f"{method} {endpoint}"] = {"description": description, "result": result}
+                self.results[base_url][f"{method} {endpoint}"] = {
+                    "description": description,
+                    "result": result,
+                }
 
                 # 요청 간 간격
                 time.sleep(0.1)
@@ -171,7 +186,11 @@ class APITester:
 
     def generate_report(self):
         """테스트 결과 리포트 생성"""
-        report = {"test_time": datetime.now().isoformat(), "summary": {}, "detailed_results": self.results}
+        report = {
+            "test_time": datetime.now().isoformat(),
+            "summary": {},
+            "detailed_results": self.results,
+        }
 
         for base_url, endpoints in self.results.items():
             successful = 0
@@ -195,7 +214,9 @@ class APITester:
                 "failed_tests": failed,
                 "total_tests": successful + failed,
                 "success_rate": (
-                    round((successful / (successful + failed)) * 100, 2) if (successful + failed) > 0 else 0
+                    round((successful / (successful + failed)) * 100, 2)
+                    if (successful + failed) > 0
+                    else 0
                 ),
                 "average_response_time": round(avg_response_time, 2),
             }
@@ -232,7 +253,9 @@ def main():
         print(f"  ⏱️  평균 응답 시간: {summary['average_response_time']}ms")
 
     # 상세 리포트를 파일로 저장
-    with open("/home/jclee/dev/fortinet/api_test_report.json", "w", encoding="utf-8") as f:
+    with open(
+        "/home/jclee/dev/fortinet/api_test_report.json", "w", encoding="utf-8"
+    ) as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     print(f"\n📄 상세 리포트가 저장되었습니다: /home/jclee/dev/fortinet/api_test_report.json")

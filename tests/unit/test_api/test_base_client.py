@@ -7,7 +7,8 @@ import os
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+from src.api.clients.base_api_client import (BaseApiClient,
+                                             RealtimeMonitoringMixin)
 
 
 class MockApiClient(BaseApiClient):
@@ -46,7 +47,11 @@ class TestBaseApiClient(unittest.TestCase):
 
     def test_environment_config_loading(self):
         """환경 변수 설정 로딩 테스트"""
-        env_vars = {"TEST_HOST": "env.example.com", "TEST_API_TOKEN": "env_token", "TEST_PORT": "9090"}
+        env_vars = {
+            "TEST_HOST": "env.example.com",
+            "TEST_API_TOKEN": "env_token",
+            "TEST_PORT": "9090",
+        }
 
         with patch.dict(os.environ, env_vars):
             with patch("src.core.connection_pool.connection_pool_manager.get_session"):
@@ -59,7 +64,11 @@ class TestBaseApiClient(unittest.TestCase):
     def test_make_request_success(self):
         """API 요청 성공 테스트"""
         # Ensure offline mode is disabled by environment variables too
-        env_vars = {"OFFLINE_MODE": "false", "NO_INTERNET": "false", "DISABLE_EXTERNAL_CALLS": "false"}
+        env_vars = {
+            "OFFLINE_MODE": "false",
+            "NO_INTERNET": "false",
+            "DISABLE_EXTERNAL_CALLS": "false",
+        }
 
         with patch.dict(os.environ, env_vars):
             # Mock response
@@ -72,7 +81,9 @@ class TestBaseApiClient(unittest.TestCase):
             # Mock session
             self.client.session.request.return_value = mock_response
 
-            success, data, status = self.client._make_request("GET", "http://test.com/api")
+            success, data, status = self.client._make_request(
+                "GET", "http://test.com/api"
+            )
 
             self.assertTrue(success)
             self.assertEqual(status, 200)
@@ -105,7 +116,11 @@ class TestBaseApiClient(unittest.TestCase):
 
     def test_header_sanitization(self):
         """민감 헤더 마스킹 테스트"""
-        headers = {"Content-Type": "application/json", "Authorization": "Bearer token123", "X-API-Key": "apikey123"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer token123",
+            "X-API-Key": "apikey123",
+        }
 
         sanitized = self.client._sanitize_headers(headers)
 
@@ -132,7 +147,10 @@ class TestJsonRpcMixin(unittest.TestCase):
     def test_json_rpc_payload_building(self):
         """JSON-RPC 페이로드 생성 테스트"""
         payload = self.mixin.build_json_rpc_request(
-            method="get", url="/api/v2/cmdb/system/interface", data={"name": "port1"}, session="session123"
+            method="get",
+            url="/api/v2/cmdb/system/interface",
+            data={"name": "port1"},
+            session="session123",
         )
 
         self.assertEqual(payload["method"], "get")
@@ -145,7 +163,12 @@ class TestJsonRpcMixin(unittest.TestCase):
         """JSON-RPC 응답 파싱 테스트"""
         # 성공 응답
         success_response = {
-            "result": [{"status": {"code": 0, "message": "OK"}, "data": {"name": "port1", "ip": "192.168.1.1"}}]
+            "result": [
+                {
+                    "status": {"code": 0, "message": "OK"},
+                    "data": {"name": "port1", "ip": "192.168.1.1"},
+                }
+            ]
         }
 
         success, data = self.mixin.parse_json_rpc_response(success_response)

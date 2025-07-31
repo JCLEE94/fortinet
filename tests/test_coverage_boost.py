@@ -15,16 +15,11 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_common(self):
         """API 공통 모듈 임포트 테스트"""
-        from src.utils.api_utils import (
-            CacheMixin,
-            ConnectionTestMixin,
-            ErrorHandlingMixin,
-            JsonRpcMixin,
-            MonitoringMixin,
-            RequestRetryMixin,
-            format_api_response,
-            sanitize_sensitive_data,
-        )
+        from src.utils.api_utils import (CacheMixin, ConnectionTestMixin,
+                                         ErrorHandlingMixin, JsonRpcMixin,
+                                         MonitoringMixin, RequestRetryMixin,
+                                         format_api_response,
+                                         sanitize_sensitive_data)
 
         # 기본 함수 테스트
         data = {"password": "secret123", "normal": "data"}
@@ -39,10 +34,12 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_clients(self):
         """API 클라이언트 임포트 테스트"""
-        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+        from src.api.clients.base_api_client import (BaseApiClient,
+                                                     RealtimeMonitoringMixin)
         from src.api.clients.faz_client import FAZClient
         from src.api.clients.fortigate_api_client import FortiGateAPIClient
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import \
+            FortiManagerAPIClient
 
         # 오프라인 모드 테스트를 위한 환경 설정
         os.environ["OFFLINE_MODE"] = "true"
@@ -60,8 +57,10 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_monitoring(self):
         """모니터링 모듈 임포트 테스트"""
-        from src.monitoring.base import HealthCheckMixin, MonitoringBase, ThresholdMixin
-        from src.monitoring.collectors.system_metrics import SystemMetricsCollector
+        from src.monitoring.base import (HealthCheckMixin, MonitoringBase,
+                                         ThresholdMixin)
+        from src.monitoring.collectors.system_metrics import \
+            SystemMetricsCollector
         from src.monitoring.config import MonitoringConfig, get_config
         from src.monitoring.manager import UnifiedMonitoringManager
 
@@ -77,7 +76,8 @@ class TestCoverageBoost(unittest.TestCase):
         """유틸리티 모듈 임포트 테스트"""
         from src.utils.api_optimization import CacheManager
         from src.utils.batch_operations import BatchProcessor
-        from src.utils.route_helpers import handle_api_exceptions, standard_api_response
+        from src.utils.route_helpers import (handle_api_exceptions,
+                                             standard_api_response)
         from src.utils.unified_logger import get_logger
 
         # 로거 테스트
@@ -125,7 +125,8 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_security(self):
         """보안 모듈 임포트 테스트"""
-        from src.utils.security import add_security_headers, hash_api_key, verify_api_key
+        from src.utils.security import (add_security_headers, hash_api_key,
+                                        verify_api_key)
 
         # API 키 해싱 테스트
         api_key = "test123"
@@ -137,7 +138,8 @@ class TestCoverageBoost(unittest.TestCase):
     def test_import_fortimanager_advanced(self):
         """FortiManager 고급 모듈 임포트 테스트"""
         from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from src.fortimanager.fortimanager_analytics_engine import AdvancedAnalyticsEngine
+        from src.fortimanager.fortimanager_analytics_engine import \
+            AdvancedAnalyticsEngine
 
         # 고급 허브 테스트
         hub = FortiManagerAdvancedHub(None)
@@ -154,7 +156,9 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_coverage_helper_functions(self):
         """커버리지 향상을 위한 헬퍼 함수들 테스트"""
-        from src.utils.api_utils import create_timeout_context, merge_monitoring_data, validate_config
+        from src.utils.api_utils import (create_timeout_context,
+                                         merge_monitoring_data,
+                                         validate_config)
 
         # 설정 검증 테스트
         valid, missing = validate_config({"key1": "value1"}, ["key1"])

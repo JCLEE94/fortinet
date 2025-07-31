@@ -154,22 +154,34 @@ class EndpointTester:
         failed = sum(1 for r in self.results if r["status"] == "FAILED")
 
         # Check for specific issues
-        json_errors = [r for r in self.results if r.get("response_type") == "invalid_json"]
-        timeout_errors = [r for r in self.results if r.get("error") == "Request timeout"]
-        connection_errors = [r for r in self.results if r.get("error") == "Connection error"]
+        json_errors = [
+            r for r in self.results if r.get("response_type") == "invalid_json"
+        ]
+        timeout_errors = [
+            r for r in self.results if r.get("error") == "Request timeout"
+        ]
+        connection_errors = [
+            r for r in self.results if r.get("error") == "Connection error"
+        ]
 
         # Check mode-specific data
         mode_issues = []
         if self.mode == "production":
             # Check if any endpoint returns test data
             for result in self.results:
-                if result["status"] == "SUCCESS" and result.get("response_type") == "json":
+                if (
+                    result["status"] == "SUCCESS"
+                    and result.get("response_type") == "json"
+                ):
                     data = result.get("response_data", {})
                     if isinstance(data, dict):
                         # Check for test mode indicators
                         if data.get("test_mode", False) or data.get("test_mode_info"):
                             mode_issues.append(
-                                {"endpoint": result["path"], "issue": "Returns test mode data in production"}
+                                {
+                                    "endpoint": result["path"],
+                                    "issue": "Returns test mode data in production",
+                                }
                             )
 
         return {
@@ -219,9 +231,15 @@ def main():
                 print(f"    - {issue['endpoint']}: {issue['issue']}")
 
     # Save detailed results
-    report = {"test_date": datetime.now().isoformat(), "environments": all_summaries, "detailed_results": all_results}
+    report = {
+        "test_date": datetime.now().isoformat(),
+        "environments": all_summaries,
+        "detailed_results": all_results,
+    }
 
-    report_file = f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        f"endpoint_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(report_file, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 

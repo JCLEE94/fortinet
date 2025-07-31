@@ -47,25 +47,37 @@ def test_api_key_authentication():
         headers = {"X-API-Key": valid_api_key, "Content-Type": "application/json"}
 
         # API 키 검증 모킹
-        with patch("src.core.auth_manager.AuthManager.validate_api_key") as mock_validate:
+        with patch(
+            "src.core.auth_manager.AuthManager.validate_api_key"
+        ) as mock_validate:
             mock_validate.return_value = True
 
             response = client.get("/api/fortigate/status", headers=headers)
-            test_framework.assert_eq(response.status_code, 200, "Valid API key should allow access")
+            test_framework.assert_eq(
+                response.status_code, 200, "Valid API key should allow access"
+            )
 
         # 2. 잘못된 API 키로 인증 시도
-        invalid_headers = {"X-API-Key": "invalid-key-12345", "Content-Type": "application/json"}
+        invalid_headers = {
+            "X-API-Key": "invalid-key-12345",
+            "Content-Type": "application/json",
+        }
 
-        with patch("src.core.auth_manager.AuthManager.validate_api_key") as mock_validate:
+        with patch(
+            "src.core.auth_manager.AuthManager.validate_api_key"
+        ) as mock_validate:
             mock_validate.return_value = False
 
             response = client.get("/api/fortigate/status", headers=invalid_headers)
-            test_framework.assert_ok(response.status_code in [401, 403], "Invalid API key should be rejected")
+            test_framework.assert_ok(
+                response.status_code in [401, 403], "Invalid API key should be rejected"
+            )
 
         # 3. API 키 없이 접근 시도
         response = client.get("/api/fortigate/status")
         test_framework.assert_ok(
-            response.status_code in [401, 403, 200], "Missing API key should be handled"  # 200은 공개 API의 경우
+            response.status_code in [401, 403, 200],
+            "Missing API key should be handled",  # 200은 공개 API의 경우
         )
 
 
@@ -86,16 +98,23 @@ def test_api_key_rate_limiting():
             # 10번째 요청부터 제한
             return request_count < 10
 
-        with patch("src.core.auth_manager.AuthManager.check_rate_limit", side_effect=mock_check_rate_limit):
-
+        with patch(
+            "src.core.auth_manager.AuthManager.check_rate_limit",
+            side_effect=mock_check_rate_limit,
+        ):
             # 정상 요청들
             for i in range(9):
                 response = client.get("/api/health", headers=headers)
-                test_framework.assert_eq(response.status_code, 200, f"Request {i+1} should succeed")
+                test_framework.assert_eq(
+                    response.status_code, 200, f"Request {i+1} should succeed"
+                )
 
             # 제한 초과 요청
             response = client.get("/api/health", headers=headers)
-            test_framework.assert_ok(response.status_code == 429, "Should return 429 when rate limit exceeded")
+            test_framework.assert_ok(
+                response.status_code == 429,
+                "Should return 429 when rate limit exceeded",
+            )
 
 
 # =============================================================================
@@ -111,25 +130,39 @@ def test_session_based_authentication():
         # 1. 로그인
         login_data = {"username": "admin", "password": "admin123"}
 
-        with patch("src.core.auth_manager.AuthManager.verify_credentials") as mock_verify:
-            mock_verify.return_value = {"success": True, "user_id": "admin", "permissions": ["read", "write", "admin"]}
+        with patch(
+            "src.core.auth_manager.AuthManager.verify_credentials"
+        ) as mock_verify:
+            mock_verify.return_value = {
+                "success": True,
+                "user_id": "admin",
+                "permissions": ["read", "write", "admin"],
+            }
 
-            response = client.post("/api/auth/login", json=login_data, headers={"Content-Type": "application/json"})
+            response = client.post(
+                "/api/auth/login",
+                json=login_data,
+                headers={"Content-Type": "application/json"},
+            )
 
             # 로그인 성공 확인
             if response.status_code == 200:
                 data = response.get_json()
-                test_framework.assert_ok(data.get("success") or "session" in data, "Login should succeed")
+                test_framework.assert_ok(
+                    data.get("success") or "session" in data, "Login should succeed"
+                )
 
                 # 세션 쿠키 확인
                 test_framework.assert_ok(
-                    "Set-Cookie" in response.headers or client.cookie_jar, "Should set session cookie"
+                    "Set-Cookie" in response.headers or client.cookie_jar,
+                    "Should set session cookie",
                 )
 
         # 2. 인증된 요청
         response = client.get("/api/fortigate/policies")
         test_framework.assert_ok(
-            response.status_code in [200, 401], "Should handle authenticated request"  # 401은 세션이 없는 경우
+            response.status_code in [200, 401],
+            "Should handle authenticated request",  # 401은 세션이 없는 경우
         )
 
         # 3. 로그아웃
@@ -139,7 +172,10 @@ def test_session_based_authentication():
 
             # 로그아웃 후 접근 시도
             response = client.get("/api/fortigate/policies")
-            test_framework.assert_ok(response.status_code in [401, 403, 200], "Should handle post-logout access")
+            test_framework.assert_ok(
+                response.status_code in [401, 403, 200],
+                "Should handle post-logout access",
+            )
 
 
 @test_framework.test("auth_session_expiry_handling")
@@ -177,14 +213,21 @@ def test_session_expiry_and_refresh():
             mock_get.return_value = expired_session_data
 
             is_valid = auth_manager.validate_session(session_id)
-            test_framework.assert_eq(is_valid, False, "Expired session should be invalid")
+            test_framework.assert_eq(
+                is_valid, False, "Expired session should be invalid"
+            )
 
         # 4. 세션 갱신
         with patch.object(auth_manager, "refresh_session") as mock_refresh:
-            mock_refresh.return_value = {"success": True, "new_expires": time.time() + 3600}
+            mock_refresh.return_value = {
+                "success": True,
+                "new_expires": time.time() + 3600,
+            }
 
             refresh_result = auth_manager.refresh_session(session_id)
-            test_framework.assert_ok(refresh_result.get("success"), "Session refresh should succeed")
+            test_framework.assert_ok(
+                refresh_result.get("success"), "Session refresh should succeed"
+            )
 
 
 # =============================================================================
@@ -203,17 +246,28 @@ def test_redis_session_management():
         if cache.redis_enabled:
             # Redis에 세션 저장
             session_key = "session:redis-test-123"
-            session_data = {"user_id": "redis_user", "data": {"theme": "dark", "lang": "ko"}}
+            session_data = {
+                "user_id": "redis_user",
+                "data": {"theme": "dark", "lang": "ko"},
+            }
 
             cache.set(session_key, session_data, ttl=300)
 
             # 저장 확인
             retrieved = cache.get(session_key)
-            test_framework.assert_eq(retrieved, session_data, "Should store session in Redis")
+            test_framework.assert_eq(
+                retrieved, session_data, "Should store session in Redis"
+            )
 
             # TTL 확인
-            ttl = cache.redis_client.ttl(session_key) if hasattr(cache, "redis_client") else 0
-            test_framework.assert_ok(ttl > 0 or not cache.redis_enabled, "Session should have TTL")
+            ttl = (
+                cache.redis_client.ttl(session_key)
+                if hasattr(cache, "redis_client")
+                else 0
+            )
+            test_framework.assert_ok(
+                ttl > 0 or not cache.redis_enabled, "Session should have TTL"
+            )
 
         # 2. Redis 비활성화 시 파일 폴백
         with patch.object(cache, "redis_enabled", False):
@@ -223,7 +277,9 @@ def test_redis_session_management():
             cache.set(fallback_key, fallback_data)
             retrieved = cache.get(fallback_key)
 
-            test_framework.assert_ok(retrieved is not None, "Should fallback to file storage")
+            test_framework.assert_ok(
+                retrieved is not None, "Should fallback to file storage"
+            )
 
 
 @test_framework.test("auth_session_concurrent_access")
@@ -263,16 +319,24 @@ def test_concurrent_session_handling():
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = []
             for i in range(10):
-                futures.append(executor.submit(create_and_validate_session, f"user_{i}"))
+                futures.append(
+                    executor.submit(create_and_validate_session, f"user_{i}")
+                )
 
             # 모든 작업 완료 대기
             for future in futures:
                 future.result()
 
         # 결과 검증
-        test_framework.assert_eq(session_results["created"], 10, "All sessions should be created")
-        test_framework.assert_eq(session_results["validated"], 10, "All sessions should be validated")
-        test_framework.assert_eq(session_results["errors"], 0, "No errors in concurrent access")
+        test_framework.assert_eq(
+            session_results["created"], 10, "All sessions should be created"
+        )
+        test_framework.assert_eq(
+            session_results["validated"], 10, "All sessions should be validated"
+        )
+        test_framework.assert_eq(
+            session_results["errors"], 0, "No errors in concurrent access"
+        )
 
 
 # =============================================================================
@@ -297,7 +361,11 @@ def test_permission_based_access_control():
 
         # 각 권한 레벨별 접근 테스트
         for role, permissions in permission_levels.items():
-            session_data = {"user_id": f"{role}_user", "role": role, "permissions": permissions}
+            session_data = {
+                "user_id": f"{role}_user",
+                "role": role,
+                "permissions": permissions,
+            }
 
             # 읽기 권한 테스트
             with patch.object(auth_manager, "check_permission") as mock_check:
@@ -351,7 +419,9 @@ def test_role_based_api_routing():
 
             for endpoint in admin_endpoints + user_endpoints:
                 response = client.get(endpoint, headers=admin_headers)
-                test_framework.assert_ok(response.status_code != 403, f"Admin should access {endpoint}")
+                test_framework.assert_ok(
+                    response.status_code != 403, f"Admin should access {endpoint}"
+                )
 
         # 2. 일반 사용자 권한으로 접근
         user_headers = {"X-User-Role": "user"}
@@ -360,12 +430,17 @@ def test_role_based_api_routing():
 
             for endpoint in user_endpoints:
                 response = client.get(endpoint, headers=user_headers)
-                test_framework.assert_ok(response.status_code != 403, f"User should access {endpoint}")
+                test_framework.assert_ok(
+                    response.status_code != 403, f"User should access {endpoint}"
+                )
 
             # 관리자 엔드포인트는 접근 불가
             for endpoint in admin_endpoints:
                 response = client.get(endpoint, headers=user_headers)
-                test_framework.assert_ok(response.status_code in [403, 404], f"User should not access {endpoint}")
+                test_framework.assert_ok(
+                    response.status_code in [403, 404],
+                    f"User should not access {endpoint}",
+                )
 
 
 # =============================================================================
@@ -392,22 +467,35 @@ def test_token_generation_and_validation():
 
             token_result = auth_manager.generate_token(user_data)
 
-            test_framework.assert_ok(token_result.get("token"), "Should generate access token")
-            test_framework.assert_ok(token_result.get("refresh_token"), "Should generate refresh token")
+            test_framework.assert_ok(
+                token_result.get("token"), "Should generate access token"
+            )
+            test_framework.assert_ok(
+                token_result.get("refresh_token"), "Should generate refresh token"
+            )
 
         # 2. 토큰 검증
         with patch.object(auth_manager, "validate_token") as mock_validate:
-            mock_validate.return_value = {"valid": True, "user_id": "token_user", "expires": time.time() + 3000}
+            mock_validate.return_value = {
+                "valid": True,
+                "user_id": "token_user",
+                "expires": time.time() + 3000,
+            }
 
             validation = auth_manager.validate_token(token_result.get("token"))
             test_framework.assert_ok(validation.get("valid"), "Token should be valid")
 
         # 3. 토큰 갱신
         with patch.object(auth_manager, "refresh_token") as mock_refresh:
-            mock_refresh.return_value = {"token": "eyJ0eXAiOiJKV1QiLCJhbGc_new...", "expires_in": 3600}
+            mock_refresh.return_value = {
+                "token": "eyJ0eXAiOiJKV1QiLCJhbGc_new...",
+                "expires_in": 3600,
+            }
 
             new_token = auth_manager.refresh_token(token_result.get("refresh_token"))
-            test_framework.assert_ok(new_token.get("token"), "Should generate new token")
+            test_framework.assert_ok(
+                new_token.get("token"), "Should generate new token"
+            )
 
 
 # =============================================================================
@@ -423,8 +511,14 @@ def test_multi_factor_auth_flow():
         # 1단계: 사용자명/비밀번호
         login_data = {"username": "mfa_user", "password": "secure_password"}
 
-        with patch("src.core.auth_manager.AuthManager.verify_credentials") as mock_verify:
-            mock_verify.return_value = {"success": True, "requires_mfa": True, "session_id": "mfa-session-123"}
+        with patch(
+            "src.core.auth_manager.AuthManager.verify_credentials"
+        ) as mock_verify:
+            mock_verify.return_value = {
+                "success": True,
+                "requires_mfa": True,
+                "session_id": "mfa-session-123",
+            }
 
             response = client.post("/api/auth/login", json=login_data)
 
@@ -436,7 +530,11 @@ def test_multi_factor_auth_flow():
         otp_data = {"session_id": "mfa-session-123", "otp_code": "123456"}
 
         with patch("src.core.auth_manager.AuthManager.verify_otp") as mock_otp:
-            mock_otp.return_value = {"success": True, "user_id": "mfa_user", "full_access": True}
+            mock_otp.return_value = {
+                "success": True,
+                "user_id": "mfa_user",
+                "full_access": True,
+            }
 
             response = client.post("/api/auth/verify-otp", json=otp_data)
 

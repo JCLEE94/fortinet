@@ -20,7 +20,8 @@ from unittest.mock import MagicMock, call, patch
 
 from src.core.cache_manager import CacheManager
 from src.core.connection_pool import ConnectionPoolManager
-from src.utils.batch_operations import APIBatchProcessor, BatchItem, BatchOperationType, BatchProcessor
+from src.utils.batch_operations import (APIBatchProcessor, BatchItem,
+                                        BatchOperationType, BatchProcessor)
 
 
 # Mock Paginator class since it doesn't exist in the codebase
@@ -111,7 +112,11 @@ class TestCacheManager(unittest.TestCase):
         small_cache.set("key4", "value4")
 
         # 최대 3개까지만 캐시되는지 확인
-        total_cached = sum(1 for key in ["key1", "key2", "key3", "key4"] if small_cache.get(key) is not None)
+        total_cached = sum(
+            1
+            for key in ["key1", "key2", "key3", "key4"]
+            if small_cache.get(key) is not None
+        )
         self.assertLessEqual(total_cached, 3)  # 최대 3개까지만 캐시됨
 
         # key1은 최근 접근했으므로 여전히 존재해야 함
@@ -148,7 +153,12 @@ class TestPaginator(unittest.TestCase):
     def test_pagination_basics(self):
         """기본 페이지네이션 테스트"""
         # 쿼리 파라미터
-        params = {"page": "2", "per_page": "10", "sort_by": "name", "sort_order": "desc"}
+        params = {
+            "page": "2",
+            "per_page": "10",
+            "sort_by": "name",
+            "sort_order": "desc",
+        }
 
         paginator = Paginator(params)
 
@@ -191,7 +201,11 @@ class TestBatchOperations(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.processor = BatchProcessor(max_workers=4, batch_size=10, operation_type=BatchOperationType.PARALLEL_THREAD)
+        self.processor = BatchProcessor(
+            max_workers=4,
+            batch_size=10,
+            operation_type=BatchOperationType.PARALLEL_THREAD,
+        )
 
     def test_sequential_batch_processing(self):
         """순차적 배치 처리 테스트"""
@@ -222,7 +236,9 @@ class TestBatchOperations(unittest.TestCase):
             return data**2
 
         # 배치 항목 생성
-        items = [BatchItem(id=str(i), data=i, operation=slow_process) for i in range(10)]
+        items = [
+            BatchItem(id=str(i), data=i, operation=slow_process) for i in range(10)
+        ]
 
         # 순차 처리 시간 측정
         start_time = time.time()
@@ -253,7 +269,10 @@ class TestBatchOperations(unittest.TestCase):
             return data
 
         # 배치 항목 생성 (재시도 비활성화)
-        items = [BatchItem(id=str(i), data=i, operation=error_prone_process, max_retries=0) for i in range(5)]
+        items = [
+            BatchItem(id=str(i), data=i, operation=error_prone_process, max_retries=0)
+            for i in range(5)
+        ]
 
         # 처리
         results = self.processor.process_batch(items)
@@ -280,7 +299,9 @@ class TestBatchOperations(unittest.TestCase):
             return data
 
         # 재시도 활성화
-        items = [BatchItem(id="retry_test", data=1, operation=flaky_process, max_retries=3)]
+        items = [
+            BatchItem(id="retry_test", data=1, operation=flaky_process, max_retries=3)
+        ]
 
         # 처리
         results = self.processor.process_batch(items)
@@ -327,7 +348,9 @@ class TestConnectionPoolManager(unittest.TestCase):
     def test_session_configuration(self):
         """세션 구성 테스트"""
         # 커스텀 설정으로 세션 생성
-        session = self.pool_manager.get_session("custom_api", pool_connections=50, pool_maxsize=100, max_retries=5)
+        session = self.pool_manager.get_session(
+            "custom_api", pool_connections=50, pool_maxsize=100, max_retries=5
+        )
 
         # 어댑터 설정 확인
         adapter = session.get_adapter("https://")
@@ -409,7 +432,9 @@ class TestAPIBatchProcessor(unittest.TestCase):
         metrics = ["cpu", "memory"]
 
         # asyncio.run을 사용하여 비동기 메서드 실행
-        result = asyncio.run(self.batch_processor.batch_monitor_devices(device_ids, metrics))
+        result = asyncio.run(
+            self.batch_processor.batch_monitor_devices(device_ids, metrics)
+        )
 
         # 결과 확인
         self.assertIsInstance(result, dict)

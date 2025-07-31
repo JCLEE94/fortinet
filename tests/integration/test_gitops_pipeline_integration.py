@@ -68,7 +68,9 @@ class GitOpsPipelineConfig:
 def run_command(command: str, timeout: int = 30) -> Dict[str, Any]:
     """명령어 실행 헬퍼"""
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=timeout)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, timeout=timeout
+        )
         return {
             "success": result.returncode == 0,
             "returncode": result.returncode,
@@ -76,7 +78,11 @@ def run_command(command: str, timeout: int = 30) -> Dict[str, Any]:
             "stderr": result.stderr.strip(),
         }
     except subprocess.TimeoutExpired:
-        return {"success": False, "error": f"Command timed out after {timeout} seconds", "returncode": -1}
+        return {
+            "success": False,
+            "error": f"Command timed out after {timeout} seconds",
+            "returncode": -1,
+        }
     except Exception as e:
         return {"success": False, "error": str(e), "returncode": -1}
 
@@ -101,10 +107,16 @@ def test_docker_registry_connection():
         )
 
         test_framework.assert_eq(
-            response.status_code, 200, f"Registry should be accessible, got {response.status_code}"
+            response.status_code,
+            200,
+            f"Registry should be accessible, got {response.status_code}",
         )
 
-        return {"registry_url": config.registry_url, "status_code": response.status_code, "accessible": True}
+        return {
+            "registry_url": config.registry_url,
+            "status_code": response.status_code,
+            "accessible": True,
+        }
 
     except requests.RequestException as e:
         test_framework.assert_ok(False, f"Registry connection failed: {str(e)}")
@@ -128,7 +140,9 @@ def test_docker_image_in_registry():
             tags_data = response.json()
             tags = tags_data.get("tags", [])
 
-            test_framework.assert_ok(len(tags) > 0, f"At least one image tag should exist in registry")
+            test_framework.assert_ok(
+                len(tags) > 0, f"At least one image tag should exist in registry"
+            )
 
             # 최신 태그가 있는지 확인
             has_latest = "latest" in tags
@@ -143,7 +157,9 @@ def test_docker_image_in_registry():
         else:
             # 이미지가 없어도 레지스트리는 정상적으로 응답해야 함
             test_framework.assert_eq(
-                response.status_code, 404, f"Expected 404 for non-existent image, got {response.status_code}"
+                response.status_code,
+                404,
+                f"Expected 404 for non-existent image, got {response.status_code}",
             )
 
             return {
@@ -171,19 +187,31 @@ def test_chartmuseum_connection():
         response = requests.get(f"{config.chartmuseum_url}/health", timeout=10)
 
         test_framework.assert_eq(
-            response.status_code, 200, f"ChartMuseum should be healthy, got {response.status_code}"
+            response.status_code,
+            200,
+            f"ChartMuseum should be healthy, got {response.status_code}",
         )
 
         # 차트 목록 조회 (인증 테스트)
-        charts_response = requests.get(f"{config.chartmuseum_url}/api/charts", auth=config.chartmuseum_auth, timeout=10)
+        charts_response = requests.get(
+            f"{config.chartmuseum_url}/api/charts",
+            auth=config.chartmuseum_auth,
+            timeout=10,
+        )
 
-        test_framework.assert_eq(charts_response.status_code, 200, f"ChartMuseum API should be accessible with auth")
+        test_framework.assert_eq(
+            charts_response.status_code,
+            200,
+            f"ChartMuseum API should be accessible with auth",
+        )
 
         return {
             "chartmuseum_url": config.chartmuseum_url,
             "health_status": response.status_code,
             "api_accessible": charts_response.status_code == 200,
-            "available_charts": list(charts_response.json().keys()) if charts_response.status_code == 200 else [],
+            "available_charts": list(charts_response.json().keys())
+            if charts_response.status_code == 200
+            else [],
         }
 
     except requests.RequestException as e:
@@ -198,13 +226,17 @@ def test_helm_chart_in_museum():
     try:
         # 특정 차트 버전 조회
         response = requests.get(
-            f"{config.chartmuseum_url}/api/charts/{config.app_name}", auth=config.chartmuseum_auth, timeout=10
+            f"{config.chartmuseum_url}/api/charts/{config.app_name}",
+            auth=config.chartmuseum_auth,
+            timeout=10,
         )
 
         if response.status_code == 200:
             chart_versions = response.json()
 
-            test_framework.assert_ok(len(chart_versions) > 0, f"At least one chart version should exist")
+            test_framework.assert_ok(
+                len(chart_versions) > 0, f"At least one chart version should exist"
+            )
 
             # 버전 정보 추출
             versions = [v["version"] for v in chart_versions]
@@ -219,7 +251,9 @@ def test_helm_chart_in_museum():
         else:
             # 차트가 없어도 정상적인 상황일 수 있음
             test_framework.assert_eq(
-                response.status_code, 404, f"Expected 404 for non-existent chart, got {response.status_code}"
+                response.status_code,
+                404,
+                f"Expected 404 for non-existent chart, got {response.status_code}",
             )
 
             return {
@@ -243,11 +277,15 @@ def test_kubernetes_deployment():
     config = GitOpsPipelineConfig()
 
     # kubectl 명령어 실행
-    cmd_result = run_command(f"kubectl get pods -n {config.namespace} -l app={config.app_name} -o json")
+    cmd_result = run_command(
+        f"kubectl get pods -n {config.namespace} -l app={config.app_name} -o json"
+    )
 
     if not cmd_result["success"]:
         # kubectl 명령어 실패는 환경 문제일 수 있으므로 경고로 처리
-        logger.warning(f"kubectl command failed: {cmd_result.get('stderr', 'Unknown error')}")
+        logger.warning(
+            f"kubectl command failed: {cmd_result.get('stderr', 'Unknown error')}"
+        )
         return {
             "message": "kubectl not available or cluster not accessible",
             "deployment_status": "unknown",
@@ -276,7 +314,13 @@ def test_kubernetes_deployment():
             pod_name = pod["metadata"]["name"]
             pod_status = pod["status"]["phase"]
 
-            pod_details.append({"name": pod_name, "status": pod_status, "ready": pod_status == "Running"})
+            pod_details.append(
+                {
+                    "name": pod_name,
+                    "status": pod_status,
+                    "ready": pod_status == "Running",
+                }
+            )
 
             if pod_status == "Running":
                 running_pods += 1
@@ -286,19 +330,26 @@ def test_kubernetes_deployment():
                 failed_pods += 1
 
         # 최소 1개의 Pod가 실행 중이어야 함
-        test_framework.assert_ok(running_pods > 0, f"At least one pod should be running, found {running_pods}")
+        test_framework.assert_ok(
+            running_pods > 0,
+            f"At least one pod should be running, found {running_pods}",
+        )
 
         return {
             "total_pods": len(pods),
             "running_pods": running_pods,
             "pending_pods": pending_pods,
             "failed_pods": failed_pods,
-            "deployment_status": "healthy" if running_pods > 0 and failed_pods == 0 else "degraded",
+            "deployment_status": "healthy"
+            if running_pods > 0 and failed_pods == 0
+            else "degraded",
             "pod_details": pod_details,
         }
 
     except json.JSONDecodeError:
-        test_framework.assert_ok(False, f"Failed to parse kubectl output: {cmd_result['stdout']}")
+        test_framework.assert_ok(
+            False, f"Failed to parse kubectl output: {cmd_result['stdout']}"
+        )
 
 
 @test_framework.test("kubernetes_service_status")
@@ -306,17 +357,26 @@ def test_kubernetes_service():
     """Kubernetes 서비스 상태 확인"""
     config = GitOpsPipelineConfig()
 
-    cmd_result = run_command(f"kubectl get svc -n {config.namespace} -l app={config.app_name} -o json")
+    cmd_result = run_command(
+        f"kubectl get svc -n {config.namespace} -l app={config.app_name} -o json"
+    )
 
     if not cmd_result["success"]:
-        logger.warning(f"kubectl service check failed: {cmd_result.get('stderr', 'Unknown error')}")
-        return {"message": "kubectl not available or cluster not accessible", "service_status": "unknown"}
+        logger.warning(
+            f"kubectl service check failed: {cmd_result.get('stderr', 'Unknown error')}"
+        )
+        return {
+            "message": "kubectl not available or cluster not accessible",
+            "service_status": "unknown",
+        }
 
     try:
         services_data = json.loads(cmd_result["stdout"])
         services = services_data.get("items", [])
 
-        test_framework.assert_ok(len(services) > 0, f"At least one service should exist")
+        test_framework.assert_ok(
+            len(services) > 0, f"At least one service should exist"
+        )
 
         service_details = []
 
@@ -329,16 +389,27 @@ def test_kubernetes_service():
                 "name": service_name,
                 "type": service_type,
                 "ports": [
-                    {"port": p["port"], "targetPort": p.get("targetPort"), "nodePort": p.get("nodePort")} for p in ports
+                    {
+                        "port": p["port"],
+                        "targetPort": p.get("targetPort"),
+                        "nodePort": p.get("nodePort"),
+                    }
+                    for p in ports
                 ],
             }
 
             service_details.append(service_info)
 
-        return {"service_count": len(services), "services": service_details, "service_status": "available"}
+        return {
+            "service_count": len(services),
+            "services": service_details,
+            "service_status": "available",
+        }
 
     except json.JSONDecodeError:
-        test_framework.assert_ok(False, f"Failed to parse service kubectl output: {cmd_result['stdout']}")
+        test_framework.assert_ok(
+            False, f"Failed to parse service kubectl output: {cmd_result['stdout']}"
+        )
 
 
 # =============================================================================
@@ -356,13 +427,17 @@ def test_application_health():
         response = requests.get(health_url, timeout=10)
 
         test_framework.assert_eq(
-            response.status_code, 200, f"Health endpoint should return 200, got {response.status_code}"
+            response.status_code,
+            200,
+            f"Health endpoint should return 200, got {response.status_code}",
         )
 
         # JSON 응답 파싱
         health_data = response.json()
 
-        test_framework.assert_ok("status" in health_data, "Health response should contain status field")
+        test_framework.assert_ok(
+            "status" in health_data, "Health response should contain status field"
+        )
 
         return {
             "health_url": health_url,
@@ -373,7 +448,9 @@ def test_application_health():
 
     except requests.RequestException as e:
         # 애플리케이션이 아직 배포되지 않았을 수 있음
-        logger.warning(f"Health check failed - application may not be deployed: {str(e)}")
+        logger.warning(
+            f"Health check failed - application may not be deployed: {str(e)}"
+        )
         return {
             "health_url": health_url,
             "accessible": False,
@@ -392,7 +469,9 @@ def test_application_system_info():
         response = requests.get(system_info_url, timeout=10)
 
         test_framework.assert_eq(
-            response.status_code, 200, f"System info endpoint should return 200, got {response.status_code}"
+            response.status_code,
+            200,
+            f"System info endpoint should return 200, got {response.status_code}",
         )
 
         system_data = response.json()
@@ -436,7 +515,9 @@ def test_argocd_application():
 
     if not cmd_result["success"]:
         # ArgoCD가 설정되지 않았을 수 있음
-        logger.warning(f"ArgoCD command failed: {cmd_result.get('stderr', 'Unknown error')}")
+        logger.warning(
+            f"ArgoCD command failed: {cmd_result.get('stderr', 'Unknown error')}"
+        )
         return {
             "message": "ArgoCD not configured or not accessible",
             "application_status": "unknown",
@@ -453,7 +534,8 @@ def test_argocd_application():
 
         # 동기화 상태 확인
         test_framework.assert_ok(
-            sync_status in ["Synced", "OutOfSync"], f"Sync status should be known, got {sync_status}"
+            sync_status in ["Synced", "OutOfSync"],
+            f"Sync status should be known, got {sync_status}",
         )
 
         return {
@@ -465,7 +547,9 @@ def test_argocd_application():
         }
 
     except json.JSONDecodeError:
-        test_framework.assert_ok(False, f"Failed to parse ArgoCD output: {cmd_result['stdout']}")
+        test_framework.assert_ok(
+            False, f"Failed to parse ArgoCD output: {cmd_result['stdout']}"
+        )
 
 
 # =============================================================================
@@ -491,7 +575,10 @@ def test_complete_pipeline():
     # 1. 레지스트리 접근성 확인
     try:
         response = requests.get(
-            f"https://{config.registry_url}/v2/", auth=config.registry_auth, timeout=5, verify=False
+            f"https://{config.registry_url}/v2/",
+            auth=config.registry_auth,
+            timeout=5,
+            verify=False,
         )
         pipeline_status["registry_accessible"] = response.status_code == 200
     except:
@@ -505,7 +592,9 @@ def test_complete_pipeline():
         issues.append("ChartMuseum not accessible")
 
     # 3. Kubernetes 배포 상태 확인
-    cmd_result = run_command(f"kubectl get pods -n {config.namespace} -l app={config.app_name}", timeout=10)
+    cmd_result = run_command(
+        f"kubectl get pods -n {config.namespace} -l app={config.app_name}", timeout=10
+    )
     if cmd_result["success"] and "Running" in cmd_result["stdout"]:
         pipeline_status["kubernetes_deployed"] = True
     else:
@@ -532,7 +621,8 @@ def test_complete_pipeline():
 
     # 최소 60% 이상의 구성 요소가 작동해야 함
     test_framework.assert_ok(
-        health_percentage >= 60, f"Pipeline health should be at least 60%, got {health_percentage:.1f}%"
+        health_percentage >= 60,
+        f"Pipeline health should be at least 60%, got {health_percentage:.1f}%",
     )
 
     return {
@@ -542,7 +632,11 @@ def test_complete_pipeline():
         "component_status": pipeline_status,
         "issues": issues,
         "overall_status": (
-            "healthy" if health_percentage >= 80 else "degraded" if health_percentage >= 60 else "unhealthy"
+            "healthy"
+            if health_percentage >= 80
+            else "degraded"
+            if health_percentage >= 60
+            else "unhealthy"
         ),
     }
 

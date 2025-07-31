@@ -33,13 +33,21 @@ def login_and_test():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
+        "params": [
+            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False, timeout=10)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers,
+            json=login_payload,
+            verify=False,
+            timeout=10,
+        )
 
         result = response.json()
         print(f"로그인 응답: {json.dumps(result, indent=2)}")
@@ -79,7 +87,12 @@ def test_api_with_session(session_id):
     tests = [
         {
             "name": "시스템 상태",
-            "request": {"id": 1, "method": "get", "params": [{"url": "/sys/status"}], "session": session_id},
+            "request": {
+                "id": 1,
+                "method": "get",
+                "params": [{"url": "/sys/status"}],
+                "session": session_id,
+            },
         },
         {
             "name": "FortiManager 버전",
@@ -92,11 +105,21 @@ def test_api_with_session(session_id):
         },
         {
             "name": "ADOM 목록",
-            "request": {"id": 3, "method": "get", "params": [{"url": "/dvmdb/adom"}], "session": session_id},
+            "request": {
+                "id": 3,
+                "method": "get",
+                "params": [{"url": "/dvmdb/adom"}],
+                "session": session_id,
+            },
         },
         {
             "name": "관리 장치 목록",
-            "request": {"id": 4, "method": "get", "params": [{"url": "/dvmdb/device"}], "session": session_id},
+            "request": {
+                "id": 4,
+                "method": "get",
+                "params": [{"url": "/dvmdb/device"}],
+                "session": session_id,
+            },
         },
         {
             "name": "방화벽 주소 객체",
@@ -124,7 +147,12 @@ def test_api_with_session(session_id):
         print(f"\n테스트: {test['name']}")
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=test["request"],
+                verify=False,
+            )
 
             result = response.json()
             if "result" in result:
@@ -139,7 +167,9 @@ def test_api_with_session(session_id):
                         if isinstance(data, list):
                             print(f"  데이터: {len(data)}개 항목")
                             if len(data) > 0:
-                                print(f"  첫 번째 항목: {json.dumps(data[0], indent=2)[:200]}...")
+                                print(
+                                    f"  첫 번째 항목: {json.dumps(data[0], indent=2)[:200]}..."
+                                )
                         else:
                             print(f"  데이터: {json.dumps(data, indent=2)[:200]}...")
                 else:
@@ -169,7 +199,9 @@ def check_api_user(session_id):
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False
+        )
 
         result = response.json()
         if "result" in result and result["result"][0]["status"]["code"] == 0:
@@ -192,12 +224,19 @@ def logout(session_id):
     """로그아웃"""
 
     print("\n\n4. 로그아웃")
-    logout_request = {"id": 1, "method": "exec", "params": [{"url": "/sys/logout"}], "session": session_id}
+    logout_request = {
+        "id": 1,
+        "method": "exec",
+        "params": [{"url": "/sys/logout"}],
+        "session": session_id,
+    }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=logout_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=logout_request, verify=False
+        )
 
         result = response.json()
         if result["result"][0]["status"]["code"] == 0:

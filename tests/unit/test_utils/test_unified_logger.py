@@ -9,7 +9,8 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from src.utils.unified_logger import UnifiedLogger, get_advanced_logger, get_logger
+from src.utils.unified_logger import (UnifiedLogger, get_advanced_logger,
+                                      get_logger)
 
 
 class TestUnifiedLogger(unittest.TestCase):

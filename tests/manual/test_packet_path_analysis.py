@@ -60,7 +60,10 @@ def test_packet_path_analysis():
 
         # Analyze packet path
         result = mock_fortigate.analyze_packet_path(
-            src_ip=scenario["src_ip"], dst_ip=scenario["dst_ip"], port=scenario["port"], protocol=scenario["protocol"]
+            src_ip=scenario["src_ip"],
+            dst_ip=scenario["dst_ip"],
+            port=scenario["port"],
+            protocol=scenario["protocol"],
         )
 
         if result["status"] == "success":
@@ -86,7 +89,9 @@ def test_packet_path_analysis():
                 print(f"  - 이름: {policy['name']}")
                 print(f"  - 액션: {policy['action']}")
                 if "nat" in policy:
-                    print(f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}")
+                    print(
+                        f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}"
+                    )
 
             # Show route details
             if "route" in analysis:

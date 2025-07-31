@@ -34,7 +34,10 @@ def test_api_key():
         {"name": "ADOM 목록", "url": "/dvmdb/adom"},
         {"name": "관리 장치 목록", "url": "/dvmdb/device"},
         {"name": "방화벽 주소 객체", "url": "/pm/config/global/obj/firewall/address"},
-        {"name": "방화벽 정책 (root ADOM)", "url": "/pm/config/adom/root/pkg/default/firewall/policy"},
+        {
+            "name": "방화벽 정책 (root ADOM)",
+            "url": "/pm/config/adom/root/pkg/default/firewall/policy",
+        },
         {"name": "VPN 설정", "url": "/pm/config/global/obj/vpn/ssl/settings"},
         {"name": "시스템 관리자 목록", "url": "/cli/global/system/admin/user"},
     ]
@@ -48,7 +51,11 @@ def test_api_key():
 
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=request_payload, verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=request_payload,
+                verify=False,
+                timeout=10,
             )
 
             result = response.json()
@@ -107,7 +114,9 @@ def test_packet_path_analysis(headers):
     }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=packet_test, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=packet_test, verify=False
+        )
 
         result = response.json()
         print(f"패킷 경로 분석 결과: {json.dumps(result, indent=2)[:300]}...")

@@ -34,7 +34,13 @@ def test_with_correct_info():
     test_request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_request, verify=False, timeout=10)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers,
+            json=test_request,
+            verify=False,
+            timeout=10,
+        )
 
         print(f"응답 코드: {response.status_code}")
         result = response.json()

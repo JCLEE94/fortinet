@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 FortiManager Demo Test with New API Key
-Testing with: pxx7odxgnjcxtzujbtu3nz39ahoegmx1
+Testing with environment variable FORTIMANAGER_NEW_API_KEY
 """
 
 import json
+import os
 import time
 from datetime import datetime
 
@@ -18,19 +19,26 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def test_new_api_key():
     """Test FortiManager with new API key"""
 
-    # New API key
-    api_key = "pxx7odxgnjcxtzujbtu3nz39ahoegmx1"
-    host = "hjsim-1034-451984.fortidemo.fortinet.com"
-    port = 14005
+    # Configuration from environment variables
+    api_key = os.environ.get("FORTIMANAGER_NEW_API_KEY", "test_new_api_key_placeholder")
+    host = os.environ.get("FORTIMANAGER_TEST_HOST", "test.fortimanager.local")
+    port = int(os.environ.get("FORTIMANAGER_TEST_PORT", "443"))
     base_url = f"https://{host}:{port}/jsonrpc"
 
     print(f"=== FortiManager Demo Test with New API Key ===")
     print(f"Host: {host}:{port}")
-    print(f"API Key: {api_key}")
+    print(
+        f"API Key: {'*' * 20 if api_key != 'test_new_api_key_placeholder' else 'NOT SET'}"
+    )
     print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
-    test_results = {"test_time": datetime.now().isoformat(), "api_key": api_key, "host": f"{host}:{port}", "tests": []}
+    test_results = {
+        "test_time": datetime.now().isoformat(),
+        "api_key": api_key,
+        "host": f"{host}:{port}",
+        "tests": [],
+    }
 
     def build_json_rpc_request(method, url, data=None, session=None, verbose=0):
         """Build JSON-RPC request payload"""
@@ -52,10 +60,15 @@ def test_new_api_key():
     # Test 1: API Key as Bearer Token
     print("Test 1: Bearer Token Authentication")
     try:
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        }
 
         payload = build_json_rpc_request("get", "/sys/status")
-        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
+        response = requests.post(
+            base_url, json=payload, headers=headers, verify=False, timeout=30
+        )
 
         print(f"Status Code: {response.status_code}")
 
@@ -64,7 +77,12 @@ def test_new_api_key():
             print(f"✅ Bearer Auth Success!")
             print(f"Response: {json.dumps(result, indent=2)}")
             test_results["tests"].append(
-                {"name": "bearer_auth_system_status", "status": "success", "method": "Bearer Token", "response": result}
+                {
+                    "name": "bearer_auth_system_status",
+                    "status": "success",
+                    "method": "Bearer Token",
+                    "response": result,
+                }
             )
         else:
             print(f"❌ Bearer Auth Failed: {response.text}")
@@ -80,7 +98,12 @@ def test_new_api_key():
     except Exception as e:
         print(f"❌ Bearer Auth Exception: {e}")
         test_results["tests"].append(
-            {"name": "bearer_auth_system_status", "status": "error", "method": "Bearer Token", "error": str(e)}
+            {
+                "name": "bearer_auth_system_status",
+                "status": "error",
+                "method": "Bearer Token",
+                "error": str(e),
+            }
         )
 
     print("\n" + "=" * 50 + "\n")
@@ -88,10 +111,16 @@ def test_new_api_key():
     # Test 2: API Key in Request Header (Alternative method)
     print("Test 2: API Key in Custom Header")
     try:
-        headers = {"Content-Type": "application/json", "X-API-Key": api_key, "Authorization": f"Token {api_key}"}
+        headers = {
+            "Content-Type": "application/json",
+            "X-API-Key": api_key,
+            "Authorization": f"Token {api_key}",
+        }
 
         payload = build_json_rpc_request("get", "/sys/status")
-        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
+        response = requests.post(
+            base_url, json=payload, headers=headers, verify=False, timeout=30
+        )
 
         print(f"Status Code: {response.status_code}")
 
@@ -100,7 +129,12 @@ def test_new_api_key():
             print(f"✅ Custom Header Auth Success!")
             print(f"Response: {json.dumps(result, indent=2)}")
             test_results["tests"].append(
-                {"name": "custom_header_auth", "status": "success", "method": "Custom Header", "response": result}
+                {
+                    "name": "custom_header_auth",
+                    "status": "success",
+                    "method": "Custom Header",
+                    "response": result,
+                }
             )
         else:
             print(f"❌ Custom Header Auth Failed: {response.text}")
@@ -116,7 +150,12 @@ def test_new_api_key():
     except Exception as e:
         print(f"❌ Custom Header Auth Exception: {e}")
         test_results["tests"].append(
-            {"name": "custom_header_auth", "status": "error", "method": "Custom Header", "error": str(e)}
+            {
+                "name": "custom_header_auth",
+                "status": "error",
+                "method": "Custom Header",
+                "error": str(e),
+            }
         )
 
     print("\n" + "=" * 50 + "\n")
@@ -127,7 +166,9 @@ def test_new_api_key():
 
     for username in usernames:
         try:
-            payload = build_json_rpc_request("exec", "/sys/login/user", {"user": username, "passwd": api_key})
+            payload = build_json_rpc_request(
+                "exec", "/sys/login/user", {"user": username, "passwd": api_key}
+            )
 
             response = requests.post(base_url, json=payload, verify=False, timeout=30)
 
@@ -140,8 +181,12 @@ def test_new_api_key():
                     session_id = result["session"]
 
                     # Test authenticated request
-                    test_payload = build_json_rpc_request("get", "/sys/status", session=session_id)
-                    test_response = requests.post(base_url, json=test_payload, verify=False)
+                    test_payload = build_json_rpc_request(
+                        "get", "/sys/status", session=session_id
+                    )
+                    test_response = requests.post(
+                        base_url, json=test_payload, verify=False
+                    )
 
                     if test_response.status_code == 200:
                         test_result = test_response.json()
@@ -165,14 +210,20 @@ def test_new_api_key():
                         break  # Success, no need to try other usernames
 
                 else:
-                    error_msg = result.get("result", [{}])[0].get("status", {}).get("message", "Unknown error")
+                    error_msg = (
+                        result.get("result", [{}])[0]
+                        .get("status", {})
+                        .get("message", "Unknown error")
+                    )
                     print(f"❌ Login failed for {username}: {error_msg}")
 
         except Exception as e:
             print(f"❌ Login exception for {username}: {e}")
 
     # Save results
-    report_filename = f"fortimanager_new_api_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_filename = (
+        f"fortimanager_new_api_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(report_filename, "w") as f:
         json.dump(test_results, f, indent=2, default=str)
 
@@ -215,9 +266,14 @@ def test_additional_endpoints(base_url, session_id, test_results):
             if response.status_code == 200:
                 result = response.json()
 
-                if "result" in result and result["result"][0].get("status", {}).get("code") == 0:
+                if (
+                    "result" in result
+                    and result["result"][0].get("status", {}).get("code") == 0
+                ):
                     data = result["result"][0].get("data", [])
-                    print(f"✅ {name}: Found {len(data) if isinstance(data, list) else 'N/A'} items")
+                    print(
+                        f"✅ {name}: Found {len(data) if isinstance(data, list) else 'N/A'} items"
+                    )
 
                     test_results["tests"].append(
                         {
@@ -225,12 +281,16 @@ def test_additional_endpoints(base_url, session_id, test_results):
                             "status": "success",
                             "url": url,
                             "data_count": len(data) if isinstance(data, list) else None,
-                            "sample_data": data[:2] if isinstance(data, list) and data else None,
+                            "sample_data": data[:2]
+                            if isinstance(data, list) and data
+                            else None,
                         }
                     )
                 else:
                     error_info = result.get("result", [{}])[0].get("status", {})
-                    print(f"❌ {name}: Error {error_info.get('code')} - {error_info.get('message')}")
+                    print(
+                        f"❌ {name}: Error {error_info.get('code')} - {error_info.get('message')}"
+                    )
 
             else:
                 print(f"❌ {name}: HTTP {response.status_code}")
@@ -283,7 +343,9 @@ if __name__ == "__main__":
 
     # Generate markdown report
     report = generate_detailed_report(results)
-    report_filename = f"fortimanager_new_api_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    report_filename = (
+        f"fortimanager_new_api_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    )
 
     with open(report_filename, "w") as f:
         f.write(report)

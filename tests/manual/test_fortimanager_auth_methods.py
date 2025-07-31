@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
 FortiManager Authentication Methods Test
-Tests various authentication combinations with username 'test'
+Tests various authentication combinations with configured username
 """
 
 import json
+import os
 from datetime import datetime
 
 import requests
@@ -13,10 +14,12 @@ import urllib3
 # Disable SSL warnings for demo environment
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Demo environment configuration
-BASE_URL = "https://hjsim-1034-451984.fortidemo.fortinet.com:14005"
-API_KEY = "1bs7k8bq4rntg8n8nup8kmkqeaf1bsd9"
-USERNAME = "test"
+# Demo environment configuration from environment variables
+HOST = os.environ.get("FORTIMANAGER_TEST_HOST", "test.fortimanager.local")
+PORT = int(os.environ.get("FORTIMANAGER_TEST_PORT", "443"))
+BASE_URL = f"https://{HOST}:{PORT}"
+API_KEY = os.environ.get("FORTIMANAGER_TEST_API_KEY", "test_api_key_placeholder")
+USERNAME = os.environ.get("FORTIMANAGER_TEST_USERNAME", "test_user")
 
 
 def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
@@ -32,11 +35,15 @@ def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
         url = f"{BASE_URL}{endpoint}"
 
         if data:
-            response = requests.post(url, headers=headers, json=data, verify=False, timeout=10)
+            response = requests.post(
+                url, headers=headers, json=data, verify=False, timeout=10
+            )
         else:
             # Simple test request
             test_data = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
-            response = requests.post(url, headers=headers, json=test_data, verify=False, timeout=10)
+            response = requests.post(
+                url, headers=headers, json=test_data, verify=False, timeout=10
+            )
 
         print(f"\nStatus Code: {response.status_code}")
         print(f"Response Headers: {dict(response.headers)}")
@@ -47,14 +54,18 @@ def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
                 print(f"Response: {json.dumps(json_response, indent=2)}")
 
                 # Check for specific error codes
-                if "result" in json_response and isinstance(json_response["result"], list):
+                if "result" in json_response and isinstance(
+                    json_response["result"], list
+                ):
                     if len(json_response["result"]) > 0:
                         result = json_response["result"][0]
                         if "status" in result:
                             status = result["status"]
                             if "code" in status:
                                 print(f"\n⚠️  API Error Code: {status['code']}")
-                                print(f"   Message: {status.get('message', 'No message')}")
+                                print(
+                                    f"   Message: {status.get('message', 'No message')}"
+                                )
             except:
                 print(f"Raw Response: {response.text[:500]}")
 
@@ -71,38 +82,61 @@ def main():
     print(f"Time: {datetime.now()}")
     print(f"Host: {BASE_URL}")
     print(f"Username: {USERNAME}")
-    print(f"API Key: {API_KEY}")
+    print(
+        f"API Key: {'*' * 20 if API_KEY != 'test_api_key_placeholder' else 'NOT SET'}"
+    )
 
     # Test 1: API Key only (known working method)
-    test_auth_method("API Key Only (X-API-Key)", headers={"Content-Type": "application/json", "X-API-Key": API_KEY})
+    test_auth_method(
+        "API Key Only (X-API-Key)",
+        headers={"Content-Type": "application/json", "X-API-Key": API_KEY},
+    )
 
     # Test 2: API Key with Username in header
     test_auth_method(
         "API Key + Username Header",
-        headers={"Content-Type": "application/json", "X-API-Key": API_KEY, "X-Username": USERNAME},
+        headers={
+            "Content-Type": "application/json",
+            "X-API-Key": API_KEY,
+            "X-Username": USERNAME,
+        },
     )
 
     # Test 3: Bearer token with username
     test_auth_method(
         "Bearer Token + Username Header",
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}", "X-Username": USERNAME},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {API_KEY}",
+            "X-Username": USERNAME,
+        },
     )
 
     # Test 4: Login with username and API key as password
     login_data = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}
+        ],
     }
 
-    test_auth_method("Login Method (username/api_key)", headers={"Content-Type": "application/json"}, data=login_data)
+    test_auth_method(
+        "Login Method (username/api_key)",
+        headers={"Content-Type": "application/json"},
+        data=login_data,
+    )
 
     # Test 5: Basic Auth with username and API key
     import base64
 
     credentials = base64.b64encode(f"{USERNAME}:{API_KEY}".encode()).decode()
     test_auth_method(
-        "Basic Authentication", headers={"Content-Type": "application/json", "Authorization": f"Basic {credentials}"}
+        "Basic Authentication",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Basic {credentials}",
+        },
     )
 
     # Test 6: Custom FortiManager header format
@@ -117,7 +151,12 @@ def main():
     )
 
     # Test 7: Session-based with user context
-    session_data = {"id": 1, "session": f"{USERNAME}:{API_KEY}", "method": "get", "params": [{"url": "/sys/status"}]}
+    session_data = {
+        "id": 1,
+        "session": f"{USERNAME}:{API_KEY}",
+        "method": "get",
+        "params": [{"url": "/sys/status"}],
+    }
 
     test_auth_method(
         "Session-based with User Context",
@@ -129,10 +168,19 @@ def main():
     token_data = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/auth", "data": {"username": USERNAME, "secretkey": API_KEY, "token": API_KEY}}],
+        "params": [
+            {
+                "url": "/sys/login/auth",
+                "data": {"username": USERNAME, "secretkey": API_KEY, "token": API_KEY},
+            }
+        ],
     }
 
-    test_auth_method("Token Auth with User Parameter", headers={"Content-Type": "application/json"}, data=token_data)
+    test_auth_method(
+        "Token Auth with User Parameter",
+        headers={"Content-Type": "application/json"},
+        data=token_data,
+    )
 
     print("\n" + "=" * 60)
     print("✅ Authentication testing complete!")

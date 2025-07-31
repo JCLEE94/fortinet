@@ -37,8 +37,18 @@ def test_api_without_session():
                 # 세션 필드 없음!
             },
         },
-        {"name": "ADOM 목록 (세션 없이)", "request": {"id": 2, "method": "get", "params": [{"url": "/dvmdb/adom"}]}},
-        {"name": "API 버전 정보", "request": {"id": 3, "method": "get", "params": [{"url": "/sys/api/versions"}]}},
+        {
+            "name": "ADOM 목록 (세션 없이)",
+            "request": {"id": 2, "method": "get", "params": [{"url": "/dvmdb/adom"}]},
+        },
+        {
+            "name": "API 버전 정보",
+            "request": {
+                "id": 3,
+                "method": "get",
+                "params": [{"url": "/sys/api/versions"}],
+            },
+        },
     ]
 
     # Bearer 토큰 테스트
@@ -47,7 +57,11 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=test["request"],
+                verify=False,
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -67,7 +81,11 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=test["request"], verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=test["request"],
+                verify=False,
+                timeout=10,
             )
 
             result = response.json()
@@ -76,7 +94,9 @@ def test_api_without_session():
                 if status["code"] == 0:
                     print(f"✅ 성공!")
                     if "data" in result["result"][0]:
-                        print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
+                        print(
+                            f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
+                        )
                 else:
                     print(f"❌ 에러 {status['code']}: {status['message']}")
 
@@ -91,7 +111,9 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             url = f"{BASE_URL}/jsonrpc?access_token={API_KEY}"
-            response = requests.post(url, headers=headers, json=test["request"], verify=False, timeout=10)
+            response = requests.post(
+                url, headers=headers, json=test["request"], verify=False, timeout=10
+            )
 
             if response.status_code == 200:
                 result = response.json()

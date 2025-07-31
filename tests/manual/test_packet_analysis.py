@@ -66,7 +66,11 @@ def test_packet_path_analysis():
                 "status": "allowed",
                 "path": [
                     {"interface": "lan", "zone": "Internal"},
-                    {"policy": "Internet_Access_Policy", "action": "accept", "nat": "enabled"},
+                    {
+                        "policy": "Internet_Access_Policy",
+                        "action": "accept",
+                        "nat": "enabled",
+                    },
                     {"interface": "wan1", "zone": "External"},
                 ],
                 "nat": {"type": "source NAT", "translated_ip": "203.0.113.1"},
@@ -78,10 +82,18 @@ def test_packet_path_analysis():
                 "status": "allowed",
                 "path": [
                     {"interface": "wan1", "zone": "External"},
-                    {"policy": "DMZ_Web_Server_Policy", "action": "accept", "nat": "enabled"},
+                    {
+                        "policy": "DMZ_Web_Server_Policy",
+                        "action": "accept",
+                        "nat": "enabled",
+                    },
                     {"interface": "dmz", "zone": "DMZ"},
                 ],
-                "nat": {"type": "destination NAT", "original_ip": "203.0.113.100", "translated_ip": "10.10.10.100"},
+                "nat": {
+                    "type": "destination NAT",
+                    "original_ip": "203.0.113.100",
+                    "translated_ip": "10.10.10.100",
+                },
                 "security_profiles": ["AV", "IPS", "WAF"],
                 "route": "10.10.10.0/24 via dmz interface",
             }

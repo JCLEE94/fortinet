@@ -64,9 +64,15 @@ class MSATestFramework:
         """인증 플로우 테스트"""
         try:
             # 1. 로그인 테스트
-            login_data = {"user_id": "testuser", "password": "admin123", "permissions": ["read", "write"]}
+            login_data = {
+                "user_id": "testuser",
+                "password": "admin123",
+                "permissions": ["read", "write"],
+            }
 
-            response = requests.post(f"{AUTH_SERVICE_URL}/login", json=login_data, timeout=10)
+            response = requests.post(
+                f"{AUTH_SERVICE_URL}/login", json=login_data, timeout=10
+            )
 
             if response.status_code != 200:
                 return {
@@ -80,7 +86,11 @@ class MSATestFramework:
             self.auth_token = auth_data.get("token")
 
             # 2. 토큰 검증 테스트
-            verify_response = requests.post(f"{AUTH_SERVICE_URL}/verify", json={"token": self.auth_token}, timeout=10)
+            verify_response = requests.post(
+                f"{AUTH_SERVICE_URL}/verify",
+                json={"token": self.auth_token},
+                timeout=10,
+            )
 
             if verify_response.status_code != 200:
                 return {
@@ -92,7 +102,9 @@ class MSATestFramework:
 
             # 3. 인증된 요청 테스트
             headers = {"Authorization": f"Bearer {self.auth_token}"}
-            status_response = requests.get(f"{AUTH_SERVICE_URL}/status", headers=headers, timeout=10)
+            status_response = requests.get(
+                f"{AUTH_SERVICE_URL}/status", headers=headers, timeout=10
+            )
 
             if status_response.status_code != 200:
                 return {
@@ -115,13 +127,19 @@ class MSATestFramework:
     def test_service_to_service_communication(self) -> dict:
         """서비스 간 통신 테스트"""
         if not self.auth_token:
-            return {"test": "service_communication", "status": "skipped", "reason": "No auth token available"}
+            return {
+                "test": "service_communication",
+                "status": "skipped",
+                "reason": "No auth token available",
+            }
 
         try:
             headers = {"Authorization": f"Bearer {self.auth_token}"}
 
             # FortiManager 서비스 테스트
-            fm_response = requests.get(f"{FORTIMANAGER_SERVICE_URL}/policies", headers=headers, timeout=10)
+            fm_response = requests.get(
+                f"{FORTIMANAGER_SERVICE_URL}/policies", headers=headers, timeout=10
+            )
 
             if fm_response.status_code != 200:
                 return {
@@ -143,7 +161,10 @@ class MSATestFramework:
             }
 
             create_response = requests.post(
-                f"{FORTIMANAGER_SERVICE_URL}/policies", json=policy_data, headers=headers, timeout=10
+                f"{FORTIMANAGER_SERVICE_URL}/policies",
+                json=policy_data,
+                headers=headers,
+                timeout=10,
             )
 
             if create_response.status_code not in [200, 201]:
@@ -171,8 +192,15 @@ class MSATestFramework:
             services_response = requests.get(f"{KONG_ADMIN_URL}/services", timeout=10)
             routes_response = requests.get(f"{KONG_ADMIN_URL}/routes", timeout=10)
 
-            if services_response.status_code != 200 or routes_response.status_code != 200:
-                return {"test": "kong_gateway_routing", "status": "failed", "error": "Kong Admin API unavailable"}
+            if (
+                services_response.status_code != 200
+                or routes_response.status_code != 200
+            ):
+                return {
+                    "test": "kong_gateway_routing",
+                    "status": "failed",
+                    "error": "Kong Admin API unavailable",
+                }
 
             services = services_response.json().get("data", [])
             routes = routes_response.json().get("data", [])
@@ -189,7 +217,9 @@ class MSATestFramework:
             ]
 
             registered_services = [service["name"] for service in services]
-            missing_services = [svc for svc in expected_services if svc not in registered_services]
+            missing_services = [
+                svc for svc in expected_services if svc not in registered_services
+            ]
 
             # 라우팅 테스트 - 각 서비스에 직접 요청
             routing_tests = {}
@@ -225,7 +255,9 @@ class MSATestFramework:
             auth = ("fortinet", "fortinet123")
 
             # 큐 상태 확인
-            queues_response = requests.get(f"{rabbitmq_url}/queues", auth=auth, timeout=10)
+            queues_response = requests.get(
+                f"{rabbitmq_url}/queues", auth=auth, timeout=10
+            )
 
             if queues_response.status_code != 200:
                 return {
@@ -250,7 +282,11 @@ class MSATestFramework:
             }
 
         except Exception as e:
-            return {"test": "message_queue_integration", "status": "error", "error": str(e)}
+            return {
+                "test": "message_queue_integration",
+                "status": "error",
+                "error": str(e),
+            }
 
     def run_comprehensive_test(self) -> dict:
         """종합 MSA 테스트 실행"""

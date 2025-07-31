@@ -16,7 +16,8 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+from src.api.clients.base_api_client import (BaseApiClient,
+                                             RealtimeMonitoringMixin)
 from src.api.clients.faz_client import FAZClient
 from src.api.clients.fortigate_api_client import FortiGateAPIClient
 from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
@@ -143,7 +144,9 @@ class TestJsonRpcMixin(unittest.TestCase):
 
         # 기본 페이로드
         payload = client.build_json_rpc_request(
-            method="exec", url="/sys/login/user", data={"user": "admin", "passwd": "password"}
+            method="exec",
+            url="/sys/login/user",
+            data={"user": "admin", "passwd": "password"},
         )
 
         self.assertEqual(payload["id"], 1)
@@ -153,7 +156,9 @@ class TestJsonRpcMixin(unittest.TestCase):
         self.assertEqual(payload["params"]["data"]["user"], "admin")
 
         # 세션 포함 페이로드
-        payload2 = client.build_json_rpc_request(method="get", url="/pm/config/device", session="test-session-id")
+        payload2 = client.build_json_rpc_request(
+            method="get", url="/pm/config/device", session="test-session-id"
+        )
 
         self.assertEqual(payload2["session"], "test-session-id")
         self.assertEqual(payload2["id"], 2)  # ID 증가 확인
@@ -170,7 +175,12 @@ class TestJsonRpcMixin(unittest.TestCase):
         # 성공 응답
         success_response = {
             "id": 1,
-            "result": [{"status": {"code": 0, "message": "OK"}, "data": {"devices": ["device1", "device2"]}}],
+            "result": [
+                {
+                    "status": {"code": 0, "message": "OK"},
+                    "data": {"devices": ["device1", "device2"]},
+                }
+            ],
         }
 
         success, data = client.parse_json_rpc_response(success_response)
@@ -178,7 +188,10 @@ class TestJsonRpcMixin(unittest.TestCase):
         self.assertEqual(data["devices"], ["device1", "device2"])
 
         # 에러 응답
-        error_response = {"id": 1, "error": {"code": -11, "message": "Authentication failed"}}
+        error_response = {
+            "id": 1,
+            "error": {"code": -11, "message": "Authentication failed"},
+        }
 
         success, data = client.parse_json_rpc_response(error_response)
         self.assertFalse(success)
@@ -197,7 +210,13 @@ class TestFortiGateAPIClient(unittest.TestCase):
         """시스템 상태 조회 테스트"""
         mock_request.return_value = (
             True,
-            {"results": {"version": "v7.0.0", "serial": "FG100E1234567890", "hostname": "FortiGate-100E"}},
+            {
+                "results": {
+                    "version": "v7.0.0",
+                    "serial": "FG100E1234567890",
+                    "hostname": "FortiGate-100E",
+                }
+            },
             200,
         )
 
@@ -240,7 +259,9 @@ class TestFortiGateAPIClient(unittest.TestCase):
         # Mock 모든 API 호출들
         with patch.object(self.client, "get_cpu_usage") as mock_cpu, patch.object(
             self.client, "get_memory_usage"
-        ) as mock_memory, patch.object(self.client, "get_interface_stats") as mock_interfaces, patch.object(
+        ) as mock_memory, patch.object(
+            self.client, "get_interface_stats"
+        ) as mock_interfaces, patch.object(
             self.client, "get_sessions"
         ) as mock_sessions, patch.object(
             self.client, "get_system_status"
@@ -273,14 +294,20 @@ class TestFortiManagerAPIClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FortiManagerAPIClient(host="192.168.1.200", username="admin", password="password")
+        self.client = FortiManagerAPIClient(
+            host="192.168.1.200", username="admin", password="password"
+        )
 
     @patch.object(FortiManagerAPIClient, "_make_request")
     def test_json_rpc_login(self, mock_request):
         """JSON-RPC 로그인 테스트"""
         mock_request.return_value = (
             True,
-            {"id": 1, "result": [{"status": {"code": 0, "message": "OK"}}], "session": "test-session-id"},
+            {
+                "id": 1,
+                "result": [{"status": {"code": 0, "message": "OK"}}],
+                "session": "test-session-id",
+            },
             200,
         )
 
@@ -294,7 +321,10 @@ class TestFortiManagerAPIClient(unittest.TestCase):
         """ADOM 목록 조회 테스트"""
         mock_api_request.return_value = (
             True,
-            [{"name": "root", "desc": "Root ADOM"}, {"name": "TestADOM", "desc": "Test ADOM"}],
+            [
+                {"name": "root", "desc": "Root ADOM"},
+                {"name": "TestADOM", "desc": "Test ADOM"},
+            ],
         )
 
         adoms = self.client.get_adom_list()
@@ -309,14 +339,24 @@ class TestFAZClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FAZClient(host="192.168.1.150", username="admin", password="password")
+        self.client = FAZClient(
+            host="192.168.1.150", username="admin", password="password"
+        )
 
     @patch.object(FAZClient, "_make_request")
     def test_login_and_token_fallback(self, mock_request):
         """로그인 및 토큰 폴백 테스트"""
         # 첫 번째 호출: 로그인 성공
         mock_request.side_effect = [
-            (True, {"id": 1, "result": [{"status": {"code": 0, "message": "OK"}}], "session": "test-session-id"}, 200)
+            (
+                True,
+                {
+                    "id": 1,
+                    "result": [{"status": {"code": 0, "message": "OK"}}],
+                    "session": "test-session-id",
+                },
+                200,
+            )
         ]
 
         success = self.client.login()

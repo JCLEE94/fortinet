@@ -26,11 +26,24 @@ def raw_test():
     print("\n1. 다양한 헤더 조합 테스트")
 
     header_combinations = [
-        {"name": "Cookie 방식", "headers": {"Content-Type": "application/json", "Cookie": f"APISCCT={API_KEY}"}},
-        {"name": "FortiToken", "headers": {"Content-Type": "application/json", "FortiToken": API_KEY}},
+        {
+            "name": "Cookie 방식",
+            "headers": {
+                "Content-Type": "application/json",
+                "Cookie": f"APISCCT={API_KEY}",
+            },
+        },
+        {
+            "name": "FortiToken",
+            "headers": {"Content-Type": "application/json", "FortiToken": API_KEY},
+        },
         {
             "name": "Authorization + X-API-Key",
-            "headers": {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}", "X-API-Key": API_KEY},
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {API_KEY}",
+                "X-API-Key": API_KEY,
+            },
         },
         {
             "name": "Custom Fortinet Headers",
@@ -49,7 +62,11 @@ def raw_test():
         print(f"\n테스트: {combo['name']}")
         try:
             response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=combo["headers"], json=test_payload, verify=False, timeout=10
+                f"{BASE_URL}/jsonrpc",
+                headers=combo["headers"],
+                json=test_payload,
+                verify=False,
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -70,12 +87,22 @@ def raw_test():
     # 2. GET 메소드로 시도
     print("\n\n2. GET 메소드 직접 호출")
 
-    get_endpoints = ["/api/v2/cmdb/system/status", "/api/v2/monitor/system/status", "/sys/status", "/jsonrpc"]
+    get_endpoints = [
+        "/api/v2/cmdb/system/status",
+        "/api/v2/monitor/system/status",
+        "/sys/status",
+        "/jsonrpc",
+    ]
 
     for endpoint in get_endpoints:
         print(f"\nGET {endpoint}")
         try:
-            response = requests.get(f"{BASE_URL}{endpoint}", headers={"X-API-Key": API_KEY}, verify=False, timeout=5)
+            response = requests.get(
+                f"{BASE_URL}{endpoint}",
+                headers={"X-API-Key": API_KEY},
+                verify=False,
+                timeout=5,
+            )
             print(f"Status: {response.status_code}")
             if response.status_code == 200:
                 print(f"Response: {response.text[:200]}")
@@ -93,10 +120,16 @@ def raw_test():
     login_data = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": "admin", "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": "admin", "passwd": API_KEY}}
+        ],
     }
 
-    response = session.post(f"{BASE_URL}/jsonrpc", json=login_data, headers={"Content-Type": "application/json"})
+    response = session.post(
+        f"{BASE_URL}/jsonrpc",
+        json=login_data,
+        headers={"Content-Type": "application/json"},
+    )
 
     print(f"로그인 응답: {response.json()}")
     print(f"쿠키: {session.cookies.get_dict()}")
@@ -106,8 +139,16 @@ def raw_test():
 
     alternate_formats = [
         {"jsonrpc": "2.0", "id": 1, "method": "get", "params": {"url": "/sys/status"}},
-        {"id": 1, "method": "get", "params": {"url": "/sys/status", "access_token": API_KEY}},
-        {"id": 1, "method": "get", "params": [{"url": "/sys/status", "token": API_KEY}]},
+        {
+            "id": 1,
+            "method": "get",
+            "params": {"url": "/sys/status", "access_token": API_KEY},
+        },
+        {
+            "id": 1,
+            "method": "get",
+            "params": [{"url": "/sys/status", "token": API_KEY}],
+        },
     ]
 
     for fmt in alternate_formats:

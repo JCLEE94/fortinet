@@ -110,9 +110,18 @@ class TestWebAppIntegration(unittest.TestCase):
 
     def test_api_firewall_policy_analysis(self):
         """방화벽 정책 분석 API 테스트"""
-        test_data = {"src_ip": "192.168.1.100", "dst_ip": "172.16.10.100", "port": 80, "protocol": "tcp"}
+        test_data = {
+            "src_ip": "192.168.1.100",
+            "dst_ip": "172.16.10.100",
+            "port": 80,
+            "protocol": "tcp",
+        }
 
-        response = self.client.post("/api/firewall-policy/analyze", json=test_data, content_type="application/json")
+        response = self.client.post(
+            "/api/firewall-policy/analyze",
+            json=test_data,
+            content_type="application/json",
+        )
 
         # 분석 결과 확인 (성공하거나 설정 오류)
         self.assertIn(response.status_code, [200, 500])
@@ -129,7 +138,9 @@ class TestWebAppIntegration(unittest.TestCase):
         }
 
         response = self.client.post(
-            "/api/firewall-policy/create-ticket", json=test_data, content_type="application/json"
+            "/api/firewall-policy/create-ticket",
+            json=test_data,
+            content_type="application/json",
         )
 
         self.assertIn(response.status_code, [200, 500])

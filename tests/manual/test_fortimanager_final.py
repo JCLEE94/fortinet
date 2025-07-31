@@ -5,6 +5,7 @@ FortiManager API 최종 테스트
 """
 
 import json
+import os
 
 import requests
 import urllib3
@@ -12,9 +13,12 @@ import urllib3
 # SSL 경고 비활성화
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-BASE_URL = "https://hjsim-1034-451984.fortidemo.fortinet.com:14005"
-API_KEY = "7rwswqr91x514i1pjq7h14exqb8g733h"
-USERNAME = "1411"
+# 환경변수에서 설정 가져오기
+HOST = os.environ.get("FORTIMANAGER_TEST_HOST", "test.fortimanager.local")
+PORT = int(os.environ.get("FORTIMANAGER_TEST_PORT", "443"))
+BASE_URL = f"https://{HOST}:{PORT}"
+API_KEY = os.environ.get("FORTIMANAGER_TEST_API_KEY", "test_api_key_placeholder")
+USERNAME = os.environ.get("FORTIMANAGER_TEST_USERNAME", "test_user")
 
 
 def test_fortimanager_api():
@@ -32,7 +36,9 @@ def test_fortimanager_api():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [{"data": {"user": USERNAME, "passwd": API_KEY}, "url": "sys/login/user"}],
+        "params": [
+            {"data": {"user": USERNAME, "passwd": API_KEY}, "url": "sys/login/user"}
+        ],
         "session": None,
     }
 
@@ -41,7 +47,13 @@ def test_fortimanager_api():
     try:
         print(f"요청: {json.dumps(login_payload, indent=2)}")
 
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False, timeout=10)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc",
+            headers=headers,
+            json=login_payload,
+            verify=False,
+            timeout=10,
+        )
 
         result = response.json()
         print(f"\n응답: {json.dumps(result, indent=2)}")
@@ -66,13 +78,20 @@ def test_fortimanager_api():
 
     # Bearer 토큰
     print("\n2.1 Authorization Bearer 헤더")
-    bearer_headers = {"Content-Type": "application/json", "Authorization": f"Bearer {API_KEY}"}
+    bearer_headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}",
+    }
 
     test_request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
 
     try:
         response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=bearer_headers, json=test_request, verify=False, timeout=10
+            f"{BASE_URL}/jsonrpc",
+            headers=bearer_headers,
+            json=test_request,
+            verify=False,
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -90,7 +109,11 @@ def test_fortimanager_api():
 
     try:
         response = requests.post(
-            url_with_token, headers={"Content-Type": "application/json"}, json=test_request, verify=False, timeout=10
+            url_with_token,
+            headers={"Content-Type": "application/json"},
+            json=test_request,
+            verify=False,
+            timeout=10,
         )
 
         if response.status_code == 200:
@@ -134,10 +157,20 @@ def test_session_api(session_id):
     for url, desc in endpoints:
         print(f"\n테스트: {desc}")
 
-        request_payload = {"id": 1, "method": "get", "params": [{"url": url}], "session": session_id}
+        request_payload = {
+            "id": 1,
+            "method": "get",
+            "params": [{"url": url}],
+            "session": session_id,
+        }
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_payload, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc",
+                headers=headers,
+                json=request_payload,
+                verify=False,
+            )
 
             result = response.json()
             if "result" in result:
@@ -145,9 +178,13 @@ def test_session_api(session_id):
                 if status_code == 0:
                     print(f"✅ 성공!")
                     if "data" in result["result"][0]:
-                        print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
+                        print(
+                            f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
+                        )
                 else:
-                    print(f"❌ 에러 {status_code}: {result['result'][0]['status']['message']}")
+                    print(
+                        f"❌ 에러 {status_code}: {result['result'][0]['status']['message']}"
+                    )
 
         except Exception as e:
             print(f"예외: {e}")

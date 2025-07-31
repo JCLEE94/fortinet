@@ -38,7 +38,9 @@ def test_adom_access():
         request_data = {"id": 1, "method": "get", "params": [{"url": test["url"]}]}
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False
+            )
 
             result = response.json()
             if "result" in result:
@@ -46,7 +48,9 @@ def test_adom_access():
                 if code == 0:
                     print(f"  ✅ 성공! 데이터 접근 가능")
                     if "data" in result["result"][0]:
-                        print(f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
+                        print(
+                            f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
+                        )
                 else:
                     print(f"  ❌ 에러 {code}: {result['result'][0]['status']['message']}")
 
@@ -55,10 +59,16 @@ def test_adom_access():
 
     # 2. ADOM 목록 확인
     print("\n\n2. ADOM 목록 확인")
-    adom_list_request = {"id": 1, "method": "get", "params": [{"url": "/dvmdb/adom", "option": ["object member"]}]}
+    adom_list_request = {
+        "id": 1,
+        "method": "get",
+        "params": [{"url": "/dvmdb/adom", "option": ["object member"]}],
+    }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_list_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=adom_list_request, verify=False
+        )
 
         result = response.json()
         print(f"ADOM 목록 응답: {json.dumps(result, indent=2)}")
@@ -74,10 +84,16 @@ def test_adom_access():
         print(f"\nADOM '{adom}' 테스트:")
 
         # ADOM 정보 조회
-        adom_info = {"id": 1, "method": "get", "params": [{"url": f"/dvmdb/adom/{adom}"}]}
+        adom_info = {
+            "id": 1,
+            "method": "get",
+            "params": [{"url": f"/dvmdb/adom/{adom}"}],
+        }
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_info, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=adom_info, verify=False
+            )
 
             result = response.json()
             if "result" in result:
@@ -94,10 +110,16 @@ def test_adom_access():
 
     # 4. 사용자 권한 확인
     print("\n\n4. API 사용자 권한 확인")
-    user_check = {"id": 1, "method": "get", "params": [{"url": "/cli/global/system/admin/user/1411"}]}
+    user_check = {
+        "id": 1,
+        "method": "get",
+        "params": [{"url": "/cli/global/system/admin/user/1411"}],
+    }
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_check, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=user_check, verify=False
+        )
 
         result = response.json()
         print(f"사용자 정보: {json.dumps(result, indent=2)}")
