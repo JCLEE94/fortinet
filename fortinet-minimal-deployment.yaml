@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet
+  namespace: fortinet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fortinet
+  template:
+    metadata:
+      labels:
+        app: fortinet
+    spec:
+      imagePullSecrets:
+      - name: harbor-registry
+      containers:
+      - name: fortinet
+        image: registry.jclee.me/fortinet:latest
+        ports:
+        - containerPort: 7777
+        env:
+        - name: APP_MODE
+          value: "production"
+        - name: WEB_APP_PORT
+          value: "7777"
+        - name: OFFLINE_MODE
+          value: "false"
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fortinet
+  namespace: fortinet
+spec:
+  type: NodePort
+  ports:
+  - port: 7777
+    targetPort: 7777
+    nodePort: 30777
+    protocol: TCP
+  selector:
+    app: fortinet
