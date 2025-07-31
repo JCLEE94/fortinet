@@ -78,29 +78,19 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         volumeMounts:
-        {{- if .Values.volumes.data.enabled }}
         - name: data-volume
           mountPath: /app/data
-        {{- end }}
-        {{- if .Values.volumes.logs.enabled }}
         - name: logs-volume
           mountPath: /app/logs
-        {{- end }}
         - name: tmp
           mountPath: /tmp
         - name: var-cache
           mountPath: /var/cache
       volumes:
-      {{- if .Values.volumes.data.enabled }}
       - name: data-volume
-        persistentVolumeClaim:
-          claimName: {{ .Chart.Name }}-data-pvc
-      {{- end }}
-      {{- if .Values.volumes.logs.enabled }}
+        emptyDir: {}
       - name: logs-volume
-        persistentVolumeClaim:
-          claimName: {{ .Chart.Name }}-logs-pvc
-      {{- end }}
+        emptyDir: {}
       - name: tmp
         emptyDir: {}
       - name: var-cache

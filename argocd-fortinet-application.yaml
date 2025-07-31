@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet-production
+  name: fortinet
   namespace: argocd
   labels:
     app: fortinet
@@ -11,13 +11,13 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/jclee94/fortinet.git
-    path: charts/fortinet
-    targetRevision: HEAD
+    repoURL: https://charts.jclee.me
+    targetRevision: 1.1.2
+    chart: fortinet
     helm:
       releaseName: fortinet
       values: |
-        replicaCount: 2
+        replicaCount: 1
         image:
           pullPolicy: Always
         service:
@@ -25,15 +25,19 @@ spec:
           nodePort: 30777
         resources:
           limits:
-            cpu: 1000m
-            memory: 1Gi
-          requests:
             cpu: 200m
             memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
         env:
           APP_MODE: production
           OFFLINE_MODE: "false"
           WEB_APP_PORT: "7777"
+        persistence:
+          enabled: false
+        autoscaling:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
@@ -44,8 +48,6 @@ spec:
       allowEmpty: false
     syncOptions:
     - CreateNamespace=true
-    - ServerSideApply=true
-    - ApplyOutOfSyncOnly=true
     retry:
       limit: 5
       backoff:

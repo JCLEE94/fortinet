@@ -1,5 +1,5 @@
 # MSA 기본 설정 (jclee.me 인프라 최적화)
-replicaCount: 3
+replicaCount: 1
 strategy:
   type: RollingUpdate
   rollingUpdate:
@@ -7,13 +7,13 @@ strategy:
     maxSurge: 1
 
 image:
-  repository: registry.jclee.me/jclee/fortinet
+  repository: registry.jclee.me/fortinet
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "master-37900ce8"
+  tag: "latest"
 
 imagePullSecrets:
-  - name: jclee-registry-secret
+  - name: harbor-registry
 
 service:
   type: NodePort
@@ -23,7 +23,7 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
+  className: traefik
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -40,14 +40,16 @@ ingress:
       hosts:
         - fortinet.jclee.me
 
-# MSA 리소스 최적화
+# MSA 리소스 최적화 (보안 강화)
 resources:
   limits:
-    cpu: 2000m
-    memory: 2Gi
+    cpu: 200m
+    memory: 256Mi
+    ephemeral-storage: 1Gi
   requests:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 50m
+    memory: 64Mi
+    ephemeral-storage: 512Mi
 
 # HPA (Horizontal Pod Autoscaler)
 autoscaling:
@@ -57,7 +59,7 @@ autoscaling:
   targetCPUUtilizationPercentage: 70
   targetMemoryUtilizationPercentage: 80
 
-# Fortinet 애플리케이션 환경 변수
+# Fortinet 애플리케이션 환경 변수 (보안 강화)
 env:
   NODE_ENV: production
   WEB_APP_PORT: "7777"
@@ -66,6 +68,26 @@ env:
   MICROSERVICE_NAME: fortinet
   CLUSTER_NAME: microservices-cluster
   NAMESPACE: microservices
+  # 보안 설정 강화
+  VERIFY_SSL: "true"
+  SESSION_COOKIE_SECURE: "true"
+  SESSION_COOKIE_HTTPONLY: "true"
+  SESSION_COOKIE_SAMESITE: "Lax"
+  PERMANENT_SESSION_LIFETIME: "900"  # 15분
+  FORCE_DEBUG: "false"
+  # JWT 보안 설정
+  JWT_EXPIRES_IN: "900"  # 15분
+  JWT_ALGORITHM: "HS256"
+  JWT_ISSUER: "fortinet-app"
+  JWT_AUDIENCE: "fortinet-api"
+  # API 보안
+  API_RATE_LIMIT_MAX: "100"
+  API_RATE_LIMIT_WINDOW: "60"
+  API_TIMEOUT: "30"
+  # 로깅 보안
+  LOG_LEVEL: "INFO"
+  DISABLE_DEBUG_LOGS: "true"
+  MASK_SENSITIVE_DATA: "true"
 
 # Health Check 설정 (Fortinet 애플리케이션 기준)
 probes:
@@ -84,23 +106,32 @@ probes:
     timeoutSeconds: 5
     failureThreshold: 3
 
-# MSA 보안 설정
+# MSA 보안 설정 강화
 securityContext:
-  runAsNonRoot: false  # Fortinet 애플리케이션 요구사항
-  runAsUser: 0
-  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  readOnlyRootFilesystem: true
   allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - NET_BIND_SERVICE  # 포트 바인딩만 허용
+  seccompProfile:
+    type: RuntimeDefault
 
 # Fortinet 애플리케이션 볼륨 설정
 volumes:
   data:
-    enabled: true
+    enabled: false
     size: 1Gi
-    storageClass: standard
+    storageClass: local-path
   logs:
-    enabled: true
+    enabled: false
     size: 500Mi
-    storageClass: standard
+    storageClass: local-path
 
 # MSA 모니터링 (Prometheus/Grafana)
 monitoring:
