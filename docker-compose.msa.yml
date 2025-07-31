@@ -1,17 +1,25 @@
 version: '3.8'
 
 services:
-  # API Gateway (Kong)
+  # API Gateway (Kong) - 보안 강화
   kong-database:
     image: postgres:13
     environment:
       POSTGRES_DB: kong
       POSTGRES_USER: kong
-      POSTGRES_PASSWORD: kongpass
+      POSTGRES_PASSWORD: ${KONG_DB_PASSWORD:-secure_kong_password_2024}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - kong_data:/var/lib/postgresql/data
     networks:
       - fortinet-msa
+    # 보안 설정
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # PostgreSQL은 쓰기 필요
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    user: "999:999"  # postgres user
 
   kong-migrations:
     image: kong/kong-gateway:3.4.0
@@ -61,12 +69,14 @@ services:
     networks:
       - fortinet-msa
 
-  # Message Queue (RabbitMQ)
+  # Message Queue (RabbitMQ) - 보안 강화
   rabbitmq:
     image: rabbitmq:3.12-management
     environment:
-      RABBITMQ_DEFAULT_USER: fortinet
-      RABBITMQ_DEFAULT_PASS: fortinet123
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-fortinet_admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-secure_rabbit_password_2024}
+      RABBITMQ_DEFAULT_VHOST: fortinet
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-secure_erlang_cookie_2024}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -74,6 +84,13 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - fortinet-msa
+    # 보안 설정
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # RabbitMQ는 쓰기 필요
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    user: "999:999"  # rabbitmq user
 
   # Redis (Shared Cache)
   redis:
