@@ -5,120 +5,126 @@ Tests FortiManager demo using Docker container environment
 """
 
 import json
+import os
+from datetime import datetime
+
 import requests
 import urllib3
-from datetime import datetime
-import os
 
 # Disable SSL warnings
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 def generate_comprehensive_report():
     """Generate comprehensive test report with screenshots and findings"""
-    
+
     report_data = {
-        'test_metadata': {
-            'test_date': datetime.now().isoformat(),
-            'demo_environment': {
-                'host': 'hjsim-1034-451984.fortidemo.fortinet.com',
-                'port': 14005,
-                'api_key_provided': '8wy6xtig45xkn8oxukmiegf5yn18rn4c',
-                'ssl_cert_info': {
-                    'subject': 'CN=*.fortidemo.fortinet.com',
-                    'issuer': 'DigiCert Global G2 TLS RSA SHA256 2020 CA1',
-                    'valid_until': '2025-09-04 23:59:59'
-                }
+        "test_metadata": {
+            "test_date": datetime.now().isoformat(),
+            "demo_environment": {
+                "host": "hjsim-1034-451984.fortidemo.fortinet.com",
+                "port": 14005,
+                "api_key_provided": "8wy6xtig45xkn8oxukmiegf5yn18rn4c",
+                "ssl_cert_info": {
+                    "subject": "CN=*.fortidemo.fortinet.com",
+                    "issuer": "DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+                    "valid_until": "2025-09-04 23:59:59",
+                },
             },
-            'testing_method': 'Direct HTTP/HTTPS and JSON-RPC API calls'
+            "testing_method": "Direct HTTP/HTTPS and JSON-RPC API calls",
         },
-        'connection_analysis': {
-            'web_interface_accessible': True,
-            'ssl_connection_status': 'Working (TLS 1.3)',
-            'json_rpc_endpoint_accessible': True,
-            'api_authentication_method': 'Session-based login required'
+        "connection_analysis": {
+            "web_interface_accessible": True,
+            "ssl_connection_status": "Working (TLS 1.3)",
+            "json_rpc_endpoint_accessible": True,
+            "api_authentication_method": "Session-based login required",
         },
-        'test_results': {
-            'web_interface_test': {
-                'status': 'SUCCESS',
-                'login_page_accessible': True,
-                'login_page_content': 'FortiManager-VM64-KVM login interface detected',
-                'authentication_methods_detected': ['Username/Password', 'SSO', 'Fabric IdP']
+        "test_results": {
+            "web_interface_test": {
+                "status": "SUCCESS",
+                "login_page_accessible": True,
+                "login_page_content": "FortiManager-VM64-KVM login interface detected",
+                "authentication_methods_detected": [
+                    "Username/Password",
+                    "SSO",
+                    "Fabric IdP",
+                ],
             },
-            'api_endpoint_test': {
-                'status': 'PARTIAL_SUCCESS',
-                'json_rpc_endpoint_responsive': True,
-                'authentication_challenge': 'Login credentials required',
-                'api_key_authentication': 'Failed - Token not accepted as Bearer auth',
-                'session_login_required': True
-            }
+            "api_endpoint_test": {
+                "status": "PARTIAL_SUCCESS",
+                "json_rpc_endpoint_responsive": True,
+                "authentication_challenge": "Login credentials required",
+                "api_key_authentication": "Failed - Token not accepted as Bearer auth",
+                "session_login_required": True,
+            },
         },
-        'api_endpoints_discovered': [
-            '/p/login/ - Web login interface',
-            '/jsonrpc - JSON-RPC API endpoint',
-            '/sys/login/user - User authentication',
-            '/sys/status - System status (requires auth)',
-            '/dvmdb/adom - ADOM management (requires auth)',
-            '/pm/config/adom/{adom}/obj/firewall/address - Address objects',
-            '/pm/config/device/{device}/vdom/{vdom}/firewall/policy - Firewall policies'
+        "api_endpoints_discovered": [
+            "/p/login/ - Web login interface",
+            "/jsonrpc - JSON-RPC API endpoint",
+            "/sys/login/user - User authentication",
+            "/sys/status - System status (requires auth)",
+            "/dvmdb/adom - ADOM management (requires auth)",
+            "/pm/config/adom/{adom}/obj/firewall/address - Address objects",
+            "/pm/config/device/{device}/vdom/{vdom}/firewall/policy - Firewall policies",
         ],
-        'authentication_findings': {
-            'provided_api_key': '8wy6xtig45xkn8oxukmiegf5yn18rn4c',
-            'api_key_format': 'Valid format (32 character alphanumeric)',
-            'bearer_auth_result': 'Failed - Server closes connection',
-            'session_auth_required': True,
-            'login_attempts': [
-                {'user': 'admin', 'password': 'admin', 'result': 'Login fail (-22)'},
-                {'user': 'demo', 'password': 'demo', 'result': 'Login fail (-22)'},
-                {'user': 'api', 'password': '[API_KEY]', 'result': 'Login fail (-22)'}
-            ]
-        },
-        'firewall_policy_analysis': {
-            'policy_management_endpoints': [
-                '/pm/config/device/{device}/vdom/{vdom}/firewall/policy',
-                '/pm/config/adom/{adom}/pkg/{package}/firewall/policy'
+        "authentication_findings": {
+            "provided_api_key": "8wy6xtig45xkn8oxukmiegf5yn18rn4c",
+            "api_key_format": "Valid format (32 character alphanumeric)",
+            "bearer_auth_result": "Failed - Server closes connection",
+            "session_auth_required": True,
+            "login_attempts": [
+                {"user": "admin", "password": "admin", "result": "Login fail (-22)"},
+                {"user": "demo", "password": "demo", "result": "Login fail (-22)"},
+                {"user": "api", "password": "[API_KEY]", "result": "Login fail (-22)"},
             ],
-            'expected_policy_operations': [
-                'GET - List policies',
-                'POST/add - Create policy', 
-                'PUT/set - Update policy',
-                'DELETE - Remove policy'
+        },
+        "firewall_policy_analysis": {
+            "policy_management_endpoints": [
+                "/pm/config/device/{device}/vdom/{vdom}/firewall/policy",
+                "/pm/config/adom/{adom}/pkg/{package}/firewall/policy",
             ],
-            'policy_path_analysis_capability': 'Available via /pm/config endpoints'
+            "expected_policy_operations": [
+                "GET - List policies",
+                "POST/add - Create policy",
+                "PUT/set - Update policy",
+                "DELETE - Remove policy",
+            ],
+            "policy_path_analysis_capability": "Available via /pm/config endpoints",
         },
-        'demo_environment_assessment': {
-            'environment_type': 'Fortinet Official Demo Environment',
-            'accessibility': 'Public demo available',
-            'ssl_security': 'Valid certificate from DigiCert',
-            'api_documentation_compliance': 'Follows FortiManager JSON-RPC v2.0 standard',
-            'demo_limitations': [
-                'Authentication credentials not publicly documented',
-                'API key method may require specific setup',
-                'Session-based authentication required for API access'
-            ]
+        "demo_environment_assessment": {
+            "environment_type": "Fortinet Official Demo Environment",
+            "accessibility": "Public demo available",
+            "ssl_security": "Valid certificate from DigiCert",
+            "api_documentation_compliance": "Follows FortiManager JSON-RPC v2.0 standard",
+            "demo_limitations": [
+                "Authentication credentials not publicly documented",
+                "API key method may require specific setup",
+                "Session-based authentication required for API access",
+            ],
         },
-        'recommendations': [
-            'Contact Fortinet support for demo environment credentials',
-            'Use session-based authentication workflow: login -> get session -> use session for API calls',
-            'Implement proper SSL certificate validation in production',
-            'Use official FortiManager API documentation for integration',
-            'Consider using FortiManager Ansible modules for automation'
+        "recommendations": [
+            "Contact Fortinet support for demo environment credentials",
+            "Use session-based authentication workflow: login -> get session -> use session for API calls",
+            "Implement proper SSL certificate validation in production",
+            "Use official FortiManager API documentation for integration",
+            "Consider using FortiManager Ansible modules for automation",
         ],
-        'docker_implementation_notes': {
-            'container_requirements': [
-                'Python 3.9+ with requests library',
-                'SSL/TLS support enabled',
-                'Network access to fortidemo.fortinet.com'
+        "docker_implementation_notes": {
+            "container_requirements": [
+                "Python 3.9+ with requests library",
+                "SSL/TLS support enabled",
+                "Network access to fortidemo.fortinet.com",
             ],
-            'recommended_approach': [
-                'Create lightweight Python container',
-                'Include FortiManager API client library',
-                'Implement credential management via environment variables',
-                'Add retry logic for API calls',
-                'Include comprehensive error handling'
-            ]
-        }
+            "recommended_approach": [
+                "Create lightweight Python container",
+                "Include FortiManager API client library",
+                "Implement credential management via environment variables",
+                "Add retry logic for API calls",
+                "Include comprehensive error handling",
+            ],
+        },
     }
-    
+
     # Generate markdown report
     markdown_report = f"""# FortiManager Demo Environment Test Report
 
@@ -166,9 +172,11 @@ JSON-RPC API endpoint is responsive but requires authentication:
 **Authentication Attempts:**
 """
 
-    for attempt in report_data['authentication_findings']['login_attempts']:
-        status_icon = "❌" if "fail" in attempt['result'] else "✅"
-        markdown_report += f"- {status_icon} User: `{attempt['user']}` → {attempt['result']}\n"
+    for attempt in report_data["authentication_findings"]["login_attempts"]:
+        status_icon = "❌" if "fail" in attempt["result"] else "✅"
+        markdown_report += (
+            f"- {status_icon} User: `{attempt['user']}` → {attempt['result']}\n"
+        )
 
     markdown_report += f"""
 
@@ -295,12 +303,13 @@ The FortiManager demo environment is fully functional and accessible. The main c
 ---
 *Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} UTC*
 """
-    
+
     return markdown_report, report_data
+
 
 def create_docker_test_script():
     """Create a Docker-compatible test script"""
-    
+
     docker_script = '''#!/usr/bin/env python3
 """
 Docker-based FortiManager Test Script
@@ -437,32 +446,35 @@ if __name__ == "__main__":
     tester = FortiManagerTester()
     tester.run_comprehensive_test()
 '''
-    
+
     return docker_script
+
 
 def main():
     print("Generating comprehensive FortiManager demo test report...")
-    
+
     # Generate report
     markdown_report, json_data = generate_comprehensive_report()
-    
+
     # Save markdown report
     report_filename = f"FORTIMANAGER_DEMO_COMPREHENSIVE_REPORT_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-    with open(report_filename, 'w', encoding='utf-8') as f:
+    with open(report_filename, "w", encoding="utf-8") as f:
         f.write(markdown_report)
-    
+
     # Save JSON data
-    json_filename = f"fortimanager_demo_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(json_filename, 'w', encoding='utf-8') as f:
+    json_filename = (
+        f"fortimanager_demo_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
+    with open(json_filename, "w", encoding="utf-8") as f:
         json.dump(json_data, f, indent=2, ensure_ascii=False)
-    
+
     # Create Docker test script
     docker_script = create_docker_test_script()
-    with open("docker_fortimanager_tester.py", 'w') as f:
+    with open("docker_fortimanager_tester.py", "w") as f:
         f.write(docker_script)
-    
+
     # Create Dockerfile
-    dockerfile_content = '''FROM python:3.9-slim
+    dockerfile_content = """FROM python:3.9-slim
 
 # Install required packages
 RUN pip install requests urllib3
@@ -485,20 +497,25 @@ ENV VERIFY_SSL=false
 
 # Run test
 CMD ["python", "docker_fortimanager_tester.py"]
-'''
-    
-    with open("Dockerfile.fortimanager-test", 'w') as f:
+"""
+
+    with open("Dockerfile.fortimanager-test", "w") as f:
         f.write(dockerfile_content)
-    
+
     print(f"✅ Comprehensive report generated: {report_filename}")
     print(f"✅ JSON data saved: {json_filename}")
     print(f"✅ Docker test script created: docker_fortimanager_tester.py")
     print(f"✅ Dockerfile created: Dockerfile.fortimanager-test")
-    
-    print("\n" + "="*80)
+
+    print("\n" + "=" * 80)
     print("REPORT PREVIEW:")
-    print("="*80)
-    print(markdown_report[:2000] + "..." if len(markdown_report) > 2000 else markdown_report)
+    print("=" * 80)
+    print(
+        markdown_report[:2000] + "..."
+        if len(markdown_report) > 2000
+        else markdown_report
+    )
+
 
 if __name__ == "__main__":
     main()

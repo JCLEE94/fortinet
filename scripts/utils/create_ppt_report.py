@@ -4,64 +4,68 @@ Create PPT-Ready FortiManager Demo Report
 Beautiful UI-focused presentation material
 """
 
+import base64
 import json
+import os
+from datetime import datetime
+
 import requests
 import urllib3
-from datetime import datetime
-import base64
-import os
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 def create_comprehensive_test_with_new_key():
     """Comprehensive test with working API key"""
-    
+
     api_key = "pxx7odxgnjcxtzujbtu3nz39ahoegmx1"
     host = "hjsim-1034-451984.fortidemo.fortinet.com"
     port = 14005
     base_url = f"https://{host}:{port}/jsonrpc"
-    
+
     # Test with custom headers that worked
     headers = {
-        'Content-Type': 'application/json',
-        'X-API-Key': api_key,
-        'Authorization': f'Token {api_key}'
+        "Content-Type": "application/json",
+        "X-API-Key": api_key,
+        "Authorization": f"Token {api_key}",
     }
-    
+
     def make_request(method, url, data=None):
         payload = {
             "id": int(datetime.now().timestamp()),
             "method": method,
             "params": [{"url": url}],
-            "jsonrpc": "2.0"
+            "jsonrpc": "2.0",
         }
         if data:
             payload["params"][0]["data"] = data
-            
+
         try:
-            response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
+            response = requests.post(
+                base_url, json=payload, headers=headers, verify=False, timeout=30
+            )
             if response.status_code == 200:
                 return True, response.json()
             else:
                 return False, f"HTTP {response.status_code}: {response.text}"
         except Exception as e:
             return False, str(e)
-    
+
     test_results = {
-        'metadata': {
-            'test_date': datetime.now().isoformat(),
-            'api_key': api_key,
-            'host': f"{host}:{port}",
-            'test_type': 'Comprehensive FortiManager Demo Analysis'
+        "metadata": {
+            "test_date": datetime.now().isoformat(),
+            "api_key": api_key,
+            "host": f"{host}:{port}",
+            "test_type": "Comprehensive FortiManager Demo Analysis",
         },
-        'connection_status': 'success',
-        'authentication_method': 'Custom Header Token',
-        'endpoints_tested': [],
-        'discoveries': {},
-        'ui_screenshots': [],
-        'implementation_status': {}
+        "connection_status": "success",
+        "authentication_method": "Custom Header Token",
+        "endpoints_tested": [],
+        "discoveries": {},
+        "ui_screenshots": [],
+        "implementation_status": {},
     }
-    
+
     # Test various endpoints
     endpoints_to_test = [
         ("System Status", "get", "/sys/status"),
@@ -72,40 +76,49 @@ def create_comprehensive_test_with_new_key():
         ("Policy Packages", "get", "/pm/config/adom/root/pkg"),
         ("System Info", "get", "/sys/system"),
         ("Admin Users", "get", "/cli/global/system/admin"),
-        ("Interfaces", "get", "/pm/config/adom/root/obj/system/interface")
+        ("Interfaces", "get", "/pm/config/adom/root/obj/system/interface"),
     ]
-    
+
     for name, method, url in endpoints_to_test:
         success, result = make_request(method, url)
-        
+
         endpoint_result = {
-            'name': name,
-            'url': url,
-            'method': method,
-            'status': 'success' if success else 'failed',
-            'timestamp': datetime.now().isoformat()
+            "name": name,
+            "url": url,
+            "method": method,
+            "status": "success" if success else "failed",
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
         if success:
-            if 'result' in result:
-                status_code = result['result'][0].get('status', {}).get('code', -1)
+            if "result" in result:
+                status_code = result["result"][0].get("status", {}).get("code", -1)
                 if status_code == 0:
-                    endpoint_result['data_available'] = True
-                    endpoint_result['data'] = result['result'][0].get('data', [])
-                    endpoint_result['data_count'] = len(endpoint_result['data']) if isinstance(endpoint_result['data'], list) else 'N/A'
+                    endpoint_result["data_available"] = True
+                    endpoint_result["data"] = result["result"][0].get("data", [])
+                    endpoint_result["data_count"] = (
+                        len(endpoint_result["data"])
+                        if isinstance(endpoint_result["data"], list)
+                        else "N/A"
+                    )
                 else:
-                    endpoint_result['data_available'] = False
-                    endpoint_result['error_message'] = result['result'][0].get('status', {}).get('message', 'Unknown error')
+                    endpoint_result["data_available"] = False
+                    endpoint_result["error_message"] = (
+                        result["result"][0]
+                        .get("status", {})
+                        .get("message", "Unknown error")
+                    )
         else:
-            endpoint_result['error'] = result
-        
-        test_results['endpoints_tested'].append(endpoint_result)
-    
+            endpoint_result["error"] = result
+
+        test_results["endpoints_tested"].append(endpoint_result)
+
     return test_results
+
 
 def generate_ppt_html_report(test_results):
     """Generate beautiful HTML report suitable for PPT"""
-    
+
     html_content = f"""
 <!DOCTYPE html>
 <html lang="ko">
@@ -534,11 +547,23 @@ def generate_ppt_html_report(test_results):
         <div class="endpoint-list">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">🔍 API Endpoint Analysis</h2>
 """
-    
-    for endpoint in test_results['endpoints_tested']:
-        status_class = 'status-green' if endpoint.get('data_available') else ('status-orange' if endpoint['status'] == 'success' else 'status-red')
-        data_info = f"{endpoint.get('data_count', 'N/A')} items" if endpoint.get('data_available') else (endpoint.get('error_message', 'Access denied') if endpoint['status'] == 'success' else 'Connection failed')
-        
+
+    for endpoint in test_results["endpoints_tested"]:
+        status_class = (
+            "status-green"
+            if endpoint.get("data_available")
+            else ("status-orange" if endpoint["status"] == "success" else "status-red")
+        )
+        data_info = (
+            f"{endpoint.get('data_count', 'N/A')} items"
+            if endpoint.get("data_available")
+            else (
+                endpoint.get("error_message", "Access denied")
+                if endpoint["status"] == "success"
+                else "Connection failed"
+            )
+        )
+
         html_content += f"""
             <div class="endpoint-item">
                 <div class="endpoint-status {status_class}"></div>
@@ -549,7 +574,7 @@ def generate_ppt_html_report(test_results):
                 <div class="endpoint-data">{data_info}</div>
             </div>
         """
-    
+
     html_content += f"""
         </div>
         
@@ -624,137 +649,141 @@ def generate_ppt_html_report(test_results):
 </body>
 </html>
     """
-    
+
     return html_content
+
 
 def identify_missing_implementations():
     """Identify what needs to be implemented or fixed"""
-    
+
     missing_items = {
-        'critical': [
+        "critical": [
             {
-                'item': 'Session Management Enhancement',
-                'description': 'Current API client needs better session handling for authenticated requests',
-                'file': 'src/api/clients/fortimanager_api_client.py',
-                'priority': 'HIGH'
+                "item": "Session Management Enhancement",
+                "description": "Current API client needs better session handling for authenticated requests",
+                "file": "src/api/clients/fortimanager_api_client.py",
+                "priority": "HIGH",
             },
             {
-                'item': 'Policy Path Analysis Testing',
-                'description': 'Packet path analysis function needs testing with real device data',
-                'file': 'src/api/clients/fortimanager_api_client.py',
-                'line': '372-461',
-                'priority': 'HIGH'
+                "item": "Policy Path Analysis Testing",
+                "description": "Packet path analysis function needs testing with real device data",
+                "file": "src/api/clients/fortimanager_api_client.py",
+                "line": "372-461",
+                "priority": "HIGH",
             },
             {
-                'item': 'Authentication Error Handling',
-                'description': 'Better handling of "No permission" errors and token refresh',
-                'file': 'src/api/clients/fortimanager_api_client.py',
-                'line': '126-158',
-                'priority': 'MEDIUM'
-            }
+                "item": "Authentication Error Handling",
+                "description": 'Better handling of "No permission" errors and token refresh',
+                "file": "src/api/clients/fortimanager_api_client.py",
+                "line": "126-158",
+                "priority": "MEDIUM",
+            },
         ],
-        'features': [
+        "features": [
             {
-                'item': 'Real-time Monitoring WebSocket',
-                'description': 'WebSocket implementation for real-time device monitoring',
-                'file': 'src/monitoring/realtime/websocket.py',
-                'status': 'STUB_ONLY',
-                'priority': 'MEDIUM'
+                "item": "Real-time Monitoring WebSocket",
+                "description": "WebSocket implementation for real-time device monitoring",
+                "file": "src/monitoring/realtime/websocket.py",
+                "status": "STUB_ONLY",
+                "priority": "MEDIUM",
             },
             {
-                'item': 'Advanced Analytics Engine',
-                'description': 'FortiManager advanced analytics need full implementation',
-                'file': 'src/fortimanager/fortimanager_analytics_engine.py',
-                'status': 'PARTIAL',
-                'priority': 'LOW'
+                "item": "Advanced Analytics Engine",
+                "description": "FortiManager advanced analytics need full implementation",
+                "file": "src/fortimanager/fortimanager_analytics_engine.py",
+                "status": "PARTIAL",
+                "priority": "LOW",
             },
             {
-                'item': 'Compliance Automation',
-                'description': 'Compliance checking and remediation features',
-                'file': 'src/fortimanager/fortimanager_compliance_automation.py',
-                'status': 'PARTIAL',
-                'priority': 'LOW'
-            }
+                "item": "Compliance Automation",
+                "description": "Compliance checking and remediation features",
+                "file": "src/fortimanager/fortimanager_compliance_automation.py",
+                "status": "PARTIAL",
+                "priority": "LOW",
+            },
         ],
-        'ui_improvements': [
+        "ui_improvements": [
             {
-                'item': 'FortiManager Dashboard',
-                'description': 'Dedicated dashboard for FortiManager operations',
-                'file': 'src/templates/dashboard.html',
-                'line': 'Need new section',
-                'priority': 'MEDIUM'
+                "item": "FortiManager Dashboard",
+                "description": "Dedicated dashboard for FortiManager operations",
+                "file": "src/templates/dashboard.html",
+                "line": "Need new section",
+                "priority": "MEDIUM",
             },
             {
-                'item': 'API Status Indicators',
-                'description': 'Real-time API connection status in UI',
-                'file': 'src/static/js/dashboard-realtime.js',
-                'priority': 'LOW'
-            }
-        ]
+                "item": "API Status Indicators",
+                "description": "Real-time API connection status in UI",
+                "file": "src/static/js/dashboard-realtime.js",
+                "priority": "LOW",
+            },
+        ],
     }
-    
+
     return missing_items
+
 
 if __name__ == "__main__":
     print("🔍 Running comprehensive FortiManager test...")
-    
+
     # Run comprehensive test
     test_results = create_comprehensive_test_with_new_key()
-    
+
     # Generate HTML report
     html_report = generate_ppt_html_report(test_results)
-    
+
     # Save HTML report
-    html_filename = f"FortiManager_PPT_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-    with open(html_filename, 'w', encoding='utf-8') as f:
+    html_filename = (
+        f"FortiManager_PPT_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+    )
+    with open(html_filename, "w", encoding="utf-8") as f:
         f.write(html_report)
-    
+
     # Save JSON data
     json_filename = f"fortimanager_comprehensive_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    with open(json_filename, 'w', encoding='utf-8') as f:
+    with open(json_filename, "w", encoding="utf-8") as f:
         json.dump(test_results, f, indent=2, ensure_ascii=False, default=str)
-    
+
     # Identify missing implementations
     missing_items = identify_missing_implementations()
-    
+
     # Save implementation report
     impl_report = f"""# FortiManager Implementation Status Report
 
 ## Critical Issues to Fix
 
 """
-    
-    for item in missing_items['critical']:
+
+    for item in missing_items["critical"]:
         impl_report += f"""### {item['item']} ({item['priority']})
 - **File:** `{item['file']}`
 - **Description:** {item['description']}
 {f"- **Line:** {item['line']}" if 'line' in item else ""}
 
 """
-    
+
     impl_report += "\n## Features to Complete\n\n"
-    
-    for item in missing_items['features']:
+
+    for item in missing_items["features"]:
         impl_report += f"""### {item['item']} ({item['priority']})
 - **File:** `{item['file']}`
 - **Status:** {item['status']}
 - **Description:** {item['description']}
 
 """
-    
+
     impl_report += "\n## UI Improvements Needed\n\n"
-    
-    for item in missing_items['ui_improvements']:
+
+    for item in missing_items["ui_improvements"]:
         impl_report += f"""### {item['item']} ({item['priority']})
 - **File:** `{item['file']}`
 - **Description:** {item['description']}
 {f"- **Location:** {item['line']}" if 'line' in item else ""}
 
 """
-    
-    with open("FORTIMANAGER_IMPLEMENTATION_TODO.md", 'w', encoding='utf-8') as f:
+
+    with open("FORTIMANAGER_IMPLEMENTATION_TODO.md", "w", encoding="utf-8") as f:
         f.write(impl_report)
-    
+
     print(f"✅ PPT-ready HTML report: {html_filename}")
     print(f"✅ Comprehensive data: {json_filename}")
     print(f"✅ Implementation TODO: FORTIMANAGER_IMPLEMENTATION_TODO.md")
