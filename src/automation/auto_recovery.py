@@ -339,9 +339,7 @@ class AutoRecoveryEngine:
                         # 중요하지 않은 프로세스만 종료
                         if proc.info["name"] in ["chrome", "firefox", "code"]:
                             proc.terminate()
-                            logger.info(
-                                f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}"
-                            )
+                            logger.info(f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}")
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 

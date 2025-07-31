@@ -78,11 +78,26 @@ class BaseApiClient(ABC):
         # Set auth method based on provided credentials
         self.auth_method = "token" if self.api_token else "credentials"
 
-        # SSL verification (from environment or default to False)
+        # SSL verification (보안 강화: 기본값 True)
         if verify_ssl is None:
-            self.verify_ssl = os.environ.get("VERIFY_SSL", "false").lower() == "true"
+            # 개발 환경에서만 SSL 검증 비활성화 허용
+            if os.environ.get("APP_MODE", "production").lower() == "development":
+                self.verify_ssl = (
+                    os.environ.get("VERIFY_SSL", "false").lower() == "true"
+                )
+                if not self.verify_ssl:
+                    self.logger.warning(
+                        "⚠️  개발 환경: SSL 검증이 비활성화되었습니다. 프로덕션에서는 사용하지 마세요"
+                    )
+            else:
+                # 프로덕션/테스트 환경에서는 기본적으로 SSL 검증 활성화
+                self.verify_ssl = os.environ.get("VERIFY_SSL", "true").lower() == "true"
         else:
             self.verify_ssl = verify_ssl
+
+        # SSL 검증 비활성화 시 경고 로그
+        if not self.verify_ssl:
+            self.logger.warning(f"🔓 SSL 검증 비활성화됨 - 호스트: {self.host}")
 
         # Timeout settings
         self.timeout = int(os.environ.get("API_TIMEOUT", "30"))

@@ -10,12 +10,74 @@ import json
 import logging
 import logging.handlers
 import os
+import re
 import sys
 import traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from config.constants import FILE_LIMITS
+
+
+class SensitiveDataMasker:
+    """민감정보 마스킹 클래스 (보안 강화)"""
+
+    # 민감정보 패턴들
+    SENSITIVE_PATTERNS = {
+        "api_key": re.compile(
+            r'(?i)(api[_-]?key|apikey|token)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{20,})["\']?'
+        ),
+        "password": re.compile(
+            r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']?([^"\'\s]{6,})["\']?'
+        ),
+        "secret": re.compile(
+            r'(?i)(secret|SECRET_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{16,})["\']?'
+        ),
+        "bearer_token": re.compile(r"(?i)Bearer\s+([a-zA-Z0-9_.-]{20,})"),
+        "jwt": re.compile(r"eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+"),
+        "credit_card": re.compile(r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b"),
+        "ip_private": re.compile(
+            r"\b(?:10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.|192\.168\.)[\d.]+\b"
+        ),
+        "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
+    }
+
+    @classmethod
+    def mask_sensitive_data(cls, message: str) -> str:
+        """민감정보를 마스킹 처리"""
+        if not isinstance(message, str):
+            message = str(message)
+
+        masked_message = message
+
+        # 각 패턴에 대해 마스킹 수행
+        for pattern_name, pattern in cls.SENSITIVE_PATTERNS.items():
+            if pattern_name == "api_key":
+                masked_message = pattern.sub(r"\1=***API_KEY_MASKED***", masked_message)
+            elif pattern_name == "password":
+                masked_message = pattern.sub(
+                    r"\1=***PASSWORD_MASKED***", masked_message
+                )
+            elif pattern_name == "secret":
+                masked_message = pattern.sub(r"\1=***SECRET_MASKED***", masked_message)
+            elif pattern_name == "bearer_token":
+                masked_message = pattern.sub(
+                    r"Bearer ***TOKEN_MASKED***", masked_message
+                )
+            elif pattern_name == "jwt":
+                masked_message = pattern.sub("***JWT_TOKEN_MASKED***", masked_message)
+            elif pattern_name == "credit_card":
+                masked_message = pattern.sub("****-****-****-XXXX", masked_message)
+            elif pattern_name == "ip_private":
+                # 개발 환경이 아닌 경우에만 IP 마스킹
+                if os.environ.get("APP_MODE", "production").lower() != "development":
+                    masked_message = pattern.sub("***IP_MASKED***", masked_message)
+            elif pattern_name == "email":
+                masked_message = pattern.sub(
+                    lambda m: m.group(0).split("@")[0][:2] + "***@***", masked_message
+                )
+
+        return masked_message
 
 
 # Logger strategies
@@ -175,8 +237,59 @@ class AdvancedLoggerStrategy(LoggerStrategy):
             )
 
 
+class SecureStructuredFormatter(logging.Formatter):
+    """보안 강화된 JSON 로그 포매터 (민감정보 마스킹)"""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """로그 레코드를 민감정보가 마스킹된 JSON 문자열로 포매팅"""
+        # 원본 메시지에서 민감정보 마스킹
+        original_message = record.getMessage()
+        masked_message = SensitiveDataMasker.mask_sensitive_data(original_message)
+
+        log_data = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": masked_message,
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+
+        # 보안 관련 메타데이터 추가
+        if hasattr(record, "security_event"):
+            log_data["security_event"] = record.security_event
+
+        # 민감정보가 마스킹되었는지 표시
+        if masked_message != original_message:
+            log_data["security_masked"] = True
+
+        # Add exception info if available (민감정보 마스킹 적용)
+        if record.exc_info and record.exc_info[0] is not None:
+            exception_message = str(record.exc_info[1]) if record.exc_info[1] else ""
+            masked_exception = SensitiveDataMasker.mask_sensitive_data(
+                exception_message
+            )
+
+            log_data["exception"] = {
+                "type": record.exc_info[0].__name__,
+                "message": masked_exception,
+                "traceback": [
+                    SensitiveDataMasker.mask_sensitive_data(line)
+                    for line in traceback.format_exception(*record.exc_info)
+                ],
+            }
+        elif record.exc_info:
+            # Handle case where exc_info is provided but empty
+            log_data["exception"] = {
+                "message": "Exception occurred but no details available"
+            }
+
+        return json.dumps(log_data, ensure_ascii=False)
+
+
 class StructuredFormatter(logging.Formatter):
-    """Formatter for structured JSON logs"""
+    """Formatter for structured JSON logs (기존 유지)"""
 
     def format(self, record: logging.LogRecord) -> str:
         """Format the log record as a JSON string"""

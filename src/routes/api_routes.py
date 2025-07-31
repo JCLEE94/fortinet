@@ -27,12 +27,8 @@ def optimized_response(**kwargs):
 
 
 from utils.api_utils import get_api_manager
-from utils.route_helpers import (
-    api_route,
-    require_json_data,
-    standard_api_response,
-    validate_ip_address,
-)
+from utils.route_helpers import (api_route, require_json_data,
+                                 standard_api_response, validate_ip_address)
 from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
@@ -390,9 +386,7 @@ def test_connection():
     except Exception as e:
         logger.error(f"연결 테스트 실패: {e}")
         return (
-            jsonify(
-                {"success": False, "message": f"연결 테스트 중 오류 발생: {str(e)}"}
-            ),
+            jsonify({"success": False, "message": f"연결 테스트 중 오류 발생: {str(e)}"}),
             500,
         )
 
@@ -821,9 +815,7 @@ def get_monitoring():
                                     )  # MB
 
                         except Exception as e:
-                            logger.warning(
-                                f"FortiGate {device_id} 모니터링 데이터 수집 실패: {e}"
-                            )
+                            logger.warning(f"FortiGate {device_id} 모니터링 데이터 수집 실패: {e}")
                             continue
 
                     # 평균 계산
@@ -1370,7 +1362,8 @@ def generate_token():
 
         # In production mode, attempt real token generation
         try:
-            from api.clients.fortimanager_api_client import FortiManagerAPIClient
+            from api.clients.fortimanager_api_client import \
+                FortiManagerAPIClient
 
             client = FortiManagerAPIClient(
                 host=hostname,
@@ -1629,9 +1622,9 @@ def get_system_info():
                 }
             )
         else:
-            system_info["note"] = (
-                "Limited system information available (psutil not installed)"
-            )
+            system_info[
+                "note"
+            ] = "Limited system information available (psutil not installed)"
 
         return jsonify({"success": True, "data": system_info})
 

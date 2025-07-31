@@ -9,7 +9,7 @@ import secrets
 from datetime import datetime, timedelta
 from functools import wraps
 
-from flask import abort, jsonify, request, session
+from flask import abort, current_app, jsonify, request, session
 
 from config.constants import RATE_LIMITS
 from config.constants import SECURITY_HEADERS as CONFIG_SECURITY
@@ -56,12 +56,26 @@ def csrf_protect(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if request.method in ["POST", "PUT", "DELETE", "PATCH"]:
-            # API 요청은 토큰 기반 인증 사용
+            # API 요청은 토큰 기반 인증 사용 (보안 강화)
             if request.path.startswith("/api/"):
-                # API 토큰 검증 (실제 구현 시 더 정교하게)
+                # JWT 토큰 검증
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):
-                    return jsonify({"error": "Unauthorized"}), 401
+                    return (
+                        jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
+                        401,
+                    )
+
+                token = auth_header.split(" ")[1]
+                payload = verify_jwt_token(token)
+                if not payload:
+                    return (
+                        jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}),
+                        401,
+                    )
+
+                # 요청 객체에 토큰 정보 저장
+                request.jwt_payload = payload
             else:
                 # 웹 폼은 CSRF 토큰 검증
                 token = request.form.get("csrf_token") or request.headers.get(
@@ -85,6 +99,78 @@ def generate_csrf_token():
 def validate_csrf_token(token):
     """CSRF 토큰 검증"""
     return token == session.get("csrf_token")
+
+
+def verify_jwt_token(token):
+    """JWT 토큰 검증 (보안 강화)"""
+    try:
+        # JWT 라이브러리가 없는 경우 간단한 HMAC 검증 구현
+        if not hasattr(verify_jwt_token, "_jwt"):
+            try:
+                import jwt
+
+                verify_jwt_token._jwt = jwt
+            except ImportError:
+                # JWT 라이브러리가 없는 경우 기본 검증
+                parts = token.split(".")
+                if len(parts) != 3:
+                    return None
+                # 기본적인 시그니처 검증 (실제 운영에서는 JWT 라이브러리 사용 권장)
+                header, payload, signature = parts
+                expected_signature = hmac.new(
+                    current_app.config["SECRET_KEY"].encode(),
+                    f"{header}.{payload}".encode(),
+                    hashlib.sha256,
+                ).hexdigest()
+                if not hmac.compare_digest(signature, expected_signature):
+                    return None
+                # 페이로드 디코딩 (간단 구현)
+                import base64
+                import json
+
+                try:
+                    decoded_payload = base64.urlsafe_b64decode(payload + "==").decode()
+                    return json.loads(decoded_payload)
+                except:
+                    return None
+
+        # JWT 라이브러리가 있는 경우
+        jwt_lib = verify_jwt_token._jwt
+        payload = jwt_lib.decode(
+            token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
+        )
+
+        # 토큰 만료 시간 검증
+        if "exp" in payload:
+            if datetime.utcnow().timestamp() > payload["exp"]:
+                return None
+
+        return payload
+
+    except Exception as e:
+        current_app.logger.warning(f"JWT 토큰 검증 실패: {e}")
+        return None
+
+
+def jwt_required(f):
+    """JWT 토큰 필수 데코레이터 (보안 강화)"""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}), 401
+
+        token = auth_header.split(" ")[1]
+        payload = verify_jwt_token(token)
+        if not payload:
+            return jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}), 401
+
+        # 요청 객체에 토큰 정보 저장
+        request.jwt_payload = payload
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 class InputValidator:

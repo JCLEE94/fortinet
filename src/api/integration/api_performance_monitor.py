@@ -46,9 +46,7 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
             lambda: {"calls": [], "errors": 0, "total": 0}
         )
         self.metrics = defaultdict(lambda: deque(maxlen=1000))  # 수정: 누락된 속성
-        self.response_times = defaultdict(
-            lambda: deque(maxlen=1000)
-        )  # 수정: 누락된 속성
+        self.response_times = defaultdict(lambda: deque(maxlen=1000))  # 수정: 누락된 속성
         self.success_counts = defaultdict(int)  # 수정: 누락된 속성
         self.error_counts = defaultdict(int)  # 수정: 누락된 속성
         self.throughput_data = defaultdict(list)  # 수정: 누락된 속성

@@ -50,32 +50,30 @@ class FirewallRuleAnalyzer:
         try:
             if self.fortigate_client:
                 # 직접 FortiGate API를 통한 데이터 로드
-                self._policies[firewall_id] = (
-                    self.fortigate_client.get_firewall_policies()
-                )
-                self._addresses[firewall_id] = (
-                    self.fortigate_client.get_firewall_addresses()
-                )
-                self._address_groups[firewall_id] = (
-                    self.fortigate_client.get_firewall_address_groups()
-                )
-                self._services[firewall_id] = (
-                    self.fortigate_client.get_firewall_services()
-                )
-                self._service_groups[firewall_id] = (
-                    self.fortigate_client.get_firewall_service_groups()
-                )
-                self._routing_tables[firewall_id] = (
-                    self.fortigate_client.get_routing_table()
-                )
+                self._policies[
+                    firewall_id
+                ] = self.fortigate_client.get_firewall_policies()
+                self._addresses[
+                    firewall_id
+                ] = self.fortigate_client.get_firewall_addresses()
+                self._address_groups[
+                    firewall_id
+                ] = self.fortigate_client.get_firewall_address_groups()
+                self._services[
+                    firewall_id
+                ] = self.fortigate_client.get_firewall_services()
+                self._service_groups[
+                    firewall_id
+                ] = self.fortigate_client.get_firewall_service_groups()
+                self._routing_tables[
+                    firewall_id
+                ] = self.fortigate_client.get_routing_table()
                 return True
 
             elif self.fortimanager_client:
                 # FortiManager 인스턴스가 있는 경우 필요한 데이터 로드
                 # 여기서는 가정: firewall_id가 FortiManager의 장치 이름이라고 가정
-                self.logger.info(
-                    f"FortiManager를 통해 {firewall_id} 방화벽 데이터 로드 중..."
-                )
+                self.logger.info(f"FortiManager를 통해 {firewall_id} 방화벽 데이터 로드 중...")
 
                 # ADOM 정보 (일반적으로 "root" 사용)
                 adom = "root"
@@ -93,9 +91,7 @@ class FirewallRuleAnalyzer:
                 # 정책 패키지 정보 로드
                 policy_packages = self.fortimanager_client.get_policy_packages(adom)
                 if not policy_packages:
-                    self.logger.error(
-                        f"{firewall_id}에 대한 정책 패키지를 로드할 수 없습니다."
-                    )
+                    self.logger.error(f"{firewall_id}에 대한 정책 패키지를 로드할 수 없습니다.")
                     return False
 
                 # 장치에 할당된 정책 패키지 찾기
@@ -108,37 +104,35 @@ class FirewallRuleAnalyzer:
                 )
 
                 if policy_package:
-                    self._policies[firewall_id] = (
-                        self.fortimanager_client.get_firewall_policies(
-                            policy_package, adom
-                        )
+                    self._policies[
+                        firewall_id
+                    ] = self.fortimanager_client.get_firewall_policies(
+                        policy_package, adom
                     )
 
                 # 주소 객체 및 서비스 객체 로드
-                self._addresses[firewall_id] = (
-                    self.fortimanager_client.get_firewall_addresses(adom)
-                )
-                self._address_groups[firewall_id] = (
-                    self.fortimanager_client.get_firewall_address_groups(adom)
-                )
-                self._services[firewall_id] = (
-                    self.fortimanager_client.get_firewall_services(adom)
-                )
-                self._service_groups[firewall_id] = (
-                    self.fortimanager_client.get_firewall_service_groups(adom)
-                )
+                self._addresses[
+                    firewall_id
+                ] = self.fortimanager_client.get_firewall_addresses(adom)
+                self._address_groups[
+                    firewall_id
+                ] = self.fortimanager_client.get_firewall_address_groups(adom)
+                self._services[
+                    firewall_id
+                ] = self.fortimanager_client.get_firewall_services(adom)
+                self._service_groups[
+                    firewall_id
+                ] = self.fortimanager_client.get_firewall_service_groups(adom)
 
                 # 라우팅 테이블 로드
-                self._routing_tables[firewall_id] = (
-                    self.fortimanager_client.get_device_routing_table(firewall_id, adom)
-                )
+                self._routing_tables[
+                    firewall_id
+                ] = self.fortimanager_client.get_device_routing_table(firewall_id, adom)
 
                 return True
 
             else:
-                self.logger.error(
-                    "FortiGate 또는 FortiManager 클라이언트가 필요합니다."
-                )
+                self.logger.error("FortiGate 또는 FortiManager 클라이언트가 필요합니다.")
                 return False
 
         except Exception as e:
@@ -173,9 +167,7 @@ class FirewallRuleAnalyzer:
 
                 devices = self.fortimanager_client.get_devices(adom_name)
                 if not devices:
-                    self.logger.warning(
-                        f"ADOM '{adom_name}'에서 장치를 찾을 수 없습니다."
-                    )
+                    self.logger.warning(f"ADOM '{adom_name}'에서 장치를 찾을 수 없습니다.")
                     continue
 
                 for device in devices:
@@ -256,9 +248,7 @@ class FirewallRuleAnalyzer:
             bool: IP가 주소 그룹에 포함되는지 여부
         """
         if firewall_id not in self._address_groups:
-            self.logger.error(
-                f"방화벽 {firewall_id}의 주소 그룹 데이터가 로드되지 않았습니다."
-            )
+            self.logger.error(f"방화벽 {firewall_id}의 주소 그룹 데이터가 로드되지 않았습니다.")
             return False
 
         # 그룹 찾기
@@ -362,9 +352,7 @@ class FirewallRuleAnalyzer:
             bool: 서비스가 그룹에 포함되는지 여부
         """
         if firewall_id not in self._service_groups:
-            self.logger.error(
-                f"방화벽 {firewall_id}의 서비스 그룹 데이터가 로드되지 않았습니다."
-            )
+            self.logger.error(f"방화벽 {firewall_id}의 서비스 그룹 데이터가 로드되지 않았습니다.")
             return False
 
         # 그룹 찾기
@@ -417,9 +405,7 @@ class FirewallRuleAnalyzer:
             dict: 다음 홉 정보 (없으면 None)
         """
         if firewall_id not in self._routing_tables:
-            self.logger.error(
-                f"방화벽 {firewall_id}의 라우팅 테이블이 로드되지 않았습니다."
-            )
+            self.logger.error(f"방화벽 {firewall_id}의 라우팅 테이블이 로드되지 않았습니다.")
             return None
 
         try:
@@ -469,9 +455,7 @@ class FirewallRuleAnalyzer:
             tuple: (일치하는 정책, 액션, 순서)
         """
         if firewall_id not in self._policies:
-            self.logger.error(
-                f"방화벽 {firewall_id}의 정책 데이터가 로드되지 않았습니다."
-            )
+            self.logger.error(f"방화벽 {firewall_id}의 정책 데이터가 로드되지 않았습니다.")
             return None, None, None
 
         matching_policies = []
@@ -688,9 +672,7 @@ class FirewallRuleAnalyzer:
             # 네트워크 토폴로지 정보 분석 및 경로 결정
             firewall_path = self._determine_firewall_path(src_ip, dst_ip)
             if not firewall_path:
-                self.logger.error(
-                    f"방화벽 경로를 결정할 수 없습니다: {src_ip} -> {dst_ip}"
-                )
+                self.logger.error(f"방화벽 경로를 결정할 수 없습니다: {src_ip} -> {dst_ip}")
                 return {
                     "allowed": False,
                     "error": "방화벽 경로를 결정할 수 없음",
@@ -817,9 +799,9 @@ class FirewallRuleAnalyzer:
 
             # 경로가 존재하는 경우 경로 최적화 추천 분석 실행
             if result["path"] and len(result["path"]) > 0:
-                result["optimization_recommendations"] = (
-                    self._analyze_path_for_optimization(result["path"])
-                )
+                result[
+                    "optimization_recommendations"
+                ] = self._analyze_path_for_optimization(result["path"])
 
             # 세션 데이터 업데이트
             import datetime
@@ -1614,9 +1596,7 @@ class FirewallRuleAnalyzer:
 
             # 라우팅 테이블이 없으면 기존 서브넷 기반 방식으로 폴백
             if not has_routing_data:
-                self.logger.warning(
-                    "라우팅 테이블 정보가 없어 서브넷 기반 경로 결정으로 전환합니다."
-                )
+                self.logger.warning("라우팅 테이블 정보가 없어 서브넷 기반 경로 결정으로 전환합니다.")
                 return self._identify_relevant_firewalls(
                     src_ip,
                     dst_ip,
@@ -1637,9 +1617,7 @@ class FirewallRuleAnalyzer:
                 route = self._find_route_for_ip(src_ip, firewall_id)
                 if route:
                     # 출발지 IP가 해당 방화벽에 직접 연결되어 있거나 해당 방화벽이 관리하는 네트워크에 속함
-                    if not route.get(
-                        "gateway"
-                    ):  # 게이트웨이가 없으면 직접 연결된 네트워크
+                    if not route.get("gateway"):  # 게이트웨이가 없으면 직접 연결된 네트워크
                         src_firewall_id = firewall_id
                         firewalls_with_routing[firewall_id] = {"src_route": route}
                         break
@@ -1651,9 +1629,7 @@ class FirewallRuleAnalyzer:
                 route = self._find_route_for_ip(dst_ip, firewall_id)
                 if route:
                     # 목적지 IP가 해당 방화벽에 직접 연결되어 있거나 해당 방화벽이 관리하는 네트워크에 속함
-                    if not route.get(
-                        "gateway"
-                    ):  # 게이트웨이가 없으면 직접 연결된 네트워크
+                    if not route.get("gateway"):  # 게이트웨이가 없으면 직접 연결된 네트워크
                         dst_firewall_id = firewall_id
                         if firewall_id in firewalls_with_routing:
                             firewalls_with_routing[firewall_id]["dst_route"] = route
@@ -1741,9 +1717,7 @@ class FirewallRuleAnalyzer:
 
             # 경로가 결정되지 않은 경우, 모든 방화벽을 순서대로 사용
             if not relevant_firewalls:
-                self.logger.warning(
-                    "라우팅 경로를 결정할 수 없어 모든 방화벽을 사용합니다."
-                )
+                self.logger.warning("라우팅 경로를 결정할 수 없어 모든 방화벽을 사용합니다.")
                 return all_firewalls
 
             return relevant_firewalls
@@ -1768,9 +1742,7 @@ class FirewallRuleAnalyzer:
         """
         try:
             if firewall_id not in self._routing_tables:
-                self.logger.error(
-                    f"방화벽 {firewall_id}의 라우팅 테이블이 로드되지 않았습니다."
-                )
+                self.logger.error(f"방화벽 {firewall_id}의 라우팅 테이블이 로드되지 않았습니다.")
                 return None
 
             ip_addr = ipaddress.ip_address(ip)

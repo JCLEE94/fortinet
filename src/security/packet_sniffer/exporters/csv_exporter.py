@@ -165,9 +165,7 @@ class CSVExporter:
             self.statistics["exported_records"] += exported_count
             self.statistics["last_export"] = datetime.now().isoformat()
 
-            logger.info(
-                f"분석 결과 CSV 내보내기 완료: {output_path} ({exported_count}개 레코드)"
-            )
+            logger.info(f"분석 결과 CSV 내보내기 완료: {output_path} ({exported_count}개 레코드)")
 
             return {
                 "success": True,

@@ -55,9 +55,7 @@ class APIPerformanceConfig:
     def __post_init__(self):
         if self.thresholds is None:
             self.thresholds = {
-                "response_time_warning": ThresholdConfig(
-                    1000.0, 3000.0, "ms", "응답 시간"
-                ),
+                "response_time_warning": ThresholdConfig(1000.0, 3000.0, "ms", "응답 시간"),
                 "error_rate": ThresholdConfig(5.0, 10.0, "%", "오류율"),
                 "throughput_min": ThresholdConfig(10.0, 5.0, "req/min", "최소 처리량"),
             }

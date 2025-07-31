@@ -109,9 +109,7 @@ class MonitoringBase(ABC):
                     self._thread.join(timeout=timeout)
 
                     if self._thread.is_alive():
-                        self.logger.warning(
-                            f"{self.name} 모니터링 스레드가 시간 초과로 강제 종료됨"
-                        )
+                        self.logger.warning(f"{self.name} 모니터링 스레드가 시간 초과로 강제 종료됨")
                         return False
 
                 self.logger.info(f"{self.name} 모니터링 중지됨")

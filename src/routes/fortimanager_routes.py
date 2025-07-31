@@ -1204,9 +1204,7 @@ def analyze_policy_scenario(scenario_id):
                     "port": scenario["port"],
                     "protocol": scenario["protocol"],
                     "allowed": overall_allowed,
-                    "reason": (
-                        "; ".join(reasons) if reasons else "FortiManager 분석 완료"
-                    ),
+                    "reason": ("; ".join(reasons) if reasons else "FortiManager 분석 완료"),
                     "policy_paths": policy_paths,  # 다중 정책 경로
                     "policy_path": (
                         "; ".join(policy_paths) if policy_paths else "N/A"
@@ -1408,9 +1406,7 @@ def batch_analyze_scenarios():
                             "protocol": scenario["protocol"],
                             "allowed": overall_allowed,
                             "reason": (
-                                "; ".join(reasons)
-                                if reasons
-                                else "FortiManager 분석 완료"
+                                "; ".join(reasons) if reasons else "FortiManager 분석 완료"
                             ),
                             "policy_paths": policy_paths,  # 다중 정책 경로
                             "policy_path": (
@@ -1581,9 +1577,7 @@ def analyze_custom_scenario():
                     "port": int(data["port"]),
                     "protocol": data["protocol"],
                     "allowed": overall_allowed,
-                    "reason": (
-                        "; ".join(reasons) if reasons else "FortiManager 분석 완료"
-                    ),
+                    "reason": ("; ".join(reasons) if reasons else "FortiManager 분석 완료"),
                     "policy_paths": policy_paths,  # 다중 정책 경로
                     "policy_path": (
                         "; ".join(policy_paths) if policy_paths else "N/A"
