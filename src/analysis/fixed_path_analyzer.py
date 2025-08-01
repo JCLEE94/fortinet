@@ -9,24 +9,18 @@
 import ipaddress
 from datetime import datetime
 
-from ..config.hardcoded_values import CONFIG
-
 
 class FixedPathAnalyzer:
     """일관된 경로 분석 데이터 생성"""
 
     def __init__(self):
-        # 네트워크 구성 정의
+        # 네트워크 구성 정의 (테스트용 고정 값)
         self.network_zones = {
-            "internal": (
-                CONFIG.network.INTERNAL_NETWORKS[0]
-                if CONFIG.network.INTERNAL_NETWORKS
-                else "192.168.0.0/16"
-            ),
-            "dmz": CONFIG.network.DMZ_NETWORK,
+            "internal": "192.168.0.0/16",
+            "dmz": "172.16.0.0/12",
             "external": "0.0.0.0/0",
             "guest": "10.10.0.0/16",
-            "management": "10.100.0.0/24",
+            "management": "192.168.100.0/24",
         }
 
         # 방화벽 정책 정의 (일관된 규칙)
@@ -220,11 +214,7 @@ class FixedPathAnalyzer:
             # 1. 소스 -> 게이트웨이
             src_route = (
                 self.routing_table.get(f"{src_ip}/32")
-                or self.routing_table.get(
-                    CONFIG.network.INTERNAL_NETWORKS[0]
-                    if CONFIG.network.INTERNAL_NETWORKS
-                    else "192.168.0.0/16"
-                )
+                or self.routing_table.get("192.168.0.0/16")
                 or self.routing_table.get("0.0.0.0/0")
             )
 
@@ -265,7 +255,7 @@ class FixedPathAnalyzer:
 
     def analyze_path(self, src_ip, dst_ip, port=None, protocol="tcp"):
         if port is None:
-            port = CONFIG.ports.SERVICE_PORTS.get("http", 80)
+            port = 80  # Default HTTP port
         """경로 분석 수행"""
         # 라우팅 경로 확인
         routing_path = self.get_routing_path(src_ip, dst_ip)
@@ -321,9 +311,7 @@ class FixedPathAnalyzer:
                 "policy_description": policy["description"],
                 "analysis_time": datetime.now().isoformat(),
             },
-            "recommendations": self.generate_recommendations(
-                src_ip, dst_ip, port, allowed, policy
-            ),
+            "recommendations": self.generate_recommendations(src_ip, dst_ip, port, allowed, policy),
         }
 
         return result
@@ -345,11 +333,7 @@ class FixedPathAnalyzer:
             src_zone = self.get_zone_for_ip(src_ip)
             dst_zone = self.get_zone_for_ip(dst_ip)
             for pol_id, pol in self.firewall_policies.items():
-                if (
-                    pol["source_zone"] == src_zone
-                    and pol["dest_zone"] == dst_zone
-                    and pol["action"] == "allow"
-                ):
+                if pol["source_zone"] == src_zone and pol["dest_zone"] == dst_zone and pol["action"] == "allow":
                     recommendations.append(
                         {
                             "type": "info",

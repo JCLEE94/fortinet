@@ -16,8 +16,7 @@ from routes.fortimanager_routes import fortimanager_bp
 from routes.itsm_api_routes import itsm_api_bp
 from routes.itsm_routes import itsm_bp
 from routes.main_routes import main_bp
-from utils.security import (add_security_headers, csrf_protect,
-                            generate_csrf_token, rate_limit)
+from utils.security import add_security_headers, csrf_protect, generate_csrf_token, rate_limit
 from utils.unified_logger import get_logger
 
 # 오프라인 모드 감지
@@ -65,6 +64,9 @@ def create_app():
     from routes.performance_routes import performance_bp
     from utils.unified_cache_manager import get_cache_manager
 
+    # 로거 설정 (다른 코드보다 먼저 초기화)
+    logger = get_logger(__name__)
+
     app = Flask(__name__)
 
     # 보안 강화: SECRET_KEY 필수 설정
@@ -82,9 +84,7 @@ def create_app():
     app.config["SECRET_KEY"] = secret_key
 
     # 보안 강화: 세션 쿠키 보안 설정
-    app.config["SESSION_COOKIE_SECURE"] = (
-        os.environ.get("APP_MODE", "production").lower() == "production"
-    )
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("APP_MODE", "production").lower() == "production"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["PERMANENT_SESSION_LIFETIME"] = 900  # 15분 세션 만료
@@ -95,9 +95,6 @@ def create_app():
 
     # 애플리케이션 시작 시간 설정 (uptime 계산용)
     app.start_time = time.time()
-
-    # 로거 설정
-    logger = get_logger(__name__)
 
     # 통합 캐시 매니저 설정
     if OFFLINE_MODE:
@@ -174,7 +171,7 @@ def create_app():
         logger.warning(f"Logs routes not available: {e}")
 
     # Legacy routes for backward compatibility
-    @rate_limit(max_requests=30, _window=60)
+    @rate_limit(max_requests=30, window=60)
     @csrf_protect
     @app.route("/analyze_path", methods=["POST"])
     def analyze_path():
@@ -189,7 +186,7 @@ def create_app():
             return jsonify({"error": str(e)}), 500
 
     # Firewall policy routes
-    @rate_limit(max_requests=30, _window=60)
+    @rate_limit(max_requests=30, window=60)
     @csrf_protect
     @app.route("/api/firewall-policy/analyze", methods=["POST"])
     def analyze_firewall_policy():
@@ -211,7 +208,7 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
-    @rate_limit(max_requests=30, _window=60)
+    @rate_limit(max_requests=30, window=60)
     @csrf_protect
     @app.route("/api/firewall-policy/create-ticket", methods=["POST"])
     def create_firewall_ticket():
@@ -237,9 +234,8 @@ def create_app():
         except Exception as e:
             return jsonify({"status": "error", "message": str(e)}), 500
 
-    @rate_limit(max_requests=30, _window=60)
+    @rate_limit(max_requests=60, window=60)
     @csrf_protect
-    @rate_limit(max_requests=60, _window=60)
     @app.route("/api/firewall-policy/zones")
     def get_firewall_zones():
         """방화벽 존 정보 조회"""
