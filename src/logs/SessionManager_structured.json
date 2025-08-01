@@ -7,3 +7,8 @@
 {"timestamp": "2025-07-27T14:27:21.657059+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}
 {"timestamp": "2025-07-27T16:44:55.495848+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
 {"timestamp": "2025-07-27T20:50:41.016026+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
+{"timestamp": "2025-07-31T10:43:38.335322+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}
+{"timestamp": "2025-07-31T10:54:18.543726+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}
+{"timestamp": "2025-07-31T10:58:11.783881+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}
+{"timestamp": "2025-07-31T15:30:45.427833+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}
+{"timestamp": "2025-08-01T09:01:30.257460+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 313}

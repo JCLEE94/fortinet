@@ -24,3 +24,18 @@
 {"timestamp": "2025-07-27T20:50:41.016587+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 110}
 {"timestamp": "2025-07-27T20:50:41.024844+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 175}
 {"timestamp": "2025-07-27T20:50:41.040053+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 192}
+{"timestamp": "2025-07-31T10:43:38.335859+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 112}
+{"timestamp": "2025-07-31T10:43:38.338490+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 180}
+{"timestamp": "2025-07-31T10:43:38.342850+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 197}
+{"timestamp": "2025-07-31T10:54:18.544198+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 112}
+{"timestamp": "2025-07-31T10:54:18.546252+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 180}
+{"timestamp": "2025-07-31T10:54:18.549582+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 197}
+{"timestamp": "2025-07-31T10:58:11.784436+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 112}
+{"timestamp": "2025-07-31T10:58:11.786539+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 180}
+{"timestamp": "2025-07-31T10:58:11.790097+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 197}
+{"timestamp": "2025-07-31T15:30:45.428308+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 112}
+{"timestamp": "2025-07-31T15:30:45.430553+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 180}
+{"timestamp": "2025-07-31T15:30:45.434104+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 197}
+{"timestamp": "2025-08-01T09:01:30.258200+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 112}
+{"timestamp": "2025-08-01T09:01:30.259952+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 180}
+{"timestamp": "2025-08-01T09:01:30.261711+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 197}
