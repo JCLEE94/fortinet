@@ -114,9 +114,7 @@ def test_packet_path_analysis(headers):
     }
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=packet_test, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=packet_test, verify=False)
 
         result = response.json()
         print(f"패킷 경로 분석 결과: {json.dumps(result, indent=2)[:300]}...")

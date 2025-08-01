@@ -56,9 +56,7 @@ def simple_test():
     for endpoint in endpoints:
         try:
             print(f"\nTesting: {endpoint}")
-            response = requests.get(
-                f"{BASE_URL}{endpoint}", headers=headers, verify=False, timeout=5
-            )
+            response = requests.get(f"{BASE_URL}{endpoint}", headers=headers, verify=False, timeout=5)
             print(f"Status: {response.status_code}")
             if response.status_code != 404:
                 print(f"Response: {response.text[:200]}")

@@ -64,9 +64,7 @@ class FortiManagerAPI:
         if params:
             request["params"][0].update(params)
 
-        response = requests.post(
-            f"{self.base_url}/jsonrpc", headers=self.headers, json=request, verify=False
-        )
+        response = requests.post(f"{self.base_url}/jsonrpc", headers=self.headers, json=request, verify=False)
 
         return response.json()
 
@@ -138,9 +136,7 @@ def main():
     # 4. 방화벽 정책 분석
     print("\n4️⃣ 방화벽 정책 분석")
     # Enterprise_Demo ADOM의 정책 확인
-    result = api.api_call(
-        "get", "/pm/config/adom/Enterprise_Demo/pkg/default/firewall/policy"
-    )
+    result = api.api_call("get", "/pm/config/adom/Enterprise_Demo/pkg/default/firewall/policy")
     if result["result"][0]["status"]["code"] == 0:
         policies = result["result"][0].get("data", [])
         print(f"  Enterprise_Demo ADOM 정책 수: {len(policies)}")
@@ -232,9 +228,7 @@ def main():
         tasks = result["result"][0].get("data", [])
         print(f"  최근 작업 {len(tasks)}개")
         for task in tasks:
-            print(
-                f"    - {task.get('desc', 'Unknown')} ({task.get('state_str', 'Unknown')})"
-            )
+            print(f"    - {task.get('desc', 'Unknown')} ({task.get('state_str', 'Unknown')})")
 
     # 로그아웃
     api.logout()

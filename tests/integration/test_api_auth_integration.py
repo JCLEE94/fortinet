@@ -38,13 +38,9 @@ class MockFortiManagerServer:
         self.api_keys = {"valid_key_123": True, "expired_key_456": False}
         self.users = {"admin": "password123", "testuser": "testpass"}
 
-    def handle_auth_request(
-        self, auth_type: str, credentials: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def handle_auth_request(self, auth_type: str, credentials: Dict[str, Any]) -> Dict[str, Any]:
         """인증 요청 처리 시뮬레이션"""
-        self.auth_attempts.append(
-            {"type": auth_type, "credentials": credentials, "timestamp": time.time()}
-        )
+        self.auth_attempts.append({"type": auth_type, "credentials": credentials, "timestamp": time.time()})
 
         if auth_type == "bearer_token":
             token = credentials.get("token")
@@ -104,17 +100,13 @@ class APIAuthIntegrationTester:
         self.connection_tests = []
         self.auth_chain_tests = []
 
-    def create_mock_response(
-        self, status_code: int, json_data: Dict[str, Any]
-    ) -> MagicMock:
+    def create_mock_response(self, status_code: int, json_data: Dict[str, Any]) -> MagicMock:
         """Mock HTTP 응답 생성"""
         mock_response = MagicMock()
         mock_response.status_code = status_code
         mock_response.json.return_value = json_data
         mock_response.text = json.dumps(json_data)
-        mock_response.raise_for_status.side_effect = (
-            None if status_code < 400 else requests.HTTPError()
-        )
+        mock_response.raise_for_status.side_effect = None if status_code < 400 else requests.HTTPError()
         return mock_response
 
 
@@ -130,30 +122,20 @@ def test_base_client_session():
     client = BaseApiClient()
 
     # 세션이 올바르게 초기화되었는지 확인
-    test_framework.assert_ok(
-        hasattr(client, "session"), "Client should have session attribute"
-    )
-    test_framework.assert_ok(
-        client.session is not None, "Session should be initialized"
-    )
+    test_framework.assert_ok(hasattr(client, "session"), "Client should have session attribute")
+    test_framework.assert_ok(client.session is not None, "Session should be initialized")
     test_framework.assert_ok(
         isinstance(client.session, requests.Session),
         "Session should be requests.Session instance",
     )
 
     # 기본 설정 검증
-    test_framework.assert_ok(
-        hasattr(client, "verify_ssl"), "Client should have SSL verification setting"
-    )
-    test_framework.assert_ok(
-        hasattr(client, "timeout"), "Client should have timeout setting"
-    )
+    test_framework.assert_ok(hasattr(client, "verify_ssl"), "Client should have SSL verification setting")
+    test_framework.assert_ok(hasattr(client, "timeout"), "Client should have timeout setting")
 
     # 세션 헤더 검증
     default_headers = client.session.headers
-    test_framework.assert_ok(
-        "User-Agent" in default_headers, "Session should have User-Agent header"
-    )
+    test_framework.assert_ok("User-Agent" in default_headers, "Session should have User-Agent header")
 
     return {
         "session_initialized": client.session is not None,
@@ -189,18 +171,13 @@ def test_fortimanager_client_init():
             client = FortiManagerAPIClient(**config)
 
             # 기본 속성 검증
-            test_framework.assert_ok(
-                hasattr(client, "host"), "Client should have host attribute"
-            )
-            test_framework.assert_ok(
-                hasattr(client, "session"), "Client should inherit session from base"
-            )
+            test_framework.assert_ok(hasattr(client, "host"), "Client should have host attribute")
+            test_framework.assert_ok(hasattr(client, "session"), "Client should inherit session from base")
 
             # 호스트 URL 형식 검증
             if hasattr(client, "host"):
                 test_framework.assert_ok(
-                    client.host.startswith("https://")
-                    or client.host.startswith("http://"),
+                    client.host.startswith("https://") or client.host.startswith("http://"),
                     f"Host should be properly formatted URL: {client.host}",
                 )
 
@@ -209,32 +186,21 @@ def test_fortimanager_client_init():
                     "config": config,
                     "status": "success",
                     "host": getattr(client, "host", None),
-                    "has_auth_credentials": any(
-                        hasattr(client, attr)
-                        for attr in ["api_key", "username", "token"]
-                    ),
+                    "has_auth_credentials": any(hasattr(client, attr) for attr in ["api_key", "username", "token"]),
                 }
             )
 
         except Exception as e:
-            initialization_results.append(
-                {"config": config, "status": "failed", "error": str(e)}
-            )
+            initialization_results.append({"config": config, "status": "failed", "error": str(e)})
 
     # 모든 초기화가 성공해야 함
-    failed_inits = [
-        result for result in initialization_results if result["status"] == "failed"
-    ]
-    test_framework.assert_eq(
-        len(failed_inits), 0, f"All initializations should succeed: {failed_inits}"
-    )
+    failed_inits = [result for result in initialization_results if result["status"] == "failed"]
+    test_framework.assert_eq(len(failed_inits), 0, f"All initializations should succeed: {failed_inits}")
 
     return {
         "test_configs": test_configs,
         "initialization_results": initialization_results,
-        "successful_inits": len(
-            [r for r in initialization_results if r["status"] == "success"]
-        ),
+        "successful_inits": len([r for r in initialization_results if r["status"] == "success"]),
     }
 
 
@@ -271,26 +237,15 @@ def test_auth_fallback_chain():
     for scenario in auth_scenarios:
         # 각 인증 방법 시뮬레이션
         if "token" in scenario["credentials"]:
-            auth_result = auth_tester.mock_server.handle_auth_request(
-                "bearer_token", scenario["credentials"]
-            )
+            auth_result = auth_tester.mock_server.handle_auth_request("bearer_token", scenario["credentials"])
         elif "api_key" in scenario["credentials"]:
-            auth_result = auth_tester.mock_server.handle_auth_request(
-                "api_key", scenario["credentials"]
-            )
-        elif (
-            "username" in scenario["credentials"]
-            and "password" in scenario["credentials"]
-        ):
+            auth_result = auth_tester.mock_server.handle_auth_request("api_key", scenario["credentials"])
+        elif "username" in scenario["credentials"] and "password" in scenario["credentials"]:
             # 먼저 basic auth 시도
-            auth_result = auth_tester.mock_server.handle_auth_request(
-                "basic_auth", scenario["credentials"]
-            )
+            auth_result = auth_tester.mock_server.handle_auth_request("basic_auth", scenario["credentials"])
             if not auth_result["success"]:
                 # basic auth 실패 시 session login 시도
-                auth_result = auth_tester.mock_server.handle_auth_request(
-                    "session_login", scenario["credentials"]
-                )
+                auth_result = auth_tester.mock_server.handle_auth_request("session_login", scenario["credentials"])
 
         auth_results.append(
             {
@@ -314,9 +269,7 @@ def test_auth_fallback_chain():
 
     # 성공한 인증이 있어야 함
     successful_auths = [result for result in auth_results if result["auth_success"]]
-    test_framework.assert_ok(
-        len(successful_auths) > 0, "At least one authentication should succeed"
-    )
+    test_framework.assert_ok(len(successful_auths) > 0, "At least one authentication should succeed")
 
     return {
         "auth_scenarios": auth_scenarios,
@@ -334,9 +287,7 @@ def test_connection_pool():
     pool_manager = ConnectionPoolManager()
 
     # 기본 설정 검증
-    test_framework.assert_ok(
-        hasattr(pool_manager, "pools"), "Pool manager should have pools attribute"
-    )
+    test_framework.assert_ok(hasattr(pool_manager, "pools"), "Pool manager should have pools attribute")
 
     # 풀 생성 테스트
     pool_configs = [
@@ -353,9 +304,7 @@ def test_connection_pool():
             pool_key = f"{config['host']}:{config.get('port', 443)}"
 
             # 풀 설정 검증
-            test_framework.assert_ok(
-                config["pool_connections"] > 0, "Pool connections should be positive"
-            )
+            test_framework.assert_ok(config["pool_connections"] > 0, "Pool connections should be positive")
             test_framework.assert_ok(
                 config["pool_maxsize"] >= config["pool_connections"],
                 "Pool maxsize should be >= connections",
@@ -372,17 +321,11 @@ def test_connection_pool():
             )
 
         except Exception as e:
-            pool_creation_results.append(
-                {"host": config["host"], "status": "failed", "error": str(e)}
-            )
+            pool_creation_results.append({"host": config["host"], "status": "failed", "error": str(e)})
 
     # 모든 풀 설정이 성공해야 함
-    failed_pools = [
-        result for result in pool_creation_results if result["status"] == "failed"
-    ]
-    test_framework.assert_eq(
-        len(failed_pools), 0, f"All pool configurations should be valid: {failed_pools}"
-    )
+    failed_pools = [result for result in pool_creation_results if result["status"] == "failed"]
+    test_framework.assert_eq(len(failed_pools), 0, f"All pool configurations should be valid: {failed_pools}")
 
     return {
         "pool_configs": pool_configs,
@@ -423,9 +366,7 @@ def test_session_timeout_retry():
 
     timeout_retry_results = []
 
-    for i, (timeout_config, retry_config) in enumerate(
-        zip(timeout_configs, retry_configs)
-    ):
+    for i, (timeout_config, retry_config) in enumerate(zip(timeout_configs, retry_configs)):
         try:
             # 클라이언트 생성 (실제 연결 없이 설정만 테스트)
             client = BaseApiClient()
@@ -434,12 +375,8 @@ def test_session_timeout_retry():
             connect_timeout = timeout_config["connect_timeout"]
             read_timeout = timeout_config["read_timeout"]
 
-            test_framework.assert_ok(
-                connect_timeout > 0, "Connect timeout should be positive"
-            )
-            test_framework.assert_ok(
-                read_timeout > 0, "Read timeout should be positive"
-            )
+            test_framework.assert_ok(connect_timeout > 0, "Connect timeout should be positive")
+            test_framework.assert_ok(read_timeout > 0, "Read timeout should be positive")
             test_framework.assert_ok(
                 read_timeout >= connect_timeout,
                 "Read timeout should be >= connect timeout",
@@ -449,12 +386,8 @@ def test_session_timeout_retry():
             total_retries = retry_config["total_retries"]
             backoff_factor = retry_config["backoff_factor"]
 
-            test_framework.assert_ok(
-                total_retries >= 0, "Total retries should be non-negative"
-            )
-            test_framework.assert_ok(
-                backoff_factor >= 0, "Backoff factor should be non-negative"
-            )
+            test_framework.assert_ok(total_retries >= 0, "Total retries should be non-negative")
+            test_framework.assert_ok(backoff_factor >= 0, "Backoff factor should be non-negative")
             test_framework.assert_ok(
                 len(retry_config["status_forcelist"]) > 0,
                 "Status forcelist should not be empty",
@@ -470,16 +403,10 @@ def test_session_timeout_retry():
             )
 
         except Exception as e:
-            timeout_retry_results.append(
-                {"config_index": i, "validation_status": "failed", "error": str(e)}
-            )
+            timeout_retry_results.append({"config_index": i, "validation_status": "failed", "error": str(e)})
 
     # 모든 설정 검증이 통과해야 함
-    failed_validations = [
-        result
-        for result in timeout_retry_results
-        if result["validation_status"] == "failed"
-    ]
+    failed_validations = [result for result in timeout_retry_results if result["validation_status"] == "failed"]
     test_framework.assert_eq(
         len(failed_validations),
         0,
@@ -490,9 +417,7 @@ def test_session_timeout_retry():
         "timeout_configs": timeout_configs,
         "retry_configs": retry_configs,
         "validation_results": timeout_retry_results,
-        "successful_validations": len(
-            [r for r in timeout_retry_results if r["validation_status"] == "passed"]
-        ),
+        "successful_validations": len([r for r in timeout_retry_results if r["validation_status"] == "passed"]),
     }
 
 
@@ -546,11 +471,7 @@ def test_ssl_certificate_handling():
             )
 
     # 모든 SSL 설정이 유효해야 함
-    failed_ssl_configs = [
-        result
-        for result in ssl_handling_results
-        if result["validation_status"] == "failed"
-    ]
+    failed_ssl_configs = [result for result in ssl_handling_results if result["validation_status"] == "failed"]
     test_framework.assert_eq(
         len(failed_ssl_configs),
         0,
@@ -575,9 +496,7 @@ def test_concurrent_auth():
     def simulate_auth_request(thread_id: int, credentials: Dict[str, Any]):
         """스레드에서 실행될 인증 시뮬레이션"""
         try:
-            auth_result = auth_tester.mock_server.handle_auth_request(
-                "api_key", credentials
-            )
+            auth_result = auth_tester.mock_server.handle_auth_request("api_key", credentials)
             auth_results_shared.append(
                 {
                     "thread_id": thread_id,
@@ -650,9 +569,7 @@ if __name__ == "__main__":
 
     # 추가 상세 보고서
     print("\n📋 Authentication Analysis Summary:")
-    print(
-        f"🔑 Mock server processed {len(auth_tester.mock_server.auth_attempts)} auth attempts"
-    )
+    print(f"🔑 Mock server processed {len(auth_tester.mock_server.auth_attempts)} auth attempts")
     print(f"🎯 Session tokens created: {len(auth_tester.mock_server.session_tokens)}")
 
     auth_methods_tested = set()
@@ -663,14 +580,10 @@ if __name__ == "__main__":
 
     # 결과에 따른 종료 코드
     if results["failed"] == 0:
-        print(
-            f"\n✅ All {results['total']} API authentication integration tests PASSED!"
-        )
+        print(f"\n✅ All {results['total']} API authentication integration tests PASSED!")
         print("🔒 Authentication chain is working correctly")
         sys.exit(0)
     else:
-        print(
-            f"\n❌ {results['failed']}/{results['total']} API authentication integration tests FAILED"
-        )
+        print(f"\n❌ {results['failed']}/{results['total']} API authentication integration tests FAILED")
         print("🔧 Authentication integration needs attention")
         sys.exit(1)

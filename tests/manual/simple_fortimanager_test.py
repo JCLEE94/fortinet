@@ -63,29 +63,21 @@ def test_fortimanager_direct():
     print("Test 1: System Status")
     try:
         payload = build_json_rpc_request("get", "/sys/status")
-        response = requests.post(
-            base_url, json=payload, headers=headers, verify=False, timeout=30
-        )
+        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
 
         print(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results["tests"].append(
-                {"name": "system_status", "status": "success", "response": result}
-            )
+            test_results["tests"].append({"name": "system_status", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results["tests"].append(
-                {"name": "system_status", "status": "failed", "error": response.text}
-            )
+            test_results["tests"].append({"name": "system_status", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results["tests"].append(
-            {"name": "system_status", "status": "error", "error": str(e)}
-        )
+        test_results["tests"].append({"name": "system_status", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
@@ -93,29 +85,21 @@ def test_fortimanager_direct():
     print("Test 2: ADOM List")
     try:
         payload = build_json_rpc_request("get", "/dvmdb/adom")
-        response = requests.post(
-            base_url, json=payload, headers=headers, verify=False, timeout=30
-        )
+        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
 
         print(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results["tests"].append(
-                {"name": "adom_list", "status": "success", "response": result}
-            )
+            test_results["tests"].append({"name": "adom_list", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results["tests"].append(
-                {"name": "adom_list", "status": "failed", "error": response.text}
-            )
+            test_results["tests"].append({"name": "adom_list", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results["tests"].append(
-            {"name": "adom_list", "status": "error", "error": str(e)}
-        )
+        test_results["tests"].append({"name": "adom_list", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
@@ -123,66 +107,46 @@ def test_fortimanager_direct():
     print("Test 3: Managed Devices")
     try:
         payload = build_json_rpc_request("get", "/dvmdb/adom/root/device")
-        response = requests.post(
-            base_url, json=payload, headers=headers, verify=False, timeout=30
-        )
+        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
 
         print(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results["tests"].append(
-                {"name": "managed_devices", "status": "success", "response": result}
-            )
+            test_results["tests"].append({"name": "managed_devices", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results["tests"].append(
-                {"name": "managed_devices", "status": "failed", "error": response.text}
-            )
+            test_results["tests"].append({"name": "managed_devices", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results["tests"].append(
-            {"name": "managed_devices", "status": "error", "error": str(e)}
-        )
+        test_results["tests"].append({"name": "managed_devices", "status": "error", "error": str(e)})
 
     print("\n" + "=" * 50 + "\n")
 
     # Test 4: Address Objects
     print("Test 4: Address Objects")
     try:
-        payload = build_json_rpc_request(
-            "get", "/pm/config/adom/root/obj/firewall/address"
-        )
-        response = requests.post(
-            base_url, json=payload, headers=headers, verify=False, timeout=30
-        )
+        payload = build_json_rpc_request("get", "/pm/config/adom/root/obj/firewall/address")
+        response = requests.post(base_url, json=payload, headers=headers, verify=False, timeout=30)
 
         print(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             result = response.json()
             print(f"Response: {json.dumps(result, indent=2)}")
-            test_results["tests"].append(
-                {"name": "address_objects", "status": "success", "response": result}
-            )
+            test_results["tests"].append({"name": "address_objects", "status": "success", "response": result})
         else:
             print(f"Error: {response.text}")
-            test_results["tests"].append(
-                {"name": "address_objects", "status": "failed", "error": response.text}
-            )
+            test_results["tests"].append({"name": "address_objects", "status": "failed", "error": response.text})
 
     except Exception as e:
         print(f"Exception: {e}")
-        test_results["tests"].append(
-            {"name": "address_objects", "status": "error", "error": str(e)}
-        )
+        test_results["tests"].append({"name": "address_objects", "status": "error", "error": str(e)})
 
     # Save results to file
-    report_filename = (
-        f"fortimanager_demo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    )
+    report_filename = f"fortimanager_demo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(report_filename, "w") as f:
         json.dump(test_results, f, indent=2, default=str)
 

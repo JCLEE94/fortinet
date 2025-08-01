@@ -15,8 +15,7 @@ def test_imports():
 
     # API clients
     try:
-        from src.api.clients.base_api_client import (BaseApiClient,
-                                                     RealtimeMonitoringMixin)
+        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
         print("✅ base_api_client imported successfully")
     except Exception as e:
@@ -30,8 +29,7 @@ def test_imports():
         print(f"❌ fortigate_api_client import failed: {e}")
 
     try:
-        from src.api.clients.fortimanager_api_client import \
-            FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         print("✅ fortimanager_api_client imported successfully")
     except Exception as e:

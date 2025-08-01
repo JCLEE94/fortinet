@@ -36,9 +36,7 @@ def test_fortimanager_api():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [
-            {"data": {"user": USERNAME, "passwd": API_KEY}, "url": "sys/login/user"}
-        ],
+        "params": [{"data": {"user": USERNAME, "passwd": API_KEY}, "url": "sys/login/user"}],
         "session": None,
     }
 
@@ -178,13 +176,9 @@ def test_session_api(session_id):
                 if status_code == 0:
                     print(f"✅ 성공!")
                     if "data" in result["result"][0]:
-                        print(
-                            f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
-                        )
+                        print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
-                    print(
-                        f"❌ 에러 {status_code}: {result['result'][0]['status']['message']}"
-                    )
+                    print(f"❌ 에러 {status_code}: {result['result'][0]['status']['message']}")
 
         except Exception as e:
             print(f"예외: {e}")

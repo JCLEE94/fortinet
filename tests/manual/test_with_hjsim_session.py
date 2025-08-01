@@ -28,17 +28,13 @@ def test_with_session():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [
-            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
-        ],
+        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
     }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
         result = response.json()
         if "session" in result:
@@ -126,9 +122,7 @@ def work_with_adom(session_id):
         adoms = result["result"][0]["data"]
         print(f"  - 총 {len(adoms)}개 ADOM")
         for adom in adoms[:3]:
-            print(
-                f"    • {adom.get('name', 'Unknown')} - {adom.get('desc', 'No description')}"
-            )
+            print(f"    • {adom.get('name', 'Unknown')} - {adom.get('desc', 'No description')}")
 
 
 def get_device_info(session_id):
@@ -188,12 +182,8 @@ def get_policies(session_id):
         policies = result["result"][0].get("data", [])
         print(f"  - root ADOM에 {len(policies)}개 정책")
         for policy in policies[:3]:
-            print(
-                f"    • Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}"
-            )
-            print(
-                f"      {policy.get('srcintf', ['Unknown'])} → {policy.get('dstintf', ['Unknown'])}"
-            )
+            print(f"    • Policy {policy.get('policyid', 'Unknown')}: {policy.get('name', 'Unnamed')}")
+            print(f"      {policy.get('srcintf', ['Unknown'])} → {policy.get('dstintf', ['Unknown'])}")
 
 
 def get_address_objects(session_id):
@@ -219,9 +209,7 @@ def get_address_objects(session_id):
         addresses = result["result"][0]["data"]
         print(f"  - 총 {len(addresses)}개 주소 객체")
         for addr in addresses[:3]:
-            print(
-                f"    • {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}"
-            )
+            print(f"    • {addr.get('name', 'Unknown')}: {addr.get('subnet', addr.get('fqdn', 'Unknown'))}")
 
 
 def simulate_packet_analysis(session_id):

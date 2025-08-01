@@ -94,9 +94,7 @@ def test_api_without_session():
                 if status["code"] == 0:
                     print(f"✅ 성공!")
                     if "data" in result["result"][0]:
-                        print(
-                            f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
-                        )
+                        print(f"데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
                     print(f"❌ 에러 {status['code']}: {status['message']}")
 
@@ -111,9 +109,7 @@ def test_api_without_session():
         print(f"\n테스트: {test['name']}")
         try:
             url = f"{BASE_URL}/jsonrpc?access_token={API_KEY}"
-            response = requests.post(
-                url, headers=headers, json=test["request"], verify=False, timeout=10
-            )
+            response = requests.post(url, headers=headers, json=test["request"], verify=False, timeout=10)
 
             if response.status_code == 200:
                 result = response.json()

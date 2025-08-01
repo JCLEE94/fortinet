@@ -7,8 +7,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from src.api.clients.base_api_client import (BaseApiClient,
-                                             RealtimeMonitoringMixin)
+from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
 
 class MockApiClient(BaseApiClient):
@@ -81,9 +80,7 @@ class TestBaseApiClient(unittest.TestCase):
             # Mock session
             self.client.session.request.return_value = mock_response
 
-            success, data, status = self.client._make_request(
-                "GET", "http://test.com/api"
-            )
+            success, data, status = self.client._make_request("GET", "http://test.com/api")
 
             self.assertTrue(success)
             self.assertEqual(status, 200)

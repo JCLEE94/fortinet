@@ -158,8 +158,7 @@ class TestMonitoringCoverage(unittest.TestCase):
 
     def test_system_metrics_collector(self):
         """시스템 메트릭 수집기 테스트"""
-        from src.monitoring.collectors.system_metrics import \
-            SystemMetricsCollector
+        from src.monitoring.collectors.system_metrics import SystemMetricsCollector
 
         collector = SystemMetricsCollector()
         self.assertIsNotNone(collector)
@@ -218,8 +217,7 @@ class TestCoreCoverage(unittest.TestCase):
 
     def test_connection_pool(self):
         """연결 풀 테스트"""
-        from src.core.connection_pool import (ConnectionPoolManager,
-                                              connection_pool_manager)
+        from src.core.connection_pool import ConnectionPoolManager, connection_pool_manager
 
         # 싱글톤 인스턴스 확인
         self.assertIsInstance(connection_pool_manager, ConnectionPoolManager)

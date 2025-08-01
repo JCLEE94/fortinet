@@ -31,9 +31,7 @@ def test_session_login():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [
-            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
-        ],
+        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
     }
 
     headers = {"Content-Type": "application/json"}
@@ -75,9 +73,7 @@ def test_session_login():
             print("\n빈 패스워드로 재시도...")
             login_payload["params"][0]["data"]["passwd"] = ""
 
-            response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False
-            )
+            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
             result = response.json()
             print(json.dumps(result, indent=2))
@@ -155,9 +151,7 @@ def logout(session_id):
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=logout_payload, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=logout_payload, verify=False)
 
         result = response.json()
         if result["result"][0]["status"]["code"] == 0:

@@ -35,15 +35,11 @@ def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
         url = f"{BASE_URL}{endpoint}"
 
         if data:
-            response = requests.post(
-                url, headers=headers, json=data, verify=False, timeout=10
-            )
+            response = requests.post(url, headers=headers, json=data, verify=False, timeout=10)
         else:
             # Simple test request
             test_data = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
-            response = requests.post(
-                url, headers=headers, json=test_data, verify=False, timeout=10
-            )
+            response = requests.post(url, headers=headers, json=test_data, verify=False, timeout=10)
 
         print(f"\nStatus Code: {response.status_code}")
         print(f"Response Headers: {dict(response.headers)}")
@@ -54,18 +50,14 @@ def test_auth_method(method_name, headers, data=None, endpoint="/jsonrpc"):
                 print(f"Response: {json.dumps(json_response, indent=2)}")
 
                 # Check for specific error codes
-                if "result" in json_response and isinstance(
-                    json_response["result"], list
-                ):
+                if "result" in json_response and isinstance(json_response["result"], list):
                     if len(json_response["result"]) > 0:
                         result = json_response["result"][0]
                         if "status" in result:
                             status = result["status"]
                             if "code" in status:
                                 print(f"\n⚠️  API Error Code: {status['code']}")
-                                print(
-                                    f"   Message: {status.get('message', 'No message')}"
-                                )
+                                print(f"   Message: {status.get('message', 'No message')}")
             except:
                 print(f"Raw Response: {response.text[:500]}")
 
@@ -82,9 +74,7 @@ def main():
     print(f"Time: {datetime.now()}")
     print(f"Host: {BASE_URL}")
     print(f"Username: {USERNAME}")
-    print(
-        f"API Key: {'*' * 20 if API_KEY != 'test_api_key_placeholder' else 'NOT SET'}"
-    )
+    print(f"API Key: {'*' * 20 if API_KEY != 'test_api_key_placeholder' else 'NOT SET'}")
 
     # Test 1: API Key only (known working method)
     test_auth_method(
@@ -116,9 +106,7 @@ def main():
     login_data = {
         "id": 1,
         "method": "exec",
-        "params": [
-            {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}
-        ],
+        "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}],
     }
 
     test_auth_method(

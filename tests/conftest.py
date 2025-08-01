@@ -5,10 +5,11 @@ pytest configuration for FortiGate Nextrade
 Handles proper test environment setup and fixtures
 """
 
-import sys
 import os
-import pytest
+import sys
 from pathlib import Path
+
+import pytest
 
 # Add src directory to Python path
 project_root = Path(__file__).parent.parent
@@ -50,6 +51,7 @@ def test_config():
 def mock_api_client():
     """Create a mock API client for testing"""
     from unittest.mock import Mock
+
     client = Mock()
     client.session = Mock()
     client.session.get = Mock()
@@ -61,13 +63,14 @@ def mock_api_client():
 def app():
     """Create Flask app for testing"""
     os.environ["APP_MODE"] = "test"
-    
+
     try:
         from web_app import create_app
+
         app = create_app()
-        app.config['TESTING'] = True
-        app.config['WTF_CSRF_ENABLED'] = False
-        
+        app.config["TESTING"] = True
+        app.config["WTF_CSRF_ENABLED"] = False
+
         with app.app_context():
             yield app
     except ImportError as e:

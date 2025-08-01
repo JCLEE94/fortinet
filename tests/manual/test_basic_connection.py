@@ -47,9 +47,7 @@ headers = {"Content-Type": "application/json", "X-API-Key": API_KEY}
 test_request = {"id": 1, "method": "get", "params": [{"url": "/sys/status"}]}
 
 try:
-    response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers=headers, json=test_request, verify=False
-    )
+    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=test_request, verify=False)
 
     result = response.json()
     code = result["result"][0]["status"]["code"]

@@ -41,7 +41,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
     def test_session_initialization(self):
         """Test that session is properly initialized"""
         # Client should have a session
-        self.assertTrue(hasattr(self.client, 'session'))
+        self.assertTrue(hasattr(self.client, "session"))
         # Session should be initialized by parent class
         self.assertIsNotNone(self.client.session)
 
@@ -49,7 +49,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
         """Test URL building functionality"""
         # Test basic URL construction
         expected_url = "https://mock.fortimanager.test/jsonrpc"
-        if hasattr(self.client, 'build_url'):
+        if hasattr(self.client, "build_url"):
             actual_url = self.client.build_url("/jsonrpc")
             self.assertEqual(actual_url, expected_url)
         else:
@@ -59,10 +59,10 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
     def test_client_config_attributes(self):
         """Test that client has required configuration attributes"""
         # Test basic attributes
-        self.assertTrue(hasattr(self.client, 'host'))
-        self.assertTrue(hasattr(self.client, 'username'))
-        self.assertTrue(hasattr(self.client, 'verify_ssl'))
-        
+        self.assertTrue(hasattr(self.client, "host"))
+        self.assertTrue(hasattr(self.client, "username"))
+        self.assertTrue(hasattr(self.client, "verify_ssl"))
+
         # Test values
         self.assertEqual(self.client.host, "mock.fortimanager.test")
         self.assertEqual(self.client.username, "test_user")
@@ -72,14 +72,10 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
         with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"name": "port1", "ip": "192.168.1.1"}])
 
-            result = self.client.get_device_global_settings(
-                device_name="FGT-001", cli_path="system/interface"
-            )
+            result = self.client.get_device_global_settings(device_name="FGT-001", cli_path="system/interface")
 
             # Verify correct URL format: /pm/config/device/<device>/global/<cli>
-            mock_request.assert_called_once_with(
-                method="get", url="/pm/config/device/FGT-001/global/system/interface"
-            )
+            mock_request.assert_called_once_with(method="get", url="/pm/config/device/FGT-001/global/system/interface")
 
     def test_device_vdom_settings_url(self):
         """Test device VDOM settings URL structure"""
@@ -100,9 +96,7 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
         with patch.object(self.client, "_make_api_request") as mock_request:
             mock_request.return_value = (True, [{"policyid": 1}])
 
-            result = self.client.get_firewall_policies(
-                device_name="FGT-001", vdom="root"
-            )
+            result = self.client.get_firewall_policies(device_name="FGT-001", vdom="root")
 
             # Should use device-centric URL, not package-centric
             mock_request.assert_called_once_with(
@@ -113,16 +107,10 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
         """Test packet path analysis with real FortiManager APIs"""
         with patch.object(self.client, "get_routes") as mock_routes, patch.object(
             self.client, "get_interfaces"
-        ) as mock_interfaces, patch.object(
-            self.client, "get_firewall_policies"
-        ) as mock_policies:
+        ) as mock_interfaces, patch.object(self.client, "get_firewall_policies") as mock_policies:
             # Mock API responses
-            mock_interfaces.return_value = [
-                {"name": "port1", "ip": "192.168.1.1", "netmask": "255.255.255.0"}
-            ]
-            mock_routes.return_value = [
-                {"dst": "10.0.0.0", "netmask": "255.0.0.0", "device": "port2"}
-            ]
+            mock_interfaces.return_value = [{"name": "port1", "ip": "192.168.1.1", "netmask": "255.255.255.0"}]
+            mock_routes.return_value = [{"dst": "10.0.0.0", "netmask": "255.0.0.0", "device": "port2"}]
             mock_policies.return_value = [
                 {
                     "policyid": 1,
@@ -154,17 +142,13 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
             # Test policy package URL (ADOM level)
             self.client.get_policy_package_settings("default", "firewall/policy")
-            mock_request.assert_called_with(
-                method="get", url="/pm/config/adom/root/pkg/default/firewall/policy"
-            )
+            mock_request.assert_called_with(method="get", url="/pm/config/adom/root/pkg/default/firewall/policy")
 
             mock_request.reset_mock()
 
             # Test device VDOM URL (Device level)
             self.client.get_device_vdom_settings("FGT-001", "root", "firewall/policy")
-            mock_request.assert_called_with(
-                method="get", url="/pm/config/device/FGT-001/vdom/root/firewall/policy"
-            )
+            mock_request.assert_called_with(method="get", url="/pm/config/device/FGT-001/vdom/root/firewall/policy")
 
     @patch("requests.Session")
     def test_authentication_flows(self, mock_session_class):
@@ -192,15 +176,9 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
             self.assertEqual(payload["params"][0]["url"], "/sys/login/user")
 
         # Test token-based authentication
-        test_token_host = os.environ.get(
-            "TEST_FORTIMANAGER_HOST", "mock.fortimanager.test"
-        )
-        test_api_token = os.environ.get(
-            "TEST_FORTIMANAGER_TOKEN", "mock_api_token_for_testing"
-        )
-        token_client = FortiManagerAPIClient(
-            host=test_token_host, api_token=test_api_token
-        )
+        test_token_host = os.environ.get("TEST_FORTIMANAGER_HOST", "mock.fortimanager.test")
+        test_api_token = os.environ.get("TEST_FORTIMANAGER_TOKEN", "mock_api_token_for_testing")
+        token_client = FortiManagerAPIClient(host=test_token_host, api_token=test_api_token)
 
         with patch.object(token_client, "_make_request") as mock_request:
             mock_request.return_value = (

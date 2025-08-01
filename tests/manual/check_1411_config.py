@@ -26,17 +26,13 @@ def check_user_config():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [
-            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
-        ],
+        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
     }
 
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=login_payload, verify=False)
 
         result = response.json()
         if "session" in result:
@@ -52,9 +48,7 @@ def check_user_config():
                 "session": session_id,
             }
 
-            response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False
-            )
+            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False)
 
             result = response.json()
             if "result" in result and result["result"][0]["status"]["code"] == 0:
@@ -65,9 +59,7 @@ def check_user_config():
                 print(f"- userid: {data.get('userid', 'Unknown')}")
                 print(f"- user_type: {data.get('user_type', 'Unknown')} (8 = API user)")
                 print(f"- profileid: {data.get('profileid', 'Unknown')}")
-                print(
-                    f"- rpc-permit: {data.get('rpc-permit', 'Unknown')} (0=none, 1=read, 3=read-write)"
-                )
+                print(f"- rpc-permit: {data.get('rpc-permit', 'Unknown')} (0=none, 1=read, 3=read-write)")
                 print(f"- adom: {data.get('adom', 'Not set')}")
                 print(f"- adom-access: {data.get('adom-access', 'Unknown')}")
 

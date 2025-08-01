@@ -16,8 +16,7 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from src.api.clients.base_api_client import (BaseApiClient,
-                                             RealtimeMonitoringMixin)
+from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 from src.api.clients.faz_client import FAZClient
 from src.api.clients.fortigate_api_client import FortiGateAPIClient
 from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
@@ -156,9 +155,7 @@ class TestJsonRpcMixin(unittest.TestCase):
         self.assertEqual(payload["params"]["data"]["user"], "admin")
 
         # 세션 포함 페이로드
-        payload2 = client.build_json_rpc_request(
-            method="get", url="/pm/config/device", session="test-session-id"
-        )
+        payload2 = client.build_json_rpc_request(method="get", url="/pm/config/device", session="test-session-id")
 
         self.assertEqual(payload2["session"], "test-session-id")
         self.assertEqual(payload2["id"], 2)  # ID 증가 확인
@@ -259,9 +256,7 @@ class TestFortiGateAPIClient(unittest.TestCase):
         # Mock 모든 API 호출들
         with patch.object(self.client, "get_cpu_usage") as mock_cpu, patch.object(
             self.client, "get_memory_usage"
-        ) as mock_memory, patch.object(
-            self.client, "get_interface_stats"
-        ) as mock_interfaces, patch.object(
+        ) as mock_memory, patch.object(self.client, "get_interface_stats") as mock_interfaces, patch.object(
             self.client, "get_sessions"
         ) as mock_sessions, patch.object(
             self.client, "get_system_status"
@@ -294,9 +289,7 @@ class TestFortiManagerAPIClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FortiManagerAPIClient(
-            host="192.168.1.200", username="admin", password="password"
-        )
+        self.client = FortiManagerAPIClient(host="192.168.1.200", username="admin", password="password")
 
     @patch.object(FortiManagerAPIClient, "_make_request")
     def test_json_rpc_login(self, mock_request):
@@ -339,9 +332,7 @@ class TestFAZClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FAZClient(
-            host="192.168.1.150", username="admin", password="password"
-        )
+        self.client = FAZClient(host="192.168.1.150", username="admin", password="password")
 
     @patch.object(FAZClient, "_make_request")
     def test_login_and_token_fallback(self, mock_request):

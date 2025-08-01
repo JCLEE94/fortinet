@@ -89,9 +89,7 @@ def test_packet_path_analysis():
                 print(f"  - 이름: {policy['name']}")
                 print(f"  - 액션: {policy['action']}")
                 if "nat" in policy:
-                    print(
-                        f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}"
-                    )
+                    print(f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}")
 
             # Show route details
             if "route" in analysis:

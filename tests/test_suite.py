@@ -25,8 +25,7 @@ class TestAPIClients(unittest.TestCase):
 
     def test_base_api_client_import(self):
         """Test base API client import"""
-        from src.api.clients.base_api_client import (BaseApiClient,
-                                                     RealtimeMonitoringMixin)
+        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
         self.assertTrue(BaseApiClient)
         self.assertTrue(RealtimeMonitoringMixin)
@@ -76,12 +75,9 @@ class TestAPIClients(unittest.TestCase):
 
     def test_fortimanager_client_creation(self):
         """Test FortiManager API client creation"""
-        from src.api.clients.fortimanager_api_client import \
-            FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 
-        client = FortiManagerAPIClient(
-            host="192.168.1.2", username="admin", password="test"
-        )
+        client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
         self.assertIsNotNone(client)
         self.assertEqual(client.host, "192.168.1.2")
 
@@ -103,8 +99,7 @@ class TestMonitoringSystem(unittest.TestCase):
 
     def test_monitoring_base_import(self):
         """Test monitoring base import"""
-        from monitoring.base import (MonitoringBase, get_monitor,
-                                     register_monitor)
+        from monitoring.base import MonitoringBase, get_monitor, register_monitor
 
         self.assertTrue(MonitoringBase)
         self.assertTrue(register_monitor)
@@ -145,17 +140,14 @@ class TestFortiManagerAdvanced(unittest.TestCase):
         import asyncio
 
         from fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from src.api.clients.fortimanager_api_client import \
-            FortiManagerAPIClient
+        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         # Set up event loop for async components
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
         try:
-            client = FortiManagerAPIClient(
-                host="192.168.1.2", username="admin", password="test"
-            )
+            client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
             hub = FortiManagerAdvancedHub(api_client=client)
             self.assertIsNotNone(hub)
             self.assertIsNotNone(hub.policy_orchestrator)
