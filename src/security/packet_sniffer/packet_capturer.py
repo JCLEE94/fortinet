@@ -11,8 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from .base_sniffer import (BaseSniffer, MockDataGenerator, PacketInfo,
-                           SnifferConfig)
+from .base_sniffer import BaseSniffer, MockDataGenerator, PacketInfo, SnifferConfig
 from .device_manager import DeviceManager
 from .session_manager import get_session_manager
 

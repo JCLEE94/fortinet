@@ -78,9 +78,7 @@ def csrf_protect(f):
                 request.jwt_payload = payload
             else:
                 # 웹 폼은 CSRF 토큰 검증
-                token = request.form.get("csrf_token") or request.headers.get(
-                    "X-CSRF-Token"
-                )
+                token = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
                 if not token or not validate_csrf_token(token):
                     abort(403)
 
@@ -136,9 +134,7 @@ def verify_jwt_token(token):
 
         # JWT 라이브러리가 있는 경우
         jwt_lib = verify_jwt_token._jwt
-        payload = jwt_lib.decode(
-            token, current_app.config["SECRET_KEY"], algorithms=["HS256"]
-        )
+        payload = jwt_lib.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
 
         # 토큰 만료 시간 검증
         if "exp" in payload:
@@ -180,8 +176,7 @@ class InputValidator:
     def validate_ip(ip_address):
         """IP 주소 검증"""
         ip_pattern = re.compile(
-            r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}"
-            r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+            r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}" r"(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
         )
         return bool(ip_pattern.match(ip_address))
 
@@ -201,8 +196,7 @@ class InputValidator:
             return False
 
         hostname_pattern = re.compile(
-            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?"
-            r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?" r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
         )
         return bool(hostname_pattern.match(hostname))
 
@@ -242,9 +236,7 @@ def validate_request(required_fields=None, validators=None):
 
             # 필수 필드 확인
             if required_fields:
-                missing_fields = [
-                    field for field in required_fields if field not in data
-                ]
+                missing_fields = [field for field in required_fields if field not in data]
                 if missing_fields:
                     return (
                         jsonify(
@@ -312,9 +304,7 @@ class RateLimiter:
 
         # 시간 윈도우 밖의 요청 제거
         cutoff_time = now - timedelta(seconds=window)
-        self.requests[ip] = [
-            (ts, ep) for ts, ep in self.requests[ip] if ts > cutoff_time
-        ]
+        self.requests[ip] = [(ts, ep) for ts, ep in self.requests[ip] if ts > cutoff_time]
 
         # 요청 수 확인
         if len(self.requests[ip]) >= max_requests:
@@ -333,9 +323,7 @@ class RateLimiter:
 
         # 오래된 요청 기록 삭제
         for ip in list(self.requests.keys()):
-            self.requests[ip] = [
-                (ts, ep) for ts, ep in self.requests[ip] if ts > cutoff_time
-            ]
+            self.requests[ip] = [(ts, ep) for ts, ep in self.requests[ip] if ts > cutoff_time]
             if not self.requests[ip]:
                 del self.requests[ip]
 

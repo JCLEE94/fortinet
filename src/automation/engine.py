@@ -62,9 +62,7 @@ class AutomationEngine:
         logger.info(f"워크플로우 생성: {name} (ID: {workflow_id})")
         return workflow_id
 
-    def schedule_task(
-        self, task_type: AutomationTask, schedule: str, params: Optional[Dict] = None
-    ) -> str:
+    def schedule_task(self, task_type: AutomationTask, schedule: str, params: Optional[Dict] = None) -> str:
         """작업 스케줄링"""
         task_id = f"task_{datetime.now().timestamp()}_{task_type.value}"
 
@@ -82,9 +80,7 @@ class AutomationEngine:
         logger.info(f"작업 스케줄링: {task_type.value} (ID: {task_id})")
         return task_id
 
-    async def execute_task(
-        self, task_type: AutomationTask, params: Optional[Dict] = None
-    ) -> Dict:
+    async def execute_task(self, task_type: AutomationTask, params: Optional[Dict] = None) -> Dict:
         """작업 실행"""
         task_id = f"task_{datetime.now().timestamp()}"
 
@@ -201,25 +197,19 @@ class AutomationEngine:
             os.makedirs(backup_dir, exist_ok=True)
 
             # 설정 백업
-            config_backup = os.path.join(
-                backup_dir, f"config_{backup_result['backup_id']}.json"
-            )
+            config_path = os.path.join(backup_dir, f"config_{backup_result['backup_id']}.json")
             # 실제로는 설정을 가져와 저장
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("configuration")
 
             # 정책 백업
-            policy_backup = os.path.join(
-                backup_dir, f"policies_{backup_result['backup_id']}.json"
-            )
+            policy_path = os.path.join(backup_dir, f"policies_{backup_result['backup_id']}.json")
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("policies")
 
             # 로그 백업
             if params.get("include_logs", False):
-                log_backup = os.path.join(
-                    backup_dir, f"logs_{backup_result['backup_id']}.tar.gz"
-                )
+                log_path = os.path.join(backup_dir, f"logs_{backup_result['backup_id']}.tar.gz")
                 await asyncio.sleep(2)
                 backup_result["items_backed_up"].append("logs")
 
@@ -396,9 +386,7 @@ class AutomationEngine:
                     resolution_results["resolved"].append(issue)
 
                 else:
-                    resolution_results["failed"].append(
-                        {"issue": issue, "reason": "Unknown issue type"}
-                    )
+                    resolution_results["failed"].append({"issue": issue, "reason": "Unknown issue type"})
 
             return resolution_results
 

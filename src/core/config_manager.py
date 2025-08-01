@@ -81,15 +81,11 @@ class AppConfig:
     api_retry_delay: int = 1
 
     # FortiGate settings
-    fortigate_verify_ssl: bool = (
-        os.getenv("FORTIGATE_VERIFY_SSL", "false").lower() == "true"
-    )
+    fortigate_verify_ssl: bool = os.getenv("FORTIGATE_VERIFY_SSL", "false").lower() == "true"
     fortigate_timeout: int = TIMEOUTS["API_REQUEST"]
 
     # FortiManager settings
-    fortimanager_verify_ssl: bool = (
-        os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true"
-    )
+    fortimanager_verify_ssl: bool = os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true"
     fortimanager_timeout: int = TIMEOUTS["API_REQUEST"]
 
     # Test mode settings
@@ -140,11 +136,7 @@ class ConfigManager:
     def _load_default_sources(self):
         """Load default configuration sources."""
         # Environment variables (highest priority)
-        self.add_source(
-            ConfigSource(
-                path="ENV", format=ConfigFormat.ENV, required=False, priority=100
-            )
-        )
+        self.add_source(ConfigSource(path="ENV", format=ConfigFormat.ENV, required=False, priority=100))
 
         # Main config file
         config_paths = [
@@ -157,11 +149,7 @@ class ConfigManager:
         for config_path in config_paths:
             full_path = self._base_dir / config_path
             if full_path.exists():
-                format_type = (
-                    ConfigFormat.YAML
-                    if config_path.endswith(".yaml")
-                    else ConfigFormat.JSON
-                )
+                format_type = ConfigFormat.YAML if config_path.endswith(".yaml") else ConfigFormat.JSON
                 self.add_source(
                     ConfigSource(
                         path=str(full_path),
@@ -209,13 +197,9 @@ class ConfigManager:
                     self._merge_config(self._config_data, data)
             except Exception as e:
                 if source.required:
-                    raise RuntimeError(
-                        f"Failed to load required config source {source.path}: {e}"
-                    )
+                    raise RuntimeError(f"Failed to load required config source {source.path}: {e}")
                 else:
-                    print(
-                        f"Warning: Failed to load optional config source {source.path}: {e}"
-                    )
+                    print(f"Warning: Failed to load optional config source {source.path}: {e}")
 
         # Create app config object
         self._app_config = self._create_app_config()
@@ -321,9 +305,7 @@ class ConfigManager:
             with open(path, "r", encoding="utf-8") as f:
                 return yaml.safe_load(f)
         except ImportError:
-            raise ImportError(
-                "PyYAML is required for YAML config files. Install with: pip install PyYAML"
-            )
+            raise ImportError("PyYAML is required for YAML config files. Install with: pip install PyYAML")
 
     def _merge_config(self, base: Dict[str, Any], override: Dict[str, Any]):
         """
@@ -446,9 +428,7 @@ class ConfigManager:
                         allow_unicode=True,
                     )
             except ImportError:
-                raise ImportError(
-                    "PyYAML is required for YAML output. Install with: pip install PyYAML"
-                )
+                raise ImportError("PyYAML is required for YAML output. Install with: pip install PyYAML")
         else:
             raise ValueError(f"Unsupported format for saving: {format_type}")
 
@@ -462,10 +442,7 @@ class ConfigManager:
         errors = []
 
         # Required fields validation
-        if (
-            not self.app.secret_key
-            or self.app.secret_key == "dev-secret-key-change-in-production"
-        ):
+        if not self.app.secret_key or self.app.secret_key == "dev-secret-key-change-in-production":
             if self.app.flask_env == "production":
                 errors.append("SECRET_KEY must be set to a secure value in production")
 
@@ -599,9 +576,7 @@ class ConfigManager:
             "flask_env": "production",
         }
 
-    def _merge_configs(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _merge_configs(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """
         Merge two configuration dictionaries.
 

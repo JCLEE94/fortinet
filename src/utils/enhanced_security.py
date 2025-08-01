@@ -3,7 +3,7 @@
 
 Features:
 - JWT 토큰 만료 시간 강제 설정
-- 토큰 무효화 (Blacklist) 지원  
+- 토큰 무효화 (Blacklist) 지원
 - 브루트포스 공격 방지
 - 토큰 재사용 방지 (JTI)
 - 역할 기반 접근 제어
@@ -12,7 +12,6 @@ Features:
 import hashlib
 import hmac
 import secrets
-import time
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any, Dict, Optional
@@ -71,9 +70,7 @@ class SecureJWTManager:
         try:
             import jwt
 
-            token = jwt.encode(
-                payload, current_app.config["JWT_SECRET_KEY"], algorithm="HS256"
-            )
+            token = jwt.encode(payload, current_app.config["JWT_SECRET_KEY"], algorithm="HS256")
 
             logger.info(f"JWT 토큰 생성 성공 - 사용자: {user_id}, 만료: {expires_in}초")
             return token
@@ -91,14 +88,10 @@ class SecureJWTManager:
 
         # Header
         header = {"typ": "JWT", "alg": "HS256"}
-        header_encoded = (
-            base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
-        )
+        header_encoded = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
 
         # Payload
-        payload_encoded = (
-            base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
-        )
+        payload_encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
 
         # Signature
         message = f"{header_encoded}.{payload_encoded}"
@@ -337,26 +330,16 @@ class RateLimitManager:
 
         cutoff_time = now - timedelta(minutes=window_minutes)
         RateLimitManager._attempts[identifier] = [
-            (ts, ep)
-            for ts, ep in RateLimitManager._attempts[identifier]
-            if ts > cutoff_time
+            (ts, ep) for ts, ep in RateLimitManager._attempts[identifier] if ts > cutoff_time
         ]
 
         # 현재 시도 횟수 확인
-        current_attempts = len(
-            [
-                (ts, ep)
-                for ts, ep in RateLimitManager._attempts[identifier]
-                if ep == endpoint
-            ]
-        )
+        current_attempts = len([(ts, ep) for ts, ep in RateLimitManager._attempts[identifier] if ep == endpoint])
 
         if current_attempts >= max_attempts:
             # 일시적 차단 (30분)
             RateLimitManager._blocked_ips[identifier] = now + timedelta(minutes=30)
-            logger.warning(
-                f"IP 차단: {identifier} (시도 횟수: {current_attempts}, 엔드포인트: {endpoint})"
-            )
+            logger.warning(f"IP 차단: {identifier} (시도 횟수: {current_attempts}, 엔드포인트: {endpoint})")
             return True
 
         # 시도 기록
@@ -390,9 +373,7 @@ def jwt_required(roles: list = None, permissions: list = None):
             client_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
             if RateLimitManager.is_rate_limited(client_ip, request.endpoint):
                 return (
-                    jsonify(
-                        {"error": "너무 많은 요청입니다. 잠시 후 다시 시도하세요.", "code": "RATE_LIMITED"}
-                    ),
+                    jsonify({"error": "너무 많은 요청입니다. 잠시 후 다시 시도하세요.", "code": "RATE_LIMITED"}),
                     429,
                 )
 
@@ -408,10 +389,7 @@ def jwt_required(roles: list = None, permissions: list = None):
 
             # 역할 확인
             if roles and payload.get("role") not in roles:
-                logger.warning(
-                    f"권한 부족: 사용자 {payload.get('user_id')}, "
-                    f"필요 역할: {roles}, 현재 역할: {payload.get('role')}"
-                )
+                logger.warning(f"권한 부족: 사용자 {payload.get('user_id')}, " f"필요 역할: {roles}, 현재 역할: {payload.get('role')}")
                 return (
                     jsonify({"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}),
                     403,
@@ -422,8 +400,7 @@ def jwt_required(roles: list = None, permissions: list = None):
                 user_permissions = payload.get("permissions", [])
                 if not all(perm in user_permissions for perm in permissions):
                     logger.warning(
-                        f"권한 부족: 사용자 {payload.get('user_id')}, "
-                        f"필요 권한: {permissions}, 현재 권한: {user_permissions}"
+                        f"권한 부족: 사용자 {payload.get('user_id')}, " f"필요 권한: {permissions}, 현재 권한: {user_permissions}"
                     )
                     return (
                         jsonify(
@@ -493,9 +470,7 @@ def secure_endpoint(
             # 커스텀 Rate limiting
             if rate_limit:
                 max_attempts, window_minutes = rate_limit
-                if RateLimitManager.is_rate_limited(
-                    client_ip, request.endpoint, max_attempts, window_minutes
-                ):
+                if RateLimitManager.is_rate_limited(client_ip, request.endpoint, max_attempts, window_minutes):
                     return (
                         jsonify({"error": "요청 한도를 초과했습니다", "code": "RATE_LIMITED"}),
                         429,

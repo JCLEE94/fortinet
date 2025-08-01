@@ -27,9 +27,7 @@ def test_basic_imports() -> Dict:
     try:
         pass
 
-        return test_result(
-            "Basic Imports", True, "All core modules imported successfully"
-        )
+        return test_result("Basic Imports", True, "All core modules imported successfully")
     except Exception as e:
         return test_result("Basic Imports", False, f"Import error: {str(e)}")
 
@@ -59,12 +57,8 @@ def test_api_clients() -> Dict:
         from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         # Test initialization (don't actually connect)
-        fg_client = FortiGateAPIClient(
-            host="127.0.0.1", username="test", password="test"
-        )
-        fm_client = FortiManagerAPIClient(
-            host="127.0.0.1", username="test", password="test"
-        )
+        fg_client = FortiGateAPIClient(host="127.0.0.1", username="test", password="test")
+        fm_client = FortiManagerAPIClient(host="127.0.0.1", username="test", password="test")
         faz_client = FAZClient(host="127.0.0.1", username="test", password="test")
 
         return test_result(
@@ -92,9 +86,7 @@ def test_fortimanager_advanced_hub() -> Dict:
         ]
         for module in modules:
             if not hasattr(hub, module):
-                return test_result(
-                    "FortiManager Advanced Hub", False, f"Missing module: {module}"
-                )
+                return test_result("FortiManager Advanced Hub", False, f"Missing module: {module}")
 
         capabilities = hub.get_module_capabilities()
         return test_result(
@@ -228,9 +220,7 @@ def test_api_endpoints() -> Dict:
                     f"Settings endpoint returned {settings_response.status_code}",
                 )
 
-            return test_result(
-                "API Endpoints", True, "Core API endpoints responding correctly"
-            )
+            return test_result("API Endpoints", True, "Core API endpoints responding correctly")
     except Exception as e:
         return test_result("API Endpoints", False, f"Error: {str(e)}")
 
@@ -273,9 +263,7 @@ def run_comprehensive_feature_test() -> List[Dict]:
                 failed += 1
 
         except Exception as e:
-            error_result = test_result(
-                test_func.__name__, False, f"Unexpected error: {str(e)}"
-            )
+            error_result = test_result(test_func.__name__, False, f"Unexpected error: {str(e)}")
             results.append(error_result)
             print(f"   {error_result['status']} {error_result['name']}")
             print(f"   📝 {error_result['details']}")

@@ -172,9 +172,7 @@ class ConnectionPoolManager:
                 pool_stats = {
                     "num_connections": len(adapter.poolmanager.pools),
                     "num_requests": (
-                        adapter.poolmanager.num_requests
-                        if hasattr(adapter.poolmanager, "num_requests")
-                        else 0
+                        adapter.poolmanager.num_requests if hasattr(adapter.poolmanager, "num_requests") else 0
                     ),
                     "num_connections_dropped": (
                         adapter.poolmanager.num_connections_dropped

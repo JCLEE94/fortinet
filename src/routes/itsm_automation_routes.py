@@ -18,9 +18,7 @@ from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
-itsm_automation_bp = Blueprint(
-    "itsm_automation", __name__, url_prefix="/api/itsm/automation"
-)
+itsm_automation_bp = Blueprint("itsm_automation", __name__, url_prefix="/api/itsm/automation")
 
 
 def async_route(f):
@@ -62,9 +60,7 @@ async def start_automation_service():
         service = get_automation_service()
 
         if service.is_running:
-            return jsonify(
-                {"status": "warning", "message": "Service is already running"}
-            )
+            return jsonify({"status": "warning", "message": "Service is already running"})
 
         # 비동기로 서비스 시작 (백그라운드에서 실행)
         asyncio.create_task(service.start_service())
@@ -225,45 +221,19 @@ def get_automation_config():
         # 민감한 정보는 마스킹
         config_data = {
             "itsm": {
-                "platform": (
-                    service.connector.config.platform.value
-                    if service.connector
-                    else None
-                ),
-                "base_url": (
-                    service.connector.config.base_url if service.connector else None
-                ),
-                "poll_interval": (
-                    service.connector.config.poll_interval
-                    if service.connector
-                    else None
-                ),
-                "username": (
-                    "***"
-                    if service.connector and service.connector.config.username
-                    else None
-                ),
+                "platform": (service.connector.config.platform.value if service.connector else None),
+                "base_url": (service.connector.config.base_url if service.connector else None),
+                "poll_interval": (service.connector.config.poll_interval if service.connector else None),
+                "username": ("***" if service.connector and service.connector.config.username else None),
             },
             "fortimanager": {
                 "enabled": service.fortimanager_client is not None,
-                "host": (
-                    service.fortimanager_client.host
-                    if service.fortimanager_client
-                    else None
-                ),
+                "host": (service.fortimanager_client.host if service.fortimanager_client else None),
             },
             "automation_engine": {
                 "initialized": service.automation_engine is not None,
-                "firewall_count": (
-                    len(service.automation_engine.firewall_devices)
-                    if service.automation_engine
-                    else 0
-                ),
-                "zone_count": (
-                    len(service.automation_engine.network_zones)
-                    if service.automation_engine
-                    else 0
-                ),
+                "firewall_count": (len(service.automation_engine.firewall_devices) if service.automation_engine else 0),
+                "zone_count": (len(service.automation_engine.network_zones) if service.automation_engine else 0),
             },
         }
 
@@ -286,14 +256,10 @@ def update_automation_config():
         success = service.update_configuration(data)
 
         if success:
-            return jsonify(
-                {"status": "success", "message": "Configuration updated successfully"}
-            )
+            return jsonify({"status": "success", "message": "Configuration updated successfully"})
         else:
             return (
-                jsonify(
-                    {"status": "error", "message": "Failed to update configuration"}
-                ),
+                jsonify({"status": "error", "message": "Failed to update configuration"}),
                 400,
             )
 
@@ -311,9 +277,7 @@ def get_firewall_devices():
 
         if not service.automation_engine:
             return (
-                jsonify(
-                    {"status": "error", "message": "Automation engine not initialized"}
-                ),
+                jsonify({"status": "error", "message": "Automation engine not initialized"}),
                 500,
             )
 
@@ -331,9 +295,7 @@ def get_firewall_devices():
                 }
             )
 
-        return jsonify(
-            {"status": "success", "data": {"devices": devices, "count": len(devices)}}
-        )
+        return jsonify({"status": "success", "data": {"devices": devices, "count": len(devices)}})
 
     except Exception as e:
         logger.error(f"Error getting firewall devices: {e}")
@@ -349,9 +311,7 @@ def get_network_zones():
 
         if not service.automation_engine:
             return (
-                jsonify(
-                    {"status": "error", "message": "Automation engine not initialized"}
-                ),
+                jsonify({"status": "error", "message": "Automation engine not initialized"}),
                 500,
             )
 
@@ -367,9 +327,7 @@ def get_network_zones():
                 }
             )
 
-        return jsonify(
-            {"status": "success", "data": {"zones": zones, "count": len(zones)}}
-        )
+        return jsonify({"status": "success", "data": {"zones": zones, "count": len(zones)}})
 
     except Exception as e:
         logger.error(f"Error getting network zones: {e}")
@@ -388,9 +346,7 @@ def simulate_policy_request():
 
         if not service.automation_engine:
             return (
-                jsonify(
-                    {"status": "error", "message": "Automation engine not initialized"}
-                ),
+                jsonify({"status": "error", "message": "Automation engine not initialized"}),
                 500,
             )
 

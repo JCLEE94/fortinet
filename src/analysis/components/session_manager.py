@@ -321,7 +321,5 @@ def get_session_statistics(self):
             "total_sessions": total_sessions,
             "total_analyses": total_analyses,
             "user_sessions": user_sessions,
-            "average_analyses_per_session": (
-                total_analyses / total_sessions if total_sessions > 0 else 0
-            ),
+            "average_analyses_per_session": (total_analyses / total_sessions if total_sessions > 0 else 0),
         }

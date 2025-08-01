@@ -50,24 +50,12 @@ class FirewallRuleAnalyzer:
         try:
             if self.fortigate_client:
                 # 직접 FortiGate API를 통한 데이터 로드
-                self._policies[
-                    firewall_id
-                ] = self.fortigate_client.get_firewall_policies()
-                self._addresses[
-                    firewall_id
-                ] = self.fortigate_client.get_firewall_addresses()
-                self._address_groups[
-                    firewall_id
-                ] = self.fortigate_client.get_firewall_address_groups()
-                self._services[
-                    firewall_id
-                ] = self.fortigate_client.get_firewall_services()
-                self._service_groups[
-                    firewall_id
-                ] = self.fortigate_client.get_firewall_service_groups()
-                self._routing_tables[
-                    firewall_id
-                ] = self.fortigate_client.get_routing_table()
+                self._policies[firewall_id] = self.fortigate_client.get_firewall_policies()
+                self._addresses[firewall_id] = self.fortigate_client.get_firewall_addresses()
+                self._address_groups[firewall_id] = self.fortigate_client.get_firewall_address_groups()
+                self._services[firewall_id] = self.fortigate_client.get_firewall_services()
+                self._service_groups[firewall_id] = self.fortigate_client.get_firewall_service_groups()
+                self._routing_tables[firewall_id] = self.fortigate_client.get_routing_table()
                 return True
 
             elif self.fortimanager_client:
@@ -79,9 +67,7 @@ class FirewallRuleAnalyzer:
                 adom = "root"
 
                 # 장치 정보 로드
-                device_info = self.fortimanager_client.get_device_info(
-                    firewall_id, adom
-                )
+                device_info = self.fortimanager_client.get_device_info(firewall_id, adom)
                 if not device_info:
                     self.logger.error(f"장치 정보를 로드할 수 없습니다: {firewall_id}")
                     return False
@@ -97,37 +83,19 @@ class FirewallRuleAnalyzer:
                 # 장치에 할당된 정책 패키지 찾기
                 # 실제 구현에서는 장치와 정책 패키지 간의 관계를 정확히 파악해야 함
                 # 여기서는 단순화를 위해 첫 번째 정책 패키지 사용
-                policy_package = (
-                    policy_packages[0]["name"]
-                    if policy_packages and len(policy_packages) > 0
-                    else None
-                )
+                policy_package = policy_packages[0]["name"] if policy_packages and len(policy_packages) > 0 else None
 
                 if policy_package:
-                    self._policies[
-                        firewall_id
-                    ] = self.fortimanager_client.get_firewall_policies(
-                        policy_package, adom
-                    )
+                    self._policies[firewall_id] = self.fortimanager_client.get_firewall_policies(policy_package, adom)
 
                 # 주소 객체 및 서비스 객체 로드
-                self._addresses[
-                    firewall_id
-                ] = self.fortimanager_client.get_firewall_addresses(adom)
-                self._address_groups[
-                    firewall_id
-                ] = self.fortimanager_client.get_firewall_address_groups(adom)
-                self._services[
-                    firewall_id
-                ] = self.fortimanager_client.get_firewall_services(adom)
-                self._service_groups[
-                    firewall_id
-                ] = self.fortimanager_client.get_firewall_service_groups(adom)
+                self._addresses[firewall_id] = self.fortimanager_client.get_firewall_addresses(adom)
+                self._address_groups[firewall_id] = self.fortimanager_client.get_firewall_address_groups(adom)
+                self._services[firewall_id] = self.fortimanager_client.get_firewall_services(adom)
+                self._service_groups[firewall_id] = self.fortimanager_client.get_firewall_service_groups(adom)
 
                 # 라우팅 테이블 로드
-                self._routing_tables[
-                    firewall_id
-                ] = self.fortimanager_client.get_device_routing_table(firewall_id, adom)
+                self._routing_tables[firewall_id] = self.fortimanager_client.get_device_routing_table(firewall_id, adom)
 
                 return True
 
@@ -205,9 +173,7 @@ class FirewallRuleAnalyzer:
                 # subnet 형식이 '192.168.1.0 255.255.255.0'인 경우 CIDR 형식으로 변환
                 if " " in subnet:
                     ip_part, mask_part = subnet.split(" ")
-                    mask_prefix = sum(
-                        [bin(int(x)).count("1") for x in mask_part.split(".")]
-                    )
+                    mask_prefix = sum([bin(int(x)).count("1") for x in mask_part.split(".")])
                     subnet = f"{ip_part}/{mask_prefix}"
 
                 return ipaddress.ip_address(ip) in ipaddress.ip_network(subnet)
@@ -328,9 +294,7 @@ class FirewallRuleAnalyzer:
 
             elif protocol == "icmp":
                 # ICMP 프로토콜은 포트를 사용하지 않음
-                return (
-                    "protocol" in service_obj and service_obj.get("protocol") == "ICMP"
-                )
+                return "protocol" in service_obj and service_obj.get("protocol") == "ICMP"
 
             return False
 
@@ -377,9 +341,7 @@ class FirewallRuleAnalyzer:
             for svc_group in self._service_groups[firewall_id]:
                 if svc_group.get("name") == member_name:
                     is_group = True
-                    if self.is_service_in_group(
-                        port, protocol, member_name, firewall_id
-                    ):
+                    if self.is_service_in_group(port, protocol, member_name, firewall_id):
                         return True
                     break
 
@@ -419,9 +381,7 @@ class FirewallRuleAnalyzer:
                 # dst 형식이 '192.168.1.0 255.255.255.0'인 경우 CIDR 형식으로 변환
                 if " " in dst:
                     ip_part, mask_part = dst.split(" ")
-                    mask_prefix = sum(
-                        [bin(int(x)).count("1") for x in mask_part.split(".")]
-                    )
+                    mask_prefix = sum([bin(int(x)).count("1") for x in mask_part.split(".")])
                     dst = f"{ip_part}/{mask_prefix}"
 
                 try:
@@ -552,9 +512,7 @@ class FirewallRuleAnalyzer:
                 for svc_group in self._service_groups[firewall_id]:
                     if svc_group.get("name") == service_name:
                         is_group = True
-                        if self.is_service_in_group(
-                            port, protocol, service_name, firewall_id
-                        ):
+                        if self.is_service_in_group(port, protocol, service_name, firewall_id):
                             service_match = True
                             break
 
@@ -631,9 +589,7 @@ class FirewallRuleAnalyzer:
 
         # 데이터가 로드되었는지 확인
         if not self._firewalls:
-            self.logger.error(
-                "방화벽 데이터가 로드되지 않았습니다. load_data() 또는 load_all_firewalls()를 먼저 호출하세요."
-            )
+            self.logger.error("방화벽 데이터가 로드되지 않았습니다. load_data() 또는 load_all_firewalls()를 먼저 호출하세요.")
 
             # 세션 오류 상태 업데이트
             self._sessions[session_id].update(
@@ -694,11 +650,7 @@ class FirewallRuleAnalyzer:
                     "destination_ip": (
                         dst_ip
                         if is_last
-                        else (
-                            firewall_path[i + 1].get("next_hop", "unknown")
-                            if not is_last
-                            else "unknown"
-                        )
+                        else (firewall_path[i + 1].get("next_hop", "unknown") if not is_last else "unknown")
                     ),
                     "zone": hop.get("ingress_zone", "unknown"),
                     "next_zone": hop.get("egress_zone", "unknown"),
@@ -717,12 +669,8 @@ class FirewallRuleAnalyzer:
                 next_hop = firewall_info.get("next_hop")
                 hop_type = firewall_info.get("hop_type", "transit")
 
-                self.logger.info(
-                    f"Hop {hop_index+1}: {current_firewall} 분석 중 ({current_src} -> {current_dst})"
-                )
-                self.logger.info(
-                    f"  구간: {ingress_zone} -> {egress_zone}, 인터페이스: {ingress_iface} -> {egress_iface}"
-                )
+                self.logger.info(f"Hop {hop_index+1}: {current_firewall} 분석 중 ({current_src} -> {current_dst})")
+                self.logger.info(f"  구간: {ingress_zone} -> {egress_zone}, 인터페이스: {ingress_iface} -> {egress_iface}")
 
                 # 현재 방화벽에서 정책 확인
                 policy, action, policy_id = self.check_policy_match(
@@ -737,24 +685,16 @@ class FirewallRuleAnalyzer:
                         "comments": policy.get("comments", ""),
                         "status": policy.get("status", ""),
                         "schedule": policy.get("schedule", ""),
-                        "service": [
-                            s.get("name", "") for s in policy.get("service", [])
-                        ],
-                        "srcaddr": [
-                            s.get("name", "") for s in policy.get("srcaddr", [])
-                        ],
-                        "dstaddr": [
-                            s.get("name", "") for s in policy.get("dstaddr", [])
-                        ],
+                        "service": [s.get("name", "") for s in policy.get("service", [])],
+                        "srcaddr": [s.get("name", "") for s in policy.get("srcaddr", [])],
+                        "dstaddr": [s.get("name", "") for s in policy.get("dstaddr", [])],
                         "action": action,
                     }
 
                 hop_result = {
                     "hop_index": hop_index + 1,
                     "firewall_id": current_firewall,
-                    "firewall_name": self._firewalls[current_firewall].get(
-                        "name", current_firewall
-                    ),
+                    "firewall_name": self._firewalls[current_firewall].get("name", current_firewall),
                     "src_ip": current_src,
                     "dst_ip": current_dst,
                     "protocol": protocol,
@@ -779,9 +719,7 @@ class FirewallRuleAnalyzer:
                     result["blocked_by"] = {
                         "hop_index": hop_index + 1,
                         "firewall_id": current_firewall,
-                        "firewall_name": self._firewalls[current_firewall].get(
-                            "name", current_firewall
-                        ),
+                        "firewall_name": self._firewalls[current_firewall].get("name", current_firewall),
                         "policy_id": policy_id,
                         "ingress_zone": ingress_zone,
                         "ingress_interface": ingress_iface,
@@ -799,9 +737,7 @@ class FirewallRuleAnalyzer:
 
             # 경로가 존재하는 경우 경로 최적화 추천 분석 실행
             if result["path"] and len(result["path"]) > 0:
-                result[
-                    "optimization_recommendations"
-                ] = self._analyze_path_for_optimization(result["path"])
+                result["optimization_recommendations"] = self._analyze_path_for_optimization(result["path"])
 
             # 세션 데이터 업데이트
             import datetime
@@ -820,9 +756,7 @@ class FirewallRuleAnalyzer:
             )
 
             if "optimization_recommendations" in result:
-                self._sessions[session_id]["optimization_recommendations"] = result[
-                    "optimization_recommendations"
-                ]
+                self._sessions[session_id]["optimization_recommendations"] = result["optimization_recommendations"]
 
             return result
 
@@ -871,16 +805,12 @@ class FirewallRuleAnalyzer:
             src_zone = self._determine_network_zone(src_ip)
             dst_zone = self._determine_network_zone(dst_ip)
 
-            self.logger.info(
-                f"출발지 {src_ip}는 {src_zone} 구간에 위치, 목적지 {dst_ip}는 {dst_zone} 구간에 위치"
-            )
+            self.logger.info(f"출발지 {src_ip}는 {src_zone} 구간에 위치, 목적지 {dst_ip}는 {dst_zone} 구간에 위치")
 
             firewall_path = []
 
             # 이미 로드된 방화벽 목록과 그들의 라우팅 테이블 분석
-            relevant_firewalls = self._identify_relevant_firewalls_from_routing(
-                src_ip, dst_ip
-            )
+            relevant_firewalls = self._identify_relevant_firewalls_from_routing(src_ip, dst_ip)
             self.logger.info(f"라우팅 분석 결과, 관련 방화벽: {relevant_firewalls}")
 
             # 단일 방화벽 환경의 경우
@@ -896,25 +826,17 @@ class FirewallRuleAnalyzer:
                     else self._find_interface_for_ip(src_ip, firewall_id)
                 )
                 egress_iface = (
-                    egress_route.get("interface")
-                    if egress_route
-                    else self._find_interface_for_ip(dst_ip, firewall_id)
+                    egress_route.get("interface") if egress_route else self._find_interface_for_ip(dst_ip, firewall_id)
                 )
 
                 # 인터페이스 정보에 구간 정보 추가
-                ingress_zone = (
-                    self._get_interface_zone(ingress_iface, firewall_id) or src_zone
-                )
-                egress_zone = (
-                    self._get_interface_zone(egress_iface, firewall_id) or dst_zone
-                )
+                ingress_zone = self._get_interface_zone(ingress_iface, firewall_id) or src_zone
+                egress_zone = self._get_interface_zone(egress_iface, firewall_id) or dst_zone
 
                 firewall_path.append(
                     {
                         "firewall_id": firewall_id,
-                        "firewall_name": self._firewalls[firewall_id].get(
-                            "name", firewall_id
-                        ),
+                        "firewall_name": self._firewalls[firewall_id].get("name", firewall_id),
                         "ingress_interface": ingress_iface,
                         "egress_interface": egress_iface,
                         "ingress_zone": ingress_zone,
@@ -942,9 +864,7 @@ class FirewallRuleAnalyzer:
                 is_first = next_firewall_idx == 0
                 is_last = next_firewall_idx == len(relevant_firewalls) - 1
 
-                self.logger.info(
-                    f"방화벽 {firewall_id} 분석 중 (현재 IP: {current_ip}, 목적지: {dst_ip})"
-                )
+                self.logger.info(f"방화벽 {firewall_id} 분석 중 (현재 IP: {current_ip}, 목적지: {dst_ip})")
 
                 # 현재 소스 IP에 대한 라우팅 정보
                 ingress_route = self._find_route_for_ip(current_ip, firewall_id)
@@ -963,9 +883,7 @@ class FirewallRuleAnalyzer:
                 if is_last or (dst_route and not dst_route.get("gateway")):
                     # 마지막 방화벽이거나 직접 연결된 경우
                     egress_iface = (
-                        dst_route.get("interface")
-                        if dst_route
-                        else self._find_interface_for_ip(dst_ip, firewall_id)
+                        dst_route.get("interface") if dst_route else self._find_interface_for_ip(dst_ip, firewall_id)
                     )
                     next_hop = dst_ip
                     next_firewall_idx = len(relevant_firewalls)  # 루프 종료
@@ -1000,9 +918,7 @@ class FirewallRuleAnalyzer:
                             ),
                             dst_ip,
                         )
-                        egress_iface = self._find_egress_interface(
-                            next_hop, firewall_id
-                        )
+                        egress_iface = self._find_egress_interface(next_hop, firewall_id)
 
                 # 인터페이스 구간 정보 결정
                 ingress_zone = self._get_interface_zone(ingress_iface, firewall_id) or (
@@ -1016,20 +932,14 @@ class FirewallRuleAnalyzer:
                 hop_type = (
                     "source"
                     if is_first
-                    else (
-                        "destination"
-                        if is_last or next_firewall_idx >= len(relevant_firewalls)
-                        else "transit"
-                    )
+                    else ("destination" if is_last or next_firewall_idx >= len(relevant_firewalls) else "transit")
                 )
 
                 # 경로 정보 추가
                 firewall_path.append(
                     {
                         "firewall_id": firewall_id,
-                        "firewall_name": self._firewalls[firewall_id].get(
-                            "name", firewall_id
-                        ),
+                        "firewall_name": self._firewalls[firewall_id].get("name", firewall_id),
                         "ingress_interface": ingress_iface,
                         "egress_interface": egress_iface,
                         "ingress_zone": ingress_zone,
@@ -1180,9 +1090,7 @@ class FirewallRuleAnalyzer:
                 ]
 
             # 기본값: 모든 방화벽을 순서대로 경유
-            self.logger.warning(
-                f"특정 경로를 결정할 수 없어 모든 방화벽을 사용합니다: {src_zone} -> {dst_zone}"
-            )
+            self.logger.warning(f"특정 경로를 결정할 수 없어 모든 방화벽을 사용합니다: {src_zone} -> {dst_zone}")
             return all_firewalls
 
         except Exception as e:
@@ -1313,19 +1221,11 @@ class FirewallRuleAnalyzer:
             # 인터페이스 이름에 따른 구간 결정
             interface_lower = interface_name.lower()
 
-            if (
-                "internal" in interface_lower
-                or "inside" in interface_lower
-                or "lan" in interface_lower
-            ):
+            if "internal" in interface_lower or "inside" in interface_lower or "lan" in interface_lower:
                 return "internal"
             elif "dmz" in interface_lower:
                 return "dmz"
-            elif (
-                "external" in interface_lower
-                or "outside" in interface_lower
-                or "wan" in interface_lower
-            ):
+            elif "external" in interface_lower or "outside" in interface_lower or "wan" in interface_lower:
                 return "external"
 
             # 서브넷 기반 결정
@@ -1386,17 +1286,11 @@ class FirewallRuleAnalyzer:
 
                 # 인터페이스 및 구간 정보 수집
                 if hop.get("ingress_interface"):
-                    analyzed_firewalls[firewall_id]["interfaces"].add(
-                        hop.get("ingress_interface")
-                    )
+                    analyzed_firewalls[firewall_id]["interfaces"].add(hop.get("ingress_interface"))
                 if hop.get("egress_interface"):
-                    analyzed_firewalls[firewall_id]["interfaces"].add(
-                        hop.get("egress_interface")
-                    )
+                    analyzed_firewalls[firewall_id]["interfaces"].add(hop.get("egress_interface"))
                 if hop.get("ingress_zone"):
-                    analyzed_firewalls[firewall_id]["zones"].add(
-                        hop.get("ingress_zone")
-                    )
+                    analyzed_firewalls[firewall_id]["zones"].add(hop.get("ingress_zone"))
                 if hop.get("egress_zone"):
                     analyzed_firewalls[firewall_id]["zones"].add(hop.get("egress_zone"))
 
@@ -1482,9 +1376,7 @@ class FirewallRuleAnalyzer:
                     zone_policies = {}
 
                     for p_data in data["policies"]:
-                        zone_key = (
-                            f"{p_data.get('ingress_zone')}_{p_data.get('egress_zone')}"
-                        )
+                        zone_key = f"{p_data.get('ingress_zone')}_{p_data.get('egress_zone')}"
 
                         if zone_key not in zone_policies:
                             zone_policies[zone_key] = []
@@ -1498,9 +1390,7 @@ class FirewallRuleAnalyzer:
                             recommendations.append(
                                 {
                                     "firewall_id": firewall_id,
-                                    "policy_ids": [
-                                        p.get("policy_id") for p in policies
-                                    ],
+                                    "policy_ids": [p.get("policy_id") for p in policies],
                                     "severity": "low",
                                     "type": "performance_improvement",
                                     "issue": "동일 구간 다중 정책",
@@ -1587,10 +1477,7 @@ class FirewallRuleAnalyzer:
             # 라우팅 테이블이 비어있는지 확인
             has_routing_data = False
             for firewall_id in all_firewalls:
-                if (
-                    firewall_id in self._routing_tables
-                    and self._routing_tables[firewall_id]
-                ):
+                if firewall_id in self._routing_tables and self._routing_tables[firewall_id]:
                     has_routing_data = True
                     break
 
@@ -1639,11 +1526,7 @@ class FirewallRuleAnalyzer:
 
             # 3. 출발지와 목적지 사이의 라우팅 경로 분석
             # 출발지와 목적지를 모두 관리하는 방화벽이 하나이면 그 방화벽만 반환
-            if (
-                src_firewall_id
-                and dst_firewall_id
-                and src_firewall_id == dst_firewall_id
-            ):
+            if src_firewall_id and dst_firewall_id and src_firewall_id == dst_firewall_id:
                 return [src_firewall_id]
 
             # 출발지와 목적지가 다른 방화벽에 속하는 경우, 라우팅 경로 찾기
@@ -1692,10 +1575,7 @@ class FirewallRuleAnalyzer:
                     # 다음 홉을 관리하는 방화벽 찾기
                     next_firewall = None
                     for firewall_id in all_firewalls:
-                        if (
-                            firewall_id != current_firewall
-                            and self._is_ip_managed_by_firewall(next_hop, firewall_id)
-                        ):
+                        if firewall_id != current_firewall and self._is_ip_managed_by_firewall(next_hop, firewall_id):
                             next_firewall = firewall_id
                             break
 
@@ -1756,9 +1636,7 @@ class FirewallRuleAnalyzer:
                 if " " in dst:
                     ip_part, mask_part = dst.split(" ")
                     try:
-                        mask_prefix = sum(
-                            [bin(int(x)).count("1") for x in mask_part.split(".")]
-                        )
+                        mask_prefix = sum([bin(int(x)).count("1") for x in mask_part.split(".")])
                         dst = f"{ip_part}/{mask_prefix}"
                     except (ValueError, AttributeError, IndexError):
                         # 형식 변환 실패 시 다음 라우트로
@@ -1947,9 +1825,7 @@ class FirewallRuleAnalyzer:
 
             # 최적화 권장사항 추가
             if "optimization_recommendations" in session_data:
-                session_details["optimization_recommendations"] = session_data[
-                    "optimization_recommendations"
-                ]
+                session_details["optimization_recommendations"] = session_data["optimization_recommendations"]
 
             return session_details
 

@@ -382,9 +382,7 @@ class AdvancedAnalyticsEngine:
 
         return collected_metrics
 
-    async def analyze_trends(
-        self, metric_id: str, time_range: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def analyze_trends(self, metric_id: str, time_range: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze trends for a specific metric"""
 
         metric = self.metrics.get(metric_id)
@@ -436,9 +434,7 @@ class AdvancedAnalyticsEngine:
 
                     for anomaly in anomalies:
                         insight = AnalyticsInsight(
-                            insight_id=hashlib.sha256(
-                                f"{metric_id}{anomaly['timestamp']}".encode()
-                            ).hexdigest()[:16],
+                            insight_id=hashlib.sha256(f"{metric_id}{anomaly['timestamp']}".encode()).hexdigest()[:16],
                             timestamp=datetime.now(),
                             insight_type="anomaly",
                             severity=self._determine_anomaly_severity(anomaly),
@@ -449,9 +445,7 @@ class AdvancedAnalyticsEngine:
                                 "value": anomaly["value"],
                                 "expected": anomaly["expected"],
                             },
-                            recommendations=self._get_anomaly_recommendations(
-                                metric, anomaly
-                            ),
+                            recommendations=self._get_anomaly_recommendations(metric, anomaly),
                             confidence=anomaly.get("confidence", 0.8),
                         )
 
@@ -463,9 +457,7 @@ class AdvancedAnalyticsEngine:
 
         return detected_anomalies
 
-    async def generate_predictions(
-        self, model_id: str, horizon: int = 24
-    ) -> Dict[str, Any]:
+    async def generate_predictions(self, model_id: str, horizon: int = 24) -> Dict[str, Any]:
         """Generate predictions using specified model"""
 
         model = self.models.get(model_id)
@@ -479,9 +471,7 @@ class AdvancedAnalyticsEngine:
             return {"error": "Insufficient data for prediction"}
 
         # Train/update model if needed
-        if not model.last_trained or (datetime.now() - model.last_trained) > timedelta(
-            hours=24
-        ):
+        if not model.last_trained or (datetime.now() - model.last_trained) > timedelta(hours=24):
             self._train_model(model, training_data)
 
         # Generate predictions
@@ -593,15 +583,11 @@ class AdvancedAnalyticsEngine:
         }
 
         # Generate insights
-        behavior_analysis["insights"] = self._generate_behavior_insights(
-            behavior_analysis
-        )
+        behavior_analysis["insights"] = self._generate_behavior_insights(behavior_analysis)
 
         return behavior_analysis
 
-    async def perform_capacity_planning(
-        self, planning_horizon: int = 90
-    ) -> Dict[str, Any]:
+    async def perform_capacity_planning(self, planning_horizon: int = 90) -> Dict[str, Any]:
         """Perform capacity planning analysis"""
 
         # Get historical growth data
@@ -613,23 +599,15 @@ class AdvancedAnalyticsEngine:
         # Predict future requirements
         capacity_model = self.models.get("capacity_planning")
         if capacity_model:
-            predictions = await self.generate_predictions(
-                "capacity_planning", planning_horizon
-            )
+            predictions = await self.generate_predictions("capacity_planning", planning_horizon)
         else:
-            predictions = self._simple_capacity_projection(
-                growth_data, planning_horizon
-            )
+            predictions = self._simple_capacity_projection(growth_data, planning_horizon)
 
         # Calculate required capacity
-        required_capacity = self._calculate_required_capacity(
-            current_capacity, predictions, planning_horizon
-        )
+        required_capacity = self._calculate_required_capacity(current_capacity, predictions, planning_horizon)
 
         # Generate recommendations
-        recommendations = self._generate_capacity_recommendations(
-            current_capacity, required_capacity
-        )
+        recommendations = self._generate_capacity_recommendations(current_capacity, required_capacity)
 
         return {
             "planning_horizon_days": planning_horizon,
@@ -652,9 +630,7 @@ class AdvancedAnalyticsEngine:
             elif metric.data_source == "threat_logs":
                 data = await self._collect_security_metric(metric, start_time, end_time)
             elif metric.data_source == "performance_logs":
-                data = await self._collect_performance_metric(
-                    metric, start_time, end_time
-                )
+                data = await self._collect_performance_metric(metric, start_time, end_time)
             else:
                 data = await self._collect_generic_metric(metric, start_time, end_time)
 
@@ -669,9 +645,7 @@ class AdvancedAnalyticsEngine:
             self.logger.error(f"Failed to collect metric {metric.metric_id}: {e}")
             return None
 
-    async def _get_metric_data(
-        self, metric: AnalyticsMetric, time_range: Dict[str, Any]
-    ) -> List[Dict]:
+    async def _get_metric_data(self, metric: AnalyticsMetric, time_range: Dict[str, Any]) -> List[Dict]:
         """Get metric data for time range"""
 
         # Check cache first
@@ -768,11 +742,7 @@ class AdvancedAnalyticsEngine:
             return {
                 "direction": direction,
                 "slope": float(slope),
-                "strength": (
-                    abs(slope) / (max(values) - min(values))
-                    if max(values) != min(values)
-                    else 0
-                ),
+                "strength": (abs(slope) / (max(values) - min(values)) if max(values) != min(values) else 0),
             }
 
         return {"direction": "unknown"}
@@ -821,9 +791,7 @@ class AdvancedAnalyticsEngine:
 
         return anomalies
 
-    def _generate_forecast(
-        self, metric: AnalyticsMetric, historical_data: List[Dict]
-    ) -> Dict[str, Any]:
+    def _generate_forecast(self, metric: AnalyticsMetric, historical_data: List[Dict]) -> Dict[str, Any]:
         """Generate forecast for metric"""
 
         if len(historical_data) < 10:
@@ -843,9 +811,7 @@ class AdvancedAnalyticsEngine:
             "horizon": "1 hour",
         }
 
-    def _generate_trend_insights(
-        self, metric: AnalyticsMetric, trend_analysis: Dict
-    ) -> List[str]:
+    def _generate_trend_insights(self, metric: AnalyticsMetric, trend_analysis: Dict) -> List[str]:
         """Generate insights from trend analysis"""
 
         insights = []
@@ -866,17 +832,12 @@ class AdvancedAnalyticsEngine:
 
         # Threshold insights
         stats = trend_analysis.get("statistics", {})
-        if (
-            metric.threshold_critical
-            and stats.get("max", 0) > metric.threshold_critical
-        ):
+        if metric.threshold_critical and stats.get("max", 0) > metric.threshold_critical:
             insights.append(f"{metric.name} exceeded critical threshold")
 
         return insights
 
-    def _detect_metric_anomalies(
-        self, metric: AnalyticsMetric, data: List[Dict]
-    ) -> List[Dict]:
+    def _detect_metric_anomalies(self, metric: AnalyticsMetric, data: List[Dict]) -> List[Dict]:
         """Detect anomalies for specific metric"""
 
         # Use metric-specific anomaly detection
@@ -894,9 +855,7 @@ class AdvancedAnalyticsEngine:
         else:
             return "info"
 
-    def _get_anomaly_recommendations(
-        self, metric: AnalyticsMetric, anomaly: Dict
-    ) -> List[str]:
+    def _get_anomaly_recommendations(self, metric: AnalyticsMetric, anomaly: Dict) -> List[str]:
         """Get recommendations for anomaly"""
 
         recommendations = []
@@ -929,9 +888,7 @@ class AdvancedAnalyticsEngine:
         model.last_trained = datetime.now()
         model.accuracy = 0.85  # Placeholder
 
-    def _generate_model_predictions(
-        self, model: PredictiveModel, data: Dict, horizon: int
-    ) -> List[Dict]:
+    def _generate_model_predictions(self, model: PredictiveModel, data: Dict, horizon: int) -> List[Dict]:
         """Generate predictions from model"""
 
         predictions = []
@@ -966,9 +923,7 @@ class AdvancedAnalyticsEngine:
 
         return intervals
 
-    async def _generate_report_section(
-        self, section: Dict, parameters: Dict
-    ) -> Dict[str, Any]:
+    async def _generate_report_section(self, section: Dict, parameters: Dict) -> Dict[str, Any]:
         """Generate a report section"""
 
         section_data = {"title": section["title"], "content": []}
@@ -979,9 +934,7 @@ class AdvancedAnalyticsEngine:
                 metric_data = await self.collect_metrics(
                     {"start": parameters["start_date"], "end": parameters["end_date"]}
                 )
-                section_data["content"].append(
-                    {"type": "metric", "data": metric_data.get(metric_id)}
-                )
+                section_data["content"].append({"type": "metric", "data": metric_data.get(metric_id)})
 
         # Run analytics
         if "analytics" in section:
@@ -1033,9 +986,7 @@ class AdvancedAnalyticsEngine:
 
         # Check policy processing time
         if metrics.get("policy_processing_time"):
-            avg_time = (
-                metrics["policy_processing_time"].get("aggregation", {}).get("avg", 0)
-            )
+            avg_time = metrics["policy_processing_time"].get("aggregation", {}).get("avg", 0)
             if avg_time > 200:
                 recommendations.append(
                     {
@@ -1091,9 +1042,7 @@ class AdvancedAnalyticsEngine:
 
         # Check bandwidth utilization
         if metrics.get("bandwidth_utilization"):
-            avg_util = (
-                metrics["bandwidth_utilization"].get("aggregation", {}).get("avg", 0)
-            )
+            avg_util = metrics["bandwidth_utilization"].get("aggregation", {}).get("avg", 0)
             if avg_util > 80:
                 recommendations.append(
                     {
@@ -1159,25 +1108,19 @@ class AdvancedAnalyticsEngine:
         # This would fetch current capacity
         return {}
 
-    def _simple_capacity_projection(
-        self, growth_data: Dict, horizon: int
-    ) -> Dict[str, Any]:
+    def _simple_capacity_projection(self, growth_data: Dict, horizon: int) -> Dict[str, Any]:
         """Simple capacity projection"""
 
         # This would project capacity needs
         return {}
 
-    def _calculate_required_capacity(
-        self, current: Dict, predictions: Dict, horizon: int
-    ) -> Dict[str, Any]:
+    def _calculate_required_capacity(self, current: Dict, predictions: Dict, horizon: int) -> Dict[str, Any]:
         """Calculate required capacity"""
 
         # This would calculate required capacity
         return {}
 
-    def _generate_capacity_recommendations(
-        self, current: Dict, required: Dict
-    ) -> List[Dict]:
+    def _generate_capacity_recommendations(self, current: Dict, required: Dict) -> List[Dict]:
         """Generate capacity recommendations"""
 
         # This would generate recommendations
@@ -1189,9 +1132,7 @@ class AdvancedAnalyticsEngine:
         # This would estimate costs
         return {}
 
-    def _aggregate_metric_data(
-        self, data: List[Dict], metric: AnalyticsMetric
-    ) -> Dict[str, float]:
+    def _aggregate_metric_data(self, data: List[Dict], metric: AnalyticsMetric) -> Dict[str, float]:
         """Aggregate metric data based on calculation type"""
 
         if not data:
@@ -1215,9 +1156,7 @@ class AdvancedAnalyticsEngine:
         else:
             return {}
 
-    def _check_threshold_violations(
-        self, data: List[Dict], metric: AnalyticsMetric
-    ) -> List[Dict]:
+    def _check_threshold_violations(self, data: List[Dict], metric: AnalyticsMetric) -> List[Dict]:
         """Check for threshold violations"""
 
         violations = []
@@ -1299,14 +1238,9 @@ class AdvancedAnalyticsEngine:
 
         # Interpolate
         weight = index - lower_index
-        return (
-            sorted_values[lower_index] * (1 - weight)
-            + sorted_values[upper_index] * weight
-        )
+        return sorted_values[lower_index] * (1 - weight) + sorted_values[upper_index] * weight
 
-    def _calculate_linear_slope(
-        self, x_values: List[float], y_values: List[float]
-    ) -> float:
+    def _calculate_linear_slope(self, x_values: List[float], y_values: List[float]) -> float:
         """Calculate linear regression slope manually when numpy is not available"""
         if len(x_values) != len(y_values) or len(x_values) < 2:
             return 0.0
@@ -1318,9 +1252,7 @@ class AdvancedAnalyticsEngine:
         y_mean = sum(y_values) / n
 
         # Calculate slope using least squares method
-        numerator = sum(
-            (x_values[i] - x_mean) * (y_values[i] - y_mean) for i in range(n)
-        )
+        numerator = sum((x_values[i] - x_mean) * (y_values[i] - y_mean) for i in range(n))
         denominator = sum((x_values[i] - x_mean) ** 2 for i in range(n))
 
         if denominator == 0:
