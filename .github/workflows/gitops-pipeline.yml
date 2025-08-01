@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ${{ secrets.REGISTRY_URL }}
-  IMAGE_NAME: JCLEE94/${{ secrets.APP_NAME }}
+  IMAGE_NAME: jclee94/${{ secrets.APP_NAME }}
   APP_NAME: ${{ secrets.APP_NAME }}
 
 jobs:
