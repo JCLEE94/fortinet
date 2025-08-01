@@ -1,0 +1,19 @@
+{
+  "test_time": "2025-08-01T18:15:47.154082",
+  "api_key": "test_new_api_key_placeholder",
+  "host": "test.fortimanager.local:443",
+  "tests": [
+    {
+      "name": "bearer_auth_system_status",
+      "status": "error",
+      "method": "Bearer Token",
+      "error": "HTTPSConnectionPool(host='test.fortimanager.local', port=443): Max retries exceeded with url: /jsonrpc (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x74fdbaf51d50>: Failed to resolve 'test.fortimanager.local' ([Errno -3] Temporary failure in name resolution)\"))"
+    },
+    {
+      "name": "custom_header_auth",
+      "status": "error",
+      "method": "Custom Header",
+      "error": "HTTPSConnectionPool(host='test.fortimanager.local', port=443): Max retries exceeded with url: /jsonrpc (Caused by NameResolutionError(\"<urllib3.connection.HTTPSConnection object at 0x74fdbaf52170>: Failed to resolve 'test.fortimanager.local' ([Errno -3] Temporary failure in name resolution)\"))"
+    }
+  ]
+}
