@@ -480,9 +480,7 @@ def analyze_policy_conflicts():
         data = request.get_json()
         hub = get_advanced_hub()
 
-        result = hub.analyze_policy_conflicts(
-            device=data.get("device"), adom=data.get("adom", "root")
-        )
+        result = hub.analyze_policy_conflicts(device=data.get("device"), adom=data.get("adom", "root"))
 
         return jsonify(result)
     except Exception as e:
@@ -496,9 +494,7 @@ def optimize_policies():
         data = request.get_json()
         hub = get_advanced_hub()
 
-        result = hub.optimize_policies(
-            device=data.get("device"), adom=data.get("adom", "root")
-        )
+        result = hub.optimize_policies(device=data.get("device"), adom=data.get("adom", "root"))
 
         return jsonify({"optimizations": result})
     except Exception as e:
@@ -512,9 +508,7 @@ def get_policy_recommendations():
         data = request.get_json()
         hub = get_advanced_hub()
 
-        result = hub.get_policy_recommendations(
-            device=data.get("device"), adom=data.get("adom", "root")
-        )
+        result = hub.get_policy_recommendations(device=data.get("device"), adom=data.get("adom", "root"))
 
         return jsonify({"recommendations": result})
     except Exception as e:
@@ -544,10 +538,8 @@ def run_compliance_check():
             "status": "success",
             "mode": "simplified",
             "compliance_results": {
-                "total_checks": len(data.get("devices", []))
-                * len(data.get("frameworks", [])),
-                "passed": len(data.get("devices", [])) * len(data.get("frameworks", []))
-                - 1,
+                "total_checks": len(data.get("devices", [])) * len(data.get("frameworks", [])),
+                "passed": len(data.get("devices", [])) * len(data.get("frameworks", [])) - 1,
                 "failed": 1,
                 "warnings": 0,
             },
@@ -615,9 +607,7 @@ def export_compliance_report():
         data = request.get_json()
         hub = get_advanced_hub()
 
-        report = hub.export_compliance_report(
-            format=data.get("format", "json"), frameworks=data.get("frameworks")
-        )
+        report = hub.export_compliance_report(format=data.get("format", "json"), frameworks=data.get("frameworks"))
 
         # Return appropriate content type based on format
         if data.get("format") == "json":
@@ -643,13 +633,9 @@ def detect_threats():
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # If already in async context, create new task
-                threats = loop.create_task(
-                    hub.detect_threats(time_window=data.get("time_window", 60))
-                )
+                threats = loop.create_task(hub.detect_threats(time_window=data.get("time_window", 60)))
             else:
-                threats = asyncio.run(
-                    hub.detect_threats(time_window=data.get("time_window", 60))
-                )
+                threats = asyncio.run(hub.detect_threats(time_window=data.get("time_window", 60)))
 
             # Convert threat objects to dict for JSON serialization
             threat_list = []
@@ -783,13 +769,9 @@ def threat_hunting():
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # If already in async context, create new task
-                result = loop.create_task(
-                    hub.perform_threat_hunting(data.get("parameters", {}))
-                )
+                result = loop.create_task(hub.perform_threat_hunting(data.get("parameters", {})))
             else:
-                result = asyncio.run(
-                    hub.perform_threat_hunting(data.get("parameters", {}))
-                )
+                result = asyncio.run(hub.perform_threat_hunting(data.get("parameters", {})))
         except Exception as e:
             logger.error(f"Operation failed: {e}")
             return jsonify({"error": "Threat hunting failed"}), 500
@@ -900,15 +882,11 @@ def generate_predictions():
             if loop.is_running():
                 # If already in async context, create new task
                 result = loop.create_task(
-                    hub.generate_predictions(
-                        model_id=data.get("model_id"), horizon=data.get("horizon", 24)
-                    )
+                    hub.generate_predictions(model_id=data.get("model_id"), horizon=data.get("horizon", 24))
                 )
             else:
                 result = asyncio.run(
-                    hub.generate_predictions(
-                        model_id=data.get("model_id"), horizon=data.get("horizon", 24)
-                    )
+                    hub.generate_predictions(model_id=data.get("model_id"), horizon=data.get("horizon", 24))
                 )
         except Exception as e:
             logger.error(f"Operation failed: {e}")
@@ -992,9 +970,7 @@ def get_adom_list():
             )
 
         adoms = fm_client.get_adom_list()
-        return jsonify(
-            {"success": True, "adoms": adoms, "count": len(adoms) if adoms else 0}
-        )
+        return jsonify({"success": True, "adoms": adoms, "count": len(adoms) if adoms else 0})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "adoms": []}), 500
@@ -1078,9 +1054,7 @@ def get_policy_scenarios():
             },
         ]
 
-        return jsonify(
-            {"success": True, "scenarios": scenarios, "count": len(scenarios)}
-        )
+        return jsonify({"success": True, "scenarios": scenarios, "count": len(scenarios)})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e), "scenarios": []}), 500
@@ -1130,9 +1104,7 @@ def analyze_policy_scenario(scenario_id):
 
         if scenario_id not in scenarios:
             return (
-                jsonify(
-                    {"success": False, "error": f"Scenario {scenario_id} not found"}
-                ),
+                jsonify({"success": False, "error": f"Scenario {scenario_id} not found"}),
                 404,
             )
 
@@ -1206,9 +1178,7 @@ def analyze_policy_scenario(scenario_id):
                     "allowed": overall_allowed,
                     "reason": ("; ".join(reasons) if reasons else "FortiManager 분석 완료"),
                     "policy_paths": policy_paths,  # 다중 정책 경로
-                    "policy_path": (
-                        "; ".join(policy_paths) if policy_paths else "N/A"
-                    ),  # 기존 호환성
+                    "policy_path": ("; ".join(policy_paths) if policy_paths else "N/A"),  # 기존 호환성
                     "device_analyses": device_analyses,  # 장치별 상세 분석
                     "devices_count": len(device_analyses),
                     "timestamp": time.time(),
@@ -1254,14 +1224,10 @@ def analyze_policy_scenario(scenario_id):
             result["scenario_id"] = scenario_id
             result["analysis_timestamp"] = time.time()
 
-            return jsonify(
-                {"success": True, "scenario_id": scenario_id, "analysis": result}
-            )
+            return jsonify({"success": True, "scenario_id": scenario_id, "analysis": result})
         else:
             return (
-                jsonify(
-                    {"success": False, "error": "Analysis failed to produce results"}
-                ),
+                jsonify({"success": False, "error": "Analysis failed to produce results"}),
                 500,
             )
 
@@ -1345,9 +1311,7 @@ def batch_analyze_scenarios():
 
                     for device in devices:
                         try:
-                            device_name = device.get(
-                                "name", device.get("hostname", "Unknown")
-                            )
+                            device_name = device.get("name", device.get("hostname", "Unknown"))
 
                             # 각 장치에서 정책 분석 수행
                             device_analysis = fm_client.analyze_packet_path(
@@ -1361,9 +1325,7 @@ def batch_analyze_scenarios():
                             if device_analysis:
                                 device_allowed = device_analysis.get("allowed", True)
                                 device_reason = device_analysis.get("reason", "N/A")
-                                device_policy = device_analysis.get(
-                                    "policy_path", "N/A"
-                                )
+                                device_policy = device_analysis.get("policy_path", "N/A")
 
                                 # 전체 허용 여부는 모든 장치에서 허용되어야 함
                                 if not device_allowed:
@@ -1393,9 +1355,7 @@ def batch_analyze_scenarios():
                                 }
                             )
                             overall_allowed = False
-                            reasons.append(
-                                f"[{device_name}] 분석 오류: {str(device_error)}"
-                            )
+                            reasons.append(f"[{device_name}] 분석 오류: {str(device_error)}")
 
                     # 시나리오 결과 정리
                     if device_analyses:
@@ -1405,13 +1365,9 @@ def batch_analyze_scenarios():
                             "port": scenario["port"],
                             "protocol": scenario["protocol"],
                             "allowed": overall_allowed,
-                            "reason": (
-                                "; ".join(reasons) if reasons else "FortiManager 분석 완료"
-                            ),
+                            "reason": ("; ".join(reasons) if reasons else "FortiManager 분석 완료"),
                             "policy_paths": policy_paths,  # 다중 정책 경로
-                            "policy_path": (
-                                "; ".join(policy_paths) if policy_paths else "N/A"
-                            ),  # 기존 호환성
+                            "policy_path": ("; ".join(policy_paths) if policy_paths else "N/A"),  # 기존 호환성
                             "device_analyses": device_analyses,  # 장치별 상세 분석
                             "devices_count": len(device_analyses),
                             "scenario_id": scenario["id"],
@@ -1492,9 +1448,7 @@ def analyze_custom_scenario():
         for field in required_fields:
             if field not in data:
                 return (
-                    jsonify(
-                        {"success": False, "error": f"Missing required field: {field}"}
-                    ),
+                    jsonify({"success": False, "error": f"Missing required field: {field}"}),
                     400,
                 )
 
@@ -1579,9 +1533,7 @@ def analyze_custom_scenario():
                     "allowed": overall_allowed,
                     "reason": ("; ".join(reasons) if reasons else "FortiManager 분석 완료"),
                     "policy_paths": policy_paths,  # 다중 정책 경로
-                    "policy_path": (
-                        "; ".join(policy_paths) if policy_paths else "N/A"
-                    ),  # 기존 호환성
+                    "policy_path": ("; ".join(policy_paths) if policy_paths else "N/A"),  # 기존 호환성
                     "device_analyses": analysis_results,  # 장치별 상세 분석
                     "devices_count": len(analysis_results),
                     "scenario_id": "custom",
@@ -1814,9 +1766,7 @@ def analyze_packet_path():
             return jsonify({"error": "Failed to load firewall data"}), 500
 
         # 트래픽 분석 수행
-        analysis_result = analyzer.analyze_traffic(
-            src_ip, dst_ip, dst_port, protocol, device_id
-        )
+        analysis_result = analyzer.analyze_traffic(src_ip, dst_ip, dst_port, protocol, device_id)
 
         return jsonify({"analysis": analysis_result, "mode": "production"})
 
@@ -1878,9 +1828,7 @@ def get_network_topology_policies():
             return jsonify({"error": "FortiManager client not available"}), 503
 
         topology = fm_client.get_network_topology(device_id)
-        return jsonify(
-            {"topology": topology or {}, "device_id": device_id, "mode": "production"}
-        )
+        return jsonify({"topology": topology or {}, "device_id": device_id, "mode": "production"})
 
     except Exception as e:
         logger.error(f"네트워크 토폴로지 조회 중 오류: {str(e)}")

@@ -94,9 +94,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         """Make request with retry logic"""
         for attempt in range(retries):
             try:
-                return self._make_request(
-                    method, url, None, None, headers or self.headers
-                )
+                return self._make_request(method, url, None, None, headers or self.headers)
             except Exception as e:
                 if attempt == retries - 1:
                     return False, str(e), 500
@@ -147,9 +145,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 self.set_cached_data(cache_key, policies, ttl=60)  # 1분 캐시
                 return policies
             else:
-                self.handle_api_error(
-                    Exception(f"HTTP {status_code}: {result}"), "get_firewall_policies"
-                )
+                self.handle_api_error(Exception(f"HTTP {status_code}: {result}"), "get_firewall_policies")
                 return []
 
         except Exception as e:
@@ -178,9 +174,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 self.set_cached_data(cache_key, routes, ttl=120)  # 2분 캐시
                 return routes
             else:
-                self.handle_api_error(
-                    Exception(f"HTTP {status_code}: {result}"), "get_routes"
-                )
+                self.handle_api_error(Exception(f"HTTP {status_code}: {result}"), "get_routes")
                 return []
 
         except Exception as e:
@@ -235,9 +229,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         if success:
             return result.get("results", [])
         else:
-            self.logger.error(
-                f"Failed to get address objects: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to get address objects: {status_code} - {result}")
             return []
 
     def get_service_groups(self):
@@ -313,9 +305,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         if success:
             return result.get("results", {})
         else:
-            self.logger.error(
-                f"Failed to get system performance: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to get system performance: {status_code} - {result}")
             return None
 
     def get_interface_stats(self):
@@ -332,9 +322,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         if success:
             return result.get("results", [])
         else:
-            self.logger.error(
-                f"Failed to get interface stats: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to get interface stats: {status_code} - {result}")
             return []
 
     def get_sessions(self):
@@ -405,7 +393,12 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             dict: Monitoring data or None if error
         """
         try:
-            base_data = self.collect_base_monitoring_data()
+            # Base monitoring data structure
+            base_data = {
+                "timestamp": time.time(),
+                "source": "fortigate",
+                "device_id": self.host,
+            }
 
             # FortiGate 특화 모니터링 데이터 추가
             fortigate_data = {
@@ -425,13 +418,16 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                     "serial": system_status.get("serial"),
                 }
 
+            # Combine base and FortiGate data
+            base_data.update(fortigate_data)
+
             # 민감한 정보 마스킹
-            sanitized_data = self.sanitize_sensitive_data(fortigate_data)
+            sanitized_data = self.sanitize_sensitive_data(base_data)
 
             # 모니터링 데이터 업데이트
             self.update_monitoring_data(sanitized_data)
 
-            return base_data
+            return sanitized_data
 
         except Exception as e:
             self.handle_api_error(e, "_get_monitoring_data")
@@ -501,9 +497,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 del self.active_captures[capture_id]
             return result.get("results", {})
         else:
-            self.logger.error(
-                f"Failed to stop packet capture: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to stop packet capture: {status_code} - {result}")
             return None
 
     def get_packet_capture_status(self, capture_id):
@@ -527,9 +521,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         if success:
             return result.get("results", {})
         else:
-            self.logger.error(
-                f"Failed to get packet capture status: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to get packet capture status: {status_code} - {result}")
             return None
 
     def download_packet_capture(self, capture_id):
@@ -554,7 +546,5 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             # Return raw data for pcap file
             return result
         else:
-            self.logger.error(
-                f"Failed to download packet capture: {status_code} - {result}"
-            )
+            self.logger.error(f"Failed to download packet capture: {status_code} - {result}")
             return None

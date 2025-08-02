@@ -693,7 +693,10 @@ class PolicyOrchestrationEngine:
         required_fields = ["device", "policy_id", "updates"]
         for field_name in required_fields:
             if field_name not in update:
-                return {"valid": False, "error": f"Missing required field: {field_name}"}
+                return {
+                    "valid": False,
+                    "error": f"Missing required field: {field_name}",
+                }
 
         # Validate update fields
         updates = update.get("updates", {})
@@ -712,7 +715,10 @@ class PolicyOrchestrationEngine:
 
         for update_field in updates:
             if update_field not in valid_fields:
-                return {"valid": False, "error": f"Invalid update field: {update_field}"}
+                return {
+                    "valid": False,
+                    "error": f"Invalid update field: {update_field}",
+                }
 
         return {"valid": True}
 

@@ -16,13 +16,7 @@ from typing import Any, Dict, List
 import psutil
 import requests
 
-from config.constants import (
-    CHECK_INTERVALS,
-    DEFAULT_PATHS,
-    DEFAULT_PORTS,
-    SERVICE_URLS,
-    TIMEOUTS,
-)
+from config.constants import CHECK_INTERVALS, DEFAULT_PATHS, DEFAULT_PORTS, SERVICE_URLS, TIMEOUTS
 
 # 텔레그램 알림 시스템 제거됨
 
@@ -44,9 +38,7 @@ class TroubleshootingLoop:
 
         log_path = os.path.join(DEFAULT_PATHS["LOG_DIR"], "troubleshooting_loop.log")
         handler = logging.FileHandler(log_path)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
@@ -95,9 +87,7 @@ class TroubleshootingLoop:
         loop_thread.start()
 
         # 성능 모니터링 스레드
-        perf_thread = threading.Thread(
-            target=self._performance_monitor_loop, daemon=True
-        )
+        perf_thread = threading.Thread(target=self._performance_monitor_loop, daemon=True)
         perf_thread.start()
 
         return loop_thread, perf_thread
@@ -167,9 +157,7 @@ class TroubleshootingLoop:
                 timeout=self.monitors["web_app"]["timeout"],
             )
             if response.status_code != 200:
-                issues.append(
-                    {"type": "web_app_down", "status_code": response.status_code}
-                )
+                issues.append({"type": "web_app_down", "status_code": response.status_code})
         except Exception as e:
             issues.append({"type": "web_app_down", "error": str(e)})
 
@@ -180,9 +168,7 @@ class TroubleshootingLoop:
                 timeout=self.monitors["mock_server"]["timeout"],
             )
             if response.status_code != 200:
-                issues.append(
-                    {"type": "mock_server_down", "status_code": response.status_code}
-                )
+                issues.append({"type": "mock_server_down", "status_code": response.status_code})
         except Exception as e:
             issues.append({"type": "mock_server_down", "error": str(e)})
 
@@ -302,9 +288,7 @@ class TroubleshootingLoop:
             subprocess.run(["docker", "system", "prune", "-f"], check=True)
 
             # 임시 파일 정리
-            subprocess.run(
-                ["find", "/tmp", "-type", "f", "-atime", "+7", "-delete"], check=True
-            )
+            subprocess.run(["find", "/tmp", "-type", "f", "-atime", "+7", "-delete"], check=True)
 
             return True
         except Exception as e:
@@ -316,9 +300,7 @@ class TroubleshootingLoop:
         try:
             # 캐시 정리
             subprocess.run(["sync"], check=True)
-            subprocess.run(
-                ["echo", "3", ">", "/proc/sys/vm/drop_caches"], shell=True, check=True
-            )
+            subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"], shell=True, check=True)
 
             # 사용하지 않는 Docker 컨테이너 정리
             subprocess.run(["docker", "container", "prune", "-f"], check=True)
@@ -383,9 +365,7 @@ class TroubleshootingLoop:
                         archive_name = f"{filename}.{timestamp}.gz"
                         subprocess.run(
                             ["gzip", "-c", filepath],
-                            stdout=open(
-                                os.path.join(log_dir, "archive", archive_name), "wb"
-                            ),
+                            stdout=open(os.path.join(log_dir, "archive", archive_name), "wb"),
                         )
 
                         # 원본 파일 비우기
@@ -429,9 +409,7 @@ class TroubleshootingLoop:
         self.logger.info("트러블슈팅 루프 중지")
 
         # 종료 로깅
-        self.logger.info(
-            f"FortiGate 트러블슈팅 시스템 중지: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-        )
+        self.logger.info(f"FortiGate 트러블슈팅 시스템 중지: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 
 if __name__ == "__main__":

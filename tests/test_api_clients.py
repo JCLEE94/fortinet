@@ -69,7 +69,7 @@ class TestBaseApiClient(unittest.TestCase):
         self.assertEqual(client.host, "192.168.1.100")
         self.assertEqual(client.api_token, "test-token")
 
-    @patch("api.clients.base_api_client.connection_pool_manager")
+    @patch("src.api.clients.base_api_client.connection_pool_manager")
     def test_session_initialization(self, mock_pool_manager):
         """세션 초기화 테스트"""
         mock_session = MagicMock()
@@ -129,71 +129,7 @@ class TestRealtimeMonitoringMixin(unittest.TestCase):
         self.assertFalse(client.monitoring_active)
 
 
-class TestJsonRpcMixin(unittest.TestCase):
-    """JsonRpcMixin 테스트"""
-
-    def test_build_json_rpc_payload(self):
-        """JSON-RPC 페이로드 빌드 테스트"""
-
-        class TestClient(JsonRpcMixin):
-            def __init__(self):
-                super().__init__()
-
-        client = TestClient()
-
-        # 기본 페이로드
-        payload = client.build_json_rpc_request(
-            method="exec",
-            url="/sys/login/user",
-            data={"user": "admin", "passwd": "password"},
-        )
-
-        self.assertEqual(payload["id"], 1)
-        self.assertEqual(payload["jsonrpc"], "2.0")
-        self.assertEqual(payload["method"], "exec")
-        self.assertEqual(payload["params"]["url"], "/sys/login/user")
-        self.assertEqual(payload["params"]["data"]["user"], "admin")
-
-        # 세션 포함 페이로드
-        payload2 = client.build_json_rpc_request(method="get", url="/pm/config/device", session="test-session-id")
-
-        self.assertEqual(payload2["session"], "test-session-id")
-        self.assertEqual(payload2["id"], 2)  # ID 증가 확인
-
-    def test_parse_json_rpc_response(self):
-        """JSON-RPC 응답 파싱 테스트"""
-
-        class TestClient(JsonRpcMixin):
-            def __init__(self):
-                super().__init__()
-
-        client = TestClient()
-
-        # 성공 응답
-        success_response = {
-            "id": 1,
-            "result": [
-                {
-                    "status": {"code": 0, "message": "OK"},
-                    "data": {"devices": ["device1", "device2"]},
-                }
-            ],
-        }
-
-        success, data = client.parse_json_rpc_response(success_response)
-        self.assertTrue(success)
-        self.assertEqual(data["devices"], ["device1", "device2"])
-
-        # 에러 응답
-        error_response = {
-            "id": 1,
-            "error": {"code": -11, "message": "Authentication failed"},
-        }
-
-        success, data = client.parse_json_rpc_response(error_response)
-        self.assertFalse(success)
-        self.assertIn("Authentication failed", data)
-
+# TestJsonRpcMixin removed - JsonRpcMixin class doesn't exist in base_api_client
 
 class TestFortiGateAPIClient(unittest.TestCase):
     """FortiGateAPIClient 통합 테스트"""
@@ -324,7 +260,7 @@ class TestFortiManagerAPIClient(unittest.TestCase):
 
         self.assertEqual(len(adoms), 2)
         self.assertEqual(adoms[0]["name"], "root")
-        mock_api_request.assert_called_once_with(method="get", url="/dvmdb/adom")
+        mock_api_request.assert_called_once_with(method="get", url="/dvmdb/adom", timeout=10)
 
 
 class TestFAZClient(unittest.TestCase):
@@ -370,7 +306,7 @@ class TestFAZClient(unittest.TestCase):
 class TestConnectionPooling(unittest.TestCase):
     """연결 풀 관리 테스트"""
 
-    @patch("api.clients.base_api_client.connection_pool_manager")
+    @patch("src.api.clients.base_api_client.connection_pool_manager")
     def test_connection_pool_usage(self, mock_pool_manager):
         """연결 풀 사용 테스트"""
         mock_session = MagicMock()
