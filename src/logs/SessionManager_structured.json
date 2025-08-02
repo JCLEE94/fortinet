@@ -20,3 +20,5 @@
 {"timestamp": "2025-08-02T14:02:04.072366+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
 {"timestamp": "2025-08-02T16:15:46.066886+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
 {"timestamp": "2025-08-02T19:18:55.574172+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
+{"timestamp": "2025-08-02T19:21:39.056520+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
+{"timestamp": "2025-08-02T19:21:43.885344+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
