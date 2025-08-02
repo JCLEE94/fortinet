@@ -38,3 +38,4 @@
 {"timestamp": "2025-08-02T19:21:39.036343+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 120}
 {"timestamp": "2025-08-02T19:21:43.863197+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 120}
 {"timestamp": "2025-08-02T20:15:47.886710+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}
+{"timestamp": "2025-08-02T20:24:46.591726+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}

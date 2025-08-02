@@ -356,14 +356,41 @@ class LoggerRegistry:
 
     def cleanup(self):
         """Clean up resources on exit"""
-        for logger in self._loggers.values():
-            # Flush any pending logs
-            for handler in logger.logger.handlers:
-                try:
-                    handler.flush()
-                except (BrokenPipeError, OSError):
-                    # Ignore broken pipe errors during cleanup
-                    pass
+        for logger_name, logger in list(self._loggers.items()):
+            try:
+                # Flush and close handlers properly
+                handlers_to_remove = []
+                for handler in logger.logger.handlers[:]:
+                    try:
+                        if hasattr(handler, "stream") and hasattr(handler.stream, "closed"):
+                            if not handler.stream.closed:
+                                handler.flush()
+                                if hasattr(handler, "close"):
+                                    handler.close()
+                        elif hasattr(handler, "flush"):
+                            handler.flush()
+                        handlers_to_remove.append(handler)
+                    except (BrokenPipeError, OSError, ValueError):
+                        # Ignore I/O errors during cleanup
+                        handlers_to_remove.append(handler)
+                    except Exception:
+                        # Ignore any other exceptions during cleanup
+                        handlers_to_remove.append(handler)
+
+                # Remove handlers from logger
+                for handler in handlers_to_remove:
+                    try:
+                        logger.logger.removeHandler(handler)
+                    except (ValueError, AttributeError):
+                        # Handler already removed or invalid
+                        pass
+
+            except Exception:
+                # Ignore any errors during logger cleanup
+                pass
+
+        # Clear the loggers registry
+        self._loggers.clear()
 
 
 # Main logger class
