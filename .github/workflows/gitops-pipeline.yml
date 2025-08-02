@@ -8,9 +8,9 @@ on:
     branches: [master, main]
 
 env:
-  REGISTRY: ${{ secrets.REGISTRY_URL }}
-  IMAGE_NAME: ${{ secrets.APP_NAME }}
-  APP_NAME: ${{ secrets.APP_NAME }}
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
+  APP_NAME: fortinet
 
 jobs:
   # 테스트 단계 (간소화)
