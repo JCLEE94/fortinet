@@ -69,7 +69,10 @@ class DummyDataGenerator:
                 "id": f"event_{i+1:05d}",
                 "type": random.choice(event_types),
                 "severity": random.choice(severities),
-                "source_ip": f"{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}.{random.randint(1, 255)}",
+                "source_ip": (
+                    f"{random.randint(1, 255)}.{random.randint(1, 255)}."
+                    f"{random.randint(1, 255)}.{random.randint(1, 255)}"
+                ),
                 "destination_ip": f"192.168.{random.randint(1, 255)}.{random.randint(1, 254)}",
                 "timestamp": datetime.now() - timedelta(minutes=random.randint(0, 1440)),
                 "device": f"FW-{random.choice(self.locations)}-{random.randint(1, 20):02d}",

@@ -23,9 +23,7 @@ except ImportError:
         logger = logging.getLogger(name)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             # 사용자 정의 레벨을 표준 레벨로 매핑
@@ -251,9 +249,7 @@ class CaptureSession:
         self.logger.info(f"세션 중지됨: {self.session_id} (상태: {status.value})")
         return True
 
-    def get_packets(
-        self, limit: Optional[int] = None, offset: int = 0
-    ) -> List[PacketInfo]:
+    def get_packets(self, limit: Optional[int] = None, offset: int = 0) -> List[PacketInfo]:
         """패킷 조회"""
         with self.packet_lock:
             packets = self.packets[offset:]
@@ -436,27 +432,9 @@ class SessionManager:
         """전체 세션 통계"""
         with self.session_lock:
             total_sessions = len(self.sessions)
-            running_sessions = len(
-                [
-                    s
-                    for s in self.sessions.values()
-                    if s.info.status == SessionStatus.RUNNING
-                ]
-            )
-            paused_sessions = len(
-                [
-                    s
-                    for s in self.sessions.values()
-                    if s.info.status == SessionStatus.PAUSED
-                ]
-            )
-            completed_sessions = len(
-                [
-                    s
-                    for s in self.sessions.values()
-                    if s.info.status == SessionStatus.COMPLETED
-                ]
-            )
+            running_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.RUNNING])
+            paused_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.PAUSED])
+            completed_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.COMPLETED])
 
             total_packets = sum(s.info.packets_captured for s in self.sessions.values())
             total_bytes = sum(s.info.total_bytes for s in self.sessions.values())
@@ -473,9 +451,7 @@ class SessionManager:
 
     def _start_cleanup_thread(self) -> None:
         """정리 스레드 시작"""
-        self._cleanup_thread = threading.Thread(
-            target=self._cleanup_worker, daemon=True, name="session_cleanup"
-        )
+        self._cleanup_thread = threading.Thread(target=self._cleanup_worker, daemon=True, name="session_cleanup")
         self._cleanup_thread.start()
 
     def _cleanup_worker(self) -> None:

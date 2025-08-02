@@ -1,3 +1,4 @@
 {"timestamp": "2025-07-31T10:58:11.766690+00:00", "level": "WARNING", "logger": "faz_client", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 120}
 {"timestamp": "2025-07-31T15:30:45.407572+00:00", "level": "WARNING", "logger": "faz_client", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 120}
 {"timestamp": "2025-08-01T09:01:30.233145+00:00", "level": "WARNING", "logger": "faz_client", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}
+{"timestamp": "2025-08-02T13:06:28.936531+00:00", "level": "WARNING", "logger": "faz_client", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}

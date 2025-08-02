@@ -40,9 +40,7 @@ except ImportError:
         logger = logging.getLogger(name)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             # 사용자 정의 레벨을 표준 레벨로 매핑
@@ -205,9 +203,7 @@ class DeviceManager:
 
             # 루프백 인터페이스 감지
             is_loopback = (
-                interface_name.startswith("lo")
-                or interface_name.startswith("Loopback")
-                or "127.0.0.1" in ip_addresses
+                interface_name.startswith("lo") or interface_name.startswith("Loopback") or "127.0.0.1" in ip_addresses
             )
 
             return NetworkInterface(
@@ -312,9 +308,7 @@ class DeviceManager:
     def get_available_interfaces(self) -> List[Dict[str, Any]]:
         """사용 가능한 네트워크 인터페이스 목록"""
         with self.device_lock:
-            return [
-                interface.to_dict() for interface in self.network_interfaces.values()
-            ]
+            return [interface.to_dict() for interface in self.network_interfaces.values()]
 
     def get_interface_details(self, interface_name: str) -> Optional[Dict[str, Any]]:
         """특정 인터페이스 상세 정보"""
@@ -525,9 +519,7 @@ class DeviceManager:
             else:
                 ping_cmd = ["ping", "-c", "1", "-W", "3", host]
 
-            ping_result = subprocess.run(
-                ping_cmd, capture_output=True, timeout=5, text=True
-            )
+            ping_result = subprocess.run(ping_cmd, capture_output=True, timeout=5, text=True)
 
             result["ping"] = ping_result.returncode == 0
             result["response_time"] = round((time.time() - start_time) * 1000, 2)

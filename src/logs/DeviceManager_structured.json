@@ -84,3 +84,9 @@
 {"timestamp": "2025-08-01T09:01:30.260831+00:00", "level": "INFO", "logger": "DeviceManager", "message": "4개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 143}
 {"timestamp": "2025-08-01T09:01:30.261585+00:00", "level": "INFO", "logger": "DeviceManager", "message": "4개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 143}
 {"timestamp": "2025-08-01T09:01:30.262447+00:00", "level": "INFO", "logger": "DeviceManager", "message": "4개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 143}
+{"timestamp": "2025-08-02T13:06:29.009529+00:00", "level": "INFO", "logger": "DeviceManager", "message": "장치 매니저 초기화됨", "module": "device_manager", "function": "__init__", "line": 134}
+{"timestamp": "2025-08-02T13:06:29.010951+00:00", "level": "INFO", "logger": "DeviceManager", "message": "5개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 141}
+{"timestamp": "2025-08-02T13:06:29.011426+00:00", "level": "INFO", "logger": "DeviceManager", "message": "장치 매니저 초기화됨", "module": "device_manager", "function": "__init__", "line": 134}
+{"timestamp": "2025-08-02T13:06:29.012544+00:00", "level": "INFO", "logger": "DeviceManager", "message": "5개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 141}
+{"timestamp": "2025-08-02T13:06:29.013743+00:00", "level": "INFO", "logger": "DeviceManager", "message": "5개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 141}
+{"timestamp": "2025-08-02T13:06:29.015088+00:00", "level": "INFO", "logger": "DeviceManager", "message": "5개의 네트워크 인터페이스 발견됨", "module": "device_manager", "function": "_initialize_interfaces", "line": 141}

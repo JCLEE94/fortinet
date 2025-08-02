@@ -6,12 +6,14 @@ import hashlib
 import hmac
 import re
 import secrets
+import threading
+import time
 from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import abort, current_app, jsonify, request, session
 
-from config.constants import RATE_LIMITS
+from config.constants import CHECK_INTERVALS, RATE_LIMITS
 from config.constants import SECURITY_HEADERS as CONFIG_SECURITY
 
 # 보안 헤더 설정
@@ -129,7 +131,7 @@ def verify_jwt_token(token):
                 try:
                     decoded_payload = base64.urlsafe_b64decode(payload + "==").decode()
                     return json.loads(decoded_payload)
-                except:
+                except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
                     return None
 
         # JWT 라이브러리가 있는 경우
@@ -403,10 +405,6 @@ def verify_api_key(provided_key, stored_hash):
 
 
 # 주기적 정리 작업
-import threading
-import time
-
-from config.constants import CHECK_INTERVALS
 
 
 def start_cleanup_task():

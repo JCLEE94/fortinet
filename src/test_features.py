@@ -57,9 +57,9 @@ def test_api_clients() -> Dict:
         from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         # Test initialization (don't actually connect)
-        fg_client = FortiGateAPIClient(host="127.0.0.1", username="test", password="test")
-        fm_client = FortiManagerAPIClient(host="127.0.0.1", username="test", password="test")
-        faz_client = FAZClient(host="127.0.0.1", username="test", password="test")
+        FortiGateAPIClient(host="127.0.0.1", username="test", password="test")
+        FortiManagerAPIClient(host="127.0.0.1", username="test", password="test")
+        FAZClient(host="127.0.0.1", username="test", password="test")
 
         return test_result(
             "API Clients",

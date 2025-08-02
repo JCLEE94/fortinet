@@ -128,7 +128,10 @@ def packet_sniffer():
     example_filters = {
         "host": os.getenv("EXAMPLE_HOST_IP", "192.168.1.1"),
         "src_ip": os.getenv("EXAMPLE_SRC_IP", "192.168.1.10"),
-        "host_to_host": f"host {os.getenv('EXAMPLE_HOST1_IP', '192.168.1.1')} and host {os.getenv('EXAMPLE_HOST2_IP', '192.168.1.2')}",
+        "host_to_host": (
+            f"host {os.getenv('EXAMPLE_HOST1_IP', '192.168.1.1')} and "
+            f"host {os.getenv('EXAMPLE_HOST2_IP', '192.168.1.2')}"
+        ),
     }
 
     return render_template("packet_sniffer.html", devices=example_devices, example_filters=example_filters)

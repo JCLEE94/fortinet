@@ -161,7 +161,7 @@ class SecurityScanner:
 
                     for match in matches:
                         line_num = content[: match.start()].count("\n") + 1
-                        line_content = lines[line_num - 1].strip() if line_num <= len(lines) else ""
+                        # line_content = lines[line_num - 1].strip() if line_num <= len(lines) else ""
 
                         # 코드 스니펫 생성 (전후 2줄 포함)
                         snippet_lines = []
@@ -220,7 +220,7 @@ class SecurityScanner:
                             # 패키지명과 버전 추출
                             if "==" in line:
                                 package_name = line.split("==")[0].strip()
-                                version = line.split("==")[1].strip()
+                                # version = line.split("==")[1].strip()  # 현재 미사용
 
                                 if package_name in vulnerable_packages:
                                     vuln_info = vulnerable_packages[package_name]

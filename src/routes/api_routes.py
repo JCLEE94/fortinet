@@ -11,8 +11,11 @@ from datetime import datetime, timedelta
 from flask import Blueprint, current_app, jsonify, request
 
 from config.unified_settings import unified_settings
+from utils.api_utils import get_api_manager
+from utils.route_helpers import api_route, require_json_data, standard_api_response, validate_ip_address
 from utils.security import csrf_protect, rate_limit
 from utils.unified_cache_manager import cached, get_cache_manager
+from utils.unified_logger import get_logger
 
 # from src.utils.performance_cache import get_performance_cache, cached  # 제거됨
 # from src.utils.api_optimizer import get_api_optimizer, optimized_response
@@ -25,10 +28,6 @@ def optimized_response(**kwargs):
 
     return decorator
 
-
-from utils.api_utils import get_api_manager
-from utils.route_helpers import api_route, require_json_data, standard_api_response, validate_ip_address
-from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -1171,7 +1170,7 @@ def get_topology_data():
                                     "online_devices": len([n for n in nodes if n["status"] == "online"]),
                                     "total_links": len(links),
                                     "avg_utilization": (
-                                        sum(l["utilization"] for l in links) / len(links) if links else 0
+                                        sum(link["utilization"] for link in links) / len(links) if links else 0
                                     ),
                                 },
                             },

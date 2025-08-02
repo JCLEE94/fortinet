@@ -546,7 +546,7 @@ class PolicyOrchestrationEngine:
 
         for policy in policies:
             try:
-                result = await asyncio.get_event_loop().run_in_executor(
+                await asyncio.get_event_loop().run_in_executor(
                     self.executor,
                     self.api_client.create_firewall_policy,
                     device,
@@ -691,9 +691,9 @@ class PolicyOrchestrationEngine:
         """Validate policy update request"""
 
         required_fields = ["device", "policy_id", "updates"]
-        for field in required_fields:
-            if field not in update:
-                return {"valid": False, "error": f"Missing required field: {field}"}
+        for field_name in required_fields:
+            if field_name not in update:
+                return {"valid": False, "error": f"Missing required field: {field_name}"}
 
         # Validate update fields
         updates = update.get("updates", {})
@@ -710,9 +710,9 @@ class PolicyOrchestrationEngine:
             "comments",
         ]
 
-        for field in updates:
-            if field not in valid_fields:
-                return {"valid": False, "error": f"Invalid update field: {field}"}
+        for update_field in updates:
+            if update_field not in valid_fields:
+                return {"valid": False, "error": f"Invalid update field: {update_field}"}
 
         return {"valid": True}
 

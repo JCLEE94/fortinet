@@ -277,7 +277,7 @@ def get_topology():
                     "total_devices": len([n for n in mock_data["topology"]["nodes"] if n["type"] == "firewall"]),
                     "online_devices": len([n for n in mock_data["topology"]["nodes"] if n["status"] == "online"]),
                     "total_links": len(mock_data["topology"]["links"]),
-                    "avg_utilization": sum(l["utilization"] for l in mock_data["topology"]["links"])
+                    "avg_utilization": sum(link["utilization"] for link in mock_data["topology"]["links"])
                     / len(mock_data["topology"]["links"]),
                 },
             },

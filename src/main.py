@@ -1,5 +1,3 @@
-import os
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -21,6 +19,7 @@ if __name__ == "__main__":
 
 from analysis.analyzer import FirewallRuleAnalyzer
 from analysis.visualizer import PathVisualizer
+
 # 프로젝트 특정 임포트 (중복 try-except 제거)
 from api.clients.fortigate_api_client import FortiGateAPIClient
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
@@ -322,7 +321,8 @@ def main():
         if not allowed and path_data.get("blocked_by"):
             blocker = path_data["blocked_by"]
             print(
-                f"차단 위치: 방화벽 {blocker.get('firewall_name', blocker.get('firewall_id'))}, 정책 ID: {blocker.get('policy_id', 'N/A')}"
+                f"차단 위치: 방화벽 {blocker.get('firewall_name', blocker.get('firewall_id'))}, "
+                f"정책 ID: {blocker.get('policy_id', 'N/A')}"
             )
 
     return 0

@@ -5,7 +5,6 @@
 대용량 파일을 여러 모듈로 분산시킨 후 통합 인터페이스 제공
 """
 
-import logging
 import queue
 import threading
 import time

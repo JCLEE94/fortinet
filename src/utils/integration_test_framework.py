@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, List, Optional
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from web_app import create_app
+from web_app import create_app  # noqa: E402
 
 
 @dataclass

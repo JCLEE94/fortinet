@@ -15,6 +15,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from config.constants import BATCH_SETTINGS, DEFAULT_PORTS, DEFAULTS, TIMEOUTS
+
 
 class ConfigFormat(Enum):
     """Configuration file formats."""
@@ -34,9 +36,6 @@ class ConfigSource:
     required: bool = True
     reload_on_change: bool = False
     priority: int = 0  # Higher number = higher priority
-
-
-from config.constants import BATCH_SETTINGS, DEFAULT_PORTS, DEFAULTS, TIMEOUTS
 
 
 @dataclass

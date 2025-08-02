@@ -257,7 +257,7 @@ class SecureJWTManager:
 
             cache = get_cache_manager()
             return cache.get(f"revoked_token:{jti}") is not None
-        except:
+        except Exception:
             return jti in SecureJWTManager._revoked_tokens
 
     @staticmethod

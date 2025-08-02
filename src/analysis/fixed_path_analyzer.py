@@ -325,7 +325,10 @@ class FixedPathAnalyzer:
                 {
                     "type": "error",
                     "message": f"트래픽이 정책 '{policy['name']}'에 의해 차단됩니다.",
-                    "action": f"필요한 경우 {self.get_zone_for_ip(src_ip)}에서 {self.get_zone_for_ip(dst_ip)}로의 접근을 허용하는 정책을 추가하세요.",
+                    "action": (
+                        f"필요한 경우 {self.get_zone_for_ip(src_ip)}에서 "
+                        f"{self.get_zone_for_ip(dst_ip)}로의 접근을 허용하는 정책을 추가하세요."
+                    ),
                 }
             )
 

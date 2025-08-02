@@ -65,11 +65,11 @@ class SecurityFixer:
         """인증 누락 문제 수정 - 보안 데코레이터 추가"""
         fixes = []
 
-        # 민감한 엔드포인트 패턴 정의
-        sensitive_patterns = [
-            r"@app\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
-            r"@.*\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
-        ]
+        # 민감한 엔드포인트 패턴 정의 (현재 미사용)
+        # sensitive_patterns = [
+        #     r"@app\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
+        #     r"@.*\.route\(['\"][^'\"]*/(api|admin|config|settings|delete|create|update)[^'\"]*['\"][^)]*\)",
+        # ]
 
         # web_app.py 파일 수정
         web_app_path = os.path.join(self.project_root, "src", "web_app.py")

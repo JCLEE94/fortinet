@@ -8,6 +8,12 @@ from datetime import datetime
 
 from flask import Blueprint, request
 
+from utils.api_utils import get_data_source
+from utils.route_helpers import standard_api_response
+from utils.security import rate_limit
+from utils.unified_cache_manager import get_cache_manager
+from utils.unified_logger import get_logger
+
 # from src.utils.api_optimizer import get_api_optimizer, optimized_response
 
 
@@ -17,13 +23,6 @@ def optimized_response(**kwargs):
         return func
 
     return decorator
-
-
-from utils.api_utils import get_data_source
-from utils.route_helpers import standard_api_response
-from utils.security import rate_limit
-from utils.unified_cache_manager import get_cache_manager
-from utils.unified_logger import get_logger
 
 
 # Stub functions for removed modules

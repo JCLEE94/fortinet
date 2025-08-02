@@ -15,9 +15,16 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_common(self):
         """API 공통 모듈 임포트 테스트"""
-        from src.utils.api_utils import (CacheMixin, ConnectionTestMixin, ErrorHandlingMixin, JsonRpcMixin,
-                                         MonitoringMixin, RequestRetryMixin, format_api_response,
-                                         sanitize_sensitive_data)
+        from src.utils.api_utils import (
+            CacheMixin,
+            ConnectionTestMixin,
+            ErrorHandlingMixin,
+            JsonRpcMixin,
+            MonitoringMixin,
+            RequestRetryMixin,
+            format_api_response,
+            sanitize_sensitive_data,
+        )
 
         # 기본 함수 테스트
         data = {"password": "secret123", "normal": "data"}

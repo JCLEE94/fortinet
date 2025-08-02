@@ -1328,7 +1328,10 @@ class FirewallRuleAnalyzer:
                                 "severity": "high",
                                 "type": "security_improvement",
                                 "issue": "ALL 설정 사용",
-                                "description": f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 출발지, 목적지, 서비스 모두 'ANY'를 사용하고 있어 보안 위험이 큽니다.",
+                                "description": (
+                                    f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 "
+                                    "출발지, 목적지, 서비스 모두 'ANY'를 사용하고 있어 보안 위험이 큽니다."
+                                ),
                                 "recommendation": "출발지, 목적지, 서비스를 필요한 최소 범위로 제한하세요.",
                             }
                         )
@@ -1340,7 +1343,10 @@ class FirewallRuleAnalyzer:
                                 "severity": "medium",
                                 "type": "security_improvement",
                                 "issue": "출발지 ANY 설정",
-                                "description": f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 출발지를 'ANY'로 설정하여 모든 출발지로부터의 접근을 허용하고 있습니다.",
+                                "description": (
+                                    f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 "
+                                    "출발지를 'ANY'로 설정하여 모든 출발지로부터의 접근을 허용하고 있습니다."
+                                ),
                                 "recommendation": "출발지를 필요한 IP 또는 네트워크 범위로 제한하세요.",
                             }
                         )
@@ -1352,7 +1358,10 @@ class FirewallRuleAnalyzer:
                                 "severity": "medium",
                                 "type": "security_improvement",
                                 "issue": "목적지 ANY 설정",
-                                "description": f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 목적지를 'ANY'로 설정하여 모든 목적지로의 접근을 허용하고 있습니다.",
+                                "description": (
+                                    f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 "
+                                    "목적지를 'ANY'로 설정하여 모든 목적지로의 접근을 허용하고 있습니다."
+                                ),
                                 "recommendation": "목적지를 필요한 IP 또는 네트워크 범위로 제한하세요.",
                             }
                         )
@@ -1364,7 +1373,10 @@ class FirewallRuleAnalyzer:
                                 "severity": "medium",
                                 "type": "security_improvement",
                                 "issue": "서비스 ANY 설정",
-                                "description": f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 서비스를 'ALL'로 설정하여 모든 포트와 프로토콜을 허용하고 있습니다.",
+                                "description": (
+                                    f"방화벽 '{firewall_id}'의 정책 {p_data['policy_id']}에서 "
+                                    "서비스를 'ALL'로 설정하여 모든 포트와 프로토콜을 허용하고 있습니다."
+                                ),
                                 "recommendation": "필요한 특정 서비스(포트/프로토콜)만 허용하도록 제한하세요.",
                             }
                         )
@@ -1394,7 +1406,10 @@ class FirewallRuleAnalyzer:
                                     "severity": "low",
                                     "type": "performance_improvement",
                                     "issue": "동일 구간 다중 정책",
-                                    "description": f"방화벽 '{firewall_id}'에서 {zones[0]} -> {zones[1]} 구간에 {len(policies)}개의 정책이 적용되고 있습니다.",
+                                    "description": (
+                                        f"방화벽 '{firewall_id}'에서 {zones[0]} -> {zones[1]} 구간에 "
+                                        f"{len(policies)}개의 정책이 적용되고 있습니다."
+                                    ),
                                     "recommendation": "가능한 경우 유사한 정책들을 하나로 통합하여 성능을 개선하고 관리를 단순화하세요.",
                                 }
                             )

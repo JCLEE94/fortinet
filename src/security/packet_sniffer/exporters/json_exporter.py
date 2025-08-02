@@ -161,9 +161,7 @@ class JSONExporter:
             # 분석 결과 처리
             processed_results = []
             for result in analysis_results:
-                processed_result = self._process_analysis_result(
-                    result, include_raw_packets
-                )
+                processed_result = self._process_analysis_result(result, include_raw_packets)
                 processed_results.append(processed_result)
 
             # 요약 통계 생성
@@ -290,9 +288,7 @@ class JSONExporter:
 
             # 통계 업데이트
             self.statistics["exported_files"] += 1
-            self.statistics["exported_records"] += self._count_statistics_records(
-                statistics
-            )
+            self.statistics["exported_records"] += self._count_statistics_records(statistics)
             self.statistics["total_size"] += file_size
             self.statistics["last_export"] = datetime.now().isoformat()
 
@@ -310,9 +306,7 @@ class JSONExporter:
             logger.error(f"통계 JSON 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def export_configuration(
-        self, config: Dict[str, Any], output_path: str
-    ) -> Dict[str, Any]:
+    def export_configuration(self, config: Dict[str, Any], output_path: str) -> Dict[str, Any]:
         """
         설정 데이터를 JSON으로 내보내기
 
@@ -367,9 +361,7 @@ class JSONExporter:
             logger.error(f"설정 JSON 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_count": 0}
 
-    def export_batch(
-        self, data_sets: List[Dict[str, Any]], output_dir: str
-    ) -> Dict[str, Any]:
+    def export_batch(self, data_sets: List[Dict[str, Any]], output_dir: str) -> Dict[str, Any]:
         """
         여러 데이터셋을 일괄 JSON으로 내보내기
 
@@ -435,9 +427,7 @@ class JSONExporter:
             logger.error(f"일괄 JSON 내보내기 오류: {e}")
             return {"success": False, "error": str(e), "exported_files": 0}
 
-    def _process_analysis_result(
-        self, result: Dict[str, Any], include_raw_packets: bool
-    ) -> Dict[str, Any]:
+    def _process_analysis_result(self, result: Dict[str, Any], include_raw_packets: bool) -> Dict[str, Any]:
         """분석 결과 처리"""
         processed = result.copy()
 
@@ -457,9 +447,7 @@ class JSONExporter:
 
         return processed
 
-    def _generate_analysis_summary(
-        self, analysis_results: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _generate_analysis_summary(self, analysis_results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """분석 결과 요약 생성"""
         from collections import Counter
 
@@ -510,10 +498,7 @@ class JSONExporter:
                 charts["protocol_pie_chart"] = {
                     "type": "pie",
                     "title": "Protocol Distribution",
-                    "data": [
-                        {"name": protocol, "value": count}
-                        for protocol, count in protocol_data.items()
-                    ],
+                    "data": [{"name": protocol, "value": count} for protocol, count in protocol_data.items()],
                 }
 
             # 시간별 트래픽 라인 차트 데이터
@@ -522,10 +507,7 @@ class JSONExporter:
                 charts["hourly_traffic_line_chart"] = {
                     "type": "line",
                     "title": "Hourly Traffic",
-                    "data": [
-                        {"time": hour, "packets": count}
-                        for hour, count in hourly_data.items()
-                    ],
+                    "data": [{"time": hour, "packets": count} for hour, count in hourly_data.items()],
                 }
 
             # 상위 IP 주소 바 차트 데이터
@@ -542,9 +524,7 @@ class JSONExporter:
 
         return charts
 
-    def _export_general_data(
-        self, data: Any, output_path: str, name: str
-    ) -> Dict[str, Any]:
+    def _export_general_data(self, data: Any, output_path: str, name: str) -> Dict[str, Any]:
         """일반 데이터 내보내기"""
         try:
             json_data = {
@@ -656,9 +636,7 @@ class JSONExporter:
 
         # 압축률 계산
         if stats["compressed_files"] > 0:
-            stats["compression_ratio"] = (
-                stats["compressed_files"] / stats["exported_files"]
-            )
+            stats["compression_ratio"] = stats["compressed_files"] / stats["exported_files"]
         else:
             stats["compression_ratio"] = 0.0
 
@@ -677,8 +655,6 @@ class JSONExporter:
 
 
 # 팩토리 함수
-def create_json_exporter(
-    indent: Optional[int] = 2, ensure_ascii: bool = False, compress: bool = False
-) -> JSONExporter:
+def create_json_exporter(indent: Optional[int] = 2, ensure_ascii: bool = False, compress: bool = False) -> JSONExporter:
     """JSON 내보내기 인스턴스 생성"""
     return JSONExporter(indent, ensure_ascii, compress)

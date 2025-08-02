@@ -197,19 +197,19 @@ class AutomationEngine:
             os.makedirs(backup_dir, exist_ok=True)
 
             # 설정 백업
-            config_path = os.path.join(backup_dir, f"config_{backup_result['backup_id']}.json")
+            # config_path = os.path.join(backup_dir, f"config_{backup_result['backup_id']}.json")
             # 실제로는 설정을 가져와 저장
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("configuration")
 
             # 정책 백업
-            policy_path = os.path.join(backup_dir, f"policies_{backup_result['backup_id']}.json")
+            # policy_path = os.path.join(backup_dir, f"policies_{backup_result['backup_id']}.json")
             await asyncio.sleep(1)
             backup_result["items_backed_up"].append("policies")
 
             # 로그 백업
             if params.get("include_logs", False):
-                log_path = os.path.join(backup_dir, f"logs_{backup_result['backup_id']}.tar.gz")
+                # log_path = os.path.join(backup_dir, f"logs_{backup_result['backup_id']}.tar.gz")
                 await asyncio.sleep(2)
                 backup_result["items_backed_up"].append("logs")
 

@@ -261,7 +261,8 @@ class PolicyAutomationEngine:
         )
 
         logger.info(
-            f"Deployment plan created for {request.ticket_id}: {len(target_firewalls)} firewalls, auto_approve={auto_approve}"
+            f"Deployment plan created for {request.ticket_id}: "
+            f"{len(target_firewalls)} firewalls, auto_approve={auto_approve}"
         )
         return plan
 

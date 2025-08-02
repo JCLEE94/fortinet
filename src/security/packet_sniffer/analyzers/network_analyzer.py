@@ -95,9 +95,7 @@ class NetworkAnalyzer:
         self.flow_stats = defaultdict(lambda: {"packets": 0, "bytes": 0})  # 플로우 통계
         self.port_stats = defaultdict(int)  # 포트 사용 통계
 
-    def analyze(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def analyze(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
         """
         네트워크 패킷 분석
 
@@ -122,9 +120,7 @@ class NetworkAnalyzer:
             ip_info = self._analyze_ip_layer(packet_data, packet_info)
             if ip_info:
                 analysis["ip_layer"] = ip_info
-                analysis["protocol_stack"].append(
-                    f"IP/{ip_info.get('version', 'unknown')}"
-                )
+                analysis["protocol_stack"].append(f"IP/{ip_info.get('version', 'unknown')}")
 
             # 전송 계층 분석
             protocol = packet_info.get("protocol")
@@ -133,9 +129,7 @@ class NetworkAnalyzer:
                 if tcp_analysis:
                     analysis["tcp_layer"] = tcp_analysis
                     analysis["protocol_stack"].append("TCP")
-                    analysis["connection_state"] = tcp_analysis.get(
-                        "connection_state", {}
-                    )
+                    analysis["connection_state"] = tcp_analysis.get("connection_state", {})
 
             elif protocol == "UDP":
                 udp_analysis = self._analyze_udp(packet_data, packet_info)
@@ -170,9 +164,7 @@ class NetworkAnalyzer:
                 "timestamp": packet_info.get("timestamp", datetime.now().isoformat()),
             }
 
-    def _analyze_ip_layer(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_ip_layer(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """IP 계층 분석"""
         try:
             if len(packet_data) < 20:
@@ -195,9 +187,7 @@ class NetworkAnalyzer:
             logger.error(f"IP 계층 분석 오류: {e}")
             return None
 
-    def _analyze_ipv4(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _analyze_ipv4(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
         """IPv4 헤더 분석"""
         try:
             if len(packet_data) < 20:
@@ -260,9 +250,7 @@ class NetworkAnalyzer:
             logger.error(f"IPv4 분석 오류: {e}")
             return {"version": 4, "error": str(e)}
 
-    def _analyze_ipv6(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _analyze_ipv6(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
         """IPv6 헤더 분석"""
         try:
             if len(packet_data) < 40:
@@ -289,9 +277,7 @@ class NetworkAnalyzer:
                 "flow_label": flow_label,
                 "payload_length": payload_length,
                 "next_header": next_header,
-                "next_header_name": self.IP_PROTOCOLS.get(
-                    next_header, f"unknown_{next_header}"
-                ),
+                "next_header_name": self.IP_PROTOCOLS.get(next_header, f"unknown_{next_header}"),
                 "hop_limit": hop_limit,
                 "src_ip": src_ip,
                 "dst_ip": dst_ip,
@@ -317,9 +303,7 @@ class NetworkAnalyzer:
                     break
 
                 opt_type = options_data[offset]
-                opt_length = (
-                    options_data[offset + 1] if offset + 1 < len(options_data) else 0
-                )
+                opt_length = options_data[offset + 1] if offset + 1 < len(options_data) else 0
 
                 if opt_length < 2 or offset + opt_length > len(options_data):
                     break
@@ -347,15 +331,11 @@ class NetworkAnalyzer:
 
         return options
 
-    def _analyze_tcp(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_tcp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """TCP 세그먼트 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (
-                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
-            )
+            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
             tcp_start = ip_header_length
 
             if len(packet_data) < tcp_start + 20:
@@ -476,9 +456,7 @@ class NetworkAnalyzer:
 
         return options
 
-    def _track_tcp_connection(
-        self, tcp_info: Dict[str, Any], packet_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _track_tcp_connection(self, tcp_info: Dict[str, Any], packet_info: Dict[str, Any]) -> Dict[str, Any]:
         """TCP 연결 상태 추적"""
         try:
             src_ip = packet_info.get("src_ip")
@@ -534,24 +512,18 @@ class NetworkAnalyzer:
                 "direction": direction,
                 "packets": connection["packets"],
                 "bytes": connection["bytes"],
-                "duration": self._calculate_duration(
-                    connection["start_time"], packet_info.get("timestamp")
-                ),
+                "duration": self._calculate_duration(connection["start_time"], packet_info.get("timestamp")),
             }
 
         except Exception as e:
             logger.error(f"TCP 연결 추적 오류: {e}")
             return {"state": "ERROR", "error": str(e)}
 
-    def _analyze_udp(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_udp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """UDP 데이터그램 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (
-                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
-            )
+            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
             udp_start = ip_header_length
 
             if len(packet_data) < udp_start + 8:
@@ -586,15 +558,11 @@ class NetworkAnalyzer:
             logger.error(f"UDP 분석 오류: {e}")
             return None
 
-    def _analyze_icmp(
-        self, packet_data: bytes, packet_info: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+    def _analyze_icmp(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """ICMP 메시지 분석"""
         try:
             # IP 헤더 길이 계산
-            ip_header_length = (
-                (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
-            )
+            ip_header_length = (packet_data[0] & 0xF) * 4 if len(packet_data) > 0 else 20
             icmp_start = ip_header_length
 
             if len(packet_data) < icmp_start + 8:
@@ -716,10 +684,7 @@ class NetworkAnalyzer:
             return {
                 "total_flows": len(self.flow_stats),
                 "total_connections": len(self.connections),
-                "top_flows": [
-                    {"flow": f[0], "packets": f[1]["packets"], "bytes": f[1]["bytes"]}
-                    for f in top_flows
-                ],
+                "top_flows": [{"flow": f[0], "packets": f[1]["packets"], "bytes": f[1]["bytes"]} for f in top_flows],
                 "top_ports": [
                     {
                         "port": p[0],
@@ -734,9 +699,7 @@ class NetworkAnalyzer:
             logger.error(f"통계 생성 오류: {e}")
             return {}
 
-    def _detect_anomalies(
-        self, analysis: Dict[str, Any], packet_info: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _detect_anomalies(self, analysis: Dict[str, Any], packet_info: Dict[str, Any]) -> List[Dict[str, Any]]:
         """네트워크 이상 징후 검사"""
         anomalies = []
 
@@ -769,10 +732,7 @@ class NetworkAnalyzer:
                 )
 
             # 프래그먼트 이상
-            if (
-                ip_layer.get("flags", {}).get("more_fragments")
-                and ip_layer.get("fragment_offset", 0) == 0
-            ):
+            if ip_layer.get("flags", {}).get("more_fragments") and ip_layer.get("fragment_offset", 0) == 0:
                 anomalies.append(
                     {
                         "type": "fragment_anomaly",
@@ -919,9 +879,7 @@ class NetworkAnalyzer:
 
         return anomalies
 
-    def _check_icmp_anomalies(
-        self, icmp_info: Dict[str, Any], packet_info: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _check_icmp_anomalies(self, icmp_info: Dict[str, Any], packet_info: Dict[str, Any]) -> List[Dict[str, Any]]:
         """ICMP 이상 징후 검사"""
         anomalies = []
 

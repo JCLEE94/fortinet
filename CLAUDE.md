@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FortiGate Nextrade is a comprehensive network monitoring and analysis platform that integrates with FortiGate firewalls, FortiManager, and ITSM systems. Designed for closed network (offline) environments.
+FortiGate Nextrade is a comprehensive network monitoring and analysis platform that integrates with FortiGate firewalls, FortiManager, and ITSM systems. Designed for closed network (offline) environments with both monolithic and microservices architecture support.
 
 **Key Features:**
 - Mock FortiGate subsystem for hardware-free development
 - FortiManager Advanced Hub with AI-driven policy orchestration
+- Real-time packet capture and analysis
 - Offline-first design with comprehensive fallback mechanisms
+- Dual architecture: Monolithic (legacy) + MSA (microservices)
 - GitOps CI/CD with Helm charts, Harbor Registry, ChartMuseum, and ArgoCD
 
 ## Architecture
@@ -22,6 +24,7 @@ FortiGate Nextrade is a comprehensive network monitoring and analysis platform t
 - **Orchestration**: Kubernetes + ArgoCD GitOps
 - **CI/CD**: GitHub Actions (self-hosted runners) → Harbor Registry → ChartMuseum → ArgoCD
 - **Ingress**: Traefik (not NGINX)
+- **MSA Infrastructure**: Kong Gateway, Consul, RabbitMQ
 
 ### Critical Patterns
 
@@ -61,7 +64,6 @@ from api.clients.fortigate_api_client import FortiGateAPIClient
 
 # Wrong - absolute imports cause ModuleNotFoundError
 from src.utils.unified_logger import get_logger
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
 ```
 
 ## Development Commands
@@ -71,7 +73,7 @@ from src.api.clients.fortigate_api_client import FortiGateAPIClient
 # Install dependencies
 pip install -r requirements.txt
 
-# Run application
+# Run application (monolithic mode)
 cd src && python main.py --web
 
 # Run with mock mode
@@ -86,6 +88,26 @@ pytest --cov=src --cov-report=html -v      # With coverage
 
 # Code quality
 black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503
+
+# Run feature test (validates 10 core features)
+cd src && python3 test_features.py
+```
+
+### MSA Development
+```bash
+# Start full MSA stack
+docker-compose -f docker-compose.msa.yml up -d
+
+# Configure Kong Gateway routes
+./scripts/setup-kong-routes.sh
+
+# Check service status
+docker-compose -f docker-compose.msa.yml ps
+
+# Access MSA endpoints
+# Kong Gateway: http://localhost:8000
+# Consul UI: http://localhost:8500
+# RabbitMQ UI: http://localhost:15672
 ```
 
 ### Docker Development
@@ -107,7 +129,6 @@ docker run -d --name fortigate-nextrade \
 curl http://192.168.50.110:30777/api/health  # Current NodePort
 curl http://fortinet.jclee.me/api/health     # Domain (needs /etc/hosts entry)
 
-
 # Monitor ArgoCD deployment
 argocd app get fortinet
 argocd app sync fortinet
@@ -119,7 +140,12 @@ kubectl logs -l app=fortinet -n fortinet -f
 
 ## Testing Framework
 
-### Custom Rust-Style Inline Testing
+### Pytest Configuration
+- **Markers**: `slow`, `integration`, `unit`, `fortimanager`, `monitoring`
+- **Coverage target**: 5% minimum (configurable in pytest.ini)
+- **Test discovery**: `tests/` directory
+
+### Custom Rust-Style Testing Framework
 ```python
 from src.utils.integration_test_framework import test_framework
 
@@ -136,24 +162,33 @@ python src/utils/test_master_integration_suite.py
 # Features: Phase-based execution, parallel testing, comprehensive results
 ```
 
-### Test Categories (pytest.ini markers)
-- `slow`: Long-running tests
-- `integration`: Integration tests
-- `unit`: Unit tests
-- `fortimanager`: FortiManager-specific tests
-- `monitoring`: Monitoring system tests
+## Key Components
 
-## FortiManager Advanced Hub
-
+### FortiManager Advanced Hub
 Four specialized modules accessible via:
 ```python
 hub = FortiManagerAdvancedHub(api_client)
 ```
 
-1. **Policy Orchestration**: `hub.policy_orchestrator`
-2. **Compliance Automation**: `hub.compliance_framework`
-3. **Security Fabric**: `hub.security_fabric`
-4. **Advanced Analytics**: `hub.analytics_engine`
+1. **Policy Orchestrator**: `hub.policy_orchestrator` - AI-driven policy management
+2. **Compliance Framework**: `hub.compliance_framework` - Automated compliance checks
+3. **Security Fabric**: `hub.security_fabric` - Integrated security management
+4. **Analytics Engine**: `hub.analytics_engine` - Advanced analytics and reporting
+
+### Packet Sniffer System
+Located in `src/security/packet_sniffer/`:
+- **Analyzers**: Protocol-specific analysis (DNS, HTTP, TLS, FortiManager)
+- **Filters**: BPF and advanced packet filtering
+- **Exporters**: Multiple format support (CSV, JSON, PCAP, Reports)
+- **Inspectors**: Deep packet inspection capabilities
+- **Session Management**: Stateful packet tracking
+
+### ITSM Integration
+Located in `src/itsm/`:
+- **Ticket Automation**: Automated ticket creation/updates
+- **Policy Requests**: Firewall policy request workflows
+- **Approval Workflows**: Multi-level approval processes
+- **ServiceNow Integration**: API client for ServiceNow
 
 ## CI/CD Pipeline
 
@@ -172,45 +207,68 @@ hub = FortiManagerAdvancedHub(api_client)
 - `DEPLOYMENT_HOST`: 192.168.50.110
 - `DEPLOYMENT_PORT`: 30777
 
-### Current Deployment
-- **Active NodePort**: 30777 (standard configuration)
-- **Domain**: http://fortinet.jclee.me (HTTP only, TLS issues)
-- **DNS Fix**: Add `192.168.50.110 fortinet.jclee.me` to `/etc/hosts`
-
 ## Project Structure
 ```
 fortinet/
-├── src/                # 139 Python files
-│   ├── web_app.py     # Flask factory (8 blueprints)
-│   ├── routes/        # Blueprint routes
-│   ├── api/clients/   # External API clients (4)
-│   ├── fortimanager/  # Advanced features (5 modules)
-│   ├── itsm/          # ITSM integration (7 modules)
-│   ├── utils/         # Utilities (17 modules)
-│   └── templates/     # Jinja2 templates (20)
-├── tests/             # 62 test files
-│   ├── unit/          # Unit tests
-│   ├── integration/   # Integration tests (70+ endpoints)
-│   └── manual/        # Manual test suite (26 files)
-├── charts/fortinet/   # Helm chart (Traefik ingress)
-├── .github/workflows/ # CI/CD (self-hosted runners)
-└── requirements.txt   # Python dependencies
+├── src/                      # Monolithic application (139 Python files)
+│   ├── web_app.py           # Flask factory (8 blueprints)
+│   ├── main.py              # Entry point
+│   ├── routes/              # Blueprint routes (8 modules)
+│   ├── api/clients/         # External API clients (4)
+│   ├── fortimanager/        # Advanced features (5 modules)
+│   ├── itsm/                # ITSM integration (7 modules)
+│   ├── security/            # Security components
+│   │   └── packet_sniffer/  # Packet capture system
+│   ├── monitoring/          # Monitoring system
+│   ├── analysis/            # Analysis engines
+│   ├── utils/               # Utilities (17 modules)
+│   └── templates/           # Jinja2 templates (20)
+├── services/                # MSA microservices
+│   ├── auth/                # Authentication service (8081)
+│   ├── fortimanager/        # FortiManager service (8082)
+│   ├── itsm/                # ITSM service (8083)
+│   ├── monitoring/          # Monitoring service (8084)
+│   ├── security/            # Security service (8085)
+│   ├── analysis/            # Analysis service (8086)
+│   └── config/              # Configuration service (8087)
+├── tests/                   # Test suite (62 files)
+│   ├── unit/                # Unit tests
+│   ├── integration/         # Integration tests (70+ endpoints)
+│   ├── manual/              # Manual test suite (26 files)
+│   └── msa/                 # MSA-specific tests
+├── charts/fortinet/         # Helm chart (Traefik ingress)
+├── docker-compose.msa.yml   # MSA development stack
+├── .github/workflows/       # CI/CD (self-hosted runners)
+└── requirements.txt         # Python dependencies
 ```
 
 ## Key API Endpoints
 
-### Core
+### Core APIs (Monolithic)
 - `GET /api/health` - Health check
 - `GET/POST /api/settings` - Settings management
 
-### FortiManager
+### FortiManager APIs
 - `POST /api/fortimanager/analyze-packet-path` - Packet path analysis
 - `GET /api/fortimanager/devices` - List devices
 - `POST /api/fortimanager/policies` - Get policies
+- `GET /api/fortimanager/compliance` - Compliance status
 
-### Logs
+### ITSM APIs
+- `GET/POST /api/itsm/tickets` - Ticket management
+- `POST /api/itsm/policy-requests` - Policy request automation
+- `GET /api/itsm/approvals` - Approval workflows
+
+### Monitoring APIs
 - `GET /api/logs/stream` - Real-time log streaming (SSE)
 - `GET /api/logs/container` - Container logs
+- `GET /api/monitoring/metrics` - System metrics
+- `GET /api/monitoring/alerts` - Alert management
+
+### Security APIs
+- `POST /api/security/scan` - Security scanning
+- `GET /api/security/packets` - Packet analysis results
+- `GET /api/security/threats` - Threat detection
 
 ## Environment Variables
 
@@ -218,10 +276,18 @@ fortinet/
 - `APP_MODE`: `production` | `test` | `development`
 - `OFFLINE_MODE`: `true` | `false`
 - `WEB_APP_PORT`: Default `7777`
+- `SECRET_KEY`: Required for production
 
 ### API Configuration
 - `FORTIMANAGER_HOST`, `FORTIMANAGER_API_KEY`
 - `FORTIGATE_HOST`, `FORTIGATE_API_KEY`
+- `ITSM_BASE_URL`, `ITSM_API_KEY`
+
+### MSA Configuration
+- `CONSUL_URL`: Service discovery
+- `RABBITMQ_URL`: Message queue
+- `REDIS_URL`: Cache backend
+- `KONG_ADMIN_URL`: API Gateway admin
 
 ## Common Issues & Solutions
 
@@ -230,10 +296,25 @@ fortinet/
 sudo lsof -ti:7777 | xargs kill -9
 ```
 
+### Import Errors
+Ensure you're running from the correct directory:
+```bash
+cd src && python main.py --web  # Correct
+python src/main.py --web        # Wrong - causes import errors
+```
+
+### Mock Mode Not Working
+Check environment variable:
+```bash
+export APP_MODE=test
+python src/main.py --web
+```
+
 ### Domain Access Issues
-1. Check DNS: `nslookup fortinet.jclee.me`
-2. Add to hosts: `echo "192.168.50.110 fortinet.jclee.me" | sudo tee -a /etc/hosts`
-3. Verify ingress: `kubectl get ingress fortinet -n fortinet`
+Add to hosts file:
+```bash
+echo "192.168.50.110 fortinet.jclee.me" | sudo tee -a /etc/hosts
+```
 
 ### ArgoCD Sync Issues
 ```bash
@@ -241,31 +322,12 @@ sudo lsof -ti:7777 | xargs kill -9
 kubectl create secret docker-registry harbor-registry \
   --docker-server=registry.jclee.me \
   --docker-username=admin \
-  --docker-password=bingogo1 \
+  --docker-password=$PASSWORD \
   -n fortinet
 
 # Force sync
 argocd app sync fortinet --prune
 ```
-
-## GitOps Workflow Status
-
-### Pipeline Verification
-```bash
-# Check pipeline status
-gh run list --workflow="GitOps CI/CD Pipeline" --limit 3
-
-# Monitor current run
-gh run watch <run-id> --exit-status
-
-# Cancel stuck runs
-gh run cancel <run-id>
-```
-
-### Common Pipeline Issues
-- **Verification timeout**: Health check may take 5-10 minutes due to ArgoCD sync delays
-- **NodePort conflicts**: Use `kubectl get svc --all-namespaces | grep 30777` to check port usage
-- **Service updates**: May require manual service recreation for NodePort changes
 
 ## Development Guidelines
 
@@ -275,107 +337,61 @@ gh run cancel <run-id>
 - Call `super().__init__()` when extending API clients
 - Run tests before committing: `pytest tests/ -v`
 - Use environment variables instead of hardcoded values
-- Monitor GitOps pipeline after commits to master
+- Run code quality checks: `black src/ && isort src/ && flake8 src/`
+- Use the custom test framework for integration tests
 
 ### Don'ts
-- Don't hardcode IPs or URLs - all removed and replaced with env vars
+- Don't use absolute imports within src/ directory
+- Don't hardcode IPs, URLs, or credentials
 - Don't bypass the mock system when `APP_MODE=test`
 - Don't forget session management in API clients
-- Don't use uppercase in Docker image names (use lowercase)
+- Don't use uppercase in Docker image names
+- Don't commit without running the linter
 
-### Current State Notes
+### Testing Best Practices
+- Mark tests appropriately: `@pytest.mark.unit`, `@pytest.mark.integration`
+- Use fixtures for common test data
+- Mock external API calls in unit tests
+- Use `APP_MODE=test` for integration tests
+- Run the feature test to validate core functionality: `python src/test_features.py`
+
+## MSA Service Architecture
+
+### Service Ports
+- **Kong Gateway**: 8000 (proxy), 8001 (admin), 8002 (GUI)
+- **Auth Service**: 8081
+- **FortiManager Service**: 8082
+- **ITSM Service**: 8083
+- **Monitoring Service**: 8084
+- **Security Service**: 8085
+- **Analysis Service**: 8086
+- **Configuration Service**: 8087
+- **Consul**: 8500
+- **RabbitMQ**: 5672 (AMQP), 15672 (Management)
+
+### Service Communication
+- All external requests go through Kong Gateway
+- Services discover each other via Consul
+- Async messaging via RabbitMQ
+- Shared cache via Redis
+
+## Recent Updates & Current State
+
+### System Status
 - **ALL hardcoded values removed** - project uses environment variables
-- Package management uses `requirements.txt` (not pyproject.toml)
-- Ingress controller is Traefik (not NGINX)
-- TLS is currently disabled due to certificate issues
-- GitHub Actions uses self-hosted runners
-- Harbor Registry image path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
-- Helm chart version: 1.0.5 (NodePort standardized to 30777)
+- **Import paths fixed** - 79 files converted to relative imports
+- **Feature test passing** - 10/10 core features verified
+- **NodePort standardized** - Consistent use of 30777
+- **MSA architecture implemented** - 7 microservices with full infrastructure
 
-## Recent Updates & Fixes Applied
+### Code Quality Metrics
+- **Black formatting**: Applied to all Python files
+- **Import sorting**: Fixed with isort
+- **Flake8 compliance**: 269 issues remaining (down from 338)
+- **Test coverage**: Growing (minimum 5% enforced)
 
-### MSA Infrastructure Implementation (v2.1.0 - July 28, 2025)
-- **Complete MSA Architecture**: Implemented full microservice architecture with 7 independent services
-- **Kong API Gateway**: Centralized API routing on port 8000 with admin interface on 8001
-- **Service Discovery**: Consul-based service registry and discovery on port 8500
-- **Message Queue**: RabbitMQ integration for asynchronous service communication (5672, 15672)
-- **MSA Development Environment**: Complete `docker-compose.msa.yml` for local MSA development
-
-### MSA Service Architecture
-- **Auth Service (8081)**: JWT authentication, user management, API key validation
-- **FortiManager Service (8082)**: Device management, policy orchestration, compliance automation
-- **ITSM Service (8083)**: Ticket automation, policy requests, approval workflows
-- **Monitoring Service (8084)**: Real-time metrics, alerting, log aggregation
-- **Security Service (8085)**: Packet analysis, threat detection, security scanning
-- **Analysis Service (8086)**: Policy analysis, path tracing, network visualization
-- **Configuration Service (8087)**: Centralized config management, settings synchronization
-
-### Code Quality Improvements (Completed)
-- **Black Formatting**: Applied to 52 files for consistent code style
-- **Import Organization**: Fixed import sorting with isort across 47 files  
-- **Flake8 Linting**: Reduced errors from 338 → 269 by fixing bare except statements
-- **Type Annotations**: Fixed mypy errors, replaced `any` with `Any` from typing module
-
-### Enhanced Temporary File Management
-- **Collision Prevention**: Added timestamps and PIDs to temp file names
-- **Enhanced Paths**: Updated `src/config/paths.py` with `get_enhanced_temp_file_path()`
-- **Test Framework**: Improved temp file handling in integration test framework
-
-### Integration Testing Implementation
-- **Comprehensive Test Suite**: Created 6 major integration test files using Rust-style decorators
-- **API Clients**: Full lifecycle testing for FortiGate, FortiManager, FortiAnalyzer clients
-- **Authentication**: Session management and API key validation testing
-- **Data Pipeline**: End-to-end testing from packet capture to visualization
-- **ITSM Workflows**: Ticket creation, policy requests, approval workflows
-- **Monitoring**: Real-time log streaming, alerting, health checks
-
-### ArgoCD Sync Resolution
-- **NodePort Consolidation**: Fixed port 30777 conflict by merging dual services
-- **Service Configuration**: Updated values.yaml and service.yaml templates
-- **Chart Version**: Bumped to 1.0.3 with proper versioning
-
-### GitOps Pipeline Validation
-- **Health Checks**: Automated deployment verification on NodePort 30777
-- **Build Optimization**: Multi-stage Docker builds with caching
-- **Registry Integration**: Seamless Harbor → ChartMuseum → ArgoCD flow
-
-### Recent System Fixes (Latest)
-- **Import Path Resolution**: Fixed 79 files with absolute→relative import conversion
-- **Feature Testing Framework**: Comprehensive 10-module test suite achieving 100% success rate
-- **ArgoCD Port Configuration**: Standardized on NodePort 30777 for stable deployment
-- **Configuration System**: Added ThresholdConfig to unified settings for monitoring compatibility
-- **Cache Manager**: Fixed stats reporting for proper metrics display
-- **System Status**: All 10 core features verified working (Basic Imports, Flask App, API Clients, FortiManager Hub, ITSM Automation, Monitoring, Security, Data Pipeline, Caching, API Endpoints)
-
-### MSA Development Commands
-```bash
-# MSA 전체 환경 실행
-docker-compose -f docker-compose.msa.yml up -d
-
-# Kong Gateway 라우트 설정
-./scripts/setup-kong-routes.sh
-
-# 서비스 상태 확인
-docker-compose -f docker-compose.msa.yml ps
-
-# 개별 서비스 로그 확인
-docker-compose -f docker-compose.msa.yml logs auth-service
-docker-compose -f docker-compose.msa.yml logs fortimanager-service
-
-# MSA 엔드포인트 테스트
-curl http://localhost:8000/auth/health          # Kong 통한 Auth 서비스
-curl http://localhost:8000/fortimanager/devices # Kong 통한 FortiManager 서비스
-curl http://localhost:8500/ui/                  # Consul UI
-curl http://localhost:15672/                    # RabbitMQ Management UI
-```
-
-### Feature Testing Command
-```bash
-# Run comprehensive feature test (100% success rate)
-cd src && python3 test_features.py
-
-# Expected output: 10/10 tests passing
-# ✅ Working Features: Basic Imports, Flask App Creation, API Clients, 
-#    FortiManager Advanced Hub, ITSM Automation, Monitoring System,
-#    Security Features, Data Pipeline, Caching System, API Endpoints
-```
+### Deployment Notes
+- Harbor Registry path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
+- Helm chart version: 1.0.5
+- TLS currently disabled due to certificate issues
+- Self-hosted GitHub Actions runners in use

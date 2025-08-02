@@ -240,7 +240,11 @@ class ExternalITSMConnector:
         """Jira Service Management 티켓 조회"""
         url = f"{self.config.base_url}{endpoint}"
 
-        jql = f'project = "IT" AND created >= "{since.strftime("%Y-%m-%d")}" AND (summary ~ "firewall" OR description ~ "firewall" OR summary ~ "방화벽" OR description ~ "방화벽")'
+        jql = (
+            f'project = "IT" AND created >= "{since.strftime("%Y-%m-%d")}" AND '
+            '(summary ~ "firewall" OR description ~ "firewall" OR '
+            'summary ~ "방화벽" OR description ~ "방화벽")'
+        )
 
         params = {
             "jql": jql,
@@ -524,9 +528,6 @@ class ExternalITSMConnector:
 
     async def _update_jira_ticket(self, ticket_id: str, status: str, comment: str) -> bool:
         """Jira 티켓 상태 업데이트"""
-        # 상태 변경
-        transition_url = f"{self.config.base_url}/rest/api/2/issue/{ticket_id}/transitions"
-
         # 코멘트 추가
         comment_url = f"{self.config.base_url}/rest/api/2/issue/{ticket_id}/comment"
         comment_data = {"body": f"FortiGate Nextrade: {comment}"}
