@@ -14,8 +14,8 @@ from typing import Dict, Optional
 
 import psutil
 
-from ..base import HealthCheckMixin, MonitoringBase, ThresholdMixin
-from ..config import get_config
+from monitoring.base import HealthCheckMixin, MonitoringBase, ThresholdMixin
+from monitoring.config import get_config
 
 logger = logging.getLogger(__name__)
 

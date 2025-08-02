@@ -17,7 +17,9 @@ from utils.unified_logger import get_logger
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
 
-class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
+class FortiManagerAPIClient(
+    BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin
+):
     """
     FortiManager API Client for central management of FortiGate devices
     Inherits common functionality from BaseApiClient and uses common mixins
@@ -60,7 +62,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         self.session_id = None
         self.transaction_id = None
         self.request_id = 1  # JSON-RPC request ID counter
-        self.adom = os.getenv("FORTIMANAGER_DEFAULT_ADOM", "root")  # Default administrative domain
+        self.adom = os.getenv(
+            "FORTIMANAGER_DEFAULT_ADOM", "root"
+        )  # Default administrative domain
         self.auth_headers = {}  # Store successful auth headers
 
         # Configuration for API endpoints
@@ -79,7 +83,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         # API client extensions
         self._extensions = {}
 
-    def build_json_rpc_request(self, method: str, url: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def build_json_rpc_request(
+        self, method: str, url: str, data: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Build JSON-RPC request payload for FortiManager API
 
@@ -128,7 +134,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         )
 
         # Make login request
-        success, result, status_code = self._make_request("POST", self.base_url, payload, None, self.headers)
+        success, result, status_code = self._make_request(
+            "POST", self.base_url, payload, None, self.headers
+        )
 
         if success:
             # Parse response using common mixin
@@ -142,7 +150,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                 self.logger.error(f"FortiManager API login failed: {parsed_data}")
                 return False
         else:
-            self.logger.error(f"FortiManager API login failed: {status_code} - {result}")
+            self.logger.error(
+                f"FortiManager API login failed: {status_code} - {result}"
+            )
             return False
 
     def test_token_auth(self):
@@ -170,18 +180,23 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             headers.update(auth_headers)
 
             try:
-                success, result, status_code = self._make_request("POST", self.base_url, payload, None, headers)
+                success, result, status_code = self._make_request(
+                    "POST", self.base_url, payload, None, headers
+                )
 
                 if success and result:
                     parsed_success, parsed_data = self.parse_json_rpc_response(result)
 
                     # Check if we got actual data or just permission error
                     if parsed_success or (
-                        isinstance(parsed_data, dict) and parsed_data.get("status", {}).get("code") != -11
+                        isinstance(parsed_data, dict)
+                        and parsed_data.get("status", {}).get("code") != -11
                     ):
                         self.auth_method = "token"
                         self.auth_headers = auth_headers
-                        self.logger.info(f"Token authentication successful with method {i+1}")
+                        self.logger.info(
+                            f"Token authentication successful with method {i+1}"
+                        )
                         return True
                     elif parsed_data.get("status", {}).get("code") == -11:
                         self.logger.warning(
@@ -189,7 +204,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                         )
                         # 권한 문제 시 세션 인증으로 자동 전환 시도
                         if self.username and self.password:
-                            self.logger.info("Attempting session authentication due to API permission error")
+                            self.logger.info(
+                                "Attempting session authentication due to API permission error"
+                            )
                             return False  # login() 메서드가 호출되도록 함
                         continue
 
@@ -266,7 +283,11 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
 
         # Add token to headers if using token auth
         headers = self.headers.copy()
-        if self.auth_method == "token" and self.api_token and hasattr(self, "auth_headers"):
+        if (
+            self.auth_method == "token"
+            and self.api_token
+            and hasattr(self, "auth_headers")
+        ):
             headers.update(self.auth_headers)
         elif self.auth_method == "token" and self.api_token:
             headers["Authorization"] = f"Bearer {self.api_token}"
@@ -282,7 +303,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                 return True, parsed_data
             else:
                 # Check if authentication error
-                if "No permission" in str(parsed_data) or "Invalid session" in str(parsed_data):
+                if "No permission" in str(parsed_data) or "Invalid session" in str(
+                    parsed_data
+                ):
                     self.logger.warning("Authentication error, attempting to re-login")
                     if self.login():
                         # Retry request with new session
@@ -297,7 +320,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                             "POST", self.base_url, payload, None, self.headers
                         )
                         if retry_success:
-                            parsed_success, parsed_data = self.parse_json_rpc_response(retry_result)
+                            parsed_success, parsed_data = self.parse_json_rpc_response(
+                                retry_result
+                            )
                             return parsed_success, parsed_data
 
                 return False, parsed_data
@@ -320,7 +345,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                 self.logger.debug("Returning cached ADOM list")
                 return cached_data
 
-        success, result = self._make_api_request(method="get", url="/dvmdb/adom", timeout=10)  # 10 second timeout
+        success, result = self._make_api_request(
+            method="get", url="/dvmdb/adom", timeout=10
+        )  # 10 second timeout
 
         if success:
             # Cache the result
@@ -354,7 +381,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         Returns:
             list: Managed devices or empty list on failure
         """
-        success, result = self._make_api_request(method="get", url=f"/dvmdb/adom/{adom}/device")
+        success, result = self._make_api_request(
+            method="get", url=f"/dvmdb/adom/{adom}/device"
+        )
 
         if success:
             return result if isinstance(result, list) else []
@@ -373,7 +402,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         Returns:
             dict: Device status or None on failure
         """
-        success, result = self._make_api_request(method="get", url=f"/dvmdb/adom/{adom}/device/{device_name}")
+        success, result = self._make_api_request(
+            method="get", url=f"/dvmdb/adom/{adom}/device/{device_name}"
+        )
 
         if success:
             return result
@@ -468,7 +499,11 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                                 all_devices = devices
                                 break
 
-                devices_to_analyze = [dev.get("name") for dev in all_devices if dev.get("name")] if all_devices else []
+                devices_to_analyze = (
+                    [dev.get("name") for dev in all_devices if dev.get("name")]
+                    if all_devices
+                    else []
+                )
 
                 # If still no devices, return error
                 if not devices_to_analyze:
@@ -499,7 +534,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                 try:
                     # Get device info
                     device_info = self.get_device_info(device)
-                    hostname = device_info.get("hostname", device) if device_info else device
+                    hostname = (
+                        device_info.get("hostname", device) if device_info else device
+                    )
 
                     # Get routing information
                     routes = self.get_routes(device, vdom)
@@ -534,15 +571,21 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
 
                     # Find matching route for destination
                     for route in routes:
-                        if self._ip_in_subnet(dst_ip, route.get("dst", ""), route.get("netmask", "")):
+                        if self._ip_in_subnet(
+                            dst_ip, route.get("dst", ""), route.get("netmask", "")
+                        ):
                             device_analysis["matching_route"] = route
-                            device_analysis["egress_interface"] = route.get("device", route.get("interface"))
+                            device_analysis["egress_interface"] = route.get(
+                                "device", route.get("interface")
+                            )
                             break
 
                     # Find ALL applicable policies (not just first match)
                     matching_policies = []
                     for policy in policies:
-                        if self._policy_matches_traffic(policy, src_ip, dst_ip, port, protocol):
+                        if self._policy_matches_traffic(
+                            policy, src_ip, dst_ip, port, protocol
+                        ):
                             # Add device hostname to policy info
                             policy_info = policy.copy()
                             policy_info["device_hostname"] = hostname
@@ -566,13 +609,17 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                     # Determine action based on policies
                     if matching_policies:
                         # Check all matching policies - if any denies, traffic is denied
-                        actions = [p.get("action", "unknown") for p in matching_policies]
+                        actions = [
+                            p.get("action", "unknown") for p in matching_policies
+                        ]
                         if "deny" in actions:
                             device_analysis["action"] = "deny"
                         elif "accept" in actions:
                             device_analysis["action"] = "accept"
                         else:
-                            device_analysis["action"] = actions[0] if actions else "unknown"
+                            device_analysis["action"] = (
+                                actions[0] if actions else "unknown"
+                            )
                     else:
                         # No matching policy - implicit deny
                         device_analysis["action"] = "deny"
@@ -581,14 +628,19 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                     path_analysis["devices_analyzed"].append(device_analysis)
 
                     # Build packet path
-                    if device_analysis["ingress_interface"] or device_analysis["egress_interface"]:
+                    if (
+                        device_analysis["ingress_interface"]
+                        or device_analysis["egress_interface"]
+                    ):
                         path_hop = {
                             "device": device,
                             "hostname": hostname,
                             "ingress": device_analysis["ingress_interface"],
                             "egress": device_analysis["egress_interface"],
                             "action": device_analysis["action"],
-                            "policies_matched": len(device_analysis["applied_policies"]),
+                            "policies_matched": len(
+                                device_analysis["applied_policies"]
+                            ),
                         }
                         path_analysis["packet_path"].append(path_hop)
 
@@ -621,7 +673,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             }
 
     # Device Settings vs Security Settings Management
-    def get_device_global_settings(self, device_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_device_global_settings(
+        self, device_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """
         Get device global settings (Device Settings 관리)
         URL 형식: /pm/config/device/<device>/global/<cli>
@@ -634,7 +688,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         Returns:
             dict: Global settings result
         """
-        success, result = self._make_api_request(method="get", url=f"/pm/config/device/{device_name}/global/{cli_path}")
+        success, result = self._make_api_request(
+            method="get", url=f"/pm/config/device/{device_name}/global/{cli_path}"
+        )
 
         if success:
             return result if isinstance(result, (dict, list)) else {}
@@ -731,7 +787,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             return False
 
     # Policy Package Management (ADOM 레벨)
-    def get_policy_package_settings(self, package_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_policy_package_settings(
+        self, package_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """
         Get policy package settings (ADOM 레벨 정책 관리)
         URL 형식: /pm/config/adom/<adom>/pkg/<package>/<cli>
@@ -767,7 +825,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         except (ValueError, ipaddress.AddressValueError):
             return False
 
-    def _policy_matches_traffic(self, policy: Dict, src_ip: str, dst_ip: str, port: int, protocol: str) -> bool:
+    def _policy_matches_traffic(
+        self, policy: Dict, src_ip: str, dst_ip: str, port: int, protocol: str
+    ) -> bool:
         """
         Check if policy matches the given traffic
         """
@@ -886,7 +946,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         Returns:
             dict: Task status or None on failure
         """
-        success, result = self._make_api_request(method="get", url=f"/task/task/{task_id}")
+        success, result = self._make_api_request(
+            method="get", url=f"/task/task/{task_id}"
+        )
 
         if success:
             return result
@@ -1029,7 +1091,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
                 return None
 
         except Exception as e:
-            self.logger.error(f"Error getting device performance for {device_name}: {e}")
+            self.logger.error(
+                f"Error getting device performance for {device_name}: {e}"
+            )
             return None
 
     def get_policies(self, device_name=None, adom="root", package="default"):
@@ -1100,7 +1164,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             return None
 
     # Policy management methods
-    def create_firewall_policy(self, device_name, policy_data, vdom="root", adom="root"):
+    def create_firewall_policy(
+        self, device_name, policy_data, vdom="root", adom="root"
+    ):
         """
         Create a new firewall policy
 
@@ -1125,7 +1191,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             self.logger.error(f"Failed to create firewall policy: {result}")
             return None
 
-    def update_firewall_policy(self, device_name, policy_id, policy_data, vdom="root", adom="root"):
+    def update_firewall_policy(
+        self, device_name, policy_id, policy_data, vdom="root", adom="root"
+    ):
         """
         Update an existing firewall policy
 
@@ -1186,7 +1254,9 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
         Returns:
             list: Address objects or empty list on failure
         """
-        success, result = self._make_api_request(method="get", url=f"/pm/config/adom/{adom}/obj/firewall/address")
+        success, result = self._make_api_request(
+            method="get", url=f"/pm/config/adom/{adom}/obj/firewall/address"
+        )
 
         if success:
             return result if isinstance(result, list) else []
@@ -1229,9 +1299,13 @@ class FortiManagerAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTe
             # Already logged out
             return True
 
-        payload = self.build_json_rpc_request(method="exec", url="/sys/logout", session=self.session_id)
+        payload = self.build_json_rpc_request(
+            method="exec", url="/sys/logout", session=self.session_id
+        )
 
-        success, result, _ = self._make_request("POST", self.base_url, payload, None, self.headers)
+        success, result, _ = self._make_request(
+            "POST", self.base_url, payload, None, self.headers
+        )
 
         if success:
             self.session_id = None

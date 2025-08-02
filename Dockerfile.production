@@ -93,8 +93,9 @@ FROM python-deps as app
 # Copy application code
 COPY --chown=fortinet:fortinet . /app/
 
-# Skip bytecode compilation for now (syntax errors in some files)
-# RUN python -m compileall /app/src/ -b -q
+# Compile Python bytecode for performance optimization
+# Using -qq for quieter output and continuing on errors
+RUN python -m compileall /app/src/ -b -qq || true
 
 # Set proper permissions
 RUN chmod +x /app/src/main.py && \
@@ -135,8 +136,8 @@ RUN chmod +x /app/start.sh
 # Runtime Configuration
 # =============================================================================
 
-# Switch to non-root user (temporarily disabled for debugging)
-# USER fortinet
+# Switch to non-root user for security
+USER fortinet
 
 # Working directory
 WORKDIR /app

@@ -375,23 +375,94 @@ argocd app sync fortinet --prune
 - Async messaging via RabbitMQ
 - Shared cache via Redis
 
+## Running Tests
+
+### Single Test Execution
+```bash
+# Run specific test file
+pytest tests/unit/test_specific.py -v
+
+# Run specific test function
+pytest tests/unit/test_specific.py::TestClass::test_function -v
+
+# Run tests with specific marker
+pytest -m "unit and not slow" -v
+
+# Run with debugging output
+pytest tests/unit/test_specific.py -xvs
+```
+
+### Performance Testing
+```bash
+# Run feature validation (10 core features)
+cd src && python3 test_features.py
+
+# Run integration test suite
+python src/utils/test_master_integration_suite.py
+```
+
+## High-Level Architecture
+
+### Request Flow (Monolithic Mode)
+1. **Entry Point**: `src/main.py --web` starts Flask app on port 7777
+2. **Application Factory**: `src/web_app.py` creates Flask app with 8 blueprints
+3. **Blueprint Routes**: Each blueprint handles specific domain (main, api, fortimanager, itsm, etc.)
+4. **API Clients**: All clients extend `BaseAPIClient` for session management
+5. **Cache Layer**: `UnifiedCacheManager` handles Redis/memory caching
+6. **Data Layer**: JSON file storage for persistence in offline mode
+
+### MSA Request Flow
+1. **Kong Gateway** (8000): All external requests entry point
+2. **Service Discovery**: Consul (8500) manages service registration
+3. **Message Queue**: RabbitMQ (5672) for async communication
+4. **Microservices**: 7 services (8081-8087) handle specific domains
+5. **Shared Cache**: Redis for cross-service data sharing
+
+### Critical Design Patterns
+
+#### Session Management Pattern
+All API clients must properly initialize sessions to avoid connection issues:
+```python
+class CustomAPIClient(BaseAPIClient):
+    def __init__(self):
+        super().__init__()  # CRITICAL - initializes self.session
+        self.session.headers.update({...})  # Then customize
+```
+
+#### Configuration Loading Pattern
+Configuration follows a strict hierarchy:
+1. Check `data/config.json` (runtime config)
+2. Check environment variables
+3. Use defaults from `src/config/unified_settings.py`
+
+#### Mock Mode Pattern
+When `APP_MODE=test`, the system automatically:
+- Uses mock FortiGate responses from `data/mock_responses/`
+- Activates Postman-based mock server on port 6666
+- Disables external API calls
+- Uses test database connections
+
 ## Recent Updates & Current State
 
 ### System Status
 - **ALL hardcoded values removed** - project uses environment variables
-- **Import paths fixed** - 79 files converted to relative imports
+- **Import paths fixed** - All files use relative imports within src/
 - **Feature test passing** - 10/10 core features verified
 - **NodePort standardized** - Consistent use of 30777
 - **MSA architecture implemented** - 7 microservices with full infrastructure
+- **Critical import bug fixed** - `src/utils/security_fixes.py:210`
+- **Docker security enhanced** - Non-root user enabled, bytecode compilation fixed
 
 ### Code Quality Metrics
 - **Black formatting**: Applied to all Python files
 - **Import sorting**: Fixed with isort
 - **Flake8 compliance**: 269 issues remaining (down from 338)
 - **Test coverage**: Growing (minimum 5% enforced)
+- **File count**: 142 Python files in src/, 76 test files
 
 ### Deployment Notes
 - Harbor Registry path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
 - Helm chart version: 1.0.5
 - TLS currently disabled due to certificate issues
 - Self-hosted GitHub Actions runners in use
+- GitOps pipeline: Test → Build → Helm → ArgoCD

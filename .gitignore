@@ -51,7 +51,17 @@ logs/*.json
 # Backups
 *.bak
 *.backup
+*-backup
+*-original
+*-old
+*_backup*
+*_original*
+*_old*
+backup/
+backup-*/
 backups/
+.backup/
+*-backup-*/
 
 # Archives (except releases)
 *.tar.gz
@@ -99,3 +109,10 @@ offline-packages/
 k8s/manifests/secrets.yaml
 **/secrets.yaml
 venv_ppt/
+
+# Documentation restrictions (only README.md and CLAUDE.md allowed)
+*.md
+!README.md
+!CLAUDE.md
+!helm/**/README.md
+!docs/**/*.md
