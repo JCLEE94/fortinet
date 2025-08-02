@@ -17,4 +17,4 @@ echo "📍 Current directory: $(pwd)"
 echo "📁 Files in /app: $(ls -la /app/)"
 
 # Start real application
-cd /app && exec python -m src.main --web
+cd /app && cd src && exec python main.py --web
