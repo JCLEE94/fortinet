@@ -60,3 +60,6 @@
 {"timestamp": "2025-08-02T16:15:46.067490+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 109}
 {"timestamp": "2025-08-02T16:15:46.069227+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 175}
 {"timestamp": "2025-08-02T16:15:46.071987+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 192}
+{"timestamp": "2025-08-02T19:18:55.575015+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 109}
+{"timestamp": "2025-08-02T19:18:55.576529+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 175}
+{"timestamp": "2025-08-02T19:18:55.579030+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 192}
