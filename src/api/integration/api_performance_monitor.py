@@ -4,15 +4,12 @@ API 성능 모니터링 시스템
 CLAUDE.md 지시사항에 따른 완전 자율적 API 성능 추적 및 최적화
 """
 import functools
-import json
-import logging
 import secrets
 import statistics
-import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
+from utils.common_imports import Dict, List, Optional, json, logging, time
 from .monitoring_base import MonitoringBase, ThresholdMixin
 from .monitoring_config import get_config
 

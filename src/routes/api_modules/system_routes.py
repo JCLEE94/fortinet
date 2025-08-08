@@ -2,10 +2,8 @@
 System-related API routes
 """
 
-import os
-import time
-
-from flask import Blueprint, current_app, jsonify
+from flask import current_app
+from utils.common_imports import Blueprint, jsonify, os, time
 
 from config.unified_settings import unified_settings
 from utils.unified_cache_manager import cached

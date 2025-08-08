@@ -1,6 +1,6 @@
-from utils.unified_logger import setup_logger
+from utils.common_imports import setup_module_logger
 
-logger = setup_logger("analyzer")
+logger = setup_module_logger("analyzer")
 
 
 class PolicyAnalyzer:

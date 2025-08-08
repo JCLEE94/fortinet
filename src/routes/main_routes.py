@@ -2,9 +2,8 @@
 Main routes for pages
 """
 
-import os
-
-from flask import Blueprint, render_template
+from utils.common_imports import Blueprint, os, render_template
+from flask import redirect, url_for
 
 main_bp = Blueprint("main", __name__)
 
@@ -12,8 +11,6 @@ main_bp = Blueprint("main", __name__)
 @main_bp.route("/")
 def index():
     """홈페이지 - 원래 Nextrade 대시보드로 리다이렉트"""
-    from flask import redirect, url_for
-
     return redirect(url_for("main.dashboard"))
 
 
