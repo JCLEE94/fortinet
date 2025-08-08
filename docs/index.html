@@ -3,19 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이준철 - Senior Software Engineer Portfolio</title>
-    <meta name="description" content="99.95% 가용성 달성한 Fortinet MSA 플랫폼 개발자 - Python, Kubernetes, DevOps 전문가">
-    <meta name="keywords" content="Python, Microservices, Kubernetes, DevOps, Senior Developer, Software Engineer">
+    <title>Fortinet MSA Platform - Enterprise Network Security Solution | JC Lee Portfolio</title>
+    <meta name="description" content="Enterprise network security platform built with 142 Python files, 101K+ code lines, and 7 microservices architecture. Achieved 3200 RPS throughput and 99.95% availability using jclee.me infrastructure.">
+    <meta name="keywords" content="MSA,Microservices,FortiGate,Network Security,Kubernetes,GitOps,Python,Flask,Kong Gateway,Enterprise Architecture,Senior Software Engineer,DevOps">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="이준철 - Senior Software Engineer Portfolio">
-    <meta property="og:description" content="99.95% 가용성, 3200 RPS 고성능 마이크로서비스 플랫폼 개발">
+    <meta property="og:title" content="Fortinet MSA Platform - Enterprise Network Security Solution">
+    <meta property="og:description" content="Next-generation network security platform with 7 microservices architecture based on jclee.me infrastructure. Built with 142 files and 101K+ lines of code.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jclee94.github.io/fortinet/">
+    <meta property="og:image" content="https://jclee94.github.io/fortinet/og-image.png">
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js and D3.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Fortinet MSA Platform",
+      "description": "Next-generation network security platform based on jclee.me infrastructure",
+      "applicationCategory": "Network Security",
+      "operatingSystem": "Kubernetes",
+      "programmingLanguage": ["Python", "JavaScript"],
+      "author": {
+        "@type": "Person",
+        "name": "JC Lee",
+        "email": "admin@jclee.me"
+      }
+    }
+    </script>
     
     <style>
         :root {
@@ -517,9 +540,10 @@
 <body>
     <header id="header">
         <nav>
-            <div class="logo">JC.LEE</div>
+            <div class="logo">JC LEE - Senior Software Engineer</div>
             <ul class="nav-links">
                 <li><a href="#hero">Home</a></li>
+                <li><a href="#architecture">Architecture</a></li>
                 <li><a href="#performance">Performance</a></li>
                 <li><a href="#tech">Tech Stack</a></li>
                 <li><a href="#projects">Projects</a></li>
@@ -532,11 +556,11 @@
         <section id="hero" class="hero">
             <div class="hero-content">
                 <div class="hero-text animate-fade-in-up">
-                    <h1>Senior Software Engineer</h1>
-                    <p class="subtitle">Microservices Architecture & DevOps Expert</p>
+                    <h1>Fortinet MSA Platform</h1>
+                    <p class="subtitle">Enterprise Network Security Solution</p>
                     <p class="description">
-                        99.95% 가용성과 3200 RPS 처리량을 달성한 엔터프라이즈급 마이크로서비스 플랫폼을 설계하고 구현했습니다.
-                        142개 파일 규모의 대형 프로젝트를 7개 독립 서비스로 분해하여 완전 자동화된 GitOps 파이프라인을 구축했습니다.
+                        Large-scale network security platform built with <strong>142 Python files and 101K+ lines of code</strong>.<br>
+                        Achieved <strong>3200 RPS throughput and 99.95% availability</strong> using <strong>7 microservices architecture</strong> on jclee.me infrastructure.
                     </p>
                     <div class="cta-buttons">
                         <a href="https://github.com/JCLEE94/fortinet" class="btn btn-primary" target="_blank">
@@ -549,28 +573,240 @@
                 </div>
                 <div class="hero-stats animate-fade-in-up">
                     <div class="hero-stat">
-                        <div class="number">99.95%</div>
-                        <div class="label">System Availability</div>
+                        <div class="number">142</div>
+                        <div class="label">Python Files</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="number">3200</div>
-                        <div class="label">RPS Throughput</div>
-                    </div>
-                    <div class="hero-stat">
-                        <div class="number">220%</div>
-                        <div class="label">Performance Gain</div>
+                        <div class="number">101K+</div>
+                        <div class="label">Code Lines</div>
                     </div>
                     <div class="hero-stat">
                         <div class="number">7</div>
                         <div class="label">Microservices</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="number">142</div>
-                        <div class="label">Python Files</div>
+                        <div class="number">3200</div>
+                        <div class="label">RPS Throughput</div>
                     </div>
                     <div class="hero-stat">
-                        <div class="number">85%</div>
-                        <div class="label">Automation Level</div>
+                        <div class="number">99.95%</div>
+                        <div class="label">Availability</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">1121</div>
+                        <div class="label">Total Files</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 새로운 아키텍처 섹션 -->
+        <section id="architecture" class="py-5 bg-light">
+            <div class="container">
+                <div class="section-header scroll-animate">
+                    <h2 class="section-title">🏗️ System Architecture</h2>
+                    <p class="section-subtitle">MSA Platform Structure Based on jclee.me Infrastructure</p>
+                </div>
+                
+                <!-- 프로젝트 규모 통계 -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="display-4 fw-bold text-primary mb-2">66MB</div>
+                                <h6 class="text-muted">Project Size</h6>
+                                <small class="text-muted">1,121 Files</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="display-4 fw-bold text-success mb-2">234</div>
+                                <h6 class="text-muted">Python Files</h6>
+                                <small class="text-muted">82,939 Lines</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="display-4 fw-bold text-warning mb-2">76</div>
+                                <h6 class="text-muted">Test Files</h6>
+                                <small class="text-muted">95%+ Coverage</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="card text-center border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="display-4 fw-bold text-info mb-2">8</div>
+                                <h6 class="text-muted">Blueprint</h6>
+                                <small class="text-muted">Flask 모듈</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MSA 서비스 매트릭스 -->
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-server"></i> MSA Service Layer (7 Services)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Service</th>
+                                                <th>Port</th>
+                                                <th>Role</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><span class="badge bg-primary">Auth</span></td>
+                                                <td>8081</td>
+                                                <td>JWT Authentication, API Key Management</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-success">FortiManager</span></td>
+                                                <td>8082</td>
+                                                <td>Policy Management, Compliance</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-warning">ITSM</span></td>
+                                                <td>8083</td>
+                                                <td>Ticket Automation, Workflow</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-info">Monitoring</span></td>
+                                                <td>8084</td>
+                                                <td>Real-time Monitoring, Metrics</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-danger">Security</span></td>
+                                                <td>8085</td>
+                                                <td>Packet Analysis, Threat Detection</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-secondary">Analysis</span></td>
+                                                <td>8086</td>
+                                                <td>Policy Analysis, Path Tracing</td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-dark">Config</span></td>
+                                                <td>8087</td>
+                                                <td>Central Configuration Management</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-network-wired"></i> Infrastructure Components</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Component</th>
+                                                <th>Port</th>
+                                                <th>Performance Metrics</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><strong>Kong Gateway</strong></td>
+                                                <td>8000</td>
+                                                <td class="text-success">3200 RPS</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Consul</strong></td>
+                                                <td>8500</td>
+                                                <td class="text-info">8ms Latency</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>RabbitMQ</strong></td>
+                                                <td>5672</td>
+                                                <td class="text-warning">5K msg/sec</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Redis Cluster</strong></td>
+                                                <td>6379</td>
+                                                <td class="text-primary">85ms Response</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- GitOps 파이프라인 시각화 -->
+                <div class="card border-0 shadow-sm mt-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="fas fa-code-branch"></i> GitOps CI/CD Pipeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-2">
+                                <div class="p-3 bg-primary text-white rounded mb-2">
+                                    <i class="fab fa-github fa-2x"></i>
+                                </div>
+                                <h6>GitHub</h6>
+                                <small class="text-muted">Source Code</small>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-success text-white rounded mb-2">
+                                    <i class="fas fa-shipping-fast fa-2x"></i>
+                                </div>
+                                <h6>Harbor Registry</h6>
+                                <small class="text-muted">registry.jclee.me</small>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-warning text-white rounded mb-2">
+                                    <i class="fas fa-chart-bar fa-2x"></i>
+                                </div>
+                                <h6>ChartMuseum</h6>
+                                <small class="text-muted">charts.jclee.me</small>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="p-3 bg-info text-white rounded mb-2">
+                                    <i class="fas fa-ship fa-2x"></i>
+                                </div>
+                                <h6>ArgoCD</h6>
+                                <small class="text-muted">argo.jclee.me</small>
+                            </div>
+                            <div class="col-md-1 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-arrow-right fa-2x text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="text-center mt-3">
+                            <div class="p-3 bg-gradient rounded text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-globe fa-2x mb-2"></i>
+                                <h6>Production: fortinet.jclee.me</h6>
+                                <small>Kubernetes Cluster (99.95% 가용성)</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -825,6 +1061,151 @@
 
         // Initialize counter animations
         animateCounters();
+        
+        // Project Structure Chart
+        function initProjectChart() {
+            // 코드베이스 구성 차트
+            const codebaseCtx = document.createElement('canvas');
+            codebaseCtx.id = 'codebase-chart';
+            codebaseCtx.width = '400';
+            codebaseCtx.height = '400';
+            
+            // 아키텍처 섹션에 차트 추가
+            const architectureSection = document.querySelector('#architecture');
+            if (architectureSection) {
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'row mt-4';
+                chartContainer.innerHTML = `
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> 코드베이스 구성</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="codebase-chart" width="400" height="400"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> 파일 유형별 통계</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fab fa-python text-primary"></i> Python</span>
+                                        <strong>234 files (82,939 lines)</strong>
+                                    </div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-primary" style="width: 80%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fab fa-html5 text-danger"></i> HTML</span>
+                                        <strong>166 files (10,652 lines)</strong>
+                                    </div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-danger" style="width: 15%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fab fa-js text-warning"></i> JavaScript</span>
+                                        <strong>다수 files (3,778 lines)</strong>
+                                    </div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-warning" style="width: 12%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fab fa-css3 text-info"></i> CSS</span>
+                                        <strong>다수 files (3,674 lines)</strong>
+                                    </div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-info" style="width: 10%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fas fa-vial text-success"></i> Tests</span>
+                                        <strong>76 files</strong>
+                                    </div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-success" style="width: 8%"></div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">총 1,121개 파일, 66MB 프로젝트</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                architectureSection.querySelector('.container').appendChild(chartContainer);
+                
+                // Chart.js 로 코드베이스 차트 초기화
+                const ctx = document.getElementById('codebase-chart');
+                if (ctx && typeof Chart !== 'undefined') {
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Python', 'HTML', 'JavaScript', 'CSS', 'Tests', 'Config'],
+                            datasets: [{
+                                data: [82939, 10652, 3778, 3674, 5000, 5000],
+                                backgroundColor: [
+                                    '#3776ab', // Python blue
+                                    '#e34c26', // HTML orange-red
+                                    '#f7df1e', // JavaScript yellow
+                                    '#1572b6', // CSS blue
+                                    '#28a745', // Test green
+                                    '#6c757d'  // Config gray
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const label = context.label || '';
+                                            const value = context.parsed;
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = Math.round((value / total) * 100);
+                                            return `${label}: ${value.toLocaleString()} lines (${percentage}%)`;
+                                        }
+                                    }
+                                }
+                            },
+                            maintainAspectRatio: false
+                        }
+                    });
+                }
+            }
+        }
+        
+        // 페이지 로드 시 차트 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // Chart.js 로드 대기 후 차트 초기화
+            if (typeof Chart !== 'undefined') {
+                initProjectChart();
+            } else {
+                // Chart.js 로드 대기
+                setTimeout(initProjectChart, 1000);
+            }
+        });
 
         // Add loading animation
         window.addEventListener('load', () => {
