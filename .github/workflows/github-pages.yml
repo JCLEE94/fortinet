@@ -1,0 +1,62 @@
+name: Deploy Portfolio to GitHub Pages
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/github-pages.yml'
+  
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './docs'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: Comment on commit
+      if: github.event_name == 'push'
+      run: |
+        echo "🚀 Portfolio deployed to: ${{ steps.deployment.outputs.page_url }}"
+        echo "📊 Deployment completed successfully"
+        echo "🔗 Public URL: https://jclee94.github.io/fortinet/"
+        
+    - name: Update README with deployment status
+      if: success()
+      run: |
+        echo "✅ GitHub Pages deployment completed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "🔗 Live URL: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "📊 Deploy time: $(date)" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ GitHub Pages deployment failed" >> $GITHUB_STEP_SUMMARY
+        echo "🔍 Check workflow logs for details" >> $GITHUB_STEP_SUMMARY
