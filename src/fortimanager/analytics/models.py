@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager Analytics Data Models and Enums
 Data structures for analytics engine components

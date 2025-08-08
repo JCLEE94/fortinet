@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager Policy Management Module
 Handles policy-related API operations
@@ -20,7 +19,9 @@ class PolicyManagementMixin:
             data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}]}
 
             response = self._make_api_request(
-                "get", f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy", data=data
+                "get",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy",
+                data=data,
             )
 
             if response and "data" in response:
@@ -36,7 +37,9 @@ class PolicyManagementMixin:
             data = {"adom": adom}
 
             response = self._make_api_request(
-                "get", f"/pm/config/adom/{adom}/pkg/{package_name}/firewall/policy", data=data
+                "get",
+                f"/pm/config/adom/{adom}/pkg/{package_name}/firewall/policy",
+                data=data,
             )
 
             if response and "data" in response:
@@ -65,12 +68,18 @@ class PolicyManagementMixin:
             logger.error(f"Error getting package policies: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_policy_package_settings(self, package_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_policy_package_settings(
+        self, package_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """Get settings from a policy package"""
         try:
             data = {"adom": adom, "option": "object member"}
 
-            response = self._make_api_request("get", f"/pm/config/adom/{adom}/pkg/{package_name}/{cli_path}", data=data)
+            response = self._make_api_request(
+                "get",
+                f"/pm/config/adom/{adom}/pkg/{package_name}/{cli_path}",
+                data=data,
+            )
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -91,13 +100,21 @@ class PolicyManagementMixin:
             return {"status": "error", "message": str(e)}
 
     def set_policy_package_settings(
-        self, package_name: str, cli_path: str, settings_data: Dict[str, Any], adom: str = "root"
+        self,
+        package_name: str,
+        cli_path: str,
+        settings_data: Dict[str, Any],
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Set settings on a policy package"""
         try:
             data = {"adom": adom, "data": settings_data}
 
-            response = self._make_api_request("set", f"/pm/config/adom/{adom}/pkg/{package_name}/{cli_path}", data=data)
+            response = self._make_api_request(
+                "set",
+                f"/pm/config/adom/{adom}/pkg/{package_name}/{cli_path}",
+                data=data,
+            )
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -117,14 +134,24 @@ class PolicyManagementMixin:
             return {"status": "error", "message": str(e)}
 
     def create_firewall_policy(
-        self, device_name: str, policy_data: Dict[str, Any], vdom: str = "root", adom: str = "root"
+        self,
+        device_name: str,
+        policy_data: Dict[str, Any],
+        vdom: str = "root",
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Create a new firewall policy"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}], "data": policy_data}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+                "data": policy_data,
+            }
 
             response = self._make_api_request(
-                "add", f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy", data=data
+                "add",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy",
+                data=data,
             )
 
             if response and response.get("status", {}).get("code") == 0:
@@ -135,21 +162,36 @@ class PolicyManagementMixin:
                     "task_id": response.get("task"),
                 }
             else:
-                return {"status": "error", "message": "Failed to create firewall policy", "response": response}
+                return {
+                    "status": "error",
+                    "message": "Failed to create firewall policy",
+                    "response": response,
+                }
 
         except Exception as e:
             logger.error(f"Error creating firewall policy: {e}")
             return {"status": "error", "message": str(e)}
 
     def update_firewall_policy(
-        self, device_name: str, policy_id: int, policy_data: Dict[str, Any], vdom: str = "root", adom: str = "root"
+        self,
+        device_name: str,
+        policy_id: int,
+        policy_data: Dict[str, Any],
+        vdom: str = "root",
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Update an existing firewall policy"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}], "data": policy_data}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+                "data": policy_data,
+            }
 
             response = self._make_api_request(
-                "update", f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}", data=data
+                "update",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}",
+                data=data,
             )
 
             if response and response.get("status", {}).get("code") == 0:
@@ -177,7 +219,9 @@ class PolicyManagementMixin:
             data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}]}
 
             response = self._make_api_request(
-                "delete", f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}", data=data
+                "delete",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/firewall/policy/{policy_id}",
+                data=data,
             )
 
             if response and response.get("status", {}).get("code") == 0:

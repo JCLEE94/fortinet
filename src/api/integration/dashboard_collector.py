@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 대시보드 데이터 수집기 - 실제 FortiGate/FortiManager 연동
 """
@@ -190,10 +189,19 @@ class DashboardDataCollector:
                     # 최근 24시간 이벤트 필터링
                     recent_time = datetime.now() - timedelta(hours=24)
                     recent_events = [
-                        event for event in events if datetime.fromisoformat(event.get("timestamp", "")) > recent_time
+                        event
+                        for event in events
+                        if datetime.fromisoformat(event.get("timestamp", ""))
+                        > recent_time
                     ]
 
-                    stats.threat_count = len([e for e in recent_events if e.get("severity") in ["critical", "high"]])
+                    stats.threat_count = len(
+                        [
+                            e
+                            for e in recent_events
+                            if e.get("severity") in ["critical", "high"]
+                        ]
+                    )
                     stats.alert_count = len(recent_events)
             except Exception as e:
                 logger.warning(f"보안 이벤트 수집 실패: {e}")
@@ -252,8 +260,12 @@ class DashboardDataCollector:
                     if interfaces:
                         for interface in interfaces:
                             stats_data = interface.get("stats", {})
-                            total_bandwidth_in += stats_data.get("rx_bytes", 0) / (1024 * 1024)  # MB
-                            total_bandwidth_out += stats_data.get("tx_bytes", 0) / (1024 * 1024)  # MB
+                            total_bandwidth_in += stats_data.get("rx_bytes", 0) / (
+                                1024 * 1024
+                            )  # MB
+                            total_bandwidth_out += stats_data.get("tx_bytes", 0) / (
+                                1024 * 1024
+                            )  # MB
 
                 except Exception as e:
                     logger.warning(f"FortiGate {device_id} 데이터 수집 실패: {e}")

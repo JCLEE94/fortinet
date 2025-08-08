@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Auto Fix Module
 Automatic vulnerability remediation functionality
@@ -16,7 +15,9 @@ logger = logging.getLogger(__name__)
 class AutoFixMixin:
     """Mixin for automatic vulnerability fixing"""
 
-    def auto_fix_vulnerabilities(self, scan_result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def auto_fix_vulnerabilities(
+        self, scan_result: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """취약점 자동 수정"""
         try:
             logger.info("취약점 자동 수정 시작")
@@ -78,7 +79,13 @@ class AutoFixMixin:
                     hardening_actions.append(result)
                 except Exception as action_error:
                     logger.error(f"강화 작업 오류: {action_error}")
-                    hardening_actions.append({"action": action.__name__, "success": False, "error": str(action_error)})
+                    hardening_actions.append(
+                        {
+                            "action": action.__name__,
+                            "success": False,
+                            "error": str(action_error),
+                        }
+                    )
 
             result = {
                 "operation": "system_hardening",
@@ -110,7 +117,11 @@ class AutoFixMixin:
         elif vuln_type == "configuration" and "ssh" in category:
             return self._fix_ssh_configuration(vulnerability)
         else:
-            return {"vulnerability": vulnerability, "success": False, "reason": "자동 수정이 지원되지 않는 취약점 유형"}
+            return {
+                "vulnerability": vulnerability,
+                "success": False,
+                "reason": "자동 수정이 지원되지 않는 취약점 유형",
+            }
 
     def _fix_file_permissions(self, vulnerability: Dict) -> Dict:
         """파일 권한 취약점 수정"""
@@ -119,9 +130,17 @@ class AutoFixMixin:
             if file_path and "env" in file_path:
                 # 환경변수 파일에 대해서는 600 권한 설정
                 subprocess.run(["chmod", "600", file_path], check=True)
-                return {"vulnerability": vulnerability, "success": True, "action": f"chmod 600 {file_path}"}
+                return {
+                    "vulnerability": vulnerability,
+                    "success": True,
+                    "action": f"chmod 600 {file_path}",
+                }
             else:
-                return {"vulnerability": vulnerability, "success": False, "reason": "안전하지 않은 파일에 대한 권한 변경 거부"}
+                return {
+                    "vulnerability": vulnerability,
+                    "success": False,
+                    "reason": "안전하지 않은 파일에 대한 권한 변경 거부",
+                }
         except Exception as e:
             return {"vulnerability": vulnerability, "success": False, "error": str(e)}
 
@@ -129,7 +148,11 @@ class AutoFixMixin:
         """
         SSH 설정 취약점 수정 (주의: 실제 서버에서는 신중하게)
         """
-        return {"vulnerability": vulnerability, "success": False, "reason": "SSH 설정 변경은 수동으로 수행해야 함"}
+        return {
+            "vulnerability": vulnerability,
+            "success": False,
+            "reason": "SSH 설정 변경은 수동으로 수행해야 함",
+        }
 
     def _secure_file_permissions(self) -> Dict:
         """파일 권한 보안 설정"""

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 외부 ITSM 시스템 연동 모듈
@@ -145,7 +144,9 @@ class ExternalITSMConnector:
 
         elif platform == ITSMPlatform.NEXTRADE_ITSM:
             # Nextrade ITSM Custom Auth
-            self.session.headers.update({"X-API-Key": self.config.api_token, "Content-Type": "application/json"})
+            self.session.headers.update(
+                {"X-API-Key": self.config.api_token, "Content-Type": "application/json"}
+            )
 
         # 공통 헤더 추가
         self.session.headers.update(self.config.custom_headers)
@@ -170,7 +171,9 @@ class ExternalITSMConnector:
             logger.error(f"Connection error: {e}")
             return False
 
-    async def fetch_firewall_requests(self, since: datetime = None) -> List[FirewallPolicyRequest]:
+    async def fetch_firewall_requests(
+        self, since: datetime = None
+    ) -> List[FirewallPolicyRequest]:
         """
         방화벽 정책 요청 티켓 수집
 
@@ -204,7 +207,9 @@ class ExternalITSMConnector:
             logger.error(f"Error fetching firewall requests: {e}")
             return []
 
-    async def _fetch_tickets_by_platform(self, platform: ITSMPlatform, since: datetime) -> List[Dict]:
+    async def _fetch_tickets_by_platform(
+        self, platform: ITSMPlatform, since: datetime
+    ) -> List[Dict]:
         """플랫폼별 티켓 조회"""
         endpoints = self.endpoint_mapping.get(platform, {})
         endpoint = endpoints.get("tickets", "/api/tickets")
@@ -218,7 +223,9 @@ class ExternalITSMConnector:
         else:
             return await self._fetch_custom_tickets(endpoint, since)
 
-    async def _fetch_servicenow_tickets(self, endpoint: str, since: datetime) -> List[Dict]:
+    async def _fetch_servicenow_tickets(
+        self, endpoint: str, since: datetime
+    ) -> List[Dict]:
         """ServiceNow 티켓 조회"""
         url = f"{self.config.base_url}{endpoint}"
 
@@ -260,7 +267,9 @@ class ExternalITSMConnector:
             logger.error(f"Jira API error: {response.status_code}")
             return []
 
-    async def _fetch_nextrade_tickets(self, endpoint: str, since: datetime) -> List[Dict]:
+    async def _fetch_nextrade_tickets(
+        self, endpoint: str, since: datetime
+    ) -> List[Dict]:
         """Nextrade ITSM 티켓 조회"""
         url = f"{self.config.base_url}{endpoint}"
 
@@ -301,7 +310,9 @@ class ExternalITSMConnector:
 
         # 플랫폼별로 내용 추출
         if self.config.platform == ITSMPlatform.SERVICENOW:
-            content = f"{ticket.get('short_description', '')} {ticket.get('description', '')}"
+            content = (
+                f"{ticket.get('short_description', '')} {ticket.get('description', '')}"
+            )
         elif self.config.platform == ITSMPlatform.JIRA_SERVICE_MANAGEMENT:
             fields = ticket.get("fields", {})
             content = f"{fields.get('summary', '')} {fields.get('description', '')}"
@@ -336,7 +347,9 @@ class ExternalITSMConnector:
 
     def _parse_servicenow_ticket(self, ticket: Dict) -> Optional[FirewallPolicyRequest]:
         """ServiceNow 티켓 파싱"""
-        description = f"{ticket.get('short_description', '')} {ticket.get('description', '')}"
+        description = (
+            f"{ticket.get('short_description', '')} {ticket.get('description', '')}"
+        )
 
         # IP 주소 추출
         ip_pattern = r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
@@ -354,7 +367,9 @@ class ExternalITSMConnector:
                 port=int(ports[0]),
                 protocol=self._extract_protocol(description),
                 description=ticket.get("short_description", ""),
-                created_at=datetime.fromisoformat(ticket.get("opened_at", "").replace("Z", "+00:00")),
+                created_at=datetime.fromisoformat(
+                    ticket.get("opened_at", "").replace("Z", "+00:00")
+                ),
                 priority=ticket.get("priority", "normal"),
             )
 
@@ -380,7 +395,9 @@ class ExternalITSMConnector:
                 port=int(ports[0]),
                 protocol=self._extract_protocol(description),
                 description=fields.get("summary", ""),
-                created_at=datetime.fromisoformat(fields.get("created", "").replace("Z", "+00:00")),
+                created_at=datetime.fromisoformat(
+                    fields.get("created", "").replace("Z", "+00:00")
+                ),
                 priority=fields.get("priority", {}).get("name", "normal"),
             )
 
@@ -414,7 +431,9 @@ class ExternalITSMConnector:
         # 기본 추출 로직
         return self._extract_from_natural_language(ticket)
 
-    def _extract_from_natural_language(self, ticket: Dict) -> Optional[FirewallPolicyRequest]:
+    def _extract_from_natural_language(
+        self, ticket: Dict
+    ) -> Optional[FirewallPolicyRequest]:
         """자연어 처리를 통한 방화벽 요청 정보 추출"""
         description = ticket.get("description", "") + " " + ticket.get("title", "")
 
@@ -447,7 +466,9 @@ class ExternalITSMConnector:
                 description=ticket.get("title", ticket.get("short_description", "")),
                 business_justification=description,
                 requester=ticket.get("requester", ticket.get("reporter", "unknown")),
-                created_at=self._parse_datetime(ticket.get("created_at", ticket.get("opened_at", ""))),
+                created_at=self._parse_datetime(
+                    ticket.get("created_at", ticket.get("opened_at", ""))
+                ),
                 priority=ticket.get("priority", "normal"),
             )
 
@@ -498,7 +519,9 @@ class ExternalITSMConnector:
 
         return datetime.now()
 
-    async def update_ticket_status(self, ticket_id: str, status: str, comment: str = "") -> bool:
+    async def update_ticket_status(
+        self, ticket_id: str, status: str, comment: str = ""
+    ) -> bool:
         """티켓 상태 업데이트"""
         try:
             if self.config.platform == ITSMPlatform.SERVICENOW:
@@ -514,7 +537,9 @@ class ExternalITSMConnector:
             logger.error(f"Error updating ticket {ticket_id}: {e}")
             return False
 
-    async def _update_servicenow_ticket(self, ticket_id: str, status: str, comment: str) -> bool:
+    async def _update_servicenow_ticket(
+        self, ticket_id: str, status: str, comment: str
+    ) -> bool:
         """ServiceNow 티켓 상태 업데이트"""
         url = f"{self.config.base_url}/api/now/table/incident/{ticket_id}"
 
@@ -526,7 +551,9 @@ class ExternalITSMConnector:
         response = self.session.patch(url, json=data)
         return response.status_code == 200
 
-    async def _update_jira_ticket(self, ticket_id: str, status: str, comment: str) -> bool:
+    async def _update_jira_ticket(
+        self, ticket_id: str, status: str, comment: str
+    ) -> bool:
         """Jira 티켓 상태 업데이트"""
         # 코멘트 추가
         comment_url = f"{self.config.base_url}/rest/api/2/issue/{ticket_id}/comment"
@@ -535,7 +562,9 @@ class ExternalITSMConnector:
         response = self.session.post(comment_url, json=comment_data)
         return response.status_code == 201
 
-    async def _update_nextrade_ticket(self, ticket_id: str, status: str, comment: str) -> bool:
+    async def _update_nextrade_ticket(
+        self, ticket_id: str, status: str, comment: str
+    ) -> bool:
         """Nextrade ITSM 티켓 상태 업데이트"""
         url = f"{self.config.base_url}/api/tickets/{ticket_id}"
 
@@ -548,7 +577,9 @@ class ExternalITSMConnector:
         response = self.session.patch(url, json=data)
         return response.status_code == 200
 
-    async def _update_custom_ticket(self, ticket_id: str, status: str, comment: str) -> bool:
+    async def _update_custom_ticket(
+        self, ticket_id: str, status: str, comment: str
+    ) -> bool:
         """커스텀 API 티켓 상태 업데이트"""
         url = f"{self.config.base_url}/api/tickets/{ticket_id}/status"
 

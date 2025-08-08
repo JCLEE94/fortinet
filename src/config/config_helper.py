@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Configuration Helper Module
 Provides easy access to all configuration values with fallbacks
@@ -124,7 +123,9 @@ def validate_configuration() -> Dict[str, Any]:
                 web_port = get_web_port()
                 mock_port = get_mock_port()
                 if web_port == mock_port:
-                    issues.append(f"Port conflict: both web and mock using port {web_port}")
+                    issues.append(
+                        f"Port conflict: both web and mock using port {web_port}"
+                    )
 
                     # Check data directory exists
                     data_dir = get_data_path("DATA_DIR")
@@ -132,7 +133,9 @@ def validate_configuration() -> Dict[str, Any]:
                         warnings.append(f"Data directory does not exist: {data_dir}")
 
                         return {
-                            "status": ("error" if issues else ("warning" if warnings else "ok")),
+                            "status": (
+                                "error" if issues else ("warning" if warnings else "ok")
+                            ),
                             "issues": issues,
                             "warnings": warnings,
                             "config": {

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 통합 설정 시스템 - FortiGate Nextrade
 설정 우선순위: 환경변수 → JSON 파일 → 기본값

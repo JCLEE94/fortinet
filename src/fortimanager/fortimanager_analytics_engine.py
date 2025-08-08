@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager Advanced Analytics and Reporting Engine
 Backward-compatible wrapper for the new modular analytics system
@@ -13,7 +12,8 @@ from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 # Import from the new modular structure
 from .analytics import AdvancedAnalyticsEngine as ModularAnalyticsEngine
-from .analytics import AnalyticsInsight, AnalyticsMetric, AnalyticsType, PredictiveModel, ReportFormat
+from .analytics import (AnalyticsInsight, AnalyticsMetric, AnalyticsType,
+                        PredictiveModel, ReportFormat)
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +47,15 @@ class AdvancedAnalyticsEngine:
         """List all available metrics (delegates to modular engine)"""
         return self._engine.list_metrics()
 
-    async def analyze_metric(self, metric_id: str, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
+    async def analyze_metric(
+        self, metric_id: str, start_time: datetime, end_time: datetime
+    ) -> Dict[str, Any]:
         """Analyze a specific metric (delegates to modular engine)"""
         return await self._engine.analyze_metric(metric_id, start_time, end_time)
 
-    async def generate_insights(self, analysis_results: List[Dict]) -> List[AnalyticsInsight]:
+    async def generate_insights(
+        self, analysis_results: List[Dict]
+    ) -> List[AnalyticsInsight]:
         """Generate actionable insights from analysis results (delegates to modular engine)"""
         return await self._engine.generate_insights(analysis_results)
 
@@ -64,18 +68,24 @@ class AdvancedAnalyticsEngine:
         format_type: ReportFormat = ReportFormat.JSON,
     ) -> Any:
         """Generate a comprehensive analytics report (delegates to modular engine)"""
-        return self._engine.generate_report(template_name, metrics, start_time, end_time, format_type)
+        return self._engine.generate_report(
+            template_name, metrics, start_time, end_time, format_type
+        )
 
     # Delegate all other methods to the modular engine
     def __getattr__(self, name):
         """Delegate unknown attributes to the modular engine"""
         if hasattr(self._engine, name):
             return getattr(self._engine, name)
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+        raise AttributeError(
+            f"'{self.__class__.__name__}' object has no attribute '{name}'"
+        )
 
 
 # Legacy function for backward compatibility
-def get_advanced_analytics_engine(api_client: FortiManagerAPIClient = None) -> AdvancedAnalyticsEngine:
+def get_advanced_analytics_engine(
+    api_client: FortiManagerAPIClient = None,
+) -> AdvancedAnalyticsEngine:
     """Factory function to create analytics engine instance"""
     if api_client is None:
         # Create a mock client for testing

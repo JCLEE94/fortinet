@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager Analytics Report Generation
 Report formatting and template management
@@ -30,7 +29,11 @@ class ReportGenerator:
             "sections": [
                 {
                     "title": "Overview",
-                    "metrics": ["threat_count", "traffic_volume", "bandwidth_utilization"],
+                    "metrics": [
+                        "threat_count",
+                        "traffic_volume",
+                        "bandwidth_utilization",
+                    ],
                     "visualizations": ["trend_chart", "gauge_chart"],
                 },
                 {
@@ -52,7 +55,12 @@ class ReportGenerator:
             "sections": [
                 {
                     "title": "System Performance",
-                    "metrics": ["cpu_usage", "memory_usage", "disk_usage", "network_throughput"],
+                    "metrics": [
+                        "cpu_usage",
+                        "memory_usage",
+                        "disk_usage",
+                        "network_throughput",
+                    ],
                     "analytics": ["performance_trends", "capacity_analysis"],
                 },
                 {
@@ -62,7 +70,11 @@ class ReportGenerator:
                 },
                 {
                     "title": "Operational Insights",
-                    "analytics": ["user_behavior", "traffic_patterns", "anomaly_detection"],
+                    "analytics": [
+                        "user_behavior",
+                        "traffic_patterns",
+                        "anomaly_detection",
+                    ],
                 },
             ],
         }
@@ -73,7 +85,11 @@ class ReportGenerator:
             "sections": [
                 {
                     "title": "Compliance Overview",
-                    "metrics": ["compliance_score", "policy_violations", "audit_findings"],
+                    "metrics": [
+                        "compliance_score",
+                        "policy_violations",
+                        "audit_findings",
+                    ],
                 },
                 {
                     "title": "Regulatory Requirements",
@@ -87,7 +103,10 @@ class ReportGenerator:
         }
 
     def generate_report(
-        self, template_name: str, report_data: Dict, format_type: ReportFormat = ReportFormat.JSON
+        self,
+        template_name: str,
+        report_data: Dict,
+        format_type: ReportFormat = ReportFormat.JSON,
     ) -> Any:
         """Generate a report using specified template and format"""
         if template_name not in self.report_templates:
@@ -146,7 +165,9 @@ class ReportGenerator:
             "performance_score": report_data.get("overall_score", 85),
         }
 
-    def _extract_section_metrics(self, section: Dict, report_data: Dict) -> Dict[str, Any]:
+    def _extract_section_metrics(
+        self, section: Dict, report_data: Dict
+    ) -> Dict[str, Any]:
         """Extract metrics for a report section"""
         metrics = {}
         for metric_name in section.get("metrics", []):
@@ -155,7 +176,9 @@ class ReportGenerator:
             )
         return metrics
 
-    def _extract_section_analytics(self, section: Dict, report_data: Dict) -> Dict[str, Any]:
+    def _extract_section_analytics(
+        self, section: Dict, report_data: Dict
+    ) -> Dict[str, Any]:
         """Extract analytics for a report section"""
         analytics = {}
         for analytics_name in section.get("analytics", []):
@@ -196,9 +219,7 @@ class ReportGenerator:
         for section in report_data["sections"]:
             content += f"<div class='section'><h2>{section['title']}</h2>"
             for metric_name, metric_data in section["metrics"].items():
-                content += (
-                    f"<div class='metric'><strong>{metric_name}:</strong> {metric_data.get('value', 'N/A')}</div>"
-                )
+                content += f"<div class='metric'><strong>{metric_name}:</strong> {metric_data.get('value', 'N/A')}</div>"
             content += "</div>"
 
         return html_template.format(

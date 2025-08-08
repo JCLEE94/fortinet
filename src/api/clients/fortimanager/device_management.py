@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager Device Management Module
 Handles device-related API operations
@@ -17,7 +16,9 @@ class DeviceManagementMixin:
     def get_devices(self, adom="root"):
         """Get list of devices in ADOM"""
         data = {"adom": adom}
-        return self._make_api_request("get", "/dvmdb/adom/{adom}/device".format(adom=adom), data=data)
+        return self._make_api_request(
+            "get", "/dvmdb/adom/{adom}/device".format(adom=adom), data=data
+        )
 
     def get_managed_devices(self, adom="root"):
         """Get managed devices with detailed information"""
@@ -47,7 +48,9 @@ class DeviceManagementMixin:
         """Get device status and information"""
         try:
             data = {"adom": adom, "device": device_name}
-            response = self._make_api_request("get", f"/dvmdb/adom/{adom}/device/{device_name}", data=data)
+            response = self._make_api_request(
+                "get", f"/dvmdb/adom/{adom}/device/{device_name}", data=data
+            )
 
             if response and "data" in response:
                 device_info = response["data"]
@@ -68,15 +71,27 @@ class DeviceManagementMixin:
             logger.error(f"Error getting device status for {device_name}: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_device_global_settings(self, device_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_device_global_settings(
+        self, device_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """Get global settings from a managed device"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": "global"}], "option": "object member"}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": "global"}],
+                "option": "object member",
+            }
 
-            response = self._make_api_request("get", f"/pm/config/device/{device_name}/global/{cli_path}", data=data)
+            response = self._make_api_request(
+                "get", f"/pm/config/device/{device_name}/global/{cli_path}", data=data
+            )
 
             if response and response.get("status", {}).get("code") == 0:
-                return {"status": "success", "data": response.get("data", {}), "path": cli_path}
+                return {
+                    "status": "success",
+                    "data": response.get("data", {}),
+                    "path": cli_path,
+                }
             else:
                 return {
                     "status": "error",
@@ -89,13 +104,23 @@ class DeviceManagementMixin:
             return {"status": "error", "message": str(e)}
 
     def set_device_global_settings(
-        self, device_name: str, cli_path: str, settings_data: Dict[str, Any], adom: str = "root"
+        self,
+        device_name: str,
+        cli_path: str,
+        settings_data: Dict[str, Any],
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Set global settings on a managed device"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": "global"}], "data": settings_data}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": "global"}],
+                "data": settings_data,
+            }
 
-            response = self._make_api_request("set", f"/pm/config/device/{device_name}/global/{cli_path}", data=data)
+            response = self._make_api_request(
+                "set", f"/pm/config/device/{device_name}/global/{cli_path}", data=data
+            )
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -119,14 +144,25 @@ class DeviceManagementMixin:
     ) -> Dict[str, Any]:
         """Get VDOM-specific settings from a managed device"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}], "option": "object member"}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+                "option": "object member",
+            }
 
             response = self._make_api_request(
-                "get", f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}", data=data
+                "get",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}",
+                data=data,
             )
 
             if response and response.get("status", {}).get("code") == 0:
-                return {"status": "success", "data": response.get("data", {}), "vdom": vdom, "path": cli_path}
+                return {
+                    "status": "success",
+                    "data": response.get("data", {}),
+                    "vdom": vdom,
+                    "path": cli_path,
+                }
             else:
                 return {
                     "status": "error",
@@ -139,14 +175,25 @@ class DeviceManagementMixin:
             return {"status": "error", "message": str(e)}
 
     def set_device_vdom_settings(
-        self, device_name: str, vdom: str, cli_path: str, settings_data: Dict[str, Any], adom: str = "root"
+        self,
+        device_name: str,
+        vdom: str,
+        cli_path: str,
+        settings_data: Dict[str, Any],
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Set VDOM-specific settings on a managed device"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}], "data": settings_data}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+                "data": settings_data,
+            }
 
             response = self._make_api_request(
-                "set", f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}", data=data
+                "set",
+                f"/pm/config/device/{device_name}/vdom/{vdom}/{cli_path}",
+                data=data,
             )
 
             if response and response.get("status", {}).get("code") == 0:

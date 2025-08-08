@@ -7,12 +7,10 @@
 
 import asyncio
 import datetime
-
 # 서드파티 라이브러리 임포트
 import ipaddress
 import json
 import logging
-
 # 표준 라이브러리 임포트
 import os
 import sys
@@ -35,7 +33,6 @@ except ImportError:
 
 from utils.security import rate_limit
 from utils.unified_cache_manager import cached
-
 # 프로젝트 공통 유틸리티 임포트
 from utils.unified_logger import setup_logger
 
@@ -93,9 +90,13 @@ def validate_required_fields(required_fields: List[str]):
             if request.is_json:
                 data = request.get_json()
                 if data:
-                    missing_fields = [field for field in required_fields if field not in data]
+                    missing_fields = [
+                        field for field in required_fields if field not in data
+                    ]
                     if missing_fields:
-                        raise ValidationException(f"Missing required fields: {missing_fields}")
+                        raise ValidationException(
+                            f"Missing required fields: {missing_fields}"
+                        )
             return func(*args, **kwargs)
 
         return wrapper
@@ -189,7 +190,9 @@ def get_env_int(key: str, default: int = 0) -> int:
     return safe_int(os.getenv(key), default)
 
 
-def get_env_list(key: str, separator: str = ",", default: List[str] = None) -> List[str]:
+def get_env_list(
+    key: str, separator: str = ",", default: List[str] = None
+) -> List[str]:
     """환경 변수를 리스트로 변환"""
     if default is None:
         default = []

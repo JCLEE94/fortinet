@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 FortiManager API Client
 Modular implementation with mixin-based architecture
@@ -11,7 +10,8 @@ from utils.api_utils import ConnectionTestMixin
 from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from .fortimanager import AdvancedFeaturesMixin, AuthConnectionMixin, DeviceManagementMixin, PolicyManagementMixin
+from .fortimanager import (AdvancedFeaturesMixin, AuthConnectionMixin,
+                           DeviceManagementMixin, PolicyManagementMixin)
 
 
 class FortiManagerAPIClient(
@@ -71,7 +71,11 @@ class FortiManagerAPIClient(
         self.logger = get_logger(__name__)
 
     def _make_api_request(
-        self, method: str, url: str, data: Dict[str, Any] = None, params: Dict[str, Any] = None
+        self,
+        method: str,
+        url: str,
+        data: Dict[str, Any] = None,
+        params: Dict[str, Any] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Make API request to FortiManager using JSON-RPC format
@@ -97,7 +101,10 @@ class FortiManagerAPIClient(
 
             # Make the request
             response = self.session.post(
-                f"{self.base_url}/jsonrpc", json=json_rpc_request, timeout=self.timeout, verify=self.verify_ssl
+                f"{self.base_url}/jsonrpc",
+                json=json_rpc_request,
+                timeout=self.timeout,
+                verify=self.verify_ssl,
             )
 
             if response.status_code == 200:

@@ -57,7 +57,9 @@ class DeviceManager:
                         devices.append(
                             {
                                 "name": device.get("name", ""),
-                                "hostname": device.get("hostname", device.get("name", "")),
+                                "hostname": device.get(
+                                    "hostname", device.get("name", "")
+                                ),
                                 "ip": device.get("ip", ""),
                                 "platform": device.get("platform", ""),
                                 "version": device.get("version", ""),
@@ -147,7 +149,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 인터페이스 목록 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/cmdb/system/interface")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/cmdb/system/interface"
+                )
 
                 if response and "results" in response:
                     for interface in response["results"]:
@@ -259,7 +263,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 방화벽 정책 목록 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/cmdb/firewall/policy")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/cmdb/firewall/policy"
+                )
 
                 if response and "results" in response:
                     for policy in response["results"]:
@@ -365,7 +371,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 라우팅 테이블 조회
-                response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/router/ipv4")
+                response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/router/ipv4"
+                )
 
                 if response and "results" in response:
                     for route in response["results"]:
@@ -461,9 +469,13 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 ARP 테이블 및 DHCP 리스 정보 조회
-                arp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/arp")
+                arp_response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/system/arp"
+                )
 
-                dhcp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/dhcp")
+                dhcp_response = self.api_client.get(
+                    device_name=device_name, url="/api/v2/monitor/system/dhcp"
+                )
 
                 # ARP 테이블에서 연결된 장치 정보 추출
                 if arp_response and "results" in arp_response:
@@ -591,9 +603,13 @@ class DeviceManager:
             return "Server"
         elif any(pc in hostname for pc in ["pc", "desktop", "workstation"]):
             return "PC"
-        elif any(mobile in hostname for mobile in ["phone", "iphone", "android", "mobile"]):
+        elif any(
+            mobile in hostname for mobile in ["phone", "iphone", "android", "mobile"]
+        ):
             return "Mobile"
-        elif any(printer in hostname for printer in ["print", "printer", "hp", "canon"]):
+        elif any(
+            printer in hostname for printer in ["print", "printer", "hp", "canon"]
+        ):
             return "Printer"
         elif any(network in hostname for network in ["switch", "router", "ap", "wifi"]):
             return "Network Device"
@@ -660,7 +676,9 @@ class DeviceManager:
         try:
             # 기본 정보
             if device_name in self._device_cache:
-                details["basic_info"] = self._device_cache[device_name].get("basic_info", {})
+                details["basic_info"] = self._device_cache[device_name].get(
+                    "basic_info", {}
+                )
             else:
                 devices = self.get_fortigate_devices()
                 for device in devices:
@@ -734,4 +752,3 @@ class DeviceManager:
         except Exception as e:
             logger.error(f"장치 검색 실패: {str(e)}")
             return []
-

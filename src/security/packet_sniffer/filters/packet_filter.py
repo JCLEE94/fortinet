@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 기본 패킷 필터
 IP, 포트, 프로토콜 등 기본적인 필터링 기능
@@ -116,7 +115,9 @@ class PacketFilter:
         }
         self.callbacks = []
 
-    def add_rule(self, field: str, operator: str, value: Any, action: str = "allow") -> FilterRule:
+    def add_rule(
+        self, field: str, operator: str, value: Any, action: str = "allow"
+    ) -> FilterRule:
         """
         필터 규칙 추가
 

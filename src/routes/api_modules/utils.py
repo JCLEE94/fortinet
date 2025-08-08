@@ -104,8 +104,20 @@ def generate_topology_data():
     """Generate sample topology data"""
     return {
         "nodes": [
-            {"id": "fw1", "name": "FortiGate-1", "type": "firewall", "x": 100, "y": 100},
-            {"id": "fw2", "name": "FortiGate-2", "type": "firewall", "x": 300, "y": 100},
+            {
+                "id": "fw1",
+                "name": "FortiGate-1",
+                "type": "firewall",
+                "x": 100,
+                "y": 100,
+            },
+            {
+                "id": "fw2",
+                "name": "FortiGate-2",
+                "type": "firewall",
+                "x": 300,
+                "y": 100,
+            },
             {"id": "sw1", "name": "Switch-1", "type": "switch", "x": 200, "y": 200},
         ],
         "edges": [

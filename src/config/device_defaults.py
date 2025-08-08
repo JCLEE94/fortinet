@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 장치 관리 페이지 기본 설정 및 하드코딩 값 관리
 """
@@ -201,8 +200,11 @@ API_ENDPOINTS = {
 # 성능 설정
 PERFORMANCE_CONFIG = {
     "datatable_page_length": int(os.getenv("DATATABLE_PAGE_LENGTH", "25")),
-    "auto_refresh_interval": int(os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")),  # 밀리초
-    "auto_refresh_enabled": os.getenv("DEVICE_AUTO_REFRESH_ENABLED", "false").lower() == "true",
+    "auto_refresh_interval": int(
+        os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")
+    ),  # 밀리초
+    "auto_refresh_enabled": os.getenv("DEVICE_AUTO_REFRESH_ENABLED", "false").lower()
+    == "true",
 }
 
 

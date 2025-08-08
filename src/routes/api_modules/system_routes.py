@@ -11,7 +11,8 @@ from config.unified_settings import unified_settings
 from utils.unified_cache_manager import cached
 from utils.unified_logger import get_logger
 
-from .utils import format_uptime, get_cpu_usage, get_memory_usage, get_system_uptime, optimized_response
+from .utils import (format_uptime, get_cpu_usage, get_memory_usage,
+                    get_system_uptime, optimized_response)
 
 logger = get_logger(__name__)
 
@@ -49,7 +50,10 @@ def health_check():
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return jsonify({"status": "unhealthy", "timestamp": time.time(), "error": str(e)}), 500
+        return (
+            jsonify({"status": "unhealthy", "timestamp": time.time(), "error": str(e)}),
+            500,
+        )
 
 
 @system_bp.route("/system/stats", methods=["GET"])

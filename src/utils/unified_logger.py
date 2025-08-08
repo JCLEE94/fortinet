@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Unified Logger Module for FortiGate Analyzer
 Provides a consistent, configurable logging interface with multiple logging strategies
@@ -24,13 +23,21 @@ class SensitiveDataMasker:
 
     # 민감정보 패턴들
     SENSITIVE_PATTERNS = {
-        "api_key": re.compile(r'(?i)(api[_-]?key|apikey|token)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{20,})["\']?'),
-        "password": re.compile(r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']?([^"\'\s]{6,})["\']?'),
-        "secret": re.compile(r'(?i)(secret|SECRET_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{16,})["\']?'),
+        "api_key": re.compile(
+            r'(?i)(api[_-]?key|apikey|token)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{20,})["\']?'
+        ),
+        "password": re.compile(
+            r'(?i)(password|passwd|pwd)\s*[=:]\s*["\']?([^"\'\s]{6,})["\']?'
+        ),
+        "secret": re.compile(
+            r'(?i)(secret|SECRET_KEY)\s*[=:]\s*["\']?([a-zA-Z0-9_-]{16,})["\']?'
+        ),
         "bearer_token": re.compile(r"(?i)Bearer\s+([a-zA-Z0-9_.-]{20,})"),
         "jwt": re.compile(r"eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+"),
         "credit_card": re.compile(r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b"),
-        "ip_private": re.compile(r"\b(?:10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.|192\.168\.)[\d.]+\b"),
+        "ip_private": re.compile(
+            r"\b(?:10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.|192\.168\.)[\d.]+\b"
+        ),
         "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
     }
 
@@ -47,11 +54,15 @@ class SensitiveDataMasker:
             if pattern_name == "api_key":
                 masked_message = pattern.sub(r"\1=***API_KEY_MASKED***", masked_message)
             elif pattern_name == "password":
-                masked_message = pattern.sub(r"\1=***PASSWORD_MASKED***", masked_message)
+                masked_message = pattern.sub(
+                    r"\1=***PASSWORD_MASKED***", masked_message
+                )
             elif pattern_name == "secret":
                 masked_message = pattern.sub(r"\1=***SECRET_MASKED***", masked_message)
             elif pattern_name == "bearer_token":
-                masked_message = pattern.sub(r"Bearer ***TOKEN_MASKED***", masked_message)
+                masked_message = pattern.sub(
+                    r"Bearer ***TOKEN_MASKED***", masked_message
+                )
             elif pattern_name == "jwt":
                 masked_message = pattern.sub("***JWT_TOKEN_MASKED***", masked_message)
             elif pattern_name == "credit_card":
@@ -61,7 +72,9 @@ class SensitiveDataMasker:
                 if os.environ.get("APP_MODE", "production").lower() != "development":
                     masked_message = pattern.sub("***IP_MASKED***", masked_message)
             elif pattern_name == "email":
-                masked_message = pattern.sub(lambda m: m.group(0).split("@")[0][:2] + "***@***", masked_message)
+                masked_message = pattern.sub(
+                    lambda m: m.group(0).split("@")[0][:2] + "***@***", masked_message
+                )
 
         return masked_message
 
@@ -127,8 +140,12 @@ class BasicLoggerStrategy(LoggerStrategy):
             logger.removeHandler(handler)
 
         # Create formatters
-        console_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        file_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        console_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        file_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
         # Console handler
         console_handler = SafeStreamHandler(sys.stdout)
@@ -155,7 +172,9 @@ class BasicLoggerStrategy(LoggerStrategy):
 
         except Exception as e:
             # If file logging fails, log to console
-            logger.warning(f"Log file setup failed (console logging still active): {str(e)}")
+            logger.warning(
+                f"Log file setup failed (console logging still active): {str(e)}"
+            )
 
 
 class AdvancedLoggerStrategy(LoggerStrategy):
@@ -168,7 +187,9 @@ class AdvancedLoggerStrategy(LoggerStrategy):
             logger.removeHandler(handler)
 
         # Create formatters
-        standard_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        standard_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         json_formatter = StructuredFormatter()
 
         # Console handler
@@ -238,7 +259,9 @@ class AdvancedLoggerStrategy(LoggerStrategy):
 
         except Exception as e:
             # If file logging fails, log to console
-            logger.warning(f"Advanced log file setup failed (console logging still active): {str(e)}")
+            logger.warning(
+                f"Advanced log file setup failed (console logging still active): {str(e)}"
+            )
 
 
 class SecureStructuredFormatter(logging.Formatter):
@@ -271,7 +294,9 @@ class SecureStructuredFormatter(logging.Formatter):
         # Add exception info if available (민감정보 마스킹 적용)
         if record.exc_info and record.exc_info[0] is not None:
             exception_message = str(record.exc_info[1]) if record.exc_info[1] else ""
-            masked_exception = SensitiveDataMasker.mask_sensitive_data(exception_message)
+            masked_exception = SensitiveDataMasker.mask_sensitive_data(
+                exception_message
+            )
 
             log_data["exception"] = {
                 "type": record.exc_info[0].__name__,
@@ -283,7 +308,9 @@ class SecureStructuredFormatter(logging.Formatter):
             }
         elif record.exc_info:
             # Handle case where exc_info is provided but empty
-            log_data["exception"] = {"message": "Exception occurred but no details available"}
+            log_data["exception"] = {
+                "message": "Exception occurred but no details available"
+            }
 
         return json.dumps(log_data, ensure_ascii=False)
 
@@ -362,7 +389,9 @@ class LoggerRegistry:
                 handlers_to_remove = []
                 for handler in logger.logger.handlers[:]:
                     try:
-                        if hasattr(handler, "stream") and hasattr(handler.stream, "closed"):
+                        if hasattr(handler, "stream") and hasattr(
+                            handler.stream, "closed"
+                        ):
                             if not handler.stream.closed:
                                 handler.flush()
                                 if hasattr(handler, "close"):
@@ -443,7 +472,9 @@ class UnifiedLogger:
 
         self.strategy.setup(self.logger)
 
-    def log_with_context(self, level: int, msg: str, context: Dict[str, Any] = None, **kwargs):
+    def log_with_context(
+        self, level: int, msg: str, context: Dict[str, Any] = None, **kwargs
+    ):
         """Log a message with additional context"""
         extra = kwargs.get("extra", {})
         if context:
@@ -451,7 +482,9 @@ class UnifiedLogger:
         self.logger.log(level, msg, extra=extra, **kwargs)
 
     # Specialized logging methods for API clients
-    def log_api_request(self, method: str, url: str, data: Any = None, headers: Dict = None):
+    def log_api_request(
+        self, method: str, url: str, data: Any = None, headers: Dict = None
+    ):
         """Log an API request"""
         extra = {
             "api_request": {
@@ -463,7 +496,9 @@ class UnifiedLogger:
         }
         self.logger.info(f"API Request: {method} {url}", extra=extra)
 
-    def log_api_response(self, status_code: int, response_data: Any = None, error: Any = None):
+    def log_api_response(
+        self, status_code: int, response_data: Any = None, error: Any = None
+    ):
         """Log an API response"""
         extra = {
             "api_response": {
@@ -498,7 +533,9 @@ class UnifiedLogger:
         if status == "connected":
             self.logger.info(f"FortiGate connected: {host}", extra=extra)
         else:
-            self.logger.error(f"FortiGate connection failed: {host} - {error}", extra=extra)
+            self.logger.error(
+                f"FortiGate connection failed: {host} - {error}", extra=extra
+            )
 
     def log_fortimanager_connection(
         self,
@@ -520,11 +557,17 @@ class UnifiedLogger:
         if status == "connected":
             self.logger.info(f"FortiManager connected: {host}", extra=extra)
         else:
-            self.logger.error(f"FortiManager connection failed: {host} - {error}", extra=extra)
+            self.logger.error(
+                f"FortiManager connection failed: {host} - {error}", extra=extra
+            )
 
-    def log_troubleshooting(self, issue: str, context: Dict[str, Any], resolution: Optional[str] = None):
+    def log_troubleshooting(
+        self, issue: str, context: Dict[str, Any], resolution: Optional[str] = None
+    ):
         """Log troubleshooting information"""
-        extra = {"context": {"issue": issue, "details": context, "resolution": resolution}}
+        extra = {
+            "context": {"issue": issue, "details": context, "resolution": resolution}
+        }
         self.logger.info(f"Troubleshooting: {issue}", extra=extra)
 
     def log_environment_check(self):
@@ -604,7 +647,9 @@ class UnifiedLogger:
 
 
 # Global functions for backward compatibility
-def get_logger(name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None) -> UnifiedLogger:
+def get_logger(
+    name: str, strategy: str = "basic", log_dir: str = None, log_level: str = None
+) -> UnifiedLogger:
     """Get a logger instance (compatible with existing code)"""
     return LoggerRegistry().get_logger(name, strategy, log_dir, log_level)
 
@@ -614,7 +659,9 @@ def setup_logger(name: str, log_level: str = None) -> UnifiedLogger:
     return get_logger(name, "basic", None, log_level)
 
 
-def get_advanced_logger(name: str, log_dir: str = None, log_level: str = None) -> UnifiedLogger:
+def get_advanced_logger(
+    name: str, log_dir: str = None, log_level: str = None
+) -> UnifiedLogger:
     """Get an advanced logger (compatible with existing code)"""
     return get_logger(name, "advanced", log_dir, log_level)
 

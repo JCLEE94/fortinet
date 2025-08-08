@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 HTTP Connection Pool Manager
 중앙화된 연결 풀 관리로 성능 최적화
@@ -172,7 +171,9 @@ class ConnectionPoolManager:
                 pool_stats = {
                     "num_connections": len(adapter.poolmanager.pools),
                     "num_requests": (
-                        adapter.poolmanager.num_requests if hasattr(adapter.poolmanager, "num_requests") else 0
+                        adapter.poolmanager.num_requests
+                        if hasattr(adapter.poolmanager, "num_requests")
+                        else 0
                     ),
                     "num_connections_dropped": (
                         adapter.poolmanager.num_connections_dropped
