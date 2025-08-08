@@ -14,7 +14,7 @@ logger = setup_logger("rule_validator")
 class RuleValidator:
     """방화벽 규칙 검증을 담당하는 클래스"""
 
-    def __init__(self, data_loader):
+    def __init__(self, data_loader=None):
         """
         규칙 검증기 초기화
 

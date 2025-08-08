@@ -73,6 +73,44 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         # Define test endpoint for FortiAnalyzer (not used since it's JSON-RPC)
         self.test_endpoint = "/sys/status"
 
+    def _build_json_rpc_request(self, method: str, url: str, data: dict = None, session: str = None, verbose: int = 0) -> dict:
+        """
+        Build JSON-RPC request payload for FortiAnalyzer API
+        
+        Args:
+            method (str): RPC method (exec, get, set, etc.)
+            url (str): API URL path
+            data (dict): Request data payload
+            session (str): Session ID if available
+            verbose (int): Verbosity level
+            
+        Returns:
+            dict: JSON-RPC request payload
+        """
+        import time
+        
+        payload = {
+            "id": int(time.time()),
+            "method": method,
+            "params": [{"url": url}]
+        }
+        
+        # Add session if provided
+        if session:
+            payload["session"] = session
+        elif self.session_id:
+            payload["session"] = self.session_id
+            
+        # Add data if provided
+        if data:
+            payload["params"][0]["data"] = data
+            
+        # Add verbosity if requested
+        if verbose:
+            payload["params"][0]["verbose"] = verbose
+            
+        return payload
+
     def login(self):
         """
         Login to FortiAnalyzer API with username/password
@@ -90,8 +128,8 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
             self.logger.error("API token or user credentials are required")
             return False
 
-        # Prepare login payload using common mixin
-        payload = self.build_json_rpc_request(
+        # Prepare login payload
+        payload = self._build_json_rpc_request(
             method="exec",
             url="/sys/login/user",
             data={"user": self.username, "passwd": self.password},
@@ -125,8 +163,8 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         if not self.api_token:
             return False
 
-        # Simple request to test token using common mixin
-        payload = self.build_json_rpc_request(method="get", url="/sys/status")
+        # Simple request to test token
+        payload = self._build_json_rpc_request(method="get", url="/sys/status")
 
         success, result, status_code = self._make_request("POST", self.base_url, payload, None, self.headers)
 
@@ -154,7 +192,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         if self.auth_method == "token" or not self.session_id:
             return True
 
-        payload = self.build_json_rpc_request(method="exec", url="/sys/logout", session=self.session_id)
+        payload = self._build_json_rpc_request(method="exec", url="/sys/logout", session=self.session_id)
 
         success, result, status_code = self._make_request("POST", self.base_url, payload, None, self.headers)
 
@@ -187,8 +225,8 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
             if not self.login():
                 return None
 
-        # Build request payload using common mixin
-        payload = self.build_json_rpc_request(
+        # Build request payload
+        payload = self._build_json_rpc_request(
             method=method,
             url=url,
             data=data,
