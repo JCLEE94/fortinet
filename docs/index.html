@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이준철 - Fortinet MSA Platform 포트폴리오</title>
+    <meta name="description" content="Senior Software Engineer - Microservices Architecture & DevOps Expert">
+    <meta name="keywords" content="Python, Microservices, Kubernetes, DevOps, Architecture">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="이준철 - Fortinet MSA Platform Portfolio">
+    <meta property="og:description" content="99.95% 가용성, 3200 RPS 고성능 마이크로서비스 플랫폼 개발">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jclee94.github.io/fortinet/">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #4a5568;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #667eea;
+        }
+        
+        main {
+            margin-top: 80px;
+        }
+        
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .hero .subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .hero .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            opacity: 0.8;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .stats {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+        
+        .stat-card {
+            padding: 2rem;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        .features {
+            padding: 4rem 0;
+            background: #f7fafc;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2d3748;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+        
+        .tech-stack {
+            padding: 4rem 0;
+            background: white;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .tech-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .achievements {
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .achievement-card {
+            background: rgba(255,255,255,0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .achievement-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 3rem 0;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .footer-links a:hover {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">이준철 Portfolio</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#project">Project</a></li>
+                <li><a href="#tech">Tech</a></li>
+                <li><a href="#achievements">Achievements</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="container">
+                <h1>Fortinet MSA Platform</h1>
+                <p class="subtitle">고성능 마이크로서비스 아키텍처 & DevOps 전문가</p>
+                <p class="description">
+                    99.95% 가용성과 3200 RPS 처리량을 달성한 차세대 네트워크 보안 플랫폼을 설계하고 구현했습니다.
+                    142개 파일 규모의 대형 Python 프로젝트를 7개 마이크로서비스로 분해하여 완전 자동화된 CI/CD 파이프라인을 구축했습니다.
+                </p>
+                <div class="cta-buttons">
+                    <a href="https://github.com/JCLEE94/fortinet" class="btn btn-primary" target="_blank">GitHub 저장소</a>
+                    <a href="#project" class="btn btn-secondary">프로젝트 상세</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="stats" class="stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">99.95%</div>
+                        <div class="stat-label">시스템 가용성</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">3200</div>
+                        <div class="stat-label">RPS 처리량</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">마이크로서비스</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">142</div>
+                        <div class="stat-label">Python 파일</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">85%</div>
+                        <div class="stat-label">자동화 수준</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">220%</div>
+                        <div class="stat-label">성능 향상</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="project" class="features">
+            <div class="container">
+                <h2 class="section-title">🏗️ 아키텍처 설계 전문성</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3 class="feature-title">모놀리식 → MSA 전환</h3>
+                        <p>레거시 시스템을 7개 독립 서비스로 분해하여 확장성과 유지보수성을 극대화했습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">고성능 API 게이트웨이</h3>
+                        <p>Kong Gateway를 활용해 3200 RPS 처리량과 28ms 평균 지연시간을 달성했습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3 class="feature-title">엔터프라이즈 보안</h3>
+                        <p>mTLS, JWT, RBAC을 통한 다층 보안 아키텍처로 기업급 보안을 구현했습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="feature-title">관측 가능성</h3>
+                        <p>Prometheus, Grafana, Jaeger를 통한 종합 모니터링으로 운영 투명성을 확보했습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3 class="feature-title">무중단 배포</h3>
+                        <p>Blue-Green, Canary 배포 전략으로 99.95% 가용성을 달성했습니다.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3 class="feature-title">AI 기반 자동화</h3>
+                        <p>머신러닝을 활용한 보안 정책 최적화로 85% 자동화 수준을 달성했습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="tech-stack">
+            <div class="container">
+                <h2 class="section-title">🛠️ 기술 스택 전문성</h2>
+                <div class="tech-grid">
+                    <div class="tech-item">
+                        <span>🐍</span> Python 3.11 + Flask
+                    </div>
+                    <div class="tech-item">
+                        <span>⚙️</span> Microservices Architecture
+                    </div>
+                    <div class="tech-item">
+                        <span>🐳</span> Docker + Kubernetes
+                    </div>
+                    <div class="tech-item">
+                        <span>🌊</span> Kong API Gateway
+                    </div>
+                    <div class="tech-item">
+                        <span>🔍</span> Consul Service Discovery
+                    </div>
+                    <div class="tech-item">
+                        <span>🐰</span> RabbitMQ Message Queue
+                    </div>
+                    <div class="tech-item">
+                        <span>💾</span> Redis Cluster
+                    </div>
+                    <div class="tech-item">
+                        <span>📈</span> Prometheus + Grafana
+                    </div>
+                    <div class="tech-item">
+                        <span>🔗</span> Jaeger Tracing
+                    </div>
+                    <div class="tech-item">
+                        <span>🚢</span> Harbor Registry
+                    </div>
+                    <div class="tech-item">
+                        <span>⚓</span> Helm Charts
+                    </div>
+                    <div class="tech-item">
+                        <span>🔄</span> ArgoCD GitOps
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="achievements" class="achievements">
+            <div class="container">
+                <h2 class="section-title">🏆 핵심 성과</h2>
+                <div class="achievement-grid">
+                    <div class="achievement-card">
+                        <h3 class="achievement-title">🚀 성능 최적화</h3>
+                        <ul>
+                            <li>API 응답시간 25% 개선 (캐싱 전략)</li>
+                            <li>메모리 사용량 24% 절약</li>
+                            <li>CPU 효율성 27% 향상</li>
+                            <li>처리량 220% 증가</li>
+                        </ul>
+                    </div>
+                    <div class="achievement-card">
+                        <h3 class="achievement-title">🔧 DevOps 혁신</h3>
+                        <ul>
+                            <li>완전 자동화 CI/CD 구축</li>
+                            <li>GitOps 방법론 도입</li>
+                            <li>컨테이너 이미지 60% 최적화</li>
+                            <li>배포 성공률 99.2% 달성</li>
+                        </ul>
+                    </div>
+                    <div class="achievement-card">
+                        <h3 class="achievement-title">📊 품질 관리</h3>
+                        <ul>
+                            <li>테스트 커버리지 78% 달성</li>
+                            <li>코드 품질 95% 준수율</li>
+                            <li>76개 테스트 파일 구축</li>
+                            <li>완전 자동화 품질 검사</li>
+                        </ul>
+                    </div>
+                    <div class="achievement-card">
+                        <h3 class="achievement-title">🏗️ 아키텍처</h3>
+                        <ul>
+                            <li>모놀리식 → MSA 성공적 전환</li>
+                            <li>7개 독립 서비스 설계</li>
+                            <li>수평 확장 아키텍처</li>
+                            <li>엔터프라이즈급 보안 구현</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-links">
+                <a href="https://github.com/JCLEE94/fortinet" target="_blank">GitHub</a>
+                <a href="https://github.com/JCLEE94/fortinet/blob/master/README.md" target="_blank">Documentation</a>
+                <a href="mailto:jclee94@example.com">Email</a>
+            </div>
+            <p>&copy; 2025 이준철. Made with ❤️ for Portfolio</p>
+            <p><em>jclee.me 인프라를 활용한 차세대 네트워크 보안 플랫폼</em></p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+
+        // Animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .stat-card, .achievement-card').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    </script>
+</body>
+</html>
