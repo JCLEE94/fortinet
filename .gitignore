@@ -110,6 +110,18 @@ k8s/manifests/secrets.yaml
 **/secrets.yaml
 venv_ppt/
 
+# Serena MCP Cache
+.serena/cache/
+.serena/memories/
+
+# Test artifacts and temporary files
+*_test_*.json
+*_2024*.json
+*_2025*.json
+test_results/
+temp/
+tmp/
+
 # Documentation restrictions (only README.md and CLAUDE.md allowed)
 *.md
 !README.md

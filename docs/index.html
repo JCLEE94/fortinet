@@ -3,17 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>이준철 - Fortinet MSA Platform 포트폴리오</title>
-    <meta name="description" content="Senior Software Engineer - Microservices Architecture & DevOps Expert">
-    <meta name="keywords" content="Python, Microservices, Kubernetes, DevOps, Architecture">
+    <title>이준철 - Senior Software Engineer Portfolio</title>
+    <meta name="description" content="99.95% 가용성 달성한 Fortinet MSA 플랫폼 개발자 - Python, Kubernetes, DevOps 전문가">
+    <meta name="keywords" content="Python, Microservices, Kubernetes, DevOps, Senior Developer, Software Engineer">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="이준철 - Fortinet MSA Platform Portfolio">
+    <meta property="og:title" content="이준철 - Senior Software Engineer Portfolio">
     <meta property="og:description" content="99.95% 가용성, 3200 RPS 고성능 마이크로서비스 플랫폼 개발">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://jclee94.github.io/fortinet/">
     
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --light-color: #f9fafb;
+            --gray-color: #6b7280;
+            --white: #ffffff;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-success: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
         * {
             margin: 0;
             padding: 0;
@@ -21,202 +42,295 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--dark-color);
+            overflow-x: hidden;
         }
         
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
+        /* Header */
         header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
             position: fixed;
-            width: 100%;
             top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header-scrolled {
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 0;
+            padding: 1.5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
         }
         
         .logo {
             font-size: 1.5rem;
-            font-weight: bold;
-            color: #4a5568;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 3rem;
             list-style: none;
         }
         
         .nav-links a {
             text-decoration: none;
-            color: #4a5568;
+            color: var(--dark-color);
             font-weight: 500;
-            transition: color 0.3s;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
         }
         
-        .nav-links a:hover {
-            color: #667eea;
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 50%;
+            background: var(--gradient-primary);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
         }
         
-        main {
-            margin-top: 80px;
+        .nav-links a:hover::after {
+            width: 100%;
         }
         
+        /* Hero Section */
         .hero {
-            padding: 4rem 0;
+            min-height: 100vh;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"%3E%3Cpolygon fill="rgba(255,255,255,0.1)" points="0,1000 1000,0 1000,1000"/%3E%3C/svg%3E');
+            background-size: cover;
+        }
+        
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .hero-text h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero-text .subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+        
+        .hero-text .description {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+        
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hero-stat {
             text-align: center;
             color: white;
         }
         
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
+        .hero-stat .number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #ffffff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
-        .hero .subtitle {
-            font-size: 1.3rem;
-            margin-bottom: 2rem;
+        .hero-stat .label {
+            font-size: 0.9rem;
             opacity: 0.9;
-        }
-        
-        .hero .description {
-            font-size: 1.1rem;
-            max-width: 800px;
-            margin: 0 auto 3rem;
-            opacity: 0.8;
+            font-weight: 500;
         }
         
         .cta-buttons {
             display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-top: 2rem;
         }
         
         .btn {
-            display: inline-block;
-            padding: 1rem 2rem;
+            padding: 1rem 2.5rem;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s;
+            font-size: 1rem;
+            transition: all 0.3s ease;
             border: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
         
         .btn-primary {
             background: white;
-            color: #667eea;
+            color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 255, 255, 0.4);
         }
         
         .btn-secondary {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
         }
         
         .btn-secondary:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-3px);
         }
         
-        .stats {
-            background: white;
-            padding: 4rem 0;
+        /* Performance Section */
+        .performance {
+            padding: 6rem 0;
+            background: var(--light-color);
         }
         
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .section-header {
             text-align: center;
-        }
-        
-        .stat-card {
-            padding: 2rem;
-            border-radius: 15px;
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-        
-        .stat-number {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stat-label {
-            font-size: 1.1rem;
-            color: #4a5568;
-            font-weight: 600;
-        }
-        
-        .features {
-            padding: 4rem 0;
-            background: #f7fafc;
+            margin-bottom: 4rem;
         }
         
         .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: #2d3748;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
         }
         
-        .features-grid {
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray-color);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .performance-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
         }
         
-        .feature-card {
+        .performance-card {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .feature-card:hover {
-            transform: translateY(-5px);
+        .performance-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
         
-        .feature-icon {
+        .performance-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            color: white;
+        }
+        
+        .performance-metric {
             font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary-color);
             margin-bottom: 1rem;
         }
         
-        .feature-title {
-            font-size: 1.3rem;
-            font-weight: bold;
+        .performance-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
             margin-bottom: 1rem;
-            color: #2d3748;
         }
         
+        .performance-description {
+            color: var(--gray-color);
+            line-height: 1.6;
+        }
+        
+        /* Tech Stack */
         .tech-stack {
-            padding: 4rem 0;
+            padding: 6rem 0;
             background: white;
         }
         
@@ -230,172 +344,284 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-            padding: 1rem;
-            background: #f7fafc;
-            border-radius: 10px;
-            font-weight: 600;
-            color: #4a5568;
-        }
-        
-        .achievements {
-            padding: 4rem 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .achievement-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        
-        .achievement-card {
-            background: rgba(255,255,255,0.1);
-            padding: 2rem;
+            padding: 1.5rem;
+            background: var(--light-color);
             border-radius: 15px;
-            backdrop-filter: blur(10px);
+            font-weight: 600;
+            color: var(--dark-color);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
         
-        .achievement-title {
+        .tech-item:hover {
+            background: white;
+            border-color: var(--primary-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+        }
+        
+        .tech-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+        }
+        
+        /* Projects Section */
+        .projects {
+            padding: 6rem 0;
+            background: var(--light-color);
+        }
+        
+        .project-showcase {
+            background: white;
+            border-radius: 30px;
+            padding: 4rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .project-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--dark-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .project-description {
             font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
+            color: var(--gray-color);
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
+        .project-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .project-metric {
+            padding: 2rem;
+            background: var(--light-color);
+            border-radius: 20px;
+        }
+        
+        .metric-number {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        /* Footer */
         footer {
-            background: #2d3748;
+            background: var(--dark-color);
             color: white;
             text-align: center;
-            padding: 3rem 0;
+            padding: 4rem 2rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 3rem;
+            margin-bottom: 3rem;
         }
         
         .footer-links a {
             color: white;
             text-decoration: none;
             font-weight: 500;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
         }
         
         .footer-links a:hover {
-            color: #667eea;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
         }
         
+        /* Mobile Responsive */
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-            
             .nav-links {
                 display: none;
+            }
+            
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+            }
+            
+            .hero-stats {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 2rem;
             }
             
             .cta-buttons {
                 flex-direction: column;
                 align-items: center;
             }
+            
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        /* Scroll Animations */
+        .scroll-animate {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+        
+        .scroll-animate.animate {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <div class="logo">이준철 Portfolio</div>
+    <header id="header">
+        <nav>
+            <div class="logo">JC.LEE</div>
             <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#project">Project</a></li>
-                <li><a href="#tech">Tech</a></li>
-                <li><a href="#achievements">Achievements</a></li>
+                <li><a href="#hero">Home</a></li>
+                <li><a href="#performance">Performance</a></li>
+                <li><a href="#tech">Tech Stack</a></li>
+                <li><a href="#projects">Projects</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
         </nav>
     </header>
 
     <main>
-        <section id="home" class="hero">
-            <div class="container">
-                <h1>Fortinet MSA Platform</h1>
-                <p class="subtitle">고성능 마이크로서비스 아키텍처 & DevOps 전문가</p>
-                <p class="description">
-                    99.95% 가용성과 3200 RPS 처리량을 달성한 차세대 네트워크 보안 플랫폼을 설계하고 구현했습니다.
-                    142개 파일 규모의 대형 Python 프로젝트를 7개 마이크로서비스로 분해하여 완전 자동화된 CI/CD 파이프라인을 구축했습니다.
-                </p>
-                <div class="cta-buttons">
-                    <a href="https://github.com/JCLEE94/fortinet" class="btn btn-primary" target="_blank">GitHub 저장소</a>
-                    <a href="#project" class="btn btn-secondary">프로젝트 상세</a>
+        <section id="hero" class="hero">
+            <div class="hero-content">
+                <div class="hero-text animate-fade-in-up">
+                    <h1>Senior Software Engineer</h1>
+                    <p class="subtitle">Microservices Architecture & DevOps Expert</p>
+                    <p class="description">
+                        99.95% 가용성과 3200 RPS 처리량을 달성한 엔터프라이즈급 마이크로서비스 플랫폼을 설계하고 구현했습니다.
+                        142개 파일 규모의 대형 프로젝트를 7개 독립 서비스로 분해하여 완전 자동화된 GitOps 파이프라인을 구축했습니다.
+                    </p>
+                    <div class="cta-buttons">
+                        <a href="https://github.com/JCLEE94/fortinet" class="btn btn-primary" target="_blank">
+                            <i class="fab fa-github"></i> GitHub Repository
+                        </a>
+                        <a href="#projects" class="btn btn-secondary">
+                            <i class="fas fa-rocket"></i> View Projects
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-stats animate-fade-in-up">
+                    <div class="hero-stat">
+                        <div class="number">99.95%</div>
+                        <div class="label">System Availability</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">3200</div>
+                        <div class="label">RPS Throughput</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">220%</div>
+                        <div class="label">Performance Gain</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">7</div>
+                        <div class="label">Microservices</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">142</div>
+                        <div class="label">Python Files</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="number">85%</div>
+                        <div class="label">Automation Level</div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="stats" class="stats">
+        <section id="performance" class="performance">
             <div class="container">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number">99.95%</div>
-                        <div class="stat-label">시스템 가용성</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">3200</div>
-                        <div class="stat-label">RPS 처리량</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">7</div>
-                        <div class="stat-label">마이크로서비스</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">142</div>
-                        <div class="stat-label">Python 파일</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">85%</div>
-                        <div class="stat-label">자동화 수준</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-number">220%</div>
-                        <div class="stat-label">성능 향상</div>
-                    </div>
+                <div class="section-header scroll-animate">
+                    <h2 class="section-title">🚀 Performance Achievements</h2>
+                    <p class="section-subtitle">Enterprise-grade metrics that demonstrate technical excellence</p>
                 </div>
-            </div>
-        </section>
-
-        <section id="project" class="features">
-            <div class="container">
-                <h2 class="section-title">🏗️ 아키텍처 설계 전문성</h2>
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <div class="feature-icon">🔄</div>
-                        <h3 class="feature-title">모놀리식 → MSA 전환</h3>
-                        <p>레거시 시스템을 7개 독립 서비스로 분해하여 확장성과 유지보수성을 극대화했습니다.</p>
+                <div class="performance-grid">
+                    <div class="performance-card scroll-animate">
+                        <div class="performance-icon">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="performance-metric">25%</div>
+                        <div class="performance-label">Response Time Improvement</div>
+                        <div class="performance-description">
+                            캐싱 전략과 비동기 처리 최적화로 API 응답시간을 100ms에서 75ms로 단축했습니다.
+                        </div>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">⚡</div>
-                        <h3 class="feature-title">고성능 API 게이트웨이</h3>
-                        <p>Kong Gateway를 활용해 3200 RPS 처리량과 28ms 평균 지연시간을 달성했습니다.</p>
+                    <div class="performance-card scroll-animate">
+                        <div class="performance-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="performance-metric">220%</div>
+                        <div class="performance-label">Throughput Increase</div>
+                        <div class="performance-description">
+                            Kong Gateway 튜닝과 서비스 메시 최적화로 처리량을 1000 RPS에서 3200 RPS로 향상시켰습니다.
+                        </div>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🛡️</div>
-                        <h3 class="feature-title">엔터프라이즈 보안</h3>
-                        <p>mTLS, JWT, RBAC을 통한 다층 보안 아키텍처로 기업급 보안을 구현했습니다.</p>
+                    <div class="performance-card scroll-animate">
+                        <div class="performance-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="performance-metric">99.95%</div>
+                        <div class="performance-label">System Availability</div>
+                        <div class="performance-description">
+                            Blue-Green 배포와 자동 헬스체크로 목표 99.9%를 초과 달성한 엔터프라이즈급 가용성을 구현했습니다.
+                        </div>
                     </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">📊</div>
-                        <h3 class="feature-title">관측 가능성</h3>
-                        <p>Prometheus, Grafana, Jaeger를 통한 종합 모니터링으로 운영 투명성을 확보했습니다.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🚀</div>
-                        <h3 class="feature-title">무중단 배포</h3>
-                        <p>Blue-Green, Canary 배포 전략으로 99.95% 가용성을 달성했습니다.</p>
-                    </div>
-                    <div class="feature-card">
-                        <div class="feature-icon">🤖</div>
-                        <h3 class="feature-title">AI 기반 자동화</h3>
-                        <p>머신러닝을 활용한 보안 정책 최적화로 85% 자동화 수준을 달성했습니다.</p>
+                    <div class="performance-card scroll-animate">
+                        <div class="performance-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <div class="performance-metric">24%</div>
+                        <div class="performance-label">Memory Optimization</div>
+                        <div class="performance-description">
+                            가비지 컬렉션 튜닝과 메모리 프로파일링으로 2.1GB에서 1.6GB로 메모리 사용량을 절약했습니다.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -403,87 +629,96 @@
 
         <section id="tech" class="tech-stack">
             <div class="container">
-                <h2 class="section-title">🛠️ 기술 스택 전문성</h2>
+                <div class="section-header scroll-animate">
+                    <h2 class="section-title">🛠️ Technology Expertise</h2>
+                    <p class="section-subtitle">Modern tech stack mastery for scalable enterprise solutions</p>
+                </div>
                 <div class="tech-grid">
-                    <div class="tech-item">
-                        <span>🐍</span> Python 3.11 + Flask
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🐍</div>
+                        <div>Python 3.11 + Flask</div>
                     </div>
-                    <div class="tech-item">
-                        <span>⚙️</span> Microservices Architecture
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">⚙️</div>
+                        <div>Microservices Architecture</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🐳</span> Docker + Kubernetes
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🐳</div>
+                        <div>Docker + Kubernetes</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🌊</span> Kong API Gateway
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🌊</div>
+                        <div>Kong API Gateway</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🔍</span> Consul Service Discovery
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🔍</div>
+                        <div>Consul Service Discovery</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🐰</span> RabbitMQ Message Queue
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🐰</div>
+                        <div>RabbitMQ Message Queue</div>
                     </div>
-                    <div class="tech-item">
-                        <span>💾</span> Redis Cluster
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">💾</div>
+                        <div>Redis Cluster</div>
                     </div>
-                    <div class="tech-item">
-                        <span>📈</span> Prometheus + Grafana
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">📈</div>
+                        <div>Prometheus + Grafana</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🔗</span> Jaeger Tracing
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🔗</div>
+                        <div>Jaeger Tracing</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🚢</span> Harbor Registry
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🚢</div>
+                        <div>Harbor Registry</div>
                     </div>
-                    <div class="tech-item">
-                        <span>⚓</span> Helm Charts
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">⚓</div>
+                        <div>Helm Charts</div>
                     </div>
-                    <div class="tech-item">
-                        <span>🔄</span> ArgoCD GitOps
+                    <div class="tech-item scroll-animate">
+                        <div class="tech-icon">🔄</div>
+                        <div>ArgoCD GitOps</div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="achievements" class="achievements">
+        <section id="projects" class="projects">
             <div class="container">
-                <h2 class="section-title">🏆 핵심 성과</h2>
-                <div class="achievement-grid">
-                    <div class="achievement-card">
-                        <h3 class="achievement-title">🚀 성능 최적화</h3>
-                        <ul>
-                            <li>API 응답시간 25% 개선 (캐싱 전략)</li>
-                            <li>메모리 사용량 24% 절약</li>
-                            <li>CPU 효율성 27% 향상</li>
-                            <li>처리량 220% 증가</li>
-                        </ul>
+                <div class="project-showcase scroll-animate">
+                    <h2 class="project-title">Fortinet MSA Platform</h2>
+                    <p class="project-description">
+                        FortiGate 방화벽, FortiManager, ITSM을 통합한 차세대 네트워크 보안 모니터링 및 분석 플랫폼.
+                        AI 기반 자동화로 운영 효율성을 혁신하고 GitOps 방식으로 제로 다운타임 배포를 달성했습니다.
+                    </p>
+                    <div class="project-metrics">
+                        <div class="project-metric">
+                            <div class="metric-number">142</div>
+                            <div class="metric-label">Python Files</div>
+                        </div>
+                        <div class="project-metric">
+                            <div class="metric-number">7</div>
+                            <div class="metric-label">Microservices</div>
+                        </div>
+                        <div class="project-metric">
+                            <div class="metric-number">78%</div>
+                            <div class="metric-label">Test Coverage</div>
+                        </div>
+                        <div class="project-metric">
+                            <div class="metric-number">99.2%</div>
+                            <div class="metric-label">Deploy Success</div>
+                        </div>
                     </div>
-                    <div class="achievement-card">
-                        <h3 class="achievement-title">🔧 DevOps 혁신</h3>
-                        <ul>
-                            <li>완전 자동화 CI/CD 구축</li>
-                            <li>GitOps 방법론 도입</li>
-                            <li>컨테이너 이미지 60% 최적화</li>
-                            <li>배포 성공률 99.2% 달성</li>
-                        </ul>
-                    </div>
-                    <div class="achievement-card">
-                        <h3 class="achievement-title">📊 품질 관리</h3>
-                        <ul>
-                            <li>테스트 커버리지 78% 달성</li>
-                            <li>코드 품질 95% 준수율</li>
-                            <li>76개 테스트 파일 구축</li>
-                            <li>완전 자동화 품질 검사</li>
-                        </ul>
-                    </div>
-                    <div class="achievement-card">
-                        <h3 class="achievement-title">🏗️ 아키텍처</h3>
-                        <ul>
-                            <li>모놀리식 → MSA 성공적 전환</li>
-                            <li>7개 독립 서비스 설계</li>
-                            <li>수평 확장 아키텍처</li>
-                            <li>엔터프라이즈급 보안 구현</li>
-                        </ul>
+                    <div class="cta-buttons">
+                        <a href="https://github.com/JCLEE94/fortinet" class="btn btn-primary" target="_blank">
+                            <i class="fab fa-github"></i> View Source Code
+                        </a>
+                        <a href="https://github.com/JCLEE94/fortinet/blob/master/README.md" class="btn btn-secondary" target="_blank">
+                            <i class="fas fa-book"></i> Read Documentation
+                        </a>
                     </div>
                 </div>
             </div>
@@ -491,39 +726,51 @@
     </main>
 
     <footer id="contact">
-        <div class="container">
+        <div class="footer-content">
             <div class="footer-links">
-                <a href="https://github.com/JCLEE94/fortinet" target="_blank">GitHub</a>
-                <a href="https://github.com/JCLEE94/fortinet/blob/master/README.md" target="_blank">Documentation</a>
-                <a href="mailto:jclee94@example.com">Email</a>
+                <a href="https://github.com/JCLEE94/fortinet" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <a href="https://github.com/JCLEE94/fortinet/blob/master/README.md" target="_blank">
+                    <i class="fas fa-file-alt"></i> Documentation
+                </a>
+                <a href="mailto:jclee94@example.com">
+                    <i class="fas fa-envelope"></i> Email Contact
+                </a>
             </div>
-            <p>&copy; 2025 이준철. Made with ❤️ for Portfolio</p>
-            <p><em>jclee.me 인프라를 활용한 차세대 네트워크 보안 플랫폼</em></p>
+            <div>
+                <p>&copy; 2025 이준철 (Lee Jun Chul) - Senior Software Engineer</p>
+                <p style="margin-top: 1rem; opacity: 0.7;"><em>jclee.me 인프라를 활용한 차세대 네트워크 보안 플랫폼</em></p>
+            </div>
         </div>
     </footer>
 
     <script>
-        // Smooth scrolling
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
-                });
-            });
-        });
-
-        // Header background on scroll
+        // Header scroll effect
         window.addEventListener('scroll', () => {
-            const header = document.querySelector('header');
+            const header = document.getElementById('header');
             if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.classList.add('header-scrolled');
             } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.classList.remove('header-scrolled');
             }
         });
 
-        // Animation on scroll
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for scroll animations
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -532,17 +779,56 @@
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
+                    entry.target.classList.add('animate');
                 }
             });
         }, observerOptions);
 
-        document.querySelectorAll('.feature-card, .stat-card, .achievement-card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
+        // Observe all scroll-animate elements
+        document.querySelectorAll('.scroll-animate').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Performance metrics counter animation
+        const animateCounters = () => {
+            const counters = document.querySelectorAll('.performance-metric, .metric-number, .hero-stat .number');
+            
+            counters.forEach(counter => {
+                const target = parseFloat(counter.textContent.replace(/[^\d.]/g, ''));
+                const suffix = counter.textContent.replace(/[\d.]/g, '');
+                let current = 0;
+                const increment = target / 100;
+                
+                const updateCounter = () => {
+                    if (current < target) {
+                        current += increment;
+                        counter.textContent = Math.floor(current) + suffix;
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target + suffix;
+                    }
+                };
+                
+                // Start animation when element is visible
+                const counterObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            updateCounter();
+                            counterObserver.unobserve(entry.target);
+                        }
+                    });
+                });
+                
+                counterObserver.observe(counter);
+            });
+        };
+
+        // Initialize counter animations
+        animateCounters();
+
+        // Add loading animation
+        window.addEventListener('load', () => {
+            document.body.classList.add('loaded');
         });
     </script>
 </body>
