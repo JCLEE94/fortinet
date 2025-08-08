@@ -916,53 +916,6 @@ Copyright © 2025 Nextrade. All rights reserved.
 
 ---
 
----
-
-## 🎯 프로젝트 하이라이트 (이력서용)
-
-### 📊 핵심 성과 지표
-- **142개 파일** 규모의 대형 Python 프로젝트 아키텍처 설계 및 구현
-- **7개 마이크로서비스** 기반 분산 시스템 개발 (Flask, Kong, Consul)
-- **99.95% 가용성** 달성으로 엔터프라이즈급 안정성 구현
-- **3200 RPS** 고성능 API 게이트웨이 구축 (220% 성능 향상)
-- **완전 자동화 CI/CD** 파이프라인 구축 (GitHub Actions + ArgoCD)
-- **85% 자동화** 수준의 지능형 운영 시스템 개발
-
-### 🛠️ 기술 스택 전문성
-- **Backend**: Python 3.11, Flask, Microservices Architecture
-- **Infrastructure**: Kubernetes, Docker, Harbor Registry, Helm Charts
-- **API Gateway**: Kong, Traefik, Service Mesh (Consul)
-- **Database**: Redis Cluster, JSON-based Data Pipeline
-- **Monitoring**: Prometheus, Grafana, Jaeger (Distributed Tracing)
-- **CI/CD**: GitHub Actions, ArgoCD GitOps, ChartMuseum
-- **Security**: mTLS, JWT, RBAC, Network Policies
-
-### 🏗️ 아키텍처 설계 전문성
-- **모놀리식 → MSA 전환**: 레거시 시스템을 7개 독립 서비스로 분해
-- **고가용성 설계**: Blue-Green, Canary 배포로 무중단 서비스 구현
-- **성능 최적화**: 캐싱 전략과 비동기 처리로 응답시간 25% 단축
-- **확장성 설계**: 수평 확장 가능한 마이크로서비스 아키텍처
-- **보안 중심 설계**: 다층 보안과 암호화 통신으로 엔터프라이즈 보안 구현
-- **관측 가능성**: 종합 모니터링과 분산 추적으로 운영 투명성 확보
-
-### 💡 혁신적 기술 도입
-- **AI 기반 자동화**: 머신러닝으로 보안 정책 자동 최적화
-- **GitOps 방법론**: 코드로 인프라를 관리하는 선언적 배포 구현
-- **서비스 메시**: Kong + Consul로 마이크로서비스 통신 최적화
-- **실시간 분석**: 패킷 분석과 위협 탐지 시스템 구축
-- **컨테이너 최적화**: Multi-stage 빌드로 이미지 크기 60% 절약
-
-### 📈 개발 프로세스 혁신
-- **코드 품질**: Black, isort, Flake8으로 95% 준수율 달성
-- **테스트 자동화**: 76개 테스트 파일로 78% 커버리지 달성
-- **문서화**: 892줄 README로 완전한 프로젝트 문서화
-- **버전 관리**: Conventional Commits으로 체계적 이력 관리
-- **성능 모니터링**: 실시간 메트릭으로 지속적 성능 개선
-
-이 프로젝트는 **대규모 분산 시스템 설계**, **고성능 마이크로서비스 개발**, **완전 자동화 DevOps** 역량을 종합적으로 보여주는 포트폴리오입니다.
-
----
-
 **Made with ❤️ by Nextrade Engineering Team**
 
 *jclee.me 인프라를 활용한 차세대 네트워크 보안 플랫폼*
