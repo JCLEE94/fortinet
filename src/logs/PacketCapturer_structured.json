@@ -1,1 +1,4 @@
 
+{"timestamp": "2025-08-08T06:40:32.966918+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "PacketCapturer 초기화됨", "module": "base_sniffer", "function": "__init__", "line": 109}
+{"timestamp": "2025-08-08T06:40:32.969057+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화됨", "module": "packet_capturer", "function": "__init__", "line": 175}
+{"timestamp": "2025-08-08T06:40:32.972210+00:00", "level": "INFO", "logger": "PacketCapturer", "message": "패킷 캡처러 초기화 완료", "module": "packet_capturer", "function": "initialize", "line": 192}
