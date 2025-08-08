@@ -3,9 +3,9 @@ System-related API routes
 """
 
 from flask import current_app
-from utils.common_imports import Blueprint, jsonify, os, time
 
 from config.unified_settings import unified_settings
+from utils.common_imports import Blueprint, jsonify, os, time
 from utils.unified_cache_manager import cached
 from utils.unified_logger import get_logger
 
@@ -143,14 +143,12 @@ def get_topology_data():
 def generate_access_token():
     """API 액세스 토큰 생성"""
     try:
-        import hashlib
         import secrets
 
         # Generate a random token
         token = secrets.token_urlsafe(32)
 
-        # Create a hash for storage (in a real implementation, store this securely)
-        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        # TODO: implement secure token storage and hashing
 
         response_data = {
             "token": token,

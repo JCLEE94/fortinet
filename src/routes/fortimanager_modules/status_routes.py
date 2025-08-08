@@ -34,7 +34,7 @@ def get_fortimanager_status():
         try:
             # Test token authentication first
             if fm_client.test_token_auth():
-                status = "limited"  # Token auth but may have limited permissions
+                # Token auth but may have limited permissions
 
                 # Try to get additional data
                 try:
@@ -57,7 +57,6 @@ def get_fortimanager_status():
                     }
 
                     if fm_client.test_comprehensive_access():
-                        status = "full"
                         status_data["status"] = "fully_connected"
                         status_data["capabilities"].extend(
                             [

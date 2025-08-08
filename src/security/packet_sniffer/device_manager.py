@@ -32,23 +32,12 @@ from .base_sniffer import SnifferConfig
 try:
     from utils.unified_logger import get_logger
 except ImportError:
-    # Docker 환경이나 다른 실행 컨텍스트에서는 상대 경로 사용
+    # Docker 환경이나 다른 실행 컨텍스트에서는 fallback 로거 사용
     import logging
 
     def get_logger(name, level="INFO"):
-        logger = logging.getLogger(name)
-        if not logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-            # 사용자 정의 레벨을 표준 레벨로 매핑
-            level_map = {"ADVANCED": "DEBUG", "BASIC": "INFO"}
-            actual_level = level_map.get(level.upper(), level.upper())
-            logger.setLevel(getattr(logging, actual_level, logging.INFO))
-        return logger
+        """Fallback logger function when unified_logger is not available"""
+        return logging.getLogger(name)
 
 
 @dataclass

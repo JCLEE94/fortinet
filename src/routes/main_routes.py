@@ -2,8 +2,9 @@
 Main routes for pages
 """
 
-from utils.common_imports import Blueprint, os, render_template
 from flask import redirect, url_for
+
+from utils.common_imports import Blueprint, os, render_template
 
 main_bp = Blueprint("main", __name__)
 

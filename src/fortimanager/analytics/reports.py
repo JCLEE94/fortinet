@@ -219,7 +219,10 @@ class ReportGenerator:
         for section in report_data["sections"]:
             content += f"<div class='section'><h2>{section['title']}</h2>"
             for metric_name, metric_data in section["metrics"].items():
-                content += f"<div class='metric'><strong>{metric_name}:</strong> {metric_data.get('value', 'N/A')}</div>"
+                content += (
+                    f"<div class='metric'><strong>{metric_name}:</strong> "
+                    f"{metric_data.get('value', 'N/A')}</div>"
+                )
             content += "</div>"
 
         return html_template.format(
@@ -241,7 +244,12 @@ class ReportGenerator:
         for section in report_data["sections"]:
             section_name = section["title"]
             for metric_name, metric_data in section["metrics"].items():
-                line = f"{section_name},{metric_name},{metric_data.get('value', '')},{metric_data.get('status', '')},{metric_data.get('trend', '')}"
+                line = (
+                    f"{section_name},{metric_name},"
+                    f"{metric_data.get('value', '')},"
+                    f"{metric_data.get('status', '')},"
+                    f"{metric_data.get('trend', '')}"
+                )
                 csv_lines.append(line)
 
         return "\n".join(csv_lines)

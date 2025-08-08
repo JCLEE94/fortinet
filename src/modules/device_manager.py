@@ -5,10 +5,9 @@ FortiGate 연결 장치 관리 모듈
 - 장치 인터페이스, 정책, 라우팅 등 상세 정보 제공
 """
 
-from utils.common_imports import Any, Dict, List, logging, time
-
 from api.clients.fortigate_api_client import FortiGateAPIClient
 from config.unified_settings import unified_settings as CONFIG
+from utils.common_imports import Any, Dict, List, logging, time
 
 logger = logging.getLogger(__name__)
 
