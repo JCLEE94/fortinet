@@ -48,3 +48,5 @@
 {"timestamp": "2025-08-02T20:15:47.921463+00:00", "level": "INFO", "logger": "PacketSnifferAPI", "message": "패킷 스니퍼 API 초기화 완료", "module": "packet_sniffer_api", "function": "__init__", "line": 127}
 {"timestamp": "2025-08-02T20:24:46.615970+00:00", "level": "INFO", "logger": "PacketSnifferAPI", "message": "모든 컴포넌트 초기화 완료", "module": "packet_sniffer_api", "function": "_initialize_components", "line": 134}
 {"timestamp": "2025-08-02T20:24:46.616046+00:00", "level": "INFO", "logger": "PacketSnifferAPI", "message": "패킷 스니퍼 API 초기화 완료", "module": "packet_sniffer_api", "function": "__init__", "line": 127}
+{"timestamp": "2025-08-08T00:30:28.336735+00:00", "level": "INFO", "logger": "PacketSnifferAPI", "message": "모든 컴포넌트 초기화 완료", "module": "packet_sniffer_api", "function": "_initialize_components", "line": 134}
+{"timestamp": "2025-08-08T00:30:28.337075+00:00", "level": "INFO", "logger": "PacketSnifferAPI", "message": "패킷 스니퍼 API 초기화 완료", "module": "packet_sniffer_api", "function": "__init__", "line": 127}
