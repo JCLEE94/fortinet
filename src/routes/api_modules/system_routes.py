@@ -10,7 +10,8 @@ from flask import Blueprint, current_app, jsonify
 from config.unified_settings import unified_settings
 from utils.unified_cache_manager import cached
 from utils.unified_logger import get_logger
-from .utils import format_uptime, get_system_uptime, get_memory_usage, get_cpu_usage, optimized_response
+
+from .utils import format_uptime, get_cpu_usage, get_memory_usage, get_system_uptime, optimized_response
 
 logger = get_logger(__name__)
 
@@ -34,7 +35,7 @@ def health_check():
         try:
             memory = get_memory_usage()
             cpu_usage = get_cpu_usage()
-            
+
             health_status["metrics"] = {
                 "memory_usage_percent": memory["usage_percent"],
                 "cpu_usage_percent": cpu_usage,
@@ -48,11 +49,7 @@ def health_check():
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return jsonify({
-            "status": "unhealthy",
-            "timestamp": time.time(),
-            "error": str(e)
-        }), 500
+        return jsonify({"status": "unhealthy", "timestamp": time.time(), "error": str(e)}), 500
 
 
 @system_bp.route("/system/stats", methods=["GET"])
@@ -130,8 +127,9 @@ def get_topology_data():
     """네트워크 토폴로지 데이터 조회"""
     try:
         from .utils import generate_topology_data
+
         topology = generate_topology_data()
-        
+
         return jsonify({"success": True, "data": topology})
 
     except Exception as e:
@@ -143,22 +141,22 @@ def get_topology_data():
 def generate_access_token():
     """API 액세스 토큰 생성"""
     try:
-        import secrets
         import hashlib
-        
+        import secrets
+
         # Generate a random token
         token = secrets.token_urlsafe(32)
-        
+
         # Create a hash for storage (in a real implementation, store this securely)
         token_hash = hashlib.sha256(token.encode()).hexdigest()
-        
+
         response_data = {
             "token": token,
             "expires_in": 3600,  # 1 hour
             "token_type": "Bearer",
             "created_at": time.time(),
         }
-        
+
         logger.info("API token generated successfully")
         return jsonify({"success": True, "data": response_data})
 

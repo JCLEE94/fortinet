@@ -12,14 +12,8 @@ from typing import Any, Dict, List
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 # Import from the new modular structure
-from .analytics import (
-    AdvancedAnalyticsEngine as ModularAnalyticsEngine,
-    AnalyticsInsight,
-    AnalyticsMetric,
-    AnalyticsType,
-    PredictiveModel,
-    ReportFormat,
-)
+from .analytics import AdvancedAnalyticsEngine as ModularAnalyticsEngine
+from .analytics import AnalyticsInsight, AnalyticsMetric, AnalyticsType, PredictiveModel, ReportFormat
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +25,10 @@ class AdvancedAnalyticsEngine:
     def __init__(self, api_client: FortiManagerAPIClient = None):
         self.api_client = api_client
         self.logger = logger
-        
+
         # Initialize the modular engine
         self._engine = ModularAnalyticsEngine(api_client)
-        
+
         # Expose properties for backward compatibility
         self.metrics = self._engine.metrics
         self.insights = self._engine.insights
@@ -61,7 +55,14 @@ class AdvancedAnalyticsEngine:
         """Generate actionable insights from analysis results (delegates to modular engine)"""
         return await self._engine.generate_insights(analysis_results)
 
-    def generate_report(self, template_name: str, metrics: List[str], start_time: datetime, end_time: datetime, format_type: ReportFormat = ReportFormat.JSON) -> Any:
+    def generate_report(
+        self,
+        template_name: str,
+        metrics: List[str],
+        start_time: datetime,
+        end_time: datetime,
+        format_type: ReportFormat = ReportFormat.JSON,
+    ) -> Any:
         """Generate a comprehensive analytics report (delegates to modular engine)"""
         return self._engine.generate_report(template_name, metrics, start_time, end_time, format_type)
 
@@ -78,8 +79,8 @@ def get_advanced_analytics_engine(api_client: FortiManagerAPIClient = None) -> A
     """Factory function to create analytics engine instance"""
     if api_client is None:
         # Create a mock client for testing
-        api_client = type('MockClient', (), {})()
-    
+        api_client = type("MockClient", (), {})()
+
     return AdvancedAnalyticsEngine(api_client)
 
 

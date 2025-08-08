@@ -5,19 +5,13 @@ FortiManager API Client
 Modular implementation with mixin-based architecture
 """
 
-import os
 from typing import Any, Dict, Optional
 
 from utils.api_utils import ConnectionTestMixin
 from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from .fortimanager import (
-    AdvancedFeaturesMixin,
-    AuthConnectionMixin,
-    DeviceManagementMixin,
-    PolicyManagementMixin,
-)
+from .fortimanager import AdvancedFeaturesMixin, AuthConnectionMixin, DeviceManagementMixin, PolicyManagementMixin
 
 
 class FortiManagerAPIClient(
@@ -81,34 +75,31 @@ class FortiManagerAPIClient(
     ) -> Optional[Dict[str, Any]]:
         """
         Make API request to FortiManager using JSON-RPC format
-        
+
         Args:
             method (str): HTTP method (get, set, add, update, delete, exec)
             url (str): API endpoint URL
             data (dict): Request data
             params (dict): Additional parameters
-            
+
         Returns:
             dict: API response or None on error
         """
         try:
             # Build JSON-RPC request
             json_rpc_request = self.build_json_rpc_request(method, url, data or {})
-            
+
             # Add authentication if available
             if self.api_token:
                 json_rpc_request["access_token"] = self.api_token
             elif self.session_id:
                 json_rpc_request["session"] = self.session_id
-            
+
             # Make the request
             response = self.session.post(
-                f"{self.base_url}/jsonrpc",
-                json=json_rpc_request,
-                timeout=self.timeout,
-                verify=self.verify_ssl
+                f"{self.base_url}/jsonrpc", json=json_rpc_request, timeout=self.timeout, verify=self.verify_ssl
             )
-            
+
             if response.status_code == 200:
                 result = response.json()
                 # Return the result part of the JSON-RPC response
@@ -116,7 +107,7 @@ class FortiManagerAPIClient(
             else:
                 self.logger.error(f"HTTP error {response.status_code}: {response.text}")
                 return None
-                
+
         except Exception as e:
             self.logger.error(f"API request error: {e}")
             return None
@@ -141,5 +132,5 @@ class FortiManagerAPIClient(
             "connected": self.is_connected(),
             "login_time": self.login_time,
             "session_id": self.session_id is not None,
-            "auth_method": "token" if self.api_token else "session"
+            "auth_method": "token" if self.api_token else "session",
         }

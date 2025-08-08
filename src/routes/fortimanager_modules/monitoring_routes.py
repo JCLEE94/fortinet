@@ -20,7 +20,7 @@ def get_monitoring_data():
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
@@ -43,13 +43,13 @@ def start_packet_capture():
     try:
         data = request.get_json() or {}
         device_id = data.get("device_id")
-        
+
         if not device_id:
             return jsonify({"success": False, "message": "Device ID required"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
@@ -67,13 +67,13 @@ def stop_packet_capture():
     try:
         data = request.get_json() or {}
         capture_id = data.get("capture_id")
-        
+
         if not capture_id:
             return jsonify({"success": False, "message": "Capture ID required"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
@@ -91,7 +91,7 @@ def get_capture_results(capture_id):
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 

@@ -1,4 +1,3 @@
-import ipaddress
 
 from utils.unified_logger import setup_logger
 
@@ -8,19 +7,19 @@ logger = setup_logger("analyzer")
 class PolicyAnalyzer:
     """
     통합 정책 분석 클래스 - 여러 모듈로 분할됨
-    
+
     이전 버전과의 호환성을 위한 래퍼 클래스입니다.
     실제 구현은 components 모듈에 분리되어 있습니다.
     """
-    
+
     def __init__(self, data_loader=None, rule_validator=None):
         """Initialize PolicyAnalyzer with optional dependencies"""
         from .components.data_loader import DataLoader
-        from .components.rule_validator import RuleValidator
-        from .components.policy_analyzer import PolicyAnalyzer as PolicyAnalyzerComponent
         from .components.path_tracer import PathTracer
+        from .components.policy_analyzer import PolicyAnalyzer as PolicyAnalyzerComponent
+        from .components.rule_validator import RuleValidator
         from .components.session_manager import SessionManager
-        
+
         # Initialize components with defaults if not provided
         self.data_loader = data_loader or DataLoader()
         self.rule_validator = rule_validator or RuleValidator()
@@ -28,7 +27,7 @@ class PolicyAnalyzer:
         self.path_tracer = PathTracer(self.data_loader, self.policy_analyzer)
         self.session_manager = SessionManager(self.data_loader, self.policy_analyzer, self.path_tracer)
         self.logger = logger
-        
+
         # Delegate methods
         self.load_fortigate_data = self.data_loader.load_fortigate_data
         self.load_fortimanager_data = self.data_loader.load_fortimanager_data
@@ -37,11 +36,11 @@ class PolicyAnalyzer:
         self.create_analysis_session = self.session_manager.create_analysis_session
         self.analyze_traffic = self.policy_analyzer.analyze_traffic
         self.find_matching_policy = self.policy_analyzer.find_matching_policy
-        
+
     def validate_ip_in_range(self, ip, ip_range):
         """Delegate to rule validator"""
         return self.rule_validator.validate_ip_in_range(ip, ip_range)
-        
+
     def validate_service(self, port, protocol, service_def):
         """Delegate to rule validator"""
         return self.rule_validator.validate_service(port, protocol, service_def)
@@ -71,9 +70,9 @@ class FirewallRuleAnalyzer:
             fortimanager_client: FortiManager API 클라이언트 인스턴스
         """
         from .components.data_loader import DataLoader
-        from .components.rule_validator import RuleValidator
-        from .components.policy_analyzer import PolicyAnalyzer as PolicyAnalyzerComponent
         from .components.path_tracer import PathTracer
+        from .components.policy_analyzer import PolicyAnalyzer as PolicyAnalyzerComponent
+        from .components.rule_validator import RuleValidator
         from .components.session_manager import SessionManager
 
         # 컴포넌트 초기화

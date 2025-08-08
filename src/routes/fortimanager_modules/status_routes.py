@@ -2,7 +2,7 @@
 FortiManager Status and Connection Routes
 """
 
-import json
+
 from flask import Blueprint, jsonify
 
 from utils.api_utils import get_api_manager
@@ -62,7 +62,7 @@ def get_fortimanager_status():
                         status_data["capabilities"].extend(
                             [
                                 "advanced_analytics",
-                                "compliance_checking", 
+                                "compliance_checking",
                                 "security_fabric",
                                 "packet_capture",
                             ]
@@ -121,7 +121,7 @@ def get_address_objects():
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
@@ -133,14 +133,14 @@ def get_address_objects():
         return jsonify({"success": False, "message": str(e)})
 
 
-@status_bp.route("/service-objects", methods=["GET"])  
+@status_bp.route("/service-objects", methods=["GET"])
 @cached(ttl=300)  # 5 minutes cache for relatively static data
 def get_service_objects():
     """FortiManager 서비스 객체 목록 조회"""
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 

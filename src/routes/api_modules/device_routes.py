@@ -2,7 +2,7 @@
 Device-related API routes
 """
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 
 from utils.api_utils import get_api_manager
 from utils.unified_cache_manager import cached
@@ -20,7 +20,7 @@ def get_devices():
     try:
         api_manager = get_api_manager()
         fortigate_client = api_manager.get_fortigate_client()
-        
+
         if not fortigate_client:
             return jsonify({"success": False, "message": "FortiGate not configured"})
 
@@ -39,7 +39,7 @@ def get_device_details(device_id):
     try:
         api_manager = get_api_manager()
         fortigate_client = api_manager.get_fortigate_client()
-        
+
         if not fortigate_client:
             return jsonify({"success": False, "message": "FortiGate not configured"})
 

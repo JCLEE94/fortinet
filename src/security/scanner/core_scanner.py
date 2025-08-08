@@ -9,7 +9,7 @@ import logging
 import threading
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from .auto_fix import AutoFixMixin
 from .file_integrity import FileIntegrityMixin
@@ -70,9 +70,7 @@ class CoreSecurityScanner(
             return
 
         self.is_scanning = True
-        self.scan_thread = threading.Thread(
-            target=self._continuous_scan_loop, args=(interval_hours,)
-        )
+        self.scan_thread = threading.Thread(target=self._continuous_scan_loop, args=(interval_hours,))
         self.scan_thread.daemon = True
         self.scan_thread.start()
         logger.info(f"지속적인 보안 스캔 시작 ({interval_hours}시간 간격)")
@@ -88,7 +86,7 @@ class CoreSecurityScanner(
         """전체 보안 스캔 실행"""
         logger.info("전체 보안 스캔 시작")
         scan_start_time = datetime.now()
-        
+
         scan_results = {
             "scan_id": f"scan_{int(scan_start_time.timestamp())}",
             "start_time": scan_start_time.isoformat(),
@@ -123,7 +121,7 @@ class CoreSecurityScanner(
 
         # 결과 저장
         self.scan_results.append(scan_results)
-        
+
         # 리스너들에게 알림
         self._notify_listeners(scan_results)
 
@@ -133,7 +131,7 @@ class CoreSecurityScanner(
     def get_security_dashboard(self) -> Dict:
         """보안 대시보드 데이터 반환"""
         latest_scan = self.scan_results[-1] if self.scan_results else None
-        
+
         dashboard = {
             "status": "scanning" if self.is_scanning else "idle",
             "total_scans": len(self.scan_results),
@@ -141,7 +139,7 @@ class CoreSecurityScanner(
             "security_metrics": self._calculate_security_metrics(),
             "recommendations": self._get_security_recommendations(),
         }
-        
+
         return dashboard
 
     def _continuous_scan_loop(self, interval_hours: int):
@@ -150,17 +148,17 @@ class CoreSecurityScanner(
             try:
                 # 전체 스캔 실행
                 scan_result = self.run_full_security_scan()
-                
+
                 # 자동 수정 실행 (옵션)
-                if hasattr(self, 'auto_fix_enabled') and self.auto_fix_enabled:
+                if hasattr(self, "auto_fix_enabled") and self.auto_fix_enabled:
                     self.auto_fix_vulnerabilities(scan_result)
-                
+
                 # 지정된 시간만큼 대기
                 for _ in range(interval_hours * 3600):  # 초 단위로 반복
                     if not self.is_scanning:
                         break
                     time.sleep(1)
-                    
+
             except Exception as e:
                 logger.error(f"지속적인 스캔 오류: {e}")
                 time.sleep(300)  # 5분 대기 후 재시도
@@ -171,38 +169,38 @@ class CoreSecurityScanner(
             "total_issues": 0,
             "risk_levels": {"critical": 0, "high": 0, "medium": 0, "low": 0},
             "categories": {},
-            "recommendations": []
+            "recommendations": [],
         }
-        
+
         # 각 스캔 결과에서 정보 추출
         for scan_type, result in results.items():
             if isinstance(result, dict):
                 # 위험도 집계
-                risk_level = result.get('risk_level', 'unknown')
+                risk_level = result.get("risk_level", "unknown")
                 if risk_level in summary["risk_levels"]:
                     summary["risk_levels"][risk_level] += 1
-                
+
                 # 이슈 개수 집계
-                if 'vulnerabilities' in result:
-                    summary["total_issues"] += len(result['vulnerabilities'])
-                elif 'total_open_ports' in result:
-                    summary["total_issues"] += result.get('suspicious_ports', 0)
-        
+                if "vulnerabilities" in result:
+                    summary["total_issues"] += len(result["vulnerabilities"])
+                elif "total_open_ports" in result:
+                    summary["total_issues"] += result.get("suspicious_ports", 0)
+
         return summary
 
     def _calculate_security_metrics(self) -> Dict:
         """보안 메트릭 계산"""
         if not self.scan_results:
             return {"score": 0, "trend": "unknown"}
-        
+
         latest_scan = self.scan_results[-1]
         total_issues = latest_scan.get("summary", {}).get("total_issues", 0)
-        
+
         # 간단한 보안 점수 계산
         base_score = 100
         penalty = min(total_issues * 5, 90)  # 최대 90점 감점
         score = max(base_score - penalty, 10)  # 최소 10점
-        
+
         # 트렌드 계산
         trend = "stable"
         if len(self.scan_results) >= 2:
@@ -211,7 +209,7 @@ class CoreSecurityScanner(
                 trend = "worsening"
             elif total_issues < prev_issues:
                 trend = "improving"
-        
+
         return {
             "score": score,
             "total_issues": total_issues,
@@ -221,32 +219,32 @@ class CoreSecurityScanner(
     def _get_security_recommendations(self) -> List[str]:
         """보안 권장사항 생성"""
         recommendations = []
-        
+
         if not self.scan_results:
             recommendations.append("첫 보안 스캔을 실행하세요")
             return recommendations
-        
+
         latest_scan = self.scan_results[-1]
         results = latest_scan.get("results", {})
-        
+
         # 포트 스캔 추천사항
         port_scan = results.get("port_scan", {})
         if port_scan.get("suspicious_ports"):
             recommendations.append("비인가된 열린 포트를 확인하고 필요없는 서비스를 중지하세요")
-        
+
         # 취약점 추천사항
         vuln_scan = results.get("vulnerability_scan", {})
         if vuln_scan.get("total_vulnerabilities", 0) > 0:
             recommendations.append("발견된 취약점을 수정하세요")
-        
+
         # 파일 무결성 추천사항
         file_integrity = results.get("file_integrity", {})
         if file_integrity.get("changed_files"):
             recommendations.append("중요 파일의 변경사항을 확인하세요")
-        
+
         if not recommendations:
             recommendations.append("현재 보안 상태가 양호합니다")
-        
+
         return recommendations
 
     def _notify_listeners(self, scan_results: Dict):

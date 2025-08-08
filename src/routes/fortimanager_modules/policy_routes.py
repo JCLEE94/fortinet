@@ -18,7 +18,7 @@ def get_policies():
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
@@ -35,19 +35,19 @@ def analyze_packet_path():
     """패킷 경로 분석"""
     try:
         data = request.get_json() or {}
-        
+
         # Required parameters
         src_ip = data.get("src_ip")
         dst_ip = data.get("dst_ip")
         port = data.get("port")
         protocol = data.get("protocol", "tcp")
-        
+
         if not all([src_ip, dst_ip, port]):
             return jsonify({"success": False, "message": "Missing required parameters"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 

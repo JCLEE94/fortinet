@@ -57,6 +57,7 @@ def create_app():
     """Flask 애플리케이션 팩토리"""
 
     from analysis.analyzer import FirewallRuleAnalyzer
+
     try:
         from analysis.fixed_path_analyzer import FixedPathAnalyzer
     except ImportError:
@@ -212,7 +213,7 @@ def create_app():
                     "status": "mock",
                     "message": "Path analyzer temporarily unavailable",
                     "path": f"{data.get('src_ip')} -> {data.get('dst_ip')}",
-                    "allowed": True
+                    "allowed": True,
                 }
 
             return jsonify({"status": "success", "analysis": _result})

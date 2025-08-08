@@ -11,6 +11,7 @@ from typing import Any, Dict, List
 # Optional scientific computing libraries
 try:
     import numpy as np
+
     HAS_NUMPY = True
 except ImportError:
     HAS_NUMPY = False
@@ -39,27 +40,33 @@ class AnalyticsCalculator:
 
         # Add percentiles
         if HAS_NUMPY:
-            stats_dict.update({
-                "percentile_25": np.percentile(values, 25),
-                "percentile_75": np.percentile(values, 75),
-                "percentile_95": np.percentile(values, 95),
-            })
+            stats_dict.update(
+                {
+                    "percentile_25": np.percentile(values, 25),
+                    "percentile_75": np.percentile(values, 75),
+                    "percentile_95": np.percentile(values, 95),
+                }
+            )
         else:
             try:
                 quantiles = statistics.quantiles(values, n=4)
-                stats_dict.update({
-                    "percentile_25": quantiles[0],
-                    "percentile_75": quantiles[2],
-                    "percentile_95": self._calculate_percentile(values, 95),
-                })
+                stats_dict.update(
+                    {
+                        "percentile_25": quantiles[0],
+                        "percentile_75": quantiles[2],
+                        "percentile_95": self._calculate_percentile(values, 95),
+                    }
+                )
             except (AttributeError, statistics.StatisticsError):
                 sorted_values = sorted(values)
                 n = len(sorted_values)
-                stats_dict.update({
-                    "percentile_25": sorted_values[int(n * 0.25)] if n > 0 else 0,
-                    "percentile_75": sorted_values[int(n * 0.75)] if n > 0 else 0,
-                    "percentile_95": sorted_values[int(n * 0.95)] if n > 0 else 0,
-                })
+                stats_dict.update(
+                    {
+                        "percentile_25": sorted_values[int(n * 0.25)] if n > 0 else 0,
+                        "percentile_75": sorted_values[int(n * 0.75)] if n > 0 else 0,
+                        "percentile_95": sorted_values[int(n * 0.95)] if n > 0 else 0,
+                    }
+                )
 
         return stats_dict
 
@@ -115,48 +122,52 @@ class AnalyticsCalculator:
             z_score = abs(value - mean_val) / std_val if std_val > 0 else 0
 
             if z_score > 2.5:  # Threshold for anomaly
-                anomalies.append({
-                    "index": i,
-                    "value": value,
-                    "z_score": z_score,
-                    "timestamp": point.get("timestamp"),
-                    "severity": "high" if z_score > 3.5 else "medium"
-                })
+                anomalies.append(
+                    {
+                        "index": i,
+                        "value": value,
+                        "z_score": z_score,
+                        "timestamp": point.get("timestamp"),
+                        "severity": "high" if z_score > 3.5 else "medium",
+                    }
+                )
 
         return anomalies
 
     def check_threshold_violations(self, data: List[Dict], metric: AnalyticsMetric) -> List[Dict]:
         """Check for threshold violations"""
         violations = []
-        
+
         for point in data:
             value = point.get("value", 0)
             violation = None
-            
+
             if metric.threshold_critical is not None and value >= metric.threshold_critical:
                 violation = {"level": "critical", "threshold": metric.threshold_critical}
             elif metric.threshold_warning is not None and value >= metric.threshold_warning:
                 violation = {"level": "warning", "threshold": metric.threshold_warning}
-            
+
             if violation:
-                violations.append({
-                    "timestamp": point.get("timestamp"),
-                    "value": value,
-                    "violation": violation,
-                    "metric": metric.metric_id
-                })
-        
+                violations.append(
+                    {
+                        "timestamp": point.get("timestamp"),
+                        "value": value,
+                        "violation": violation,
+                        "metric": metric.metric_id,
+                    }
+                )
+
         return violations
 
     def aggregate_metric_data(self, data: List[Dict], metric: AnalyticsMetric) -> Dict[str, float]:
         """Aggregate metric data based on calculation type"""
         values = [d.get("value", 0) for d in data if "value" in d]
-        
+
         if not values:
             return {"count": 0}
-        
+
         result = {"count": len(values)}
-        
+
         if metric.calculation == "sum":
             result["result"] = sum(values)
         elif metric.calculation == "avg":
@@ -169,7 +180,7 @@ class AnalyticsCalculator:
             result["result"] = len(values)
         else:
             result["result"] = sum(values)  # Default to sum
-        
+
         return result
 
     def _calculate_percentile(self, values: List[float], percentile: float) -> float:

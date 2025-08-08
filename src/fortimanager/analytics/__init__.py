@@ -13,7 +13,7 @@ from .reports import ReportGenerator
 
 __all__ = [
     "AdvancedAnalyticsEngine",
-    "AnalyticsCalculator", 
+    "AnalyticsCalculator",
     "PredictiveAnalytics",
     "ReportGenerator",
     "AnalyticsMetric",

@@ -13,6 +13,6 @@ from .policy_management import PolicyManagementMixin
 __all__ = [
     "AuthConnectionMixin",
     "DeviceManagementMixin",
-    "PolicyManagementMixin", 
+    "PolicyManagementMixin",
     "AdvancedFeaturesMixin",
 ]

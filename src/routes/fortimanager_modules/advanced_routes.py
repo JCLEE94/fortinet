@@ -19,14 +19,14 @@ def initialize_advanced_features():
     try:
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
         # Initialize Advanced Hub
         hub = FortiManagerAdvancedHub(fm_client)
         result = hub.initialize()
-        
+
         return jsonify({"success": True, "data": result})
 
     except Exception as e:
@@ -39,16 +39,16 @@ def check_compliance():
     """컴플라이언스 확인"""
     try:
         data = request.get_json() or {}
-        
+
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
         hub = FortiManagerAdvancedHub(fm_client)
         result = hub.compliance_framework.check_compliance(data)
-        
+
         return jsonify({"success": True, "data": result})
 
     except Exception as e:
@@ -61,16 +61,16 @@ def analyze_policy_conflicts():
     """정책 충돌 분석"""
     try:
         data = request.get_json() or {}
-        
+
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
         hub = FortiManagerAdvancedHub(fm_client)
         result = hub.policy_orchestrator.analyze_conflicts(data)
-        
+
         return jsonify({"success": True, "data": result})
 
     except Exception as e:
@@ -83,16 +83,16 @@ def generate_analytics_report():
     """고급 분석 리포트 생성"""
     try:
         data = request.get_json() or {}
-        
+
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
-        
+
         if not fm_client:
             return jsonify({"success": False, "message": "FortiManager not configured"})
 
         hub = FortiManagerAdvancedHub(fm_client)
         result = hub.analytics_engine.generate_report(data)
-        
+
         return jsonify({"success": True, "data": result})
 
     except Exception as e:

@@ -3,6 +3,7 @@ FortiManager Device Management Routes
 """
 
 import time
+
 from flask import Blueprint, jsonify, request
 
 from utils.api_utils import get_api_manager
@@ -135,7 +136,7 @@ def get_network_topology():
         # Process devices into topology nodes
         for device in devices:
             device_id = device.get("name", device.get("device_id", "unknown"))
-            
+
             node = {
                 "id": device_id,
                 "name": device.get("name", device_id),
@@ -162,7 +163,7 @@ def get_network_topology():
             topology["nodes"].append(node)
 
         # Create basic connections based on device relationships
-        # This is simplified - in a real implementation, you'd analyze routing tables, 
+        # This is simplified - in a real implementation, you'd analyze routing tables,
         # interface connections, etc.
         for i, device in enumerate(topology["nodes"]):
             # Connect devices in sequence as example

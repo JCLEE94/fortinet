@@ -73,42 +73,40 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         # Define test endpoint for FortiAnalyzer (not used since it's JSON-RPC)
         self.test_endpoint = "/sys/status"
 
-    def _build_json_rpc_request(self, method: str, url: str, data: dict = None, session: str = None, verbose: int = 0) -> dict:
+    def _build_json_rpc_request(
+        self, method: str, url: str, data: dict = None, session: str = None, verbose: int = 0
+    ) -> dict:
         """
         Build JSON-RPC request payload for FortiAnalyzer API
-        
+
         Args:
             method (str): RPC method (exec, get, set, etc.)
             url (str): API URL path
             data (dict): Request data payload
             session (str): Session ID if available
             verbose (int): Verbosity level
-            
+
         Returns:
             dict: JSON-RPC request payload
         """
         import time
-        
-        payload = {
-            "id": int(time.time()),
-            "method": method,
-            "params": [{"url": url}]
-        }
-        
+
+        payload = {"id": int(time.time()), "method": method, "params": [{"url": url}]}
+
         # Add session if provided
         if session:
             payload["session"] = session
         elif self.session_id:
             payload["session"] = self.session_id
-            
+
         # Add data if provided
         if data:
             payload["params"][0]["data"] = data
-            
+
         # Add verbosity if requested
         if verbose:
             payload["params"][0]["verbose"] = verbose
-            
+
         return payload
 
     def login(self):
