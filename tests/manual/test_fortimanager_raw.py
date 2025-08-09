@@ -120,7 +120,9 @@ def raw_test():
     login_data = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": "admin", "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": "admin", "passwd": API_KEY}}
+        ],
     }
 
     response = session.post(

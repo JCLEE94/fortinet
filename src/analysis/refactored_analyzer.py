@@ -93,10 +93,14 @@ class RefactoredFirewallAnalyzer:
         """
         try:
             # 정책 분석
-            policy_result = self.policy_analyzer.analyze_traffic(src_ip, dst_ip, dst_port, protocol, firewall_id)
+            policy_result = self.policy_analyzer.analyze_traffic(
+                src_ip, dst_ip, dst_port, protocol, firewall_id
+            )
 
             # 경로 추적
-            path_result = self.path_tracer.trace_packet_path(src_ip, dst_ip, firewall_id)
+            path_result = self.path_tracer.trace_packet_path(
+                src_ip, dst_ip, firewall_id
+            )
 
             # 결합된 결과 생성
             combined_result = {
@@ -114,7 +118,9 @@ class RefactoredFirewallAnalyzer:
 
             # 세션에 결과 저장
             if session_id:
-                self.session_manager.store_analysis_result(session_id, "traffic_analysis", combined_result)
+                self.session_manager.store_analysis_result(
+                    session_id, "traffic_analysis", combined_result
+                )
 
             self.logger.info(f"트래픽 분석 완료: {src_ip} -> {dst_ip}:{dst_port}")
             return combined_result
@@ -150,7 +156,9 @@ class RefactoredFirewallAnalyzer:
 
             # 세션에 결과 저장
             if session_id:
-                self.session_manager.store_analysis_result(session_id, "policy_conflict_analysis", result)
+                self.session_manager.store_analysis_result(
+                    session_id, "policy_conflict_analysis", result
+                )
 
             self.logger.info(f"정책 충돌 분석 완료: {firewall_id} - {len(conflicts)}개 충돌 발견")
             return result
@@ -186,7 +194,9 @@ class RefactoredFirewallAnalyzer:
 
             # 세션에 결과 저장
             if session_id:
-                self.session_manager.store_analysis_result(session_id, "routing_loop_analysis", result)
+                self.session_manager.store_analysis_result(
+                    session_id, "routing_loop_analysis", result
+                )
 
             self.logger.info(f"라우팅 루프 분석 완료: {firewall_id} - {len(loops)}개 루프 발견")
             return result
@@ -236,7 +246,9 @@ class RefactoredFirewallAnalyzer:
         Returns:
             list: 분석 이력
         """
-        return self.session_manager.get_analysis_history(session_id, analysis_type, limit)
+        return self.session_manager.get_analysis_history(
+            session_id, analysis_type, limit
+        )
 
     def get_comprehensive_analysis(self, firewall_id="default", session_id=None):
         """
@@ -251,7 +263,9 @@ class RefactoredFirewallAnalyzer:
         """
         try:
             # 정책 충돌 분석
-            policy_conflicts = self.policy_analyzer.analyze_policy_conflicts(firewall_id)
+            policy_conflicts = self.policy_analyzer.analyze_policy_conflicts(
+                firewall_id
+            )
 
             # 라우팅 루프 분석
             routing_loops = self.path_tracer.analyze_routing_loops(firewall_id)
@@ -275,7 +289,9 @@ class RefactoredFirewallAnalyzer:
 
             # 세션에 결과 저장
             if session_id:
-                self.session_manager.store_analysis_result(session_id, "comprehensive_analysis", result)
+                self.session_manager.store_analysis_result(
+                    session_id, "comprehensive_analysis", result
+                )
 
             self.logger.info(f"종합 분석 완료: {firewall_id}")
             return result
@@ -303,10 +319,18 @@ class RefactoredFirewallAnalyzer:
         """레거시 호환성: IP 주소 그룹 확인"""
         return self.rule_validator.is_ip_in_address_group(ip, group_name, firewall_id)
 
-    def is_port_in_service_object(self, port, protocol, service_obj, firewall_id="default"):
+    def is_port_in_service_object(
+        self, port, protocol, service_obj, firewall_id="default"
+    ):
         """레거시 호환성: 포트 서비스 객체 확인"""
-        return self.rule_validator.is_port_in_service_object(port, protocol, service_obj, firewall_id)
+        return self.rule_validator.is_port_in_service_object(
+            port, protocol, service_obj, firewall_id
+        )
 
-    def is_port_in_service_group(self, port, protocol, group_name, firewall_id="default"):
+    def is_port_in_service_group(
+        self, port, protocol, group_name, firewall_id="default"
+    ):
         """레거시 호환성: 포트 서비스 그룹 확인"""
-        return self.rule_validator.is_port_in_service_group(port, protocol, group_name, firewall_id)
+        return self.rule_validator.is_port_in_service_group(
+            port, protocol, group_name, firewall_id
+        )

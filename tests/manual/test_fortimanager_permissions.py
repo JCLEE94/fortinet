@@ -115,7 +115,9 @@ def diagnose_permissions():
     headers = {"Content-Type": "application/json", "X-API-Key": API_KEY}
 
     print("\nADOM 'root'로 주소 객체 조회 시도...")
-    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False)
+    response = requests.post(
+        f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False
+    )
 
     if response.status_code == 200:
         result = response.json()
@@ -146,7 +148,9 @@ def diagnose_permissions():
     }
 
     print("\n세션 정보 조회...")
-    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_request, verify=False)
+    response = requests.post(
+        f"{BASE_URL}/jsonrpc", headers=headers, json=session_request, verify=False
+    )
 
     if response.status_code == 200:
         result = response.json()

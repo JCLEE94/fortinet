@@ -33,7 +33,9 @@ def login_and_test():
     login_payload = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}],
+        "params": [
+            {"url": "sys/login/user", "data": {"user": USERNAME, "passwd": PASSWORD}}
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
@@ -165,7 +167,9 @@ def test_api_with_session(session_id):
                         if isinstance(data, list):
                             print(f"  데이터: {len(data)}개 항목")
                             if len(data) > 0:
-                                print(f"  첫 번째 항목: {json.dumps(data[0], indent=2)[:200]}...")
+                                print(
+                                    f"  첫 번째 항목: {json.dumps(data[0], indent=2)[:200]}..."
+                                )
                         else:
                             print(f"  데이터: {json.dumps(data, indent=2)[:200]}...")
                 else:
@@ -195,7 +199,9 @@ def check_api_user(session_id):
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=user_request, verify=False
+        )
 
         result = response.json()
         if "result" in result and result["result"][0]["status"]["code"] == 0:
@@ -228,7 +234,9 @@ def logout(session_id):
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=logout_request, verify=False)
+        response = requests.post(
+            f"{BASE_URL}/jsonrpc", headers=headers, json=logout_request, verify=False
+        )
 
         result = response.json()
         if result["result"][0]["status"]["code"] == 0:

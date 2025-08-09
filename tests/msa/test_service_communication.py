@@ -70,7 +70,9 @@ class MSATestFramework:
                 "permissions": ["read", "write"],
             }
 
-            response = requests.post(f"{AUTH_SERVICE_URL}/login", json=login_data, timeout=10)
+            response = requests.post(
+                f"{AUTH_SERVICE_URL}/login", json=login_data, timeout=10
+            )
 
             if response.status_code != 200:
                 return {
@@ -100,7 +102,9 @@ class MSATestFramework:
 
             # 3. 인증된 요청 테스트
             headers = {"Authorization": f"Bearer {self.auth_token}"}
-            status_response = requests.get(f"{AUTH_SERVICE_URL}/status", headers=headers, timeout=10)
+            status_response = requests.get(
+                f"{AUTH_SERVICE_URL}/status", headers=headers, timeout=10
+            )
 
             if status_response.status_code != 200:
                 return {
@@ -133,7 +137,9 @@ class MSATestFramework:
             headers = {"Authorization": f"Bearer {self.auth_token}"}
 
             # FortiManager 서비스 테스트
-            fm_response = requests.get(f"{FORTIMANAGER_SERVICE_URL}/policies", headers=headers, timeout=10)
+            fm_response = requests.get(
+                f"{FORTIMANAGER_SERVICE_URL}/policies", headers=headers, timeout=10
+            )
 
             if fm_response.status_code != 200:
                 return {
@@ -186,7 +192,10 @@ class MSATestFramework:
             services_response = requests.get(f"{KONG_ADMIN_URL}/services", timeout=10)
             routes_response = requests.get(f"{KONG_ADMIN_URL}/routes", timeout=10)
 
-            if services_response.status_code != 200 or routes_response.status_code != 200:
+            if (
+                services_response.status_code != 200
+                or routes_response.status_code != 200
+            ):
                 return {
                     "test": "kong_gateway_routing",
                     "status": "failed",
@@ -208,7 +217,9 @@ class MSATestFramework:
             ]
 
             registered_services = [service["name"] for service in services]
-            missing_services = [svc for svc in expected_services if svc not in registered_services]
+            missing_services = [
+                svc for svc in expected_services if svc not in registered_services
+            ]
 
             # 라우팅 테스트 - 각 서비스에 직접 요청
             routing_tests = {}
@@ -244,7 +255,9 @@ class MSATestFramework:
             auth = ("fortinet", "fortinet123")
 
             # 큐 상태 확인
-            queues_response = requests.get(f"{rabbitmq_url}/queues", auth=auth, timeout=10)
+            queues_response = requests.get(
+                f"{rabbitmq_url}/queues", auth=auth, timeout=10
+            )
 
             if queues_response.status_code != 200:
                 return {

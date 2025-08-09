@@ -28,7 +28,9 @@ logger = get_logger(__name__)
 def docker_available():
     """Docker 명령어 사용 가능 여부 확인"""
     try:
-        result = subprocess.run(["docker", "--version"], capture_output=True, text=True, timeout=5)
+        result = subprocess.run(
+            ["docker", "--version"], capture_output=True, text=True, timeout=5
+        )
         return result.returncode == 0
     except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
         return False
@@ -136,7 +138,9 @@ def get_container_logs():
 
     except subprocess.TimeoutExpired:
         return (
-            jsonify({"error": "Request timeout", "logs": [], "container": container_name}),
+            jsonify(
+                {"error": "Request timeout", "logs": [], "container": container_name}
+            ),
             408,
         )
     except Exception as e:
@@ -268,7 +272,9 @@ def list_log_files():
             if file_path.strip():
                 # 파일 크기 확인
                 size_cmd = ["docker", "exec", "fortinet", "stat", "-c", "%s", file_path]
-                size_result = subprocess.run(size_cmd, capture_output=True, text=True, timeout=5)
+                size_result = subprocess.run(
+                    size_cmd, capture_output=True, text=True, timeout=5
+                )
 
                 file_size = 0
                 if size_result.returncode == 0:
@@ -422,7 +428,9 @@ def get_log_stats():
             "{}",
             "+",
         ]
-        result = subprocess.run(log_files_cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(
+            log_files_cmd, capture_output=True, text=True, timeout=15
+        )
 
         log_stats = {}
         if result.returncode == 0:

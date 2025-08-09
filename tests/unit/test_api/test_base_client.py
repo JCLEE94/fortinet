@@ -77,14 +77,15 @@ class TestBaseApiClient(unittest.TestCase):
             mock_response.headers = {"Content-Type": "application/json"}
             mock_response.json.return_value = {"result": "success"}
 
-            # Mock session
-            self.client.session.request.return_value = mock_response
+            # Mock session using patch
+            with patch.object(self.client.session, 'request', return_value=mock_response) as mock_request:
+                success, data, status = self.client._make_request(
+                    "GET", "http://test.com/api"
+                )
 
-            success, data, status = self.client._make_request("GET", "http://test.com/api")
-
-            self.assertTrue(success)
-            self.assertEqual(status, 200)
-            self.assertEqual(data["result"], "success")
+                self.assertTrue(success)
+                self.assertEqual(status, 200)
+                self.assertEqual(data["result"], "success")
 
     @patch("src.api.clients.base_api_client.BaseApiClient.OFFLINE_MODE", True)
     def test_make_request_offline_mode(self):

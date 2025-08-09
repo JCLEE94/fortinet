@@ -14,7 +14,9 @@ from urllib.parse import urljoin
 import requests
 
 # 로깅 설정
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -42,7 +44,9 @@ class EndpointTester:
                 response = self.session.get(url, timeout=10)
             elif method.upper() == "POST":
                 headers = {"Content-Type": "application/json"}
-                response = self.session.post(url, json=data, headers=headers, timeout=10)
+                response = self.session.post(
+                    url, json=data, headers=headers, timeout=10
+                )
             else:
                 raise ValueError(f"Unsupported method: {method}")
 
@@ -63,7 +67,9 @@ class EndpointTester:
 
             if response.status_code == expected_status:
                 self.success_count += 1
-                logger.info(f"✅ {method} {endpoint} - {response.status_code} ({response_time}ms)")
+                logger.info(
+                    f"✅ {method} {endpoint} - {response.status_code} ({response_time}ms)"
+                )
             else:
                 logger.warning(
                     f"⚠️  {method} {endpoint} - {response.status_code} (expected {expected_status}) ({response_time}ms)"
@@ -74,7 +80,9 @@ class EndpointTester:
                 try:
                     json_data = response.json()
                     result["json_valid"] = True
-                    result["json_keys"] = list(json_data.keys()) if isinstance(json_data, dict) else None
+                    result["json_keys"] = (
+                        list(json_data.keys()) if isinstance(json_data, dict) else None
+                    )
                 except:
                     result["json_valid"] = False
             else:
@@ -177,7 +185,9 @@ class EndpointTester:
         print("=" * 80)
 
         # 요약 통계
-        success_rate = (self.success_count / self.total_count * 100) if self.total_count > 0 else 0
+        success_rate = (
+            (self.success_count / self.total_count * 100) if self.total_count > 0 else 0
+        )
         print(f"\n📈 전체 통계:")
         print(f"   총 테스트: {self.total_count}")
         print(f"   성공: {self.success_count}")
@@ -204,12 +214,20 @@ class EndpointTester:
             print(f"\n❌ 실패한 엔드포인트 ({len(failed)}개):")
             for result in failed:
                 if result["error"]:
-                    print(f"   {result['method']} {result['endpoint']} - ERROR: {result['error']}")
+                    print(
+                        f"   {result['method']} {result['endpoint']} - ERROR: {result['error']}"
+                    )
                 else:
-                    print(f"   {result['method']} {result['endpoint']} - {result['status_code']} (expected 200)")
+                    print(
+                        f"   {result['method']} {result['endpoint']} - {result['status_code']} (expected 200)"
+                    )
 
         # 응답 시간 분석
-        response_times = [r["response_time_ms"] for r in self.results if r["response_time_ms"] is not None]
+        response_times = [
+            r["response_time_ms"]
+            for r in self.results
+            if r["response_time_ms"] is not None
+        ]
         if response_times:
             avg_time = sum(response_times) / len(response_times)
             max_time = max(response_times)

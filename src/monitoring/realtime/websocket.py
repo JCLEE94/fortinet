@@ -22,7 +22,9 @@ class RealtimeMonitoringHandler:
     def __init__(self, socketio, redis_cache=None):
         self.socketio = socketio
         self.redis_cache = redis_cache
-        self.monitoring_clients = {}  # {room_id: {clients: set(), monitor_thread: thread}}
+        self.monitoring_clients = (
+            {}
+        )  # {room_id: {clients: set(), monitor_thread: thread}}
         self.device_monitors = {}  # {device_id: api_client}
 
     def register_handlers(self):
@@ -48,7 +50,9 @@ class RealtimeMonitoringHandler:
 
             # 모니터링 스레드 시작
             if not self.monitoring_clients[room]["monitor_thread"]:
-                thread = threading.Thread(target=self._monitoring_loop, args=(room, device_id), daemon=True)
+                thread = threading.Thread(
+                    target=self._monitoring_loop, args=(room, device_id), daemon=True
+                )
                 thread.start()
                 self.monitoring_clients[room]["monitor_thread"] = thread
 
@@ -107,7 +111,9 @@ class RealtimeMonitoringHandler:
                     )
                 except Exception as e:
                     logger.error(f"Error getting device status: {str(e)}")
-                    emit("device_status_error", {"device_id": device_id, "error": str(e)})
+                    emit(
+                        "device_status_error", {"device_id": device_id, "error": str(e)}
+                    )
             else:
                 emit(
                     "device_status_error",
@@ -138,7 +144,9 @@ class RealtimeMonitoringHandler:
                     )
                 except Exception as e:
                     logger.error(f"Error getting traffic stats: {str(e)}")
-                    emit("traffic_stats_error", {"device_id": device_id, "error": str(e)})
+                    emit(
+                        "traffic_stats_error", {"device_id": device_id, "error": str(e)}
+                    )
 
         @self.socketio.on("request_security_events")
         def handle_security_events(data):
@@ -189,7 +197,9 @@ class RealtimeMonitoringHandler:
                             # 실시간 데이터 수집
                             monitoring_data = monitor.get_monitoring_data()
                             # 캐시에 저장 (5초 TTL)
-                            self.redis_cache.set(cache_key, json.dumps(monitoring_data), ttl=5)
+                            self.redis_cache.set(
+                                cache_key, json.dumps(monitoring_data), ttl=5
+                            )
                     else:
                         # Redis가 없으면 직접 수집
                         monitoring_data = monitor.get_monitoring_data()

@@ -31,7 +31,9 @@ def test_with_username_1411():
     login_request = {
         "id": 1,
         "method": "exec",
-        "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}],
+        "params": [
+            {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": API_KEY}}
+        ],
     }
 
     headers = {"Content-Type": "application/json"}
@@ -62,7 +64,9 @@ def test_with_username_1411():
                 "params": [{"url": "/sys/status"}],
             }
 
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_test, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=session_test, verify=False
+            )
 
             print(f"세션 테스트 결과: {json.dumps(response.json(), indent=2)}")
 
@@ -103,7 +107,9 @@ def test_with_username_1411():
         login_attempt = {
             "id": 1,
             "method": "exec",
-            "params": [{"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": pwd}}],
+            "params": [
+                {"url": "/sys/login/user", "data": {"user": USERNAME, "passwd": pwd}}
+            ],
         }
 
         try:

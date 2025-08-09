@@ -76,7 +76,9 @@ def test_api_user():
     headers = {"Content-Type": "application/json"}
 
     try:
-        response = requests.post(url, headers=headers, json=test_request, verify=False, timeout=10)
+        response = requests.post(
+            url, headers=headers, json=test_request, verify=False, timeout=10
+        )
         print(f"Status: {response.status_code}")
         if response.status_code == 200:
             print(f"Response: {response.json()}")
@@ -101,7 +103,9 @@ def test_api_user():
         request_data = {"id": 1, "method": "get", "params": [{"url": endpoint}]}
 
         try:
-            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
+            response = requests.post(
+                f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False
+            )
 
             result = response.json()
             if "result" in result:
@@ -110,7 +114,9 @@ def test_api_user():
                 print(f"  결과: Code {code} - {msg}")
 
                 if code == 0 and "data" in result["result"][0]:
-                    print(f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:100]}...")
+                    print(
+                        f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:100]}..."
+                    )
 
         except Exception as e:
             print(f"  에러: {e}")

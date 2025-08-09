@@ -24,9 +24,13 @@ class PolicyAnalyzer:
         # Initialize components with defaults if not provided
         self.data_loader = data_loader or DataLoader()
         self.rule_validator = rule_validator or RuleValidator()
-        self.policy_analyzer = PolicyAnalyzerComponent(self.data_loader, self.rule_validator)
+        self.policy_analyzer = PolicyAnalyzerComponent(
+            self.data_loader, self.rule_validator
+        )
         self.path_tracer = PathTracer(self.data_loader, self.policy_analyzer)
-        self.session_manager = SessionManager(self.data_loader, self.policy_analyzer, self.path_tracer)
+        self.session_manager = SessionManager(
+            self.data_loader, self.policy_analyzer, self.path_tracer
+        )
         self.logger = logger
 
         # Delegate methods
@@ -81,9 +85,13 @@ class FirewallRuleAnalyzer:
         # 컴포넌트 초기화
         self.data_loader = DataLoader(fortigate_client, fortimanager_client)
         self.rule_validator = RuleValidator()
-        self.policy_analyzer = PolicyAnalyzerComponent(self.data_loader, self.rule_validator)
+        self.policy_analyzer = PolicyAnalyzerComponent(
+            self.data_loader, self.rule_validator
+        )
         self.path_tracer = PathTracer(self.data_loader, self.policy_analyzer)
-        self.session_manager = SessionManager(self.data_loader, self.policy_analyzer, self.path_tracer)
+        self.session_manager = SessionManager(
+            self.data_loader, self.policy_analyzer, self.path_tracer
+        )
 
         self.logger = logger
 
@@ -101,13 +109,19 @@ class FirewallRuleAnalyzer:
         return self.data_loader.load_fortimanager_data()
 
     # Delegate analysis methods
-    def analyze_traffic(self, src_ip, dst_ip, dst_port, protocol="tcp", firewall_id="default"):
+    def analyze_traffic(
+        self, src_ip, dst_ip, dst_port, protocol="tcp", firewall_id="default"
+    ):
         """트래픽 분석"""
-        return self.policy_analyzer.analyze_traffic(src_ip, dst_ip, dst_port, protocol, firewall_id)
+        return self.policy_analyzer.analyze_traffic(
+            src_ip, dst_ip, dst_port, protocol, firewall_id
+        )
 
     def find_matching_policy(self, src_ip, dst_ip, dst_port, protocol, policies):
         """매칭 정책 찾기"""
-        return self.policy_analyzer.find_matching_policy(src_ip, dst_ip, dst_port, protocol, policies)
+        return self.policy_analyzer.find_matching_policy(
+            src_ip, dst_ip, dst_port, protocol, policies
+        )
 
     def analyze_packet_path(self, src_ip, dst_ip, dst_port, protocol="tcp"):
         """패킷 경로 분석"""
@@ -120,7 +134,9 @@ class FirewallRuleAnalyzer:
 
     def create_analysis_session(self, src_ip, dst_ip, service, protocol="tcp"):
         """분석 세션 생성"""
-        return self.session_manager.create_analysis_session(src_ip, dst_ip, service, protocol)
+        return self.session_manager.create_analysis_session(
+            src_ip, dst_ip, service, protocol
+        )
 
     # Delegate validation methods
     def validate_ip_in_range(self, ip, ip_range):

@@ -25,7 +25,10 @@ class TestAPIClients(unittest.TestCase):
 
     def test_base_api_client_import(self):
         """Test base API client import"""
-        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+        from src.api.clients.base_api_client import (
+            BaseApiClient,
+            RealtimeMonitoringMixin,
+        )
 
         self.assertTrue(BaseApiClient)
         self.assertTrue(RealtimeMonitoringMixin)
@@ -77,7 +80,9 @@ class TestAPIClients(unittest.TestCase):
         """Test FortiManager API client creation"""
         from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
 
-        client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
+        client = FortiManagerAPIClient(
+            host="192.168.1.2", username="admin", password="test"
+        )
         self.assertIsNotNone(client)
         self.assertEqual(client.host, "192.168.1.2")
 
@@ -147,7 +152,9 @@ class TestFortiManagerAdvanced(unittest.TestCase):
         asyncio.set_event_loop(loop)
 
         try:
-            client = FortiManagerAPIClient(host="192.168.1.2", username="admin", password="test")
+            client = FortiManagerAPIClient(
+                host="192.168.1.2", username="admin", password="test"
+            )
             hub = FortiManagerAdvancedHub(api_client=client)
             self.assertIsNotNone(hub)
             self.assertIsNotNone(hub.policy_orchestrator)

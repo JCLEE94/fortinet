@@ -39,7 +39,10 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_clients(self):
         """API 클라이언트 임포트 테스트"""
-        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+        from src.api.clients.base_api_client import (
+            BaseApiClient,
+            RealtimeMonitoringMixin,
+        )
         from src.api.clients.faz_client import FAZClient
         from src.api.clients.fortigate_api_client import FortiGateAPIClient
         from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
@@ -125,7 +128,11 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_security(self):
         """보안 모듈 임포트 테스트"""
-        from src.utils.security import add_security_headers, hash_api_key, verify_api_key
+        from src.utils.security import (
+            add_security_headers,
+            hash_api_key,
+            verify_api_key,
+        )
 
         # API 키 해싱 테스트
         api_key = "test123"
@@ -137,7 +144,9 @@ class TestCoverageBoost(unittest.TestCase):
     def test_import_fortimanager_advanced(self):
         """FortiManager 고급 모듈 임포트 테스트"""
         from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from src.fortimanager.fortimanager_analytics_engine import AdvancedAnalyticsEngine
+        from src.fortimanager.fortimanager_analytics_engine import (
+            AdvancedAnalyticsEngine,
+        )
 
         # 고급 허브 테스트
         hub = FortiManagerAdvancedHub(None)
@@ -154,7 +163,11 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_coverage_helper_functions(self):
         """커버리지 향상을 위한 헬퍼 함수들 테스트"""
-        from src.utils.api_utils import create_timeout_context, merge_monitoring_data, validate_config
+        from src.utils.api_utils import (
+            create_timeout_context,
+            merge_monitoring_data,
+            validate_config,
+        )
 
         # 설정 검증 테스트
         valid, missing = validate_config({"key1": "value1"}, ["key1"])

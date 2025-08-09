@@ -41,7 +41,9 @@ class APITester:
             # 응답 내용 확인 (JSON 형태인 경우)
             response_data = None
             try:
-                if response.headers.get("content-type", "").startswith("application/json"):
+                if response.headers.get("content-type", "").startswith(
+                    "application/json"
+                ):
                     response_data = response.json()
                 elif "text/html" in response.headers.get("content-type", ""):
                     response_data = f"HTML response ({len(response.text)} chars)"
@@ -212,7 +214,9 @@ class APITester:
                 "failed_tests": failed,
                 "total_tests": successful + failed,
                 "success_rate": (
-                    round((successful / (successful + failed)) * 100, 2) if (successful + failed) > 0 else 0
+                    round((successful / (successful + failed)) * 100, 2)
+                    if (successful + failed) > 0
+                    else 0
                 ),
                 "average_response_time": round(avg_response_time, 2),
             }
@@ -249,7 +253,9 @@ def main():
         print(f"  ⏱️  평균 응답 시간: {summary['average_response_time']}ms")
 
     # 상세 리포트를 파일로 저장
-    with open("/home/jclee/dev/fortinet/api_test_report.json", "w", encoding="utf-8") as f:
+    with open(
+        "/home/jclee/dev/fortinet/api_test_report.json", "w", encoding="utf-8"
+    ) as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     print(f"\n📄 상세 리포트가 저장되었습니다: /home/jclee/dev/fortinet/api_test_report.json")

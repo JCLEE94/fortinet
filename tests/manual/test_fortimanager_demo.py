@@ -34,8 +34,11 @@ def test_fortimanager_demo():
     demo_config = {
         "host": os.environ.get("FORTIMANAGER_DEMO_HOST", "demo.fortimanager.test"),
         "port": int(os.environ.get("FORTIMANAGER_DEMO_PORT", "14005")),
-        "api_token": os.environ.get("FORTIMANAGER_DEMO_TOKEN", "demo_token_placeholder"),
-        "verify_ssl": os.environ.get("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true",
+        "api_token": os.environ.get(
+            "FORTIMANAGER_DEMO_TOKEN", "demo_token_placeholder"
+        ),
+        "verify_ssl": os.environ.get("FORTIMANAGER_VERIFY_SSL", "false").lower()
+        == "true",
     }
 
     test_results = {
@@ -74,7 +77,9 @@ def test_fortimanager_demo():
             success, message = api_client.test_connection()
             test_results["connection_status"] = "success" if success else "failed"
             test_results["connection_message"] = message
-            logger.info(f"Connection test: {'SUCCESS' if success else 'FAILED'} - {message}")
+            logger.info(
+                f"Connection test: {'SUCCESS' if success else 'FAILED'} - {message}"
+            )
         except Exception as e:
             test_results["connection_status"] = "error"
             test_results["errors"].append(f"Connection test error: {str(e)}")
@@ -86,8 +91,12 @@ def test_fortimanager_demo():
 
         try:
             auth_success = api_client.test_token_auth()
-            test_results["authentication_status"] = "success" if auth_success else "failed"
-            logger.info(f"Authentication test: {'SUCCESS' if auth_success else 'FAILED'}")
+            test_results["authentication_status"] = (
+                "success" if auth_success else "failed"
+            )
+            logger.info(
+                f"Authentication test: {'SUCCESS' if auth_success else 'FAILED'}"
+            )
         except Exception as e:
             test_results["authentication_status"] = "error"
             test_results["errors"].append(f"Authentication test error: {str(e)}")
@@ -102,7 +111,9 @@ def test_fortimanager_demo():
             system_status = api_client.get_system_status()
             if system_status:
                 test_results["discovered_data"]["system_status"] = system_status
-                logger.info(f"System status retrieved: {json.dumps(system_status, indent=2)}")
+                logger.info(
+                    f"System status retrieved: {json.dumps(system_status, indent=2)}"
+                )
             else:
                 test_results["errors"].append("Failed to retrieve system status")
                 logger.warning("Failed to retrieve system status")
@@ -119,7 +130,9 @@ def test_fortimanager_demo():
             adom_list = api_client.get_adom_list()
             if adom_list:
                 test_results["discovered_data"]["adom_list"] = adom_list
-                logger.info(f"Found {len(adom_list)} ADOMs: {[adom.get('name', 'unknown') for adom in adom_list]}")
+                logger.info(
+                    f"Found {len(adom_list)} ADOMs: {[adom.get('name', 'unknown') for adom in adom_list]}"
+                )
             else:
                 test_results["errors"].append("No ADOMs found or failed to retrieve")
                 logger.warning("No ADOMs found or failed to retrieve")
@@ -151,12 +164,16 @@ def test_fortimanager_demo():
         # Test 6: Address Objects
         logger.info("Test 6: Getting address objects")
         test_results["tests_performed"].append("address_objects")
-        test_results["api_endpoints_tested"].append("/pm/config/adom/root/obj/firewall/address")
+        test_results["api_endpoints_tested"].append(
+            "/pm/config/adom/root/obj/firewall/address"
+        )
 
         try:
             address_objects = api_client.get_address_objects()
             if address_objects:
-                test_results["discovered_data"]["address_objects"] = address_objects[:5]  # Limit to first 5
+                test_results["discovered_data"]["address_objects"] = address_objects[
+                    :5
+                ]  # Limit to first 5
                 logger.info(f"Found {len(address_objects)} address objects")
             else:
                 test_results["errors"].append("No address objects found")
@@ -168,12 +185,16 @@ def test_fortimanager_demo():
         # Test 7: Service Objects
         logger.info("Test 7: Getting service objects")
         test_results["tests_performed"].append("service_objects")
-        test_results["api_endpoints_tested"].append("/pm/config/adom/root/obj/firewall/service/custom")
+        test_results["api_endpoints_tested"].append(
+            "/pm/config/adom/root/obj/firewall/service/custom"
+        )
 
         try:
             service_objects = api_client.get_service_objects()
             if service_objects:
-                test_results["discovered_data"]["service_objects"] = service_objects[:5]  # Limit to first 5
+                test_results["discovered_data"]["service_objects"] = service_objects[
+                    :5
+                ]  # Limit to first 5
                 logger.info(f"Found {len(service_objects)} service objects")
             else:
                 test_results["errors"].append("No service objects found")
@@ -188,7 +209,9 @@ def test_fortimanager_demo():
             device_name = first_device.get("name")
 
             if device_name:
-                logger.info(f"Test 8: Testing device-specific APIs with device: {device_name}")
+                logger.info(
+                    f"Test 8: Testing device-specific APIs with device: {device_name}"
+                )
                 test_results["tests_performed"].append("device_specific_tests")
 
                 # Test firewall policies
@@ -198,10 +221,16 @@ def test_fortimanager_demo():
                     )
                     policies = api_client.get_firewall_policies(device_name)
                     if policies:
-                        test_results["discovered_data"]["sample_policies"] = policies[:3]  # Limit to first 3
-                        logger.info(f"Found {len(policies)} firewall policies for device {device_name}")
+                        test_results["discovered_data"]["sample_policies"] = policies[
+                            :3
+                        ]  # Limit to first 3
+                        logger.info(
+                            f"Found {len(policies)} firewall policies for device {device_name}"
+                        )
                     else:
-                        logger.warning(f"No firewall policies found for device {device_name}")
+                        logger.warning(
+                            f"No firewall policies found for device {device_name}"
+                        )
                 except Exception as e:
                     test_results["errors"].append(f"Device policies error: {str(e)}")
                     logger.error(f"Device policies error: {e}")
@@ -213,8 +242,14 @@ def test_fortimanager_demo():
                     )
                     interfaces = api_client.get_interfaces(device_name)
                     if interfaces:
-                        test_results["discovered_data"]["sample_interfaces"] = interfaces[:3]  # Limit to first 3
-                        logger.info(f"Found {len(interfaces)} interfaces for device {device_name}")
+                        test_results["discovered_data"][
+                            "sample_interfaces"
+                        ] = interfaces[
+                            :3
+                        ]  # Limit to first 3
+                        logger.info(
+                            f"Found {len(interfaces)} interfaces for device {device_name}"
+                        )
                     else:
                         logger.warning(f"No interfaces found for device {device_name}")
                 except Exception as e:
@@ -223,16 +258,24 @@ def test_fortimanager_demo():
 
         # Generate recommendations
         if test_results["connection_status"] == "success":
-            test_results["recommendations"].append("Connection to FortiManager demo is working correctly")
+            test_results["recommendations"].append(
+                "Connection to FortiManager demo is working correctly"
+            )
 
         if test_results["authentication_status"] == "success":
-            test_results["recommendations"].append("API token authentication is working correctly")
+            test_results["recommendations"].append(
+                "API token authentication is working correctly"
+            )
 
         if test_results["discovered_data"].get("managed_devices"):
-            test_results["recommendations"].append("Demo environment has managed devices available for testing")
+            test_results["recommendations"].append(
+                "Demo environment has managed devices available for testing"
+            )
 
         if len(test_results["errors"]) == 0:
-            test_results["recommendations"].append("All basic API endpoints are accessible and functional")
+            test_results["recommendations"].append(
+                "All basic API endpoints are accessible and functional"
+            )
 
         test_results["test_end_time"] = datetime.now().isoformat()
         test_results["test_duration"] = str(
@@ -350,7 +393,9 @@ if __name__ == "__main__":
     report = generate_report(results)
 
     # Save to file
-    report_filename = f"fortimanager_demo_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    report_filename = (
+        f"fortimanager_demo_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    )
     with open(report_filename, "w", encoding="utf-8") as f:
         f.write(report)
 

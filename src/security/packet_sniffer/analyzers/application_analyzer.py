@@ -98,7 +98,9 @@ class ApplicationAnalyzer:
         self.sessions = {}  # 세션 추적
         self.protocols_detected = {}  # 감지된 프로토콜
 
-    def analyze(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         애플리케이션 패킷 분석
 
@@ -136,7 +138,9 @@ class ApplicationAnalyzer:
             # 프로토콜별 분석
             if identified_protocol:
                 analysis["protocols"].append(identified_protocol)
-                app_analysis = self._analyze_protocol(identified_protocol, payload, packet_info)
+                app_analysis = self._analyze_protocol(
+                    identified_protocol, payload, packet_info
+                )
                 if app_analysis:
                     analysis["application_data"] = app_analysis
 
@@ -154,7 +158,9 @@ class ApplicationAnalyzer:
             analysis["session_info"] = session_info
 
             # 보안 검사
-            security_issues = self._check_application_security(analysis, payload, packet_info)
+            security_issues = self._check_application_security(
+                analysis, payload, packet_info
+            )
             analysis["security_issues"] = security_issues
 
             return analysis
@@ -166,7 +172,9 @@ class ApplicationAnalyzer:
                 "timestamp": packet_info.get("timestamp", datetime.now().isoformat()),
             }
 
-    def _extract_payload(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Optional[bytes]:
+    def _extract_payload(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[bytes]:
         """애플리케이션 페이로드 추출"""
         try:
             # IP 헤더 길이 계산
@@ -180,7 +188,9 @@ class ApplicationAnalyzer:
             if protocol == "TCP":
                 if len(packet_data) < ip_header_length + 20:
                     return None
-                tcp_header_length = ((packet_data[ip_header_length + 12] >> 4) & 0xF) * 4
+                tcp_header_length = (
+                    (packet_data[ip_header_length + 12] >> 4) & 0xF
+                ) * 4
                 payload_start = ip_header_length + tcp_header_length
             elif protocol == "UDP":
                 payload_start = ip_header_length + 8
@@ -205,7 +215,9 @@ class ApplicationAnalyzer:
                 return detected
 
             # HTTP 감지
-            if payload.startswith((b"GET ", b"POST ", b"PUT ", b"DELETE ", b"HEAD ", b"OPTIONS ")):
+            if payload.startswith(
+                (b"GET ", b"POST ", b"PUT ", b"DELETE ", b"HEAD ", b"OPTIONS ")
+            ):
                 detected.append("HTTP")
             elif payload.startswith(b"HTTP/"):
                 detected.append("HTTP")
@@ -219,7 +231,9 @@ class ApplicationAnalyzer:
                 detected.append("FTP")
 
             # SMTP 감지
-            if payload.startswith((b"220 ", b"HELO ", b"EHLO ", b"MAIL FROM:", b"RCPT TO:")):
+            if payload.startswith(
+                (b"220 ", b"HELO ", b"EHLO ", b"MAIL FROM:", b"RCPT TO:")
+            ):
                 detected.append("SMTP")
 
             # POP3 감지
@@ -227,7 +241,9 @@ class ApplicationAnalyzer:
                 detected.append("POP3")
 
             # IMAP 감지
-            if b"IMAP" in payload[:50] or payload.startswith((b"* OK", b"* BAD", b"* NO")):
+            if b"IMAP" in payload[:50] or payload.startswith(
+                (b"* OK", b"* BAD", b"* NO")
+            ):
                 detected.append("IMAP")
 
             # MQTT 감지
@@ -255,7 +271,9 @@ class ApplicationAnalyzer:
 
         return detected
 
-    def _analyze_protocol(self, protocol: str, payload: bytes, packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_protocol(
+        self, protocol: str, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """프로토콜별 상세 분석"""
         try:
             if protocol == "SSH":
@@ -284,17 +302,25 @@ class ApplicationAnalyzer:
             logger.error(f"{protocol} 분석 오류: {e}")
             return None
 
-    def _analyze_ssh(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_ssh(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """SSH 프로토콜 분석"""
         try:
             analysis = {"protocol": "SSH"}
 
             # SSH 버전 문자열 분석
             if payload.startswith(b"SSH-"):
-                version_line = payload.split(b"\r\n")[0] if b"\r\n" in payload else payload.split(b"\n")[0]
+                version_line = (
+                    payload.split(b"\r\n")[0]
+                    if b"\r\n" in payload
+                    else payload.split(b"\n")[0]
+                )
                 version_str = version_line.decode("utf-8", errors="ignore")
 
-                analysis.update({"version_string": version_str, "phase": "version_exchange"})
+                analysis.update(
+                    {"version_string": version_str, "phase": "version_exchange"}
+                )
 
                 # SSH 버전 파싱
                 if len(version_str.split("-")) >= 3:
@@ -321,7 +347,9 @@ class ApplicationAnalyzer:
                                 "packet_length": packet_length,
                                 "padding_length": padding_length,
                                 "message_type": msg_type,
-                                "message_name": self.SSH_MSG_TYPES.get(msg_type, f"unknown_{msg_type}"),
+                                "message_name": self.SSH_MSG_TYPES.get(
+                                    msg_type, f"unknown_{msg_type}"
+                                ),
                                 "phase": "binary_protocol",
                             }
                         )
@@ -343,7 +371,9 @@ class ApplicationAnalyzer:
             logger.error(f"SSH 분석 오류: {e}")
             return {"protocol": "SSH", "error": str(e)}
 
-    def _analyze_http(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_http(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """HTTP 프로토콜 분석"""
         try:
             analysis = {"protocol": "HTTP"}
@@ -360,7 +390,9 @@ class ApplicationAnalyzer:
             first_line = lines[0]
 
             # HTTP 요청 분석
-            if first_line.startswith(("GET ", "POST ", "PUT ", "DELETE ", "HEAD ", "OPTIONS ")):
+            if first_line.startswith(
+                ("GET ", "POST ", "PUT ", "DELETE ", "HEAD ", "OPTIONS ")
+            ):
                 parts = first_line.split(" ")
                 if len(parts) >= 3:
                     analysis.update(
@@ -423,7 +455,9 @@ class ApplicationAnalyzer:
             logger.error(f"HTTP 분석 오류: {e}")
             return {"protocol": "HTTP", "error": str(e)}
 
-    def _analyze_ftp(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_ftp(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """FTP 프로토콜 분석"""
         try:
             analysis = {"protocol": "FTP"}
@@ -458,7 +492,9 @@ class ApplicationAnalyzer:
                 command = parts[0].upper()
                 args = parts[1] if len(parts) > 1 else ""
 
-                analysis.update({"type": "command", "command": command, "arguments": args})
+                analysis.update(
+                    {"type": "command", "command": command, "arguments": args}
+                )
 
                 # 명령어 분류
                 if command in ["USER", "PASS"]:
@@ -476,7 +512,9 @@ class ApplicationAnalyzer:
             logger.error(f"FTP 분석 오류: {e}")
             return {"protocol": "FTP", "error": str(e)}
 
-    def _analyze_smtp(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_smtp(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """SMTP 프로토콜 분석"""
         try:
             analysis = {"protocol": "SMTP"}
@@ -499,7 +537,9 @@ class ApplicationAnalyzer:
                 command = parts[0].upper()
                 args = parts[1] if len(parts) > 1 else ""
 
-                analysis.update({"type": "command", "command": command, "arguments": args})
+                analysis.update(
+                    {"type": "command", "command": command, "arguments": args}
+                )
 
                 # 이메일 주소 추출
                 if command in ["MAIL FROM:", "RCPT TO:"]:
@@ -513,7 +553,9 @@ class ApplicationAnalyzer:
             logger.error(f"SMTP 분석 오류: {e}")
             return {"protocol": "SMTP", "error": str(e)}
 
-    def _analyze_pop3(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_pop3(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """POP3 프로토콜 분석"""
         try:
             analysis = {"protocol": "POP3"}
@@ -529,7 +571,9 @@ class ApplicationAnalyzer:
                 status = parts[0]
                 message = parts[1] if len(parts) > 1 else ""
 
-                analysis.update({"type": "response", "status": status, "message": message})
+                analysis.update(
+                    {"type": "response", "status": status, "message": message}
+                )
 
             # POP3 명령어 분석
             else:
@@ -537,7 +581,9 @@ class ApplicationAnalyzer:
                 command = parts[0].upper()
                 args = parts[1:] if len(parts) > 1 else []
 
-                analysis.update({"type": "command", "command": command, "arguments": args})
+                analysis.update(
+                    {"type": "command", "command": command, "arguments": args}
+                )
 
             return analysis
 
@@ -545,7 +591,9 @@ class ApplicationAnalyzer:
             logger.error(f"POP3 분석 오류: {e}")
             return {"protocol": "POP3", "error": str(e)}
 
-    def _analyze_imap(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_imap(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """IMAP 프로토콜 분석"""
         try:
             analysis = {"protocol": "IMAP"}
@@ -557,7 +605,9 @@ class ApplicationAnalyzer:
 
             # IMAP 응답 분석
             if payload_str.startswith(("* ", "+ ")):
-                analysis.update({"type": "untagged_response", "content": payload_str[2:]})
+                analysis.update(
+                    {"type": "untagged_response", "content": payload_str[2:]}
+                )
 
             elif re.match(r"^[A-Z0-9]+ (OK|NO|BAD)", payload_str):
                 parts = payload_str.split(" ", 2)
@@ -597,7 +647,9 @@ class ApplicationAnalyzer:
             logger.error(f"IMAP 분석 오류: {e}")
             return {"protocol": "IMAP", "error": str(e)}
 
-    def _analyze_mqtt(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_mqtt(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """MQTT 프로토콜 분석"""
         try:
             analysis = {"protocol": "MQTT"}
@@ -615,7 +667,9 @@ class ApplicationAnalyzer:
             analysis.update(
                 {
                     "message_type": msg_type,
-                    "message_name": self.MQTT_MSG_TYPES.get(msg_type, f"unknown_{msg_type}"),
+                    "message_name": self.MQTT_MSG_TYPES.get(
+                        msg_type, f"unknown_{msg_type}"
+                    ),
                     "dup_flag": dup_flag,
                     "qos_level": qos_level,
                     "retain_flag": retain_flag,
@@ -644,7 +698,9 @@ class ApplicationAnalyzer:
             if msg_type == 1:  # CONNECT
                 analysis.update(self._analyze_mqtt_connect(payload[offset + 1 :]))
             elif msg_type == 3:  # PUBLISH
-                analysis.update(self._analyze_mqtt_publish(payload[offset + 1 :], qos_level))
+                analysis.update(
+                    self._analyze_mqtt_publish(payload[offset + 1 :], qos_level)
+                )
             elif msg_type == 8:  # SUBSCRIBE
                 analysis.update(self._analyze_mqtt_subscribe(payload[offset + 1 :]))
 
@@ -665,7 +721,9 @@ class ApplicationAnalyzer:
             if len(payload) < 2 + protocol_name_length + 8:
                 return {}
 
-            protocol_name = payload[2 : 2 + protocol_name_length].decode("utf-8", errors="ignore")
+            protocol_name = payload[2 : 2 + protocol_name_length].decode(
+                "utf-8", errors="ignore"
+            )
             offset = 2 + protocol_name_length
 
             # 프로토콜 레벨
@@ -764,7 +822,9 @@ class ApplicationAnalyzer:
                     break
 
                 # 토픽 필터
-                topic_filter = payload[offset : offset + topic_length].decode("utf-8", errors="ignore")
+                topic_filter = payload[offset : offset + topic_length].decode(
+                    "utf-8", errors="ignore"
+                )
                 offset += topic_length
 
                 # QoS
@@ -783,7 +843,9 @@ class ApplicationAnalyzer:
             logger.error(f"MQTT SUBSCRIBE 분석 오류: {e}")
             return {}
 
-    def _analyze_snmp(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_snmp(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """SNMP 프로토콜 분석"""
         try:
             analysis = {"protocol": "SNMP"}
@@ -797,7 +859,9 @@ class ApplicationAnalyzer:
                 return analysis
 
             # 기본적인 SNMP 정보만 추출
-            analysis.update({"version": "unknown", "community": "unknown", "pdu_type": "unknown"})
+            analysis.update(
+                {"version": "unknown", "community": "unknown", "pdu_type": "unknown"}
+            )
 
             # 실제 구현에서는 pyasn1 등의 라이브러리 사용 권장
 
@@ -807,7 +871,9 @@ class ApplicationAnalyzer:
             logger.error(f"SNMP 분석 오류: {e}")
             return {"protocol": "SNMP", "error": str(e)}
 
-    def _analyze_generic(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_generic(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """일반적인 애플리케이션 데이터 분석"""
         try:
             analysis = {
@@ -818,7 +884,9 @@ class ApplicationAnalyzer:
 
             if analysis["is_printable"] and len(payload) < 500:
                 try:
-                    analysis["text_preview"] = payload.decode("utf-8", errors="ignore")[:200]
+                    analysis["text_preview"] = payload.decode("utf-8", errors="ignore")[
+                        :200
+                    ]
                 except Exception:
                     pass
 
@@ -828,7 +896,9 @@ class ApplicationAnalyzer:
             logger.error(f"일반 분석 오류: {e}")
             return {"protocol": "GENERIC", "error": str(e)}
 
-    def _update_session_info(self, analysis: Dict[str, Any], packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def _update_session_info(
+        self, analysis: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """세션 정보 업데이트"""
         try:
             session_key = (
@@ -856,7 +926,9 @@ class ApplicationAnalyzer:
                 "packet_count": session["packet_count"],
                 "byte_count": session["byte_count"],
                 "protocols": list(session["protocols"]),
-                "duration": self._calculate_duration(session["start_time"], packet_info.get("timestamp")),
+                "duration": self._calculate_duration(
+                    session["start_time"], packet_info.get("timestamp")
+                ),
             }
 
         except Exception as e:

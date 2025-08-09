@@ -51,7 +51,9 @@ class BlueprintIntegrationTester:
 
         return blueprint_routes
 
-    def check_route_conflicts(self, blueprint_routes: Dict[str, List[str]]) -> List[Dict[str, Any]]:
+    def check_route_conflicts(
+        self, blueprint_routes: Dict[str, List[str]]
+    ) -> List[Dict[str, Any]]:
         """라우트 충돌 검사"""
         conflicts = []
         all_routes = {}
@@ -71,7 +73,10 @@ class BlueprintIntegrationTester:
                                 all_routes[rule]["endpoint"],
                                 route_info["endpoint"],
                             ],
-                            "methods_conflict": bool(set(all_routes[rule]["methods"]) & set(route_info["methods"])),
+                            "methods_conflict": bool(
+                                set(all_routes[rule]["methods"])
+                                & set(route_info["methods"])
+                            ),
                         }
                     )
                 else:
@@ -110,7 +115,9 @@ def test_blueprint_registration():
 
         # 모든 예상 Blueprint이 등록되었는지 확인
         missing_blueprints = expected_blueprints - registered_blueprints
-        test_framework.assert_eq(len(missing_blueprints), 0, f"Missing blueprints: {missing_blueprints}")
+        test_framework.assert_eq(
+            len(missing_blueprints), 0, f"Missing blueprints: {missing_blueprints}"
+        )
 
         # 각 Blueprint의 라우트 발견
         blueprint_routes = blueprint_tester.discover_all_routes(app)
@@ -130,7 +137,9 @@ def test_blueprint_registration():
 
         return {
             "registered_blueprints": list(registered_blueprints),
-            "blueprint_route_counts": {bp: len(routes) for bp, routes in blueprint_routes.items()},
+            "blueprint_route_counts": {
+                bp: len(routes) for bp, routes in blueprint_routes.items()
+            },
             "total_routes": sum(len(routes) for routes in blueprint_routes.values()),
         }
 
@@ -182,7 +191,9 @@ def test_url_generation():
         for endpoint, params in critical_endpoints:
             try:
                 generated_url = url_for(endpoint, **params)
-                url_tests.append({"endpoint": endpoint, "url": generated_url, "status": "success"})
+                url_tests.append(
+                    {"endpoint": endpoint, "url": generated_url, "status": "success"}
+                )
 
                 # URL이 유효한 형식인지 검증
                 test_framework.assert_ok(
@@ -191,15 +202,21 @@ def test_url_generation():
                 )
 
             except Exception as e:
-                url_tests.append({"endpoint": endpoint, "error": str(e), "status": "failed"})
+                url_tests.append(
+                    {"endpoint": endpoint, "error": str(e), "status": "failed"}
+                )
 
         # 실패한 URL 생성이 없어야 함
         failed_urls = [test for test in url_tests if test["status"] == "failed"]
-        test_framework.assert_eq(len(failed_urls), 0, f"Failed URL generations: {failed_urls}")
+        test_framework.assert_eq(
+            len(failed_urls), 0, f"Failed URL generations: {failed_urls}"
+        )
 
         return {
             "url_tests": url_tests,
-            "successful_generations": len([t for t in url_tests if t["status"] == "success"]),
+            "successful_generations": len(
+                [t for t in url_tests if t["status"] == "success"]
+            ),
         }
 
 
@@ -221,7 +238,9 @@ def test_error_handler_precedence():
         )
 
         # 404는 처리되어야 함
-        test_framework.assert_eq(response.status_code, 404, "Nonexistent route should return 404")
+        test_framework.assert_eq(
+            response.status_code, 404, "Nonexistent route should return 404"
+        )
 
         # 500 에러 테스트 (잘못된 파라미터)
         response = client.get("/api/settings?invalid_param=trigger_error")
@@ -234,7 +253,9 @@ def test_error_handler_precedence():
         )
 
         # 에러 응답에 내용이 있어야 함 (빈 응답이 아님)
-        test_framework.assert_ok(len(response.get_data()) > 0, "Error response should have content")
+        test_framework.assert_ok(
+            len(response.get_data()) > 0, "Error response should have content"
+        )
 
         # 메서드 오류 테스트
         response = client.put("/")  # GET만 허용하는 경로에 PUT 요청
@@ -246,11 +267,15 @@ def test_error_handler_precedence():
             }
         )
 
-        test_framework.assert_eq(response.status_code, 405, "Wrong method should return 405")
+        test_framework.assert_eq(
+            response.status_code, 405, "Wrong method should return 405"
+        )
 
         return {
             "error_tests": error_tests,
-            "error_handling_working": all(test["status_code"] in [404, 405, 500] for test in error_tests),
+            "error_handling_working": all(
+                test["status_code"] in [404, 405, 500] for test in error_tests
+            ),
         }
 
 
@@ -278,7 +303,8 @@ def test_template_context_isolation():
                         "test_name": test_name,
                         "status_code": response.status_code,
                         "content_length": len(response.get_data()),
-                        "has_html": b"<html" in response.get_data() or b"<!DOCTYPE" in response.get_data(),
+                        "has_html": b"<html" in response.get_data()
+                        or b"<!DOCTYPE" in response.get_data(),
                         "status": "success",
                     }
                 )
@@ -300,12 +326,18 @@ def test_template_context_isolation():
                 )
 
         # 템플릿 렌더링 실패가 없어야 함
-        failed_templates = [test for test in template_tests if test["status"] == "failed"]
-        test_framework.assert_eq(len(failed_templates), 0, f"Template rendering failures: {failed_templates}")
+        failed_templates = [
+            test for test in template_tests if test["status"] == "failed"
+        ]
+        test_framework.assert_eq(
+            len(failed_templates), 0, f"Template rendering failures: {failed_templates}"
+        )
 
         return {
             "template_tests": template_tests,
-            "successful_renders": len([t for t in template_tests if t["status"] == "success"]),
+            "successful_renders": len(
+                [t for t in template_tests if t["status"] == "success"]
+            ),
         }
 
 
@@ -332,7 +364,9 @@ def test_security_context_propagation():
                         "endpoint": endpoint,
                         "method": "GET",
                         "status_code": response.status_code,
-                        "csrf_check": "passed" if response.status_code != 400 else "failed",
+                        "csrf_check": "passed"
+                        if response.status_code != 400
+                        else "failed",
                     }
                 )
 
@@ -403,6 +437,8 @@ if __name__ == "__main__":
         print("🎯 Blueprint integration is working correctly")
         sys.exit(0)
     else:
-        print(f"\n❌ {results['failed']}/{results['total']} Blueprint integration tests FAILED")
+        print(
+            f"\n❌ {results['failed']}/{results['total']} Blueprint integration tests FAILED"
+        )
         print("🔧 Blueprint integration needs attention")
         sys.exit(1)

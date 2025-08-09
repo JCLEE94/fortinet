@@ -90,11 +90,17 @@ class ProtocolAnalyzer:
         try:
             # 기본 분석 결과
             result = {
-                "protocol": "HTTP" if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else "Unknown",
-                "confidence": 0.8 if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080] else 0.3,
+                "protocol": "HTTP"
+                if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080]
+                else "Unknown",
+                "confidence": 0.8
+                if packet.dst_port in [80, 8080] or packet.src_port in [80, 8080]
+                else 0.3,
                 "details": {"detection_method": "port_based"},
                 "flags": {"encrypted": False, "suspicious": False},
-                "hierarchy": ["TCP", "HTTP"] if packet.dst_port in [80, 8080] else ["TCP"],
+                "hierarchy": ["TCP", "HTTP"]
+                if packet.dst_port in [80, 8080]
+                else ["TCP"],
                 "security_flags": {},
                 "anomalies": [],
             }
@@ -127,9 +133,14 @@ class ProtocolAnalyzer:
                     result["details"]["type"] = "response"
 
                 # 보안 패턴 감지
-                if "union select" in payload_str.lower() or "drop table" in payload_str.lower():
+                if (
+                    "union select" in payload_str.lower()
+                    or "drop table" in payload_str.lower()
+                ):
                     result["flags"]["suspicious"] = True
-                    result["anomalies"].append("Potential SQL injection pattern detected")
+                    result["anomalies"].append(
+                        "Potential SQL injection pattern detected"
+                    )
 
             # 통계 업데이트
             self.stats["total_analyzed"] += 1
@@ -154,9 +165,13 @@ class ProtocolAnalyzer:
         return {
             "total_analyzed": self.stats["total_analyzed"],
             "cache_hits": self.stats["cache_hits"],
-            "cache_hit_rate": self.stats["cache_hits"] / max(self.stats["total_analyzed"], 1) * 100,
+            "cache_hit_rate": self.stats["cache_hits"]
+            / max(self.stats["total_analyzed"], 1)
+            * 100,
             "analysis_errors": self.stats["analysis_errors"],
-            "error_rate": self.stats["analysis_errors"] / max(self.stats["total_analyzed"], 1) * 100,
+            "error_rate": self.stats["analysis_errors"]
+            / max(self.stats["total_analyzed"], 1)
+            * 100,
             "analyzer_usage": self.stats["analyzer_usage"].copy(),
             "cache_size": len(self.analysis_cache),
             "registered_analyzers": list(self.analyzers.keys()),
@@ -236,7 +251,9 @@ class HttpAnalyzer(BaseProtocolAnalyzer):
             for method in self.http_methods:
                 if payload_str.startswith(f"{method} "):
                     lines = payload_str.split("\n")
-                    uri = lines[0].split(" ")[1] if len(lines[0].split(" ")) > 1 else "/"
+                    uri = (
+                        lines[0].split(" ")[1] if len(lines[0].split(" ")) > 1 else "/"
+                    )
 
                     return ProtocolAnalysisResult(
                         protocol="HTTP",
@@ -451,7 +468,9 @@ class TestProtocolAnalyzer(unittest.TestCase):
 
         self.assertTrue(result["flags"].get("suspicious", False))
         self.assertGreater(len(result["anomalies"]), 0)
-        self.assertTrue(any("SQL injection" in anomaly for anomaly in result["anomalies"]))
+        self.assertTrue(
+            any("SQL injection" in anomaly for anomaly in result["anomalies"])
+        )
 
     def test_protocol_hierarchy(self):
         """프로토콜 계층 구조 테스트"""
@@ -570,7 +589,9 @@ class TestHttpAnalyzer(unittest.TestCase):
 
         self.assertIsNotNone(result)
         if "body_analysis" in result.details:
-            sensitive_data = result.details["body_analysis"].get("sensitive_data_detected", [])
+            sensitive_data = result.details["body_analysis"].get(
+                "sensitive_data_detected", []
+            )
             self.assertTrue(any("password" in item.lower() for item in sensitive_data))
 
     def test_security_headers_analysis(self):

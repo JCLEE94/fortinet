@@ -28,7 +28,10 @@ class TestDeviceManager(unittest.TestCase):
         self.assertTrue(hasattr(self.device_manager, "devices"))
 
         # Initialize devices if not already done
-        if not hasattr(self.device_manager, "devices") or self.device_manager.devices is None:
+        if (
+            not hasattr(self.device_manager, "devices")
+            or self.device_manager.devices is None
+        ):
             self.device_manager.devices = {}
 
     def test_device_storage(self):
@@ -38,14 +41,20 @@ class TestDeviceManager(unittest.TestCase):
             self.device_manager.devices = {}
 
         # Test basic storage operations
-        test_device = {"id": "test-device-1", "name": "Test Device", "ip": "192.168.1.1"}
+        test_device = {
+            "id": "test-device-1",
+            "name": "Test Device",
+            "ip": "192.168.1.1",
+        }
 
         # Store device
         self.device_manager.devices["test-device-1"] = test_device
 
         # Verify storage
         self.assertIn("test-device-1", self.device_manager.devices)
-        self.assertEqual(self.device_manager.devices["test-device-1"]["name"], "Test Device")
+        self.assertEqual(
+            self.device_manager.devices["test-device-1"]["name"], "Test Device"
+        )
 
     def test_device_manager_methods(self):
         """Test device manager has expected methods"""
@@ -56,11 +65,14 @@ class TestDeviceManager(unittest.TestCase):
         actual_methods = [
             method
             for method in dir(self.device_manager)
-            if callable(getattr(self.device_manager, method)) and not method.startswith("_")
+            if callable(getattr(self.device_manager, method))
+            and not method.startswith("_")
         ]
 
         # At minimum, should have some callable methods
-        self.assertGreater(len(actual_methods), 0, "DeviceManager should have some methods")
+        self.assertGreater(
+            len(actual_methods), 0, "DeviceManager should have some methods"
+        )
 
     def test_device_manager_is_callable(self):
         """Test that device manager instance is properly initialized"""

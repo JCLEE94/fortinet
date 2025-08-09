@@ -101,7 +101,9 @@ def test_default_settings():
         settings = UnifiedSettings()
 
         # 기본값 검증
-        test_framework.assert_ok(hasattr(settings, "app_mode"), "Settings should have app_mode attribute")
+        test_framework.assert_ok(
+            hasattr(settings, "app_mode"), "Settings should have app_mode attribute"
+        )
         test_framework.assert_ok(
             hasattr(settings, "web_app_port"),
             "Settings should have web_app_port attribute",
@@ -112,9 +114,15 @@ def test_default_settings():
         )
 
         # 기본값 타입 검증
-        test_framework.assert_ok(isinstance(settings.web_app_port, int), "web_app_port should be integer")
-        test_framework.assert_ok(isinstance(settings.web_app_host, str), "web_app_host should be string")
-        test_framework.assert_ok(isinstance(settings.app_mode, str), "app_mode should be string")
+        test_framework.assert_ok(
+            isinstance(settings.web_app_port, int), "web_app_port should be integer"
+        )
+        test_framework.assert_ok(
+            isinstance(settings.web_app_host, str), "web_app_host should be string"
+        )
+        test_framework.assert_ok(
+            isinstance(settings.app_mode, str), "app_mode should be string"
+        )
 
         # 기본값 범위 검증
         test_framework.assert_ok(
@@ -169,12 +177,16 @@ def test_environment_override():
             8888,
             "WEB_APP_PORT should be overridden and converted to int",
         )
-        test_framework.assert_eq(settings.web_app_host, "127.0.0.1", "WEB_APP_HOST should be overridden")
+        test_framework.assert_eq(
+            settings.web_app_host, "127.0.0.1", "WEB_APP_HOST should be overridden"
+        )
 
         # 불린 값 변환 검증
         offline_mode = getattr(settings, "offline_mode", None)
         if offline_mode is not None:
-            test_framework.assert_eq(offline_mode, True, "OFFLINE_MODE should be converted to boolean True")
+            test_framework.assert_eq(
+                offline_mode, True, "OFFLINE_MODE should be converted to boolean True"
+            )
 
         return {
             "environment_overrides": test_env_vars,
@@ -302,7 +314,9 @@ def test_configuration_validation():
                 # 포트 검증
                 if "WEB_APP_PORT" in scenario["env_vars"]:
                     port_value = settings.web_app_port
-                    port_valid = isinstance(port_value, int) and 1024 <= port_value <= 65535
+                    port_valid = (
+                        isinstance(port_value, int) and 1024 <= port_value <= 65535
+                    )
                 else:
                     port_valid = True
 
@@ -338,7 +352,9 @@ def test_configuration_validation():
                         "expected_to_pass": scenario["should_pass"],
                         "actually_passed": False,
                         "error": str(e),
-                        "validation_correct": not scenario["should_pass"],  # 예외가 발생하면 실패로 간주
+                        "validation_correct": not scenario[
+                            "should_pass"
+                        ],  # 예외가 발생하면 실패로 간주
                     }
                 )
 
@@ -348,7 +364,11 @@ def test_configuration_validation():
 
         # 검증 결과 확인
         correct_validations = [r for r in validation_results if r["validation_correct"]]
-        validation_accuracy = len(correct_validations) / len(validation_results) if validation_results else 0
+        validation_accuracy = (
+            len(correct_validations) / len(validation_results)
+            if validation_results
+            else 0
+        )
 
         test_framework.assert_ok(
             validation_accuracy >= 0.8,
@@ -378,7 +398,9 @@ def test_runtime_config_updates():
         initial_settings = get_unified_settings()
         initial_mode = initial_settings.app_mode
 
-        test_framework.assert_eq(initial_mode, "production", "Initial mode should be production")
+        test_framework.assert_eq(
+            initial_mode, "production", "Initial mode should be production"
+        )
 
         # 런타임 환경변수 변경
         os.environ["APP_MODE"] = "development"
@@ -400,7 +422,8 @@ def test_runtime_config_updates():
             "initial_mode": initial_mode,
             "updated_mode": updated_mode,
             "config_changes": config_changes,
-            "runtime_update_supported": updated_mode != initial_mode or True,  # 캐싱으로 인해 즉시 변경되지 않을 수 있음
+            "runtime_update_supported": updated_mode != initial_mode
+            or True,  # 캐싱으로 인해 즉시 변경되지 않을 수 있음
         }
 
     finally:
@@ -485,7 +508,9 @@ def test_complex_config_scenarios():
             # 설정 파일 생성 (있는 경우)
             config_file_path = None
             if scenario.config_file_data:
-                config_file_path = config_tester.create_temp_config_file(scenario.config_file_data)
+                config_file_path = config_tester.create_temp_config_file(
+                    scenario.config_file_data
+                )
                 os.environ["CONFIG_FILE_PATH"] = config_file_path
 
             try:
@@ -539,8 +564,12 @@ def test_complex_config_scenarios():
                     os.environ.pop("CONFIG_FILE_PATH", None)
 
         # 전체 시나리오 성공률 계산
-        successful_scenarios = [r for r in scenario_results if r.get("overall_match", False)]
-        success_rate = len(successful_scenarios) / len(scenario_results) if scenario_results else 0
+        successful_scenarios = [
+            r for r in scenario_results if r.get("overall_match", False)
+        ]
+        success_rate = (
+            len(successful_scenarios) / len(scenario_results) if scenario_results else 0
+        )
 
         test_framework.assert_ok(
             success_rate >= 0.7,
@@ -592,7 +621,9 @@ if __name__ == "__main__":
             print("⚙️  Configuration management is working correctly")
             sys.exit(0)
         else:
-            print(f"\n❌ {results['failed']}/{results['total']} Configuration integration tests FAILED")
+            print(
+                f"\n❌ {results['failed']}/{results['total']} Configuration integration tests FAILED"
+            )
             print("🔧 Configuration integration needs attention")
             sys.exit(1)
 
