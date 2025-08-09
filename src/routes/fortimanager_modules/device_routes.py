@@ -131,9 +131,7 @@ def get_network_topology():
 
         # Filter devices if specified
         if device_filter:
-            devices = [
-                d for d in devices if device_filter.lower() in d.get("name", "").lower()
-            ]
+            devices = [d for d in devices if device_filter.lower() in d.get("name", "").lower()]
 
         # Process devices into topology nodes
         for device in devices:

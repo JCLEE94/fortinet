@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: fortinet
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: jclee-infrastructure
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet:latest
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/fortinet.helm.image-name: image.repository
+    argocd-image-updater.argoproj.io/fortinet.helm.image-tag: image.tag
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jclee/fortinet
+    targetRevision: HEAD
+    path: charts/fortinet
+    helm:
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.repository
+          value: "registry.jclee.me/fortinet"
+        - name: image.tag
+          value: "latest"
+        - name: replicaCount
+          value: "1"
+        - name: service.type
+          value: "NodePort"
+        - name: service.nodePort
+          value: "30777"
+        - name: persistence.enabled
+          value: "true"
+        - name: persistence.storageClass
+          value: "standard"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP

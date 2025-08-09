@@ -92,19 +92,13 @@ class ExceptionHandler:
                 )
 
         if isinstance(e, requests.exceptions.ConnectionError):
-            return self._format_api_error(
-                "Connection failed - check network connectivity", api_type, 503
-            )
+            return self._format_api_error("Connection failed - check network connectivity", api_type, 503)
 
         if isinstance(e, requests.exceptions.Timeout):
-            return self._format_api_error(
-                "Request timeout - API server not responding", api_type, 504
-            )
+            return self._format_api_error("Request timeout - API server not responding", api_type, 504)
 
         if isinstance(e, requests.exceptions.SSLError):
-            return self._format_api_error(
-                "SSL certificate verification failed", api_type, 495
-            )
+            return self._format_api_error("SSL certificate verification failed", api_type, 495)
 
         # 기본 처리
         return self._format_api_error(f"Unexpected error: {str(e)}", api_type, 500)

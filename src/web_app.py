@@ -15,8 +15,12 @@ from routes.fortimanager_routes import fortimanager_bp
 from routes.itsm_api_routes import itsm_api_bp
 from routes.itsm_routes import itsm_bp
 from routes.main_routes import main_bp
-from utils.security import (add_security_headers, csrf_protect,
-                            generate_csrf_token, rate_limit)
+from utils.security import (
+    add_security_headers,
+    csrf_protect,
+    generate_csrf_token,
+    rate_limit,
+)
 from utils.unified_logger import get_logger
 
 # 오프라인 모드 감지
@@ -89,9 +93,7 @@ def create_app():
     app.config["SECRET_KEY"] = secret_key
 
     # 보안 강화: 세션 쿠키 보안 설정
-    app.config["SESSION_COOKIE_SECURE"] = (
-        os.environ.get("APP_MODE", "production").lower() == "production"
-    )
+    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("APP_MODE", "production").lower() == "production"
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["PERMANENT_SESSION_LIFETIME"] = 900  # 15분 세션 만료

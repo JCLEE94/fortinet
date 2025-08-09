@@ -10,8 +10,12 @@ from utils.api_utils import ConnectionTestMixin
 from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from .fortimanager import (AdvancedFeaturesMixin, AuthConnectionMixin,
-                           DeviceManagementMixin, PolicyManagementMixin)
+from .fortimanager import (
+    AdvancedFeaturesMixin,
+    AuthConnectionMixin,
+    DeviceManagementMixin,
+    PolicyManagementMixin,
+)
 
 
 class FortiManagerAPIClient(

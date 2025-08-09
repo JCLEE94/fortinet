@@ -74,8 +74,7 @@ class DummyDataGenerator:
                     f"{random.randint(1, 255)}.{random.randint(1, 255)}"
                 ),
                 "destination_ip": f"192.168.{random.randint(1, 255)}.{random.randint(1, 254)}",
-                "timestamp": datetime.now()
-                - timedelta(minutes=random.randint(0, 1440)),
+                "timestamp": datetime.now() - timedelta(minutes=random.randint(0, 1440)),
                 "device": f"FW-{random.choice(self.locations)}-{random.randint(1, 20):02d}",
                 "description": f"Security event detected on {random.choice(self.device_types)}",
                 "action": random.choice(["Blocked", "Allowed", "Monitored"]),
@@ -114,9 +113,7 @@ class DummyDataGenerator:
 
         return {"nodes": nodes, "links": links}
 
-    def generate_policy_analysis_result(
-        self, src_ip: str, dst_ip: str, port: int
-    ) -> Dict[str, Any]:
+    def generate_policy_analysis_result(self, src_ip: str, dst_ip: str, port: int) -> Dict[str, Any]:
         """Generate mock policy analysis result"""
         policies = [
             {"id": 1, "name": "ALLOW_HTTP", "action": "allow"},
@@ -183,8 +180,6 @@ if __name__ == "__main__":
         os.getenv("TEST_DST_IP", "10.20.1.50"),
         80,
     )
-    print(
-        f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}"
-    )
+    print(f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}")
 
     print("\n✅ All mock data generators working correctly!")
