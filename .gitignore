@@ -94,6 +94,10 @@ auto-deploy.pid*
 .coverage
 htmlcov/
 .pytest_cache/
+.tox/
+coverage.xml
+*.cover
+.hypothesis/
 
 # Node modules (if any)
 node_modules/
