@@ -128,7 +128,9 @@ class DeviceManager:
         """네트워크 인터페이스 초기화"""
         try:
             self._discover_network_interfaces()
-            self.logger.info(f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨")
+            self.logger.info(
+                f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨"
+            )
         except Exception as e:
             self.logger.error(f"네트워크 인터페이스 초기화 실패: {e}")
 
@@ -138,7 +140,9 @@ class DeviceManager:
             self.network_interfaces.clear()
 
             if not HAS_NETIFACES:
-                self.logger.warning("netifaces 모듈이 없습니다. 기본 인터페이스를 사용합니다.")
+                self.logger.warning(
+                    "netifaces 모듈이 없습니다. 기본 인터페이스를 사용합니다."
+                )
                 self._add_default_interfaces()
                 return
 
@@ -150,7 +154,9 @@ class DeviceManager:
                         if interface_info:
                             self.network_interfaces[interface_name] = interface_info
                     except Exception as e:
-                        self.logger.debug(f"인터페이스 {interface_name} 정보 획득 실패: {e}")
+                        self.logger.debug(
+                            f"인터페이스 {interface_name} 정보 획득 실패: {e}"
+                        )
 
             except Exception as e:
                 self.logger.error(f"인터페이스 발견 중 오류: {e}")

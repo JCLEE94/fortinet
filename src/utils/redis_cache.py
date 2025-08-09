@@ -40,7 +40,9 @@ class RedisCache:
     def clear_pattern(self, pattern: str) -> int:
         """패턴에 맞는 모든 키 삭제 (통합 캐시 매니저에서는 전체 클리어)"""
         # 패턴 매칭은 복잡하므로 전체 클리어로 대체
-        logger.warning(f"패턴 매칭 삭제는 지원되지 않음 ({pattern}). 전체 캐시를 클리어합니다.")
+        logger.warning(
+            f"패턴 매칭 삭제는 지원되지 않음 ({pattern}). 전체 캐시를 클리어합니다."
+        )
         self.cache_manager.clear()
         return 1  # 일관성을 위해 1 반환
 

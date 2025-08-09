@@ -9,13 +9,8 @@ from flask import Blueprint
 
 from utils.unified_logger import get_logger
 
-from .fortimanager_modules import (
-    advanced_bp,
-    device_bp,
-    monitoring_bp,
-    policy_bp,
-    status_bp,
-)
+from .fortimanager_modules import (advanced_bp, device_bp, monitoring_bp,
+                                   policy_bp, status_bp)
 
 logger = get_logger(__name__)
 

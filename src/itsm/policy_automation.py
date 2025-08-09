@@ -703,7 +703,9 @@ class PolicyAutomationEngine:
                 firewall.api_client = FortiGateAPIClient(
                     host=firewall.host,
                     username="admin",  # 실제로는 설정에서 가져와야 함
-                    password=os.environ.get("PASSWORD", ""),  # 실제로는 설정에서 가져와야 함
+                    password=os.environ.get(
+                        "PASSWORD", ""
+                    ),  # 실제로는 설정에서 가져와야 함
                 )
 
             # 정책 데이터 구성

@@ -128,7 +128,9 @@ class CoreSecurityScanner(
         # 리스너들에게 알림
         self._notify_listeners(scan_results)
 
-        logger.info(f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)")
+        logger.info(
+            f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)"
+        )
         return scan_results
 
     def get_security_dashboard(self) -> Dict:
@@ -235,7 +237,9 @@ class CoreSecurityScanner(
         # 포트 스캔 추천사항
         port_scan = results.get("port_scan", {})
         if port_scan.get("suspicious_ports"):
-            recommendations.append("비인가된 열린 포트를 확인하고 필요없는 서비스를 중지하세요")
+            recommendations.append(
+                "비인가된 열린 포트를 확인하고 필요없는 서비스를 중지하세요"
+            )
 
         # 취약점 추천사항
         vuln_scan = results.get("vulnerability_scan", {})

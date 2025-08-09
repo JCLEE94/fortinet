@@ -221,7 +221,9 @@ class ITSMFortiGateBridge:
                             f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}"
                         )
                     else:
-                        logger.error(f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}")
+                        logger.error(
+                            f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}"
+                        )
 
                 except Exception as e:
                     logger.error(f"FortiGate {fw_id} 정책 구현 중 오류: {str(e)}")
@@ -391,7 +393,9 @@ class ITSMFortiGateBridge:
 
                 if fg_client:
                     # 정책 삭제 (실제 구현 시 FortiGate API 호출)
-                    logger.info(f"FortiGate {fw_id}에서 정책 롤백: {step['description']}")
+                    logger.info(
+                        f"FortiGate {fw_id}에서 정책 롤백: {step['description']}"
+                    )
 
                     if not self.dry_run:
                         # 실제 롤백 수행

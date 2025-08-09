@@ -657,9 +657,7 @@ class ReportExporter:
 
         type_dist = anomaly_stats.get("type_distribution", {})
 
-        content = (
-            f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
-        )
+        content = f"<p>총 {anomaly_stats.get('total_anomalies', 0)}개의 이상 징후가 발견되었습니다.</p>"
 
         content += "<h4>유형별 분류</h4><ul>"
         for anomaly_type, count in type_dist.items():

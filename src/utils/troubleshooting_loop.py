@@ -16,13 +16,8 @@ from typing import Any, Dict, List
 import psutil
 import requests
 
-from config.constants import (
-    CHECK_INTERVALS,
-    DEFAULT_PATHS,
-    DEFAULT_PORTS,
-    SERVICE_URLS,
-    TIMEOUTS,
-)
+from config.constants import (CHECK_INTERVALS, DEFAULT_PATHS, DEFAULT_PORTS,
+                              SERVICE_URLS, TIMEOUTS)
 
 # 텔레그램 알림 시스템 제거됨
 

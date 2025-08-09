@@ -146,7 +146,8 @@ def settings():
 @main_bp.route("/monitoring")
 def monitoring():
     """모니터링 페이지"""
-    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.dashboard_defaults import (generate_mock_alerts,
+                                           get_dashboard_config)
     from mock.data_generator import DummyDataGenerator
 
     # 모니터링용 더미 데이터 생성
@@ -194,7 +195,8 @@ def dashboard_modern():
 def dashboard():
     """대시보드 페이지"""
     from api.integration.api_integration import APIIntegrationManager
-    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.dashboard_defaults import (generate_mock_alerts,
+                                           get_dashboard_config)
     from config.unified_settings import unified_settings
     from mock.data_generator import DummyDataGenerator
 

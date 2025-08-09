@@ -387,7 +387,9 @@ class AdvancedFilterRule:
 
             historical_values = stats.get(f"historical_{metric}", [])
 
-            if len(historical_values) < 10:  # 충분한 데이터가 없으면 이상치로 판단하지 않음
+            if (
+                len(historical_values) < 10
+            ):  # 충분한 데이터가 없으면 이상치로 판단하지 않음
                 return False
 
             if method == "zscore":

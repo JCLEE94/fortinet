@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from .base_sniffer import BaseSniffer, MockDataGenerator, PacketInfo, SnifferConfig
+from .base_sniffer import (BaseSniffer, MockDataGenerator, PacketInfo,
+                           SnifferConfig)
 from .device_manager import DeviceManager
 from .session_manager import get_session_manager
 
@@ -301,7 +302,9 @@ class PacketCapturer(BaseSniffer):
                 return False
 
             capture_thread.start()
-            self.logger.info(f"캡처 세션 시작됨: {session_id} (인터페이스: {interface})")
+            self.logger.info(
+                f"캡처 세션 시작됨: {session_id} (인터페이스: {interface})"
+            )
             return True
 
         except Exception as e:
@@ -398,7 +401,9 @@ class PacketCapturer(BaseSniffer):
                 self.logger.error(f"가짜 패킷 생성 오류: {e}")
                 time.sleep(1)
 
-        self.logger.info(f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성")
+        self.logger.info(
+            f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성"
+        )
 
     def _fortigate_capture_loop(self, session_id: str, interface: str) -> None:
         """FortiGate를 통한 실제 패킷 캡처 루프"""

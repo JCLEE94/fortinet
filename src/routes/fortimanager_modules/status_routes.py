@@ -2,7 +2,6 @@
 FortiManager Status and Connection Routes
 """
 
-
 from flask import Blueprint, jsonify
 
 from utils.api_utils import get_api_manager

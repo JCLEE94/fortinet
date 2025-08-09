@@ -382,7 +382,9 @@ if __name__ == "__main__":
     parser.add_argument("--weak-crypto", action="store_true", help="약한 암호화 수정")
     parser.add_argument("--auth", action="store_true", help="인증 누락 수정")
     parser.add_argument("--deserialization", action="store_true", help="역직렬화 수정")
-    parser.add_argument("--secrets", action="store_true", help="하드코딩된 비밀정보 수정")
+    parser.add_argument(
+        "--secrets", action="store_true", help="하드코딩된 비밀정보 수정"
+    )
     parser.add_argument("--path-traversal", action="store_true", help="경로 탐색 수정")
 
     args = parser.parse_args()

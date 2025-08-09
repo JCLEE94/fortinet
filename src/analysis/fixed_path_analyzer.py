@@ -270,7 +270,9 @@ class FixedPathAnalyzer:
                 "firewall_name": f"FW-{i+1:02d}",
                 "src_ip": route["from"],
                 "dst_ip": route["to"],
-                "policy_id": (policy_id if i == 0 else None),  # 첫 번째 홉에서만 정책 적용
+                "policy_id": (
+                    policy_id if i == 0 else None
+                ),  # 첫 번째 홉에서만 정책 적용
                 "policy": policy if i == 0 else None,
                 "action": policy["action"] if i == 0 else "forward",
                 "interface_in": route["interface"],

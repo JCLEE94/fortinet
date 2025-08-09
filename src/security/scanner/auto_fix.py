@@ -46,7 +46,9 @@ class AutoFixMixin:
                 "total_failed": len(failed_fixes),
             }
 
-            logger.info(f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패")
+            logger.info(
+                f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패"
+            )
             return result
 
         except Exception as e:

@@ -108,7 +108,9 @@ class ITSMIntegration:
                 ),
             }
 
-            logger.info(f"방화벽 요청 분석 완료: {src_ip}({src_zone}) -> {dst_ip}({dst_zone})")
+            logger.info(
+                f"방화벽 요청 분석 완료: {src_ip}({src_zone}) -> {dst_ip}({dst_zone})"
+            )
             return result
 
         except Exception as e:

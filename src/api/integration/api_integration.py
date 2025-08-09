@@ -66,7 +66,9 @@ class APIIntegrationManager:
                 == "true",
             }
 
-            logger.info(f"FortiManager 연결 시도: {fm_config['host']}:{fm_config['port']}")
+            logger.info(
+                f"FortiManager 연결 시도: {fm_config['host']}:{fm_config['port']}"
+            )
 
             self.fortimanager_client = FortiManagerAPIClient(
                 host=fm_config["host"],
@@ -131,7 +133,9 @@ class APIIntegrationManager:
                                 device_name, device_ip, device
                             )
 
-            logger.info(f"총 {len(self.fortigate_clients)}개의 FortiGate 장치를 발견했습니다.")
+            logger.info(
+                f"총 {len(self.fortigate_clients)}개의 FortiGate 장치를 발견했습니다."
+            )
 
         except Exception as e:
             logger.error(f"FortiGate 장치 검색 오류: {str(e)}")

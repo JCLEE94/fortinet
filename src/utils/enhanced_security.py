@@ -390,7 +390,10 @@ def jwt_required(roles: list = None, permissions: list = None):
             if RateLimitManager.is_rate_limited(client_ip, request.endpoint):
                 return (
                     jsonify(
-                        {"error": "너무 많은 요청입니다. 잠시 후 다시 시도하세요.", "code": "RATE_LIMITED"}
+                        {
+                            "error": "너무 많은 요청입니다. 잠시 후 다시 시도하세요.",
+                            "code": "RATE_LIMITED",
+                        }
                     ),
                     429,
                 )
@@ -398,12 +401,22 @@ def jwt_required(roles: list = None, permissions: list = None):
             # JWT 토큰 확인
             auth_header = request.headers.get("Authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
-                return jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}), 401
+                return (
+                    jsonify(
+                        {"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}
+                    ),
+                    401,
+                )
 
             token = auth_header.split(" ")[1]
             payload = SecureJWTManager.verify_token(token)
             if not payload:
-                return jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}), 401
+                return (
+                    jsonify(
+                        {"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}
+                    ),
+                    401,
+                )
 
             # 역할 확인
             if roles and payload.get("role") not in roles:
@@ -412,7 +425,9 @@ def jwt_required(roles: list = None, permissions: list = None):
                     f"필요 역할: {roles}, 현재 역할: {payload.get('role')}"
                 )
                 return (
-                    jsonify({"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}),
+                    jsonify(
+                        {"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}
+                    ),
                     403,
                 )
 
@@ -450,14 +465,19 @@ def api_key_required(f):
     def decorated_function(*args, **kwargs):
         api_key = request.headers.get("X-API-Key")
         if not api_key:
-            return jsonify({"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}), 401
+            return (
+                jsonify({"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}),
+                401,
+            )
 
         # API 키 검증 (실제 구현에서는 데이터베이스 확인)
         valid_api_keys = current_app.config.get("VALID_API_KEYS", [])
         if api_key not in valid_api_keys:
             logger.warning(f"유효하지 않은 API 키 사용: {api_key[:10]}...")
             return (
-                jsonify({"error": "유효하지 않은 API 키입니다", "code": "INVALID_API_KEY"}),
+                jsonify(
+                    {"error": "유효하지 않은 API 키입니다", "code": "INVALID_API_KEY"}
+                ),
                 401,
             )
 
@@ -496,7 +516,12 @@ def secure_endpoint(
                     client_ip, request.endpoint, max_attempts, window_minutes
                 ):
                     return (
-                        jsonify({"error": "요청 한도를 초과했습니다", "code": "RATE_LIMITED"}),
+                        jsonify(
+                            {
+                                "error": "요청 한도를 초과했습니다",
+                                "code": "RATE_LIMITED",
+                            }
+                        ),
                         429,
                     )
 
@@ -505,7 +530,9 @@ def secure_endpoint(
                 api_key = request.headers.get("X-API-Key")
                 if not api_key:
                     return (
-                        jsonify({"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}),
+                        jsonify(
+                            {"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}
+                        ),
                         401,
                     )
 
@@ -514,7 +541,9 @@ def secure_endpoint(
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):
                     return (
-                        jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
+                        jsonify(
+                            {"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}
+                        ),
                         401,
                     )
 
@@ -522,14 +551,24 @@ def secure_endpoint(
                 payload = SecureJWTManager.verify_token(token)
                 if not payload:
                     return (
-                        jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}),
+                        jsonify(
+                            {
+                                "error": "유효하지 않은 토큰입니다",
+                                "code": "INVALID_TOKEN",
+                            }
+                        ),
                         401,
                     )
 
                 # 역할/권한 확인
                 if roles and payload.get("role") not in roles:
                     return (
-                        jsonify({"error": "충분한 역할이 없습니다", "code": "INSUFFICIENT_ROLE"}),
+                        jsonify(
+                            {
+                                "error": "충분한 역할이 없습니다",
+                                "code": "INSUFFICIENT_ROLE",
+                            }
+                        ),
                         403,
                     )
 

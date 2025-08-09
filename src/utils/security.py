@@ -64,7 +64,9 @@ def csrf_protect(f):
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):
                     return (
-                        jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
+                        jsonify(
+                            {"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}
+                        ),
                         401,
                     )
 
@@ -72,7 +74,12 @@ def csrf_protect(f):
                 payload = verify_jwt_token(token)
                 if not payload:
                     return (
-                        jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}),
+                        jsonify(
+                            {
+                                "error": "유효하지 않은 토큰입니다",
+                                "code": "INVALID_TOKEN",
+                            }
+                        ),
                         401,
                     )
 
@@ -161,12 +168,18 @@ def jwt_required(f):
     def decorated_function(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}), 401
+            return (
+                jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
+                401,
+            )
 
         token = auth_header.split(" ")[1]
         payload = verify_jwt_token(token)
         if not payload:
-            return jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}), 401
+            return (
+                jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}),
+                401,
+            )
 
         # 요청 객체에 토큰 정보 저장
         request.jwt_payload = payload

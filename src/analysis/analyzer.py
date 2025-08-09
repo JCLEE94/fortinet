@@ -15,9 +15,8 @@ class PolicyAnalyzer:
         """Initialize PolicyAnalyzer with optional dependencies"""
         from .components.data_loader import DataLoader
         from .components.path_tracer import PathTracer
-        from .components.policy_analyzer import (
-            PolicyAnalyzer as PolicyAnalyzerComponent,
-        )
+        from .components.policy_analyzer import \
+            PolicyAnalyzer as PolicyAnalyzerComponent
         from .components.rule_validator import RuleValidator
         from .components.session_manager import SessionManager
 
@@ -76,9 +75,8 @@ class FirewallRuleAnalyzer:
         """
         from .components.data_loader import DataLoader
         from .components.path_tracer import PathTracer
-        from .components.policy_analyzer import (
-            PolicyAnalyzer as PolicyAnalyzerComponent,
-        )
+        from .components.policy_analyzer import \
+            PolicyAnalyzer as PolicyAnalyzerComponent
         from .components.rule_validator import RuleValidator
         from .components.session_manager import SessionManager
 

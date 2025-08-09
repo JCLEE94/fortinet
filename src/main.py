@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
 from analysis.analyzer import FirewallRuleAnalyzer
 from analysis.visualizer import PathVisualizer
-
 # 프로젝트 특정 임포트 (중복 try-except 제거)
 from api.clients.fortigate_api_client import FortiGateAPIClient
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
@@ -115,7 +114,9 @@ def parse_args():
     )
     parser.add_argument("--output", help="출력 파일 경로", required=False)
     parser.add_argument("--web", help="웹 인터페이스 시작", action="store_true")
-    parser.add_argument("--host", help="FortiManager 또는 FortiGate 호스트", required=False)
+    parser.add_argument(
+        "--host", help="FortiManager 또는 FortiGate 호스트", required=False
+    )
     parser.add_argument("--token", help="API 토큰", required=False)
     parser.add_argument("--username", help="사용자 이름", required=False)
     parser.add_argument("--password", help="비밀번호", required=False)
@@ -151,7 +152,9 @@ def analyze_packet_path(src_ip, dst_ip, port, protocol, api_client, manager=Fals
                 return None
 
         # 경로 분석
-        logger.info(f"패킷 경로 분석 중: {src_ip} -> {dst_ip}, 포트: {port}, 프로토콜: {protocol}")
+        logger.info(
+            f"패킷 경로 분석 중: {src_ip} -> {dst_ip}, 포트: {port}, 프로토콜: {protocol}"
+        )
         path_data = analyzer.trace_packet_path(src_ip, dst_ip, port, protocol)
 
         return path_data
@@ -223,7 +226,9 @@ def main():
         if environment == "dev":
             debug = unified_settings.webapp.debug or args.log_level == "DEBUG"
         elif os.environ.get("FORCE_DEBUG", "false").lower() == "true":
-            logger.warning("⚠️  강제 디버그 모드 활성화됨 - 프로덕션에서는 권장하지 않습니다")
+            logger.warning(
+                "⚠️  강제 디버그 모드 활성화됨 - 프로덕션에서는 권장하지 않습니다"
+            )
             debug = True
 
         build_time = os.getenv("BUILD_TIME", "Development")
@@ -265,7 +270,9 @@ def main():
 
     # CLI 모드에서는 필수 인수 확인
     if not all([args.src, args.dst, args.port]):
-        print("오류: 출발지 IP(--src), 목적지 IP(--dst), 포트(--port)는 필수 인수입니다.")
+        print(
+            "오류: 출발지 IP(--src), 목적지 IP(--dst), 포트(--port)는 필수 인수입니다."
+        )
         return 1
 
     # API 클라이언트 설정

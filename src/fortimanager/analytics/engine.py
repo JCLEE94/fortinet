@@ -12,7 +12,8 @@ from typing import Any, Dict, List, Optional
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 from .calculations import AnalyticsCalculator
-from .models import AnalyticsInsight, AnalyticsMetric, PredictiveModel, ReportFormat
+from .models import (AnalyticsInsight, AnalyticsMetric, PredictiveModel,
+                     ReportFormat)
 from .predictive import PredictiveAnalytics
 from .reports import ReportGenerator
 

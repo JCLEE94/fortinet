@@ -7,13 +7,8 @@
 
 from utils.unified_logger import setup_logger
 
-from .components import (
-    DataLoader,
-    PathTracer,
-    PolicyAnalyzer,
-    RuleValidator,
-    SessionManager,
-)
+from .components import (DataLoader, PathTracer, PolicyAnalyzer, RuleValidator,
+                         SessionManager)
 
 logger = setup_logger("refactored_analyzer")
 
@@ -160,7 +155,9 @@ class RefactoredFirewallAnalyzer:
                     session_id, "policy_conflict_analysis", result
                 )
 
-            self.logger.info(f"정책 충돌 분석 완료: {firewall_id} - {len(conflicts)}개 충돌 발견")
+            self.logger.info(
+                f"정책 충돌 분석 완료: {firewall_id} - {len(conflicts)}개 충돌 발견"
+            )
             return result
 
         except Exception as e:
@@ -198,7 +195,9 @@ class RefactoredFirewallAnalyzer:
                     session_id, "routing_loop_analysis", result
                 )
 
-            self.logger.info(f"라우팅 루프 분석 완료: {firewall_id} - {len(loops)}개 루프 발견")
+            self.logger.info(
+                f"라우팅 루프 분석 완료: {firewall_id} - {len(loops)}개 루프 발견"
+            )
             return result
 
         except Exception as e:

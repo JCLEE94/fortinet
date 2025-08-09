@@ -15,12 +15,8 @@ from routes.fortimanager_routes import fortimanager_bp
 from routes.itsm_api_routes import itsm_api_bp
 from routes.itsm_routes import itsm_bp
 from routes.main_routes import main_bp
-from utils.security import (
-    add_security_headers,
-    csrf_protect,
-    generate_csrf_token,
-    rate_limit,
-)
+from utils.security import (add_security_headers, csrf_protect,
+                            generate_csrf_token, rate_limit)
 from utils.unified_logger import get_logger
 
 # 오프라인 모드 감지
@@ -82,13 +78,17 @@ def create_app():
     secret_key = os.environ.get("SECRET_KEY")
     if not secret_key:
         if os.environ.get("APP_MODE", "production").lower() == "production":
-            raise ValueError("🚨 보안 오류: 프로덕션 환경에서는 SECRET_KEY 환경변수가 필수입니다")
+            raise ValueError(
+                "🚨 보안 오류: 프로덕션 환경에서는 SECRET_KEY 환경변수가 필수입니다"
+            )
         else:
             # 개발/테스트 환경에서만 임시 키 생성
             import secrets
 
             secret_key = secrets.token_hex(32)
-            logger.warning("⚠️  개발 환경: 임시 SECRET_KEY 생성됨. 프로덕션에서는 환경변수를 설정하세요")
+            logger.warning(
+                "⚠️  개발 환경: 임시 SECRET_KEY 생성됨. 프로덕션에서는 환경변수를 설정하세요"
+            )
 
     app.config["SECRET_KEY"] = secret_key
 
@@ -115,7 +115,9 @@ def create_app():
 
     try:
         cache_manager = get_cache_manager()
-        print(f"통합 캐시 매니저 로드 성공: {cache_manager.get_stats()['backends']}개 백엔드")
+        print(
+            f"통합 캐시 매니저 로드 성공: {cache_manager.get_stats()['backends']}개 백엔드"
+        )
     except Exception as e:
         print(f"캐시 매니저 로드 실패: {e}")
         cache_manager = None

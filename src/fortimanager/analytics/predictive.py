@@ -117,11 +117,11 @@ class PredictiveAnalytics:
             projections[f"{months}_months"] = {
                 "utilization": min(100, projected_utilization),
                 "capacity_needed": projected_utilization > 80,
-                "urgency": "high"
-                if projected_utilization > 90
-                else "medium"
-                if projected_utilization > 70
-                else "low",
+                "urgency": (
+                    "high"
+                    if projected_utilization > 90
+                    else "medium" if projected_utilization > 70 else "low"
+                ),
             }
 
         return {

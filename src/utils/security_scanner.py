@@ -327,13 +327,19 @@ class SecurityScanner:
 
         specific_recommendations = []
         if "hardcoded_secrets" in categories_found:
-            specific_recommendations.append("⚠️ 하드코딩된 비밀번호/키를 즉시 제거하고 환경 변수로 이동하세요")
+            specific_recommendations.append(
+                "⚠️ 하드코딩된 비밀번호/키를 즉시 제거하고 환경 변수로 이동하세요"
+            )
 
         if "sql_injection" in categories_found:
-            specific_recommendations.append("⚠️ SQL 인젝션 취약점을 수정하세요 - 매개변수화된 쿼리 사용")
+            specific_recommendations.append(
+                "⚠️ SQL 인젝션 취약점을 수정하세요 - 매개변수화된 쿼리 사용"
+            )
 
         if "command_injection" in categories_found:
-            specific_recommendations.append("⚠️ 명령어 인젝션 취약점을 수정하세요 - 입력 검증 강화")
+            specific_recommendations.append(
+                "⚠️ 명령어 인젝션 취약점을 수정하세요 - 입력 검증 강화"
+            )
 
         return specific_recommendations + recommendations
 
