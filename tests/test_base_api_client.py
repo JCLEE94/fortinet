@@ -50,24 +50,18 @@ class TestBaseAPIClient(unittest.TestCase):
         self.assertTrue(url.startswith("https://"))
 
         # Test with custom protocol
-        client = BaseApiClient(
-            host="http://test.example.com", username="test", password="test"
-        )
+        client = BaseApiClient(host="http://test.example.com", username="test", password="test")
         url = client.build_url("/api/test")
         self.assertTrue(url.startswith("http://"))
 
     def test_host_normalization(self):
         """Test that host is properly normalized"""
         # Test host with protocol
-        client = BaseApiClient(
-            host="https://test.example.com", username="test", password="test"
-        )
+        client = BaseApiClient(host="https://test.example.com", username="test", password="test")
         self.assertEqual(client.host, "test.example.com")
 
         # Test host with trailing slash
-        client = BaseApiClient(
-            host="test.example.com/", username="test", password="test"
-        )
+        client = BaseApiClient(host="test.example.com/", username="test", password="test")
         self.assertEqual(client.host, "test.example.com")
 
     def test_connection_test_mixin_available(self):

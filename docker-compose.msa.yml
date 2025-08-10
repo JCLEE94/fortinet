@@ -30,7 +30,7 @@ services:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-database
       KONG_PG_USER: kong
-      KONG_PG_PASSWORD: kongpass
+      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD:-secure_kong_password_2024}
       KONG_PG_DATABASE: kong
     networks:
       - fortinet-msa
@@ -43,7 +43,7 @@ services:
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-database
       KONG_PG_USER: kong
-      KONG_PG_PASSWORD: kongpass
+      KONG_PG_PASSWORD: ${KONG_DB_PASSWORD:-secure_kong_password_2024}
       KONG_PG_DATABASE: kong
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
@@ -129,9 +129,9 @@ services:
     environment:
       SERVICE_NAME: fortimanager-service
       SERVICE_PORT: 8082
-      DATABASE_URL: postgresql://fortimanager:fm123@fortimanager-db:5432/fortimanager
+      DATABASE_URL: postgresql://fortimanager:${FORTIMANAGER_DB_PASSWORD:-fm123}@fortimanager-db:5432/fortimanager
       CONSUL_URL: http://consul:8500
-      RABBITMQ_URL: amqp://fortinet:fortinet123@rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-fortinet_admin}:${RABBITMQ_PASSWORD:-secure_rabbit_password_2024}@rabbitmq:5672/
     ports:
       - "8082:8082"
     depends_on:
@@ -147,7 +147,7 @@ services:
     environment:
       POSTGRES_DB: fortimanager
       POSTGRES_USER: fortimanager
-      POSTGRES_PASSWORD: fm123
+      POSTGRES_PASSWORD: ${FORTIMANAGER_DB_PASSWORD:-fm123}
     volumes:
       - fortimanager_data:/var/lib/postgresql/data
     networks:
@@ -161,9 +161,9 @@ services:
     environment:
       SERVICE_NAME: itsm-service
       SERVICE_PORT: 8083
-      DATABASE_URL: postgresql://itsm:itsm123@itsm-db:5432/itsm
+      DATABASE_URL: postgresql://itsm:${ITSM_DB_PASSWORD:-itsm123}@itsm-db:5432/itsm
       CONSUL_URL: http://consul:8500
-      RABBITMQ_URL: amqp://fortinet:fortinet123@rabbitmq:5672/
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-fortinet_admin}:${RABBITMQ_PASSWORD:-secure_rabbit_password_2024}@rabbitmq:5672/
     ports:
       - "8083:8083"
     depends_on:
@@ -179,7 +179,7 @@ services:
     environment:
       POSTGRES_DB: itsm
       POSTGRES_USER: itsm
-      POSTGRES_PASSWORD: itsm123
+      POSTGRES_PASSWORD: ${ITSM_DB_PASSWORD:-itsm123}
     volumes:
       - itsm_data:/var/lib/postgresql/data
     networks:
@@ -211,7 +211,7 @@ services:
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: fortinet
-      DOCKER_INFLUXDB_INIT_PASSWORD: fortinet123
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:-fortinet123}
       DOCKER_INFLUXDB_INIT_ORG: fortinet
       DOCKER_INFLUXDB_INIT_BUCKET: monitoring
     ports:
@@ -229,7 +229,7 @@ services:
     environment:
       SERVICE_NAME: security-service
       SERVICE_PORT: 8085
-      MONGODB_URL: mongodb://security:sec123@mongodb:27017/security
+      MONGODB_URL: mongodb://security:${MONGODB_ROOT_PASSWORD:-sec123}@mongodb:27017/security
       CONSUL_URL: http://consul:8500
     ports:
       - "8085:8085"
@@ -244,7 +244,7 @@ services:
     image: mongo:7.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: security
-      MONGO_INITDB_ROOT_PASSWORD: sec123
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_ROOT_PASSWORD:-sec123}
       MONGO_INITDB_DATABASE: security
     volumes:
       - mongodb_data:/data/db
@@ -259,7 +259,7 @@ services:
     environment:
       SERVICE_NAME: analysis-service
       SERVICE_PORT: 8086
-      DATABASE_URL: postgresql://analysis:analysis123@analysis-db:5432/analysis
+      DATABASE_URL: postgresql://analysis:${ANALYSIS_DB_PASSWORD:-analysis123}@analysis-db:5432/analysis
       CONSUL_URL: http://consul:8500
     ports:
       - "8086:8086"
@@ -275,7 +275,7 @@ services:
     environment:
       POSTGRES_DB: analysis
       POSTGRES_USER: analysis
-      POSTGRES_PASSWORD: analysis123
+      POSTGRES_PASSWORD: ${ANALYSIS_DB_PASSWORD:-analysis123}
     volumes:
       - analysis_data:/var/lib/postgresql/data
     networks:
@@ -335,7 +335,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
     volumes:
       - grafana_data:/var/lib/grafana
     networks:

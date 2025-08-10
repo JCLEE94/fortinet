@@ -38,9 +38,7 @@ def test_adom_access():
         request_data = {"id": 1, "method": "get", "params": [{"url": test["url"]}]}
 
         try:
-            response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False
-            )
+            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=request_data, verify=False)
 
             result = response.json()
             if "result" in result:
@@ -48,9 +46,7 @@ def test_adom_access():
                 if code == 0:
                     print(f"  ✅ 성공! 데이터 접근 가능")
                     if "data" in result["result"][0]:
-                        print(
-                            f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}..."
-                        )
+                        print(f"  데이터: {json.dumps(result['result'][0]['data'], indent=2)[:200]}...")
                 else:
                     print(f"  ❌ 에러 {code}: {result['result'][0]['status']['message']}")
 
@@ -66,9 +62,7 @@ def test_adom_access():
     }
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=adom_list_request, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_list_request, verify=False)
 
         result = response.json()
         print(f"ADOM 목록 응답: {json.dumps(result, indent=2)}")
@@ -91,9 +85,7 @@ def test_adom_access():
         }
 
         try:
-            response = requests.post(
-                f"{BASE_URL}/jsonrpc", headers=headers, json=adom_info, verify=False
-            )
+            response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_info, verify=False)
 
             result = response.json()
             if "result" in result:
@@ -117,9 +109,7 @@ def test_adom_access():
     }
 
     try:
-        response = requests.post(
-            f"{BASE_URL}/jsonrpc", headers=headers, json=user_check, verify=False
-        )
+        response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=user_check, verify=False)
 
         result = response.json()
         print(f"사용자 정보: {json.dumps(result, indent=2)}")

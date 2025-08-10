@@ -207,12 +207,8 @@ def main():
         logger.info("웹 인터페이스 시작...")
 
         # Use web_app module
-        try:
-            from config.unified_settings import unified_settings
-            from web_app import create_app
-        except ImportError:
-            from config.unified_settings import unified_settings
-            from web_app import create_app
+        from config.unified_settings import unified_settings
+        from web_app import create_app
 
         # Create app with factory pattern
         app = create_app()

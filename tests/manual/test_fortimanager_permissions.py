@@ -18,7 +18,7 @@ BASE_URL = "https://hjsim-1034-451984.fortidemo.fortinet.com:14005"
 API_KEY = "giwwns3ynsnip4oobnn51xgqfpt9rbje"
 
 
-def test_endpoint(name, method, url, data=None, verbose=True):
+def endpoint_test(name, method, url, data=None, verbose=True):
     """특정 엔드포인트 테스트"""
     headers = {"Content-Type": "application/json", "X-API-Key": API_KEY}
 
@@ -115,9 +115,7 @@ def diagnose_permissions():
     headers = {"Content-Type": "application/json", "X-API-Key": API_KEY}
 
     print("\nADOM 'root'로 주소 객체 조회 시도...")
-    response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False
-    )
+    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=adom_request, verify=False)
 
     if response.status_code == 200:
         result = response.json()
@@ -148,9 +146,7 @@ def diagnose_permissions():
     }
 
     print("\n세션 정보 조회...")
-    response = requests.post(
-        f"{BASE_URL}/jsonrpc", headers=headers, json=session_request, verify=False
-    )
+    response = requests.post(f"{BASE_URL}/jsonrpc", headers=headers, json=session_request, verify=False)
 
     if response.status_code == 200:
         result = response.json()

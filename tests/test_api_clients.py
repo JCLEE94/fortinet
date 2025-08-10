@@ -193,9 +193,7 @@ class TestFortiGateAPIClient(unittest.TestCase):
         # Mock 모든 API 호출들
         with patch.object(self.client, "get_cpu_usage") as mock_cpu, patch.object(
             self.client, "get_memory_usage"
-        ) as mock_memory, patch.object(
-            self.client, "get_interface_stats"
-        ) as mock_interfaces, patch.object(
+        ) as mock_memory, patch.object(self.client, "get_interface_stats") as mock_interfaces, patch.object(
             self.client, "get_sessions"
         ) as mock_sessions, patch.object(
             self.client, "get_system_status"
@@ -228,9 +226,7 @@ class TestFortiManagerAPIClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FortiManagerAPIClient(
-            host="192.168.1.200", username="admin", password="password"
-        )
+        self.client = FortiManagerAPIClient(host="192.168.1.200", username="admin", password="password")
 
     @patch.object(FortiManagerAPIClient, "_make_request")
     def test_json_rpc_login(self, mock_request):
@@ -265,9 +261,7 @@ class TestFortiManagerAPIClient(unittest.TestCase):
 
         self.assertEqual(len(adoms), 2)
         self.assertEqual(adoms[0]["name"], "root")
-        mock_api_request.assert_called_once_with(
-            method="get", url="/dvmdb/adom", timeout=10
-        )
+        mock_api_request.assert_called_once_with(method="get", url="/dvmdb/adom", timeout=10)
 
 
 class TestFAZClient(unittest.TestCase):
@@ -275,9 +269,7 @@ class TestFAZClient(unittest.TestCase):
 
     def setUp(self):
         """테스트 환경 설정"""
-        self.client = FAZClient(
-            host="192.168.1.150", username="admin", password="password"
-        )
+        self.client = FAZClient(host="192.168.1.150", username="admin", password="password")
 
     @patch.object(FAZClient, "_make_request")
     def test_login_and_token_fallback(self, mock_request):

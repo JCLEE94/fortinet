@@ -78,10 +78,8 @@ class TestBaseApiClient(unittest.TestCase):
             mock_response.json.return_value = {"result": "success"}
 
             # Mock session using patch
-            with patch.object(self.client.session, 'request', return_value=mock_response) as mock_request:
-                success, data, status = self.client._make_request(
-                    "GET", "http://test.com/api"
-                )
+            with patch.object(self.client.session, "request", return_value=mock_response) as mock_request:
+                success, data, status = self.client._make_request("GET", "http://test.com/api")
 
                 self.assertTrue(success)
                 self.assertEqual(status, 200)

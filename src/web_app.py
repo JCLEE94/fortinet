@@ -46,11 +46,7 @@ if not DISABLE_SOCKETIO:
 else:
     print("Socket.IO disabled by environment variable")
 
-# Route imports
-
-# 모듈 임포트
-
-# Removed old cache_manager import - using unified_cache_manager instead
+# Route imports removed (using direct imports in create_app)
 
 
 def create_app():

@@ -86,9 +86,7 @@ def test_api_endpoints():
                 json=test_data,
                 content_type="application/json",
             )
-            print(
-                f"✅ POST /api/fortimanager/analyze-packet-path: {response.status_code}"
-            )
+            print(f"✅ POST /api/fortimanager/analyze-packet-path: {response.status_code}")
         except Exception as e:
             print(f"❌ POST /api/fortimanager/analyze-packet-path failed: {e}")
 
@@ -106,9 +104,7 @@ def test_api_endpoints():
                 json=test_data,
                 content_type="application/json",
             )
-            print(
-                f"✅ POST /api/fortimanager/advanced/analytics/trends: {response.status_code}"
-            )
+            print(f"✅ POST /api/fortimanager/advanced/analytics/trends: {response.status_code}")
         except Exception as e:
             print(f"❌ POST /api/fortimanager/advanced/analytics/trends failed: {e}")
 
@@ -124,9 +120,7 @@ def test_api_endpoints():
                 json=test_data,
                 content_type="application/json",
             )
-            print(
-                f"✅ POST /api/fortimanager/advanced/compliance/check: {response.status_code}"
-            )
+            print(f"✅ POST /api/fortimanager/advanced/compliance/check: {response.status_code}")
         except Exception as e:
             print(f"❌ POST /api/fortimanager/advanced/compliance/check failed: {e}")
 

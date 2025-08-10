@@ -19,9 +19,4 @@ __all__ = ["settings", "UnifiedSettings"]
 if not hasattr(settings, "app_mode"):
     raise ImportError("설정 시스템이 올바르게 초기화되지 않았습니다.")
 
-# 추가 설정 모듈 임포트 (하드코딩 제거를 위해 추가)
-try:
-    from .extended_config import *  # noqa: F401, F403
-except ImportError:
-    # 새 설정 모듈이 없는 경우 무시 (기존 호환성)
-    pass
+# extended_config 모듈은 현재 사용되지 않음

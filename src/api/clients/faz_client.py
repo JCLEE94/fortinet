@@ -488,3 +488,44 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         except Exception as e:
             self.logger.error(f"Error getting monitoring data: {e}")
             return None
+
+    def parse_json_rpc_response(self, response_data):
+        """
+        Parse JSON-RPC response
+
+        Args:
+            response_data: Raw response data
+
+        Returns:
+            tuple: (success: bool, data: dict)
+        """
+        try:
+            if isinstance(response_data, dict):
+                # Check for result field (success)
+                if "result" in response_data:
+                    # JSON-RPC success response
+                    result_data = response_data["result"]
+                    if (
+                        isinstance(result_data, dict)
+                        and result_data.get("status") == "success"
+                    ):
+                        return True, result_data
+                    elif isinstance(result_data, list):
+                        # Array of results - consider success if we have data
+                        return True, {"data": result_data}
+                    else:
+                        return True, result_data
+
+                # Check for error field
+                if "error" in response_data:
+                    return False, response_data["error"]
+
+                # If neither, assume success with the whole response
+                return True, response_data
+            else:
+                # Non-dict response, assume success
+                return True, response_data
+
+        except Exception as e:
+            self.logger.error(f"JSON-RPC 응답 파싱 오류: {str(e)}")
+            return False, {"error": f"Response parsing failed: {str(e)}"}

@@ -33,7 +33,9 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://itsm:itsm123@localhost:5432/itsm"
 )
 CONSUL_URL = os.getenv("CONSUL_URL", "http://localhost:8500")
-RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://fortinet:fortinet123@localhost:5672/")
+RABBITMQ_URL = os.getenv(
+    "RABBITMQ_URL",
+    "amqp://fortinet:fortinet123@localhost:5672/")
 AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://localhost:8081")
 FORTIMANAGER_SERVICE_URL = os.getenv(
     "FORTIMANAGER_SERVICE_URL", "http://localhost:8082"
@@ -138,7 +140,8 @@ except Exception as e:
 
 # Consul 연결
 try:
-    consul_client = consul.Consul(host=CONSUL_URL.split("://")[1].split(":")[0])
+    consul_client = consul.Consul(
+        host=CONSUL_URL.split("://")[1].split(":")[0])
     consul_client.agent.service.register(
         name=SERVICE_NAME,
         service_id=f"{SERVICE_NAME}-{SERVICE_PORT}",
@@ -173,7 +176,8 @@ def require_auth(f):
                     return jsonify({"error": "Invalid token"}), 401
             except Exception as e:
                 logger.error(f"Auth verification error: {e}")
-                return jsonify({"error": "Authentication service unavailable"}), 503
+                return jsonify(
+                    {"error": "Authentication service unavailable"}), 503
         return jsonify({"error": "Authentication required"}), 401
 
     return decorated_function
@@ -216,7 +220,7 @@ class ITSMService:
             with self.db.cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO itsm_tickets 
+                    INSERT INTO itsm_tickets
                     (ticket_number, title, description, ticket_type, priority, requester, firewall_rules, due_date)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     RETURNING id
@@ -267,7 +271,7 @@ class ITSMService:
         try:
             with self.db.cursor() as cursor:
                 query = """
-                    SELECT id, ticket_number, title, description, ticket_type, status, 
+                    SELECT id, ticket_number, title, description, ticket_type, status,
                            priority, requester, assignee, created_at, updated_at, due_date
                     FROM itsm_tickets
                     WHERE 1=1
@@ -325,7 +329,7 @@ class ITSMService:
                 if assignee:
                     cursor.execute(
                         """
-                        UPDATE itsm_tickets 
+                        UPDATE itsm_tickets
                         SET status = %s, assignee = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE id = %s
                     """,
@@ -334,7 +338,7 @@ class ITSMService:
                 else:
                     cursor.execute(
                         """
-                        UPDATE itsm_tickets 
+                        UPDATE itsm_tickets
                         SET status = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE id = %s
                     """,
@@ -367,7 +371,7 @@ class ITSMService:
                 # 티켓 상태를 승인 대기로 변경
                 cursor.execute(
                     """
-                    UPDATE itsm_tickets 
+                    UPDATE itsm_tickets
                     SET status = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                 """,
@@ -412,7 +416,7 @@ class ITSMService:
                 approval_status = "approved" if approved else "rejected"
                 cursor.execute(
                     """
-                    UPDATE itsm_approvals 
+                    UPDATE itsm_approvals
                     SET approval_status = %s, approval_date = CURRENT_TIMESTAMP, comments = %s
                     WHERE ticket_id = %s AND approver = %s
                 """,
@@ -422,10 +426,10 @@ class ITSMService:
                 # 모든 승인이 완료되었는지 확인
                 cursor.execute(
                     """
-                    SELECT COUNT(*) as total, 
+                    SELECT COUNT(*) as total,
                            SUM(CASE WHEN approval_status = 'approved' THEN 1 ELSE 0 END) as approved_count,
                            SUM(CASE WHEN approval_status = 'rejected' THEN 1 ELSE 0 END) as rejected_count
-                    FROM itsm_approvals 
+                    FROM itsm_approvals
                     WHERE ticket_id = %s
                 """,
                     (ticket_id,),
@@ -445,7 +449,7 @@ class ITSMService:
                 if new_status != ITSMTicketStatus.PENDING_APPROVAL.value:
                     cursor.execute(
                         """
-                        UPDATE itsm_tickets 
+                        UPDATE itsm_tickets
                         SET status = %s, updated_at = CURRENT_TIMESTAMP
                         WHERE id = %s
                     """,
@@ -479,7 +483,7 @@ class ITSMService:
                 # 티켓 정보 조회
                 cursor.execute(
                     """
-                    SELECT firewall_rules, title FROM itsm_tickets 
+                    SELECT firewall_rules, title FROM itsm_tickets
                     WHERE id = %s AND status = %s
                 """,
                     (ticket_id, ITSMTicketStatus.APPROVED.value),
@@ -499,7 +503,8 @@ class ITSMService:
                             "policy_name": f"ITSM-{ticket_id}-{title}",
                             "policy_data": firewall_rules,
                         },
-                        headers={"Authorization": request.headers.get("Authorization")},
+                        headers={
+                            "Authorization": request.headers.get("Authorization")},
                         timeout=30,
                     )
 
@@ -536,7 +541,7 @@ class ITSMService:
                 )
                 cursor.execute(
                     """
-                    UPDATE itsm_tickets 
+                    UPDATE itsm_tickets
                     SET status = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                 """,
@@ -594,7 +599,8 @@ def get_tickets():
 
         tickets = itsm_service.get_tickets(status, requester, limit)
 
-        return jsonify({"success": True, "tickets": tickets, "count": len(tickets)})
+        return jsonify(
+            {"success": True, "tickets": tickets, "count": len(tickets)})
 
     except Exception as e:
         logger.error(f"Get tickets error: {e}")
@@ -617,7 +623,8 @@ def create_ticket():
         if missing_fields:
             return (
                 jsonify(
-                    {"error": f'Missing required fields: {", ".join(missing_fields)}'}
+                    {
+                        "error": f'Missing required fields: {", ".join(missing_fields)}'}
                 ),
                 400,
             )
@@ -643,7 +650,8 @@ def update_ticket_status(ticket_id):
         if not new_status:
             return jsonify({"error": "Status is required"}), 400
 
-        success = itsm_service.update_ticket_status(ticket_id, new_status, assignee)
+        success = itsm_service.update_ticket_status(
+            ticket_id, new_status, assignee)
 
         if success:
             return jsonify(
@@ -696,7 +704,8 @@ def process_approval(ticket_id):
         comments = data.get("comments", "")
         approver = request.user.get("user_id")
 
-        success = itsm_service.process_approval(ticket_id, approver, approved, comments)
+        success = itsm_service.process_approval(
+            ticket_id, approver, approved, comments)
 
         if success:
             return jsonify(

@@ -18,9 +18,7 @@ from typing import Any, Dict, List
 def assert_eq(actual, expected, message=""):
     """Rust 스타일 assert_eq"""
     if actual != expected:
-        raise AssertionError(
-            f"Assertion failed: {message}\n  Expected: {expected}\n  Actual: {actual}"
-        )
+        raise AssertionError(f"Assertion failed: {message}\n  Expected: {expected}\n  Actual: {actual}")
 
 
 def assert_ok(condition, message=""):
@@ -76,9 +74,7 @@ def test_module_imports():
                 sys.path.insert(0, project_root)
 
             __import__(module_name)
-            import_results.append(
-                {"module": module_name, "description": description, "imported": True}
-            )
+            import_results.append({"module": module_name, "description": description, "imported": True})
         except Exception as e:
             import_results.append(
                 {
@@ -164,12 +160,8 @@ def test_cache_system():
     cache_manager = UnifiedCacheManager()
 
     # 기본 속성 확인
-    assert_ok(
-        hasattr(cache_manager, "memory_cache"), "Cache manager should have memory cache"
-    )
-    assert_ok(
-        hasattr(cache_manager, "redis_cache"), "Cache manager should have redis cache"
-    )
+    assert_ok(hasattr(cache_manager, "memory_cache"), "Cache manager should have memory cache")
+    assert_ok(hasattr(cache_manager, "redis_cache"), "Cache manager should have redis cache")
 
     # 메모리 캐시 기본 기능 테스트
     test_key = "integration_test_key"
@@ -225,9 +217,7 @@ def test_api_client_structure():
     )
 
     # 기본 설정 확인
-    assert_ok(
-        hasattr(client, "verify_ssl"), "Client should have SSL verification setting"
-    )
+    assert_ok(hasattr(client, "verify_ssl"), "Client should have SSL verification setting")
     assert_ok(hasattr(client, "timeout"), "Client should have timeout setting")
 
     return {
@@ -267,9 +257,7 @@ def test_file_structure():
 
     # 모든 중요한 디렉토리가 존재해야 함
     missing_dirs = [r for r in dir_results if not r["exists"]]
-    assert_eq(
-        len(missing_dirs), 0, f"All important directories should exist: {missing_dirs}"
-    )
+    assert_eq(len(missing_dirs), 0, f"All important directories should exist: {missing_dirs}")
 
     # 중요한 파일 확인
     important_files = [
@@ -293,9 +281,7 @@ def test_file_structure():
 
     # 모든 중요한 파일이 존재해야 함
     missing_files = [r for r in file_results if not r["exists"]]
-    assert_eq(
-        len(missing_files), 0, f"All important files should exist: {missing_files}"
-    )
+    assert_eq(len(missing_files), 0, f"All important files should exist: {missing_files}")
 
     return {
         "project_root": str(project_root),

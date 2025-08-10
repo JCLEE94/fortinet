@@ -4,7 +4,7 @@ FortiManager API Client
 Modular implementation with mixin-based architecture
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from utils.api_utils import ConnectionTestMixin
 from utils.unified_logger import get_logger
@@ -141,3 +141,16 @@ class FortiManagerAPIClient(
             "session_id": self.session_id is not None,
             "auth_method": "token" if self.api_token else "session",
         }
+
+    def get_adom_list(self) -> List[Dict[str, Any]]:
+        """Get list of ADOMs (Administrative Domains)"""
+        try:
+            success, data = self._make_api_request(
+                method="get", url="/dvmdb/adom", timeout=10
+            )
+            if success and isinstance(data, list):
+                return data
+            return []
+        except Exception as e:
+            self.logger.error(f"Error getting ADOM list: {e}")
+            return []

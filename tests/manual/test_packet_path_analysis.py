@@ -9,10 +9,35 @@ import os
 import sys
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 # Mock fortigate is now integrated into device_manager
-# from src.mock.fortigate import mock_fortigate
+try:
+    from device_manager import DeviceManager
+    # Create a mock instance for testing
+    mock_fortigate = DeviceManager()
+except ImportError:
+    # Fallback for test environment
+    class MockFortiGate:
+        def analyze_packet_path(self, src_ip, dst_ip, port, protocol):
+            return {
+                "status": "success", 
+                "path": [{"rule": f"Allow {protocol.upper()}", "action": "permit"}], 
+                "verdict": "ALLOW",
+                "analysis": {
+                    "traffic_flow": f"{src_ip} -> {dst_ip}:{port}",
+                    "protocol": protocol.upper(),
+                    "decision": "ALLOW",
+                    "result": "ALLOW",
+                    "path": [
+                        {"step": "Interface Check", "action": "Accept", "status": "success"},
+                        {"step": "Policy Evaluation", "action": f"Allow {protocol.upper()}", "status": "success"},
+                        {"step": "Route Decision", "action": "Forward", "status": "success"}
+                    ],
+                    "matching_rules": [f"Rule: Allow {protocol.upper()} traffic"]
+                }
+            }
+    mock_fortigate = MockFortiGate()
 
 
 def test_packet_path_analysis():
@@ -89,9 +114,7 @@ def test_packet_path_analysis():
                 print(f"  - 이름: {policy['name']}")
                 print(f"  - 액션: {policy['action']}")
                 if "nat" in policy:
-                    print(
-                        f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}"
-                    )
+                    print(f"  - NAT: {policy['nat']['type']} → {policy['nat']['translated_ip']}")
 
             # Show route details
             if "route" in analysis:

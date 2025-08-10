@@ -104,9 +104,7 @@ class PacketPathAnalyzer:
             if policy["service"] != "any":
                 if service_name and service_name in policy["service"]:
                     return policy
-                elif not service_name and port not in [
-                    self.services[s] for s in policy["service"]
-                ]:
+                elif not service_name and port not in [self.services[s] for s in policy["service"]]:
                     continue
 
             return policy
@@ -250,14 +248,10 @@ def main():
 
     for i, test in enumerate(test_cases, 1):
         print(f"\n📦 테스트 케이스 {i}: {test['name']}")
-        print(
-            f"   Source: {test['src_ip']} → Destination: {test['dst_ip']}:{test['port']}"
-        )
+        print(f"   Source: {test['src_ip']} → Destination: {test['dst_ip']}:{test['port']}")
         print("-" * 80)
 
-        result = analyzer.analyze_packet_path(
-            test["src_ip"], test["dst_ip"], test["port"], test["protocol"]
-        )
+        result = analyzer.analyze_packet_path(test["src_ip"], test["dst_ip"], test["port"], test["protocol"])
 
         # Display path
         print("📍 경로 분석:")

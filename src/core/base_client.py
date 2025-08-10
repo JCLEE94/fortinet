@@ -13,7 +13,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 # 공통 임포트 사용
 from utils.common_imports import (Any, Dict, Enum, Optional, dataclass,
-                                  requests, time)
+                                  requests, setup_module_logger, time)
 from utils.exception_handlers import NetworkException
 
 from .auth_manager import AuthManager, AuthType
@@ -94,10 +94,13 @@ class UnifiedAPIClient:
         self.timeout = timeout
         self.cache_enabled = cache_enabled
 
+        # Initialize logger
+        self.logger = setup_module_logger(f"{__name__}.{client_type.value}")
+
         # Managers
-        self.auth_manager = auth_manager or auth_manager
-        self.cache_manager = cache_manager or cache_manager
-        self.config_manager = config_manager or config_manager
+        self.auth_manager = auth_manager or AuthManager()
+        self.cache_manager = cache_manager or CacheManager()
+        self.config_manager = config_manager or ConfigManager()
 
         # Session management
         self.session_id: Optional[str] = None
@@ -347,8 +350,9 @@ class UnifiedAPIClient:
                 # Check if we need to re-authenticate
                 if response.status_code == 401:
                     if attempt < max_retries:
-                        print(
-                            f"Authentication expired, retrying... (attempt {attempt + 1})"
+                        self.logger.warning(
+                            f"Authentication expired, retrying... "
+                            f"(attempt {attempt + 1})"
                         )
                         if self.authenticate():
                             continue
@@ -360,8 +364,9 @@ class UnifiedAPIClient:
                 requests.exceptions.Timeout,
             ) as e:
                 if attempt < max_retries:
-                    print(
-                        f"Request failed, retrying in {retry_delay}s... (attempt {attempt + 1})"
+                    self.logger.warning(
+                        f"Request failed, retrying in {retry_delay}s... "
+                        f"(attempt {attempt + 1})"
                     )
                     time.sleep(retry_delay)
                     retry_delay *= 2  # Exponential backoff

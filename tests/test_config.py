@@ -99,15 +99,9 @@ class TestConfiguration(unittest.TestCase):
         try:
             import config.constants as constants_module
 
-            constants_vars = [
-                name
-                for name in dir(constants_module)
-                if name.isupper() and not name.startswith("_")
-            ]
+            constants_vars = [name for name in dir(constants_module) if name.isupper() and not name.startswith("_")]
 
-            self.assertGreater(
-                len(constants_vars), 0, "Should have some constants defined"
-            )
+            self.assertGreater(len(constants_vars), 0, "Should have some constants defined")
 
         except Exception as e:
             self.skipTest(f"Constants test failed: {e}")

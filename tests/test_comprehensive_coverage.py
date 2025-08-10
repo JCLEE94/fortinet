@@ -217,10 +217,7 @@ class TestCoreCoverage(unittest.TestCase):
 
     def test_connection_pool(self):
         """연결 풀 테스트"""
-        from src.core.connection_pool import (
-            ConnectionPoolManager,
-            connection_pool_manager,
-        )
+        from src.core.connection_pool import ConnectionPoolManager, connection_pool_manager
 
         # 싱글톤 인스턴스 확인
         self.assertIsInstance(connection_pool_manager, ConnectionPoolManager)

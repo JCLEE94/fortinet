@@ -5,13 +5,12 @@
 중복된 임포트를 줄이고 일관성을 유지하기 위한 모듈입니다.
 """
 
+# 표준 라이브러리 임포트
 import asyncio
 import datetime
-# 서드파티 라이브러리 임포트
 import ipaddress
 import json
 import logging
-# 표준 라이브러리 임포트
 import os
 import sys
 import time
@@ -22,6 +21,7 @@ from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+# 서드파티 라이브러리 임포트
 import requests
 from flask import Blueprint, Flask, jsonify, render_template, request, session
 
@@ -31,9 +31,9 @@ try:
 except ImportError:
     redis = None
 
+# 프로젝트 공통 유틸리티 임포트
 from utils.security import rate_limit
 from utils.unified_cache_manager import cached
-# 프로젝트 공통 유틸리티 임포트
 from utils.unified_logger import setup_logger
 
 # from utils.api_utils import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지

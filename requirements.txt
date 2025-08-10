@@ -38,6 +38,8 @@ PyYAML==6.0.2
 
 # 웹 스크래핑 (ITSM scraper에서 사용)
 beautifulsoup4==4.12.3
+lxml==4.9.3
+html5lib==1.1
 
 # 코드 품질 도구
 pytest==8.3.3
@@ -48,7 +50,3 @@ flake8==7.1.1
 mypy==1.11.2
 isort==5.13.2
 coverage==7.6.4
-
-# 웹 스크래핑 (ITSM scraper에서 사용)
-lxml==4.9.3
-html5lib==1.1

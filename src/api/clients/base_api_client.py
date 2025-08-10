@@ -134,6 +134,23 @@ class BaseApiClient(ABC):
         # Set default headers
         self._setup_headers()
 
+    def build_url(self, endpoint):
+        """
+        Build full URL from endpoint
+
+        Args:
+            endpoint (str): API endpoint path
+
+        Returns:
+            str: Full URL
+        """
+        if endpoint.startswith(("http://", "https://")):
+            return endpoint
+
+        # Remove leading slash if present to avoid double slashes
+        endpoint = endpoint.lstrip("/")
+        return f"{self.base_url}/{endpoint}"
+
     def _init_session(self):
         """Initialize requests session using connection pool manager"""
         # Use connection pool manager for better performance

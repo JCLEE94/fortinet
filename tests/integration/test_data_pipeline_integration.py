@@ -93,9 +93,7 @@ def test_packet_capture_and_filtering():
         mock_capture.return_value = sample_packets
 
         captured = capturer.capture_packets(count=100)
-        test_framework.assert_eq(
-            len(captured), 100, "Should capture all packets without filter"
-        )
+        test_framework.assert_eq(len(captured), 100, "Should capture all packets without filter")
 
     # 2. 프로토콜 필터링
     tcp_filter = {"protocol": "TCP"}
@@ -126,9 +124,7 @@ def test_packet_capture_and_filtering():
     # 4. 복합 필터링 (IP 범위 + 프로토콜)
     complex_filter = {"src_ip": "192.168.1.0/24", "protocol": "UDP", "dst_port": 53}
 
-    dns_packets = [
-        p for p in sample_packets if p["protocol"] == "UDP" and p["dst_port"] == 53
-    ]
+    dns_packets = [p for p in sample_packets if p["protocol"] == "UDP" and p["dst_port"] == 53]
 
     with patch.object(capturer, "capture_packets") as mock_capture:
         mock_capture.return_value = dns_packets
@@ -210,13 +206,9 @@ def test_protocol_analysis_pipeline():
 
             # 프로토콜별 특수 필드 확인
             if packet["dst_port"] == 80:
-                test_framework.assert_ok(
-                    "method" in analysis, "HTTP should have method field"
-                )
+                test_framework.assert_ok("method" in analysis, "HTTP should have method field")
             elif packet["dst_port"] == 53:
-                test_framework.assert_ok(
-                    "domain" in analysis, "DNS should have domain field"
-                )
+                test_framework.assert_ok("domain" in analysis, "DNS should have domain field")
 
 
 # =============================================================================
@@ -285,9 +277,7 @@ def test_packet_path_tracing():
 
         path_result = path_tracer.trace_path(test_packet, network_topology)
 
-        test_framework.assert_ok(
-            len(path_result["path"]) == 3, "Should trace through 3 devices"
-        )
+        test_framework.assert_ok(len(path_result["path"]) == 3, "Should trace through 3 devices")
 
     # 정책 매칭 분석
     with patch.object(policy_analyzer, "analyze_policies") as mock_analyze:
@@ -304,9 +294,7 @@ def test_packet_path_tracing():
             "accept",
             "Packet should be accepted by policies",
         )
-        test_framework.assert_ok(
-            len(policy_result["matched_policies"]) == 2, "Should match both policies"
-        )
+        test_framework.assert_ok(len(policy_result["matched_policies"]) == 2, "Should match both policies")
 
 
 # =============================================================================
@@ -352,9 +340,7 @@ def test_data_export_pipeline():
 
         json_result = json_exporter.export(analyzed_data)
         test_framework.assert_ok(json_result["success"], "JSON export should succeed")
-        test_framework.assert_ok(
-            json_result["file"].endswith(".json"), "Should create JSON file"
-        )
+        test_framework.assert_ok(json_result["file"].endswith(".json"), "Should create JSON file")
 
     # 2. CSV 내보내기
     csv_exporter = CSVExporter()
@@ -503,9 +489,7 @@ def test_high_volume_data_processing():
 
     # 메모리 효율성 테스트
     # 실제로는 memory_profiler 등을 사용하지만 여기서는 간단히 시뮬레이션
-    test_framework.assert_ok(
-        True, "Memory usage should be reasonable"
-    )  # 메모리 사용량이 임계값 이하
+    test_framework.assert_ok(True, "Memory usage should be reasonable")  # 메모리 사용량이 임계값 이하
 
 
 # =============================================================================
@@ -561,9 +545,7 @@ def test_data_transformation_pipeline():
         with patch.object(transformer, "transform") as mock_transform:
             mock_transform.return_value = expected_normalized
 
-            normalized = transformer.transform(
-                input_data["data"], input_format=input_data["format"]
-            )
+            normalized = transformer.transform(input_data["data"], input_format=input_data["format"])
 
             test_framework.assert_ok(
                 "timestamp" in normalized,
@@ -618,12 +600,8 @@ def test_visualization_data_pipeline():
         ],
     }
 
-    test_framework.assert_eq(
-        len(time_series_data["labels"]), 3, "Should have 3 time points"
-    )
-    test_framework.assert_eq(
-        len(time_series_data["datasets"]), 2, "Should have 2 datasets"
-    )
+    test_framework.assert_eq(len(time_series_data["labels"]), 3, "Should have 3 time points")
+    test_framework.assert_eq(len(time_series_data["datasets"]), 2, "Should have 2 datasets")
 
     # 2. 파이 차트 데이터 준비
     pie_chart_data = {
@@ -631,9 +609,7 @@ def test_visualization_data_pipeline():
         "data": list(analysis_results["protocol_distribution"].values()),
     }
 
-    test_framework.assert_eq(
-        sum(pie_chart_data["data"]), 100, "Protocol percentages should sum to 100"
-    )
+    test_framework.assert_eq(sum(pie_chart_data["data"]), 100, "Protocol percentages should sum to 100")
 
     # 3. 네트워크 그래프 데이터 준비
     network_graph = {"nodes": [], "edges": []}
@@ -649,16 +625,10 @@ def test_visualization_data_pipeline():
 
     # 엣지 추출
     for conn in analysis_results["top_connections"]:
-        network_graph["edges"].append(
-            {"source": conn["src"], "target": conn["dst"], "weight": conn["packets"]}
-        )
+        network_graph["edges"].append({"source": conn["src"], "target": conn["dst"], "weight": conn["packets"]})
 
-    test_framework.assert_eq(
-        len(network_graph["nodes"]), 4, "Should have correct number of nodes"
-    )  # 4개의 고유 IP
-    test_framework.assert_eq(
-        len(network_graph["edges"]), 2, "Should have correct number of edges"
-    )
+    test_framework.assert_eq(len(network_graph["nodes"]), 4, "Should have correct number of nodes")  # 4개의 고유 IP
+    test_framework.assert_eq(len(network_graph["edges"]), 2, "Should have correct number of edges")
 
 
 if __name__ == "__main__":

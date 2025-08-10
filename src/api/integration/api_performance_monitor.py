@@ -79,8 +79,10 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
                     recent_calls = [
                         call
                         for call in metrics["calls"]
-                        if datetime.now() - datetime.fromisoformat(call["timestamp"])
-                        < timedelta(hours=1)
+                        if (
+                            datetime.now() - datetime.fromisoformat(call["timestamp"])
+                            < timedelta(hours=1)
+                        )
                     ]
 
                     if recent_calls:
@@ -95,8 +97,9 @@ class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
                             "total_requests": len(recent_calls),
                             "error_requests": error_count,
                             "error_rate": (error_count / len(recent_calls)) * 100,
-                            "avg_response_time": sum(response_times)
-                            / len(response_times),
+                            "avg_response_time": (
+                                sum(response_times) / len(response_times)
+                            ),
                             "min_response_time": min(response_times),
                             "max_response_time": max(response_times),
                             "p95_response_time": self._percentile(response_times, 95),
