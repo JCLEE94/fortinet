@@ -69,9 +69,7 @@ class CoreSecurityScanner(
             return
 
         self.is_scanning = True
-        self.scan_thread = threading.Thread(
-            target=self._continuous_scan_loop, args=(interval_hours,)
-        )
+        self.scan_thread = threading.Thread(target=self._continuous_scan_loop, args=(interval_hours,))
         self.scan_thread.daemon = True
         self.scan_thread.start()
         logger.info(f"지속적인 보안 스캔 시작 ({interval_hours}시간 간격)")
@@ -115,9 +113,7 @@ class CoreSecurityScanner(
         # 스캔 완료 시간 기록
         scan_end_time = datetime.now()
         scan_results["end_time"] = scan_end_time.isoformat()
-        scan_results["duration_seconds"] = (
-            scan_end_time - scan_start_time
-        ).total_seconds()
+        scan_results["duration_seconds"] = (scan_end_time - scan_start_time).total_seconds()
 
         # 요약 정보 생성
         scan_results["summary"] = self._generate_scan_summary(scan_results["results"])
@@ -128,9 +124,7 @@ class CoreSecurityScanner(
         # 리스너들에게 알림
         self._notify_listeners(scan_results)
 
-        logger.info(
-            f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)"
-        )
+        logger.info(f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)")
         return scan_results
 
     def get_security_dashboard(self) -> Dict:
@@ -209,9 +203,7 @@ class CoreSecurityScanner(
         # 트렌드 계산
         trend = "stable"
         if len(self.scan_results) >= 2:
-            prev_issues = (
-                self.scan_results[-2].get("summary", {}).get("total_issues", 0)
-            )
+            prev_issues = self.scan_results[-2].get("summary", {}).get("total_issues", 0)
             if total_issues > prev_issues:
                 trend = "worsening"
             elif total_issues < prev_issues:
@@ -237,9 +229,7 @@ class CoreSecurityScanner(
         # 포트 스캔 추천사항
         port_scan = results.get("port_scan", {})
         if port_scan.get("suspicious_ports"):
-            recommendations.append(
-                "비인가된 열린 포트를 확인하고 필요없는 서비스를 중지하세요"
-            )
+            recommendations.append("비인가된 열린 포트를 확인하고 필요없는 서비스를 중지하세요")
 
         # 취약점 추천사항
         vuln_scan = results.get("vulnerability_scan", {})

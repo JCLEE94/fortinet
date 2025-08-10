@@ -49,9 +49,7 @@ class DataLoader:
             elif self.fortimanager_client:
                 return self._load_from_fortimanager(firewall_id)
             else:
-                self.logger.error(
-                    "FortiGate 또는 FortiManager 클라이언트가 필요합니다."
-                )
+                self.logger.error("FortiGate 또는 FortiManager 클라이언트가 필요합니다.")
                 return False
 
         except Exception as e:
@@ -62,13 +60,9 @@ class DataLoader:
         """FortiGate에서 직접 데이터 로드"""
         self._policies[firewall_id] = self.fortigate_client.get_firewall_policies()
         self._addresses[firewall_id] = self.fortigate_client.get_firewall_addresses()
-        self._address_groups[firewall_id] = (
-            self.fortigate_client.get_firewall_address_groups()
-        )
+        self._address_groups[firewall_id] = self.fortigate_client.get_firewall_address_groups()
         self._services[firewall_id] = self.fortigate_client.get_firewall_services()
-        self._service_groups[firewall_id] = (
-            self.fortigate_client.get_firewall_service_groups()
-        )
+        self._service_groups[firewall_id] = self.fortigate_client.get_firewall_service_groups()
         self._routing_tables[firewall_id] = self.fortigate_client.get_routing_table()
         return True
 
@@ -96,28 +90,16 @@ class DataLoader:
         policy_package = policy_packages[0]["name"] if policy_packages else None
 
         if policy_package:
-            self._policies[firewall_id] = (
-                self.fortimanager_client.get_firewall_policies(policy_package, adom)
-            )
+            self._policies[firewall_id] = self.fortimanager_client.get_firewall_policies(policy_package, adom)
 
         # 주소 객체 및 서비스 객체 로드
-        self._addresses[firewall_id] = self.fortimanager_client.get_firewall_addresses(
-            adom
-        )
-        self._address_groups[firewall_id] = (
-            self.fortimanager_client.get_firewall_address_groups(adom)
-        )
-        self._services[firewall_id] = self.fortimanager_client.get_firewall_services(
-            adom
-        )
-        self._service_groups[firewall_id] = (
-            self.fortimanager_client.get_firewall_service_groups(adom)
-        )
+        self._addresses[firewall_id] = self.fortimanager_client.get_firewall_addresses(adom)
+        self._address_groups[firewall_id] = self.fortimanager_client.get_firewall_address_groups(adom)
+        self._services[firewall_id] = self.fortimanager_client.get_firewall_services(adom)
+        self._service_groups[firewall_id] = self.fortimanager_client.get_firewall_service_groups(adom)
 
         # 라우팅 테이블 로드
-        self._routing_tables[firewall_id] = (
-            self.fortimanager_client.get_device_routing_table(firewall_id, adom)
-        )
+        self._routing_tables[firewall_id] = self.fortimanager_client.get_device_routing_table(firewall_id, adom)
 
         return True
 
@@ -147,9 +129,7 @@ class DataLoader:
 
                 devices = self.fortimanager_client.get_devices(adom_name)
                 if not devices:
-                    self.logger.warning(
-                        f"ADOM '{adom_name}'에서 장치를 찾을 수 없습니다."
-                    )
+                    self.logger.warning(f"ADOM '{adom_name}'에서 장치를 찾을 수 없습니다.")
                     continue
 
                 for device in devices:

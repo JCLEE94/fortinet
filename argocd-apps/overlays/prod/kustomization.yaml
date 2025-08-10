@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: argocd
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: fortinet
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: fortinet-prod
+      - op: add
+        path: /metadata/labels/environment
+        value: production
+      - op: replace
+        path: /spec/source/targetRevision
+        value: master
+
+labels:
+  - includeSelectors: true
+    pairs:
+      environment: production

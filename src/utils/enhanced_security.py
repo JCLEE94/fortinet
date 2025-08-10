@@ -70,9 +70,7 @@ class SecureJWTManager:
         try:
             import jwt
 
-            token = jwt.encode(
-                payload, current_app.config["JWT_SECRET_KEY"], algorithm="HS256"
-            )
+            token = jwt.encode(payload, current_app.config["JWT_SECRET_KEY"], algorithm="HS256")
 
             logger.info(f"JWT 토큰 생성 성공 - 사용자: {user_id}, 만료: {expires_in}초")
             return token
@@ -90,14 +88,10 @@ class SecureJWTManager:
 
         # Header
         header = {"typ": "JWT", "alg": "HS256"}
-        header_encoded = (
-            base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
-        )
+        header_encoded = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
 
         # Payload
-        payload_encoded = (
-            base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
-        )
+        payload_encoded = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
 
         # Signature
         message = f"{header_encoded}.{payload_encoded}"
@@ -336,26 +330,16 @@ class RateLimitManager:
 
         cutoff_time = now - timedelta(minutes=window_minutes)
         RateLimitManager._attempts[identifier] = [
-            (ts, ep)
-            for ts, ep in RateLimitManager._attempts[identifier]
-            if ts > cutoff_time
+            (ts, ep) for ts, ep in RateLimitManager._attempts[identifier] if ts > cutoff_time
         ]
 
         # 현재 시도 횟수 확인
-        current_attempts = len(
-            [
-                (ts, ep)
-                for ts, ep in RateLimitManager._attempts[identifier]
-                if ep == endpoint
-            ]
-        )
+        current_attempts = len([(ts, ep) for ts, ep in RateLimitManager._attempts[identifier] if ep == endpoint])
 
         if current_attempts >= max_attempts:
             # 일시적 차단 (30분)
             RateLimitManager._blocked_ips[identifier] = now + timedelta(minutes=30)
-            logger.warning(
-                f"IP 차단: {identifier} (시도 횟수: {current_attempts}, 엔드포인트: {endpoint})"
-            )
+            logger.warning(f"IP 차단: {identifier} (시도 횟수: {current_attempts}, 엔드포인트: {endpoint})")
             return True
 
         # 시도 기록
@@ -402,9 +386,7 @@ def jwt_required(roles: list = None, permissions: list = None):
             auth_header = request.headers.get("Authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
                 return (
-                    jsonify(
-                        {"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}
-                    ),
+                    jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
                     401,
                 )
 
@@ -412,9 +394,7 @@ def jwt_required(roles: list = None, permissions: list = None):
             payload = SecureJWTManager.verify_token(token)
             if not payload:
                 return (
-                    jsonify(
-                        {"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}
-                    ),
+                    jsonify({"error": "유효하지 않은 토큰입니다", "code": "INVALID_TOKEN"}),
                     401,
                 )
 
@@ -425,9 +405,7 @@ def jwt_required(roles: list = None, permissions: list = None):
                     f"필요 역할: {roles}, 현재 역할: {payload.get('role')}"
                 )
                 return (
-                    jsonify(
-                        {"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}
-                    ),
+                    jsonify({"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}),
                     403,
                 )
 
@@ -475,9 +453,7 @@ def api_key_required(f):
         if api_key not in valid_api_keys:
             logger.warning(f"유효하지 않은 API 키 사용: {api_key[:10]}...")
             return (
-                jsonify(
-                    {"error": "유효하지 않은 API 키입니다", "code": "INVALID_API_KEY"}
-                ),
+                jsonify({"error": "유효하지 않은 API 키입니다", "code": "INVALID_API_KEY"}),
                 401,
             )
 
@@ -512,9 +488,7 @@ def secure_endpoint(
             # 커스텀 Rate limiting
             if rate_limit:
                 max_attempts, window_minutes = rate_limit
-                if RateLimitManager.is_rate_limited(
-                    client_ip, request.endpoint, max_attempts, window_minutes
-                ):
+                if RateLimitManager.is_rate_limited(client_ip, request.endpoint, max_attempts, window_minutes):
                     return (
                         jsonify(
                             {
@@ -530,9 +504,7 @@ def secure_endpoint(
                 api_key = request.headers.get("X-API-Key")
                 if not api_key:
                     return (
-                        jsonify(
-                            {"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}
-                        ),
+                        jsonify({"error": "API 키가 필요합니다", "code": "MISSING_API_KEY"}),
                         401,
                     )
 
@@ -541,9 +513,7 @@ def secure_endpoint(
                 auth_header = request.headers.get("Authorization")
                 if not auth_header or not auth_header.startswith("Bearer "):
                     return (
-                        jsonify(
-                            {"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}
-                        ),
+                        jsonify({"error": "인증 토큰이 필요합니다", "code": "MISSING_TOKEN"}),
                         401,
                     )
 

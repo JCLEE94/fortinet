@@ -10,8 +10,12 @@ from utils.api_utils import ConnectionTestMixin
 from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from .fortimanager import (AdvancedFeaturesMixin, AuthConnectionMixin,
-                           DeviceManagementMixin, PolicyManagementMixin)
+from .fortimanager import (
+    AdvancedFeaturesMixin,
+    AuthConnectionMixin,
+    DeviceManagementMixin,
+    PolicyManagementMixin,
+)
 
 
 class FortiManagerAPIClient(
@@ -145,9 +149,7 @@ class FortiManagerAPIClient(
     def get_adom_list(self) -> List[Dict[str, Any]]:
         """Get list of ADOMs (Administrative Domains)"""
         try:
-            success, data = self._make_api_request(
-                method="get", url="/dvmdb/adom", timeout=10
-            )
+            success, data = self._make_api_request(method="get", url="/dvmdb/adom", timeout=10)
             if success and isinstance(data, list):
                 return data
             return []
