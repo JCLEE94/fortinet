@@ -10,25 +10,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
-# 기본 디렉토리
-# 프로덕션 환경에서는 컨테이너 경로 사용, 개발 환경에서는 현재 디렉토리 기준
-DEFAULT_BASE_DIR = (
+# 기본 디렉토리 설정 - 단일 BASE_DIR 사용
+# 프로덕션 환경에서는 컨테이너 경로 사용, 개발 환경에서는 프로젝트 루트 사용
+BASE_DIR = (
     "/app"
     if os.path.exists("/app")
     else os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-BASE_DIR = os.getenv("APP_BASE_DIR", DEFAULT_BASE_DIR)
-PROJECT_ROOT = os.getenv(
-    "PROJECT_ROOT",
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-)
+
+# 환경변수로 오버라이드 가능
+BASE_DIR = os.getenv("APP_BASE_DIR", BASE_DIR)
 ENVIRONMENT = os.getenv("ENVIRONMENT", "production")
 
-# 환경별 기본 경로
-if ENVIRONMENT == "development":
-    BASE_DIR = PROJECT_ROOT
-elif ENVIRONMENT == "test":
-    BASE_DIR = os.path.join(PROJECT_ROOT, "test")
+# 테스트 환경일 경우 test 디렉토리 추가
+if ENVIRONMENT == "test":
+    BASE_DIR = os.path.join(BASE_DIR, "test")
 
 # 애플리케이션 경로
 APP_PATHS: Dict[str, str] = {
@@ -316,7 +312,6 @@ def initialize_directories():
 # 모든 설정값 내보내기
 __all__ = [
     "BASE_DIR",
-    "PROJECT_ROOT",
     "ENVIRONMENT",
     "APP_PATHS",
     "CONFIG_FILES",
