@@ -88,6 +88,9 @@ env:
   LOG_LEVEL: "INFO"
   DISABLE_DEBUG_LOGS: "true"
   MASK_SENSITIVE_DATA: "true"
+  # Redis 연결 설정
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
 
 # Health Check 설정 (Fortinet 애플리케이션 기준)
 probes:
