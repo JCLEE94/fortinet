@@ -1,16 +1,64 @@
-# FortiGate Nextrade - Kubernetes Deployment
+# GitOps Kubernetes Deployment
 
-This directory contains Kubernetes manifests for deploying FortiGate Nextrade to a Kubernetes cluster.
+**FortiGate Nextrade** - CNCF-compliant GitOps deployment with Kustomize & ArgoCD
 
-## Overview
+## 🚀 GitOps Architecture
 
-The deployment includes:
+```mermaid
+graph LR
+    A[GitHub Repo] --> B[GitHub Actions]
+    B --> C[Harbor Registry]
+    B --> D[ChartMuseum]
+    D --> E[ArgoCD]
+    E --> F[Kubernetes]
+    
+    subgraph "jclee.me Infrastructure"
+        C["Harbor Registry<br/>registry.jclee.me"]
+        D["ChartMuseum<br/>charts.jclee.me"]
+        E["ArgoCD<br/>argo.jclee.me"]
+        F["K8s Cluster<br/>k8s.jclee.me"]
+    end
+```
+
+## 📁 Directory Structure (CNCF Standard)
+
+```
+k8s/
+├── base/                    # Kustomize base resources
+│   ├── namespace.yaml       # Namespace definition
+│   ├── configmap.yaml       # Base configuration
+│   ├── deployment.yaml      # Application deployment
+│   ├── service.yaml         # Service definition
+│   └── kustomization.yaml   # Base kustomization
+├── overlays/               # Environment-specific overlays
+│   ├── development/        # Dev environment
+│   │   ├── kustomization.yaml
+│   │   ├── configmap-patch.yaml
+│   │   └── resources-patch.yaml
+│   ├── staging/           # Staging environment
+│   │   ├── kustomization.yaml
+│   │   ├── ingress.yaml
+│   │   └── hpa.yaml
+│   └── production/        # Production environment
+│       ├── kustomization.yaml
+│       ├── ingress-tls.yaml
+│       ├── hpa.yaml
+│       ├── pdb.yaml
+│       └── monitoring.yaml
+├── external-dns/          # External DNS configuration
+└── templates/             # Helm chart templates
+```
+
+## Overview - GitOps Features
+
+The GitOps deployment includes:
 - **Namespace**: `fortinet` - Isolated namespace for all resources
-- **Deployment**: Main application with 3 replicas by default
-- **Redis**: Cache layer for improved performance
+- **Kustomize Base + Overlays**: Environment-specific configuration
+- **ArgoCD Integration**: Automated GitOps sync
 - **HPA**: Auto-scaling from 2-10 pods based on CPU/Memory usage
-- **Ingress**: HTTPS access via `fortinet.jclee.me`
+- **Ingress**: HTTPS access via `fortinet.jclee.me` with TLS
 - **PVC**: Persistent storage for data and logs
+- **Monitoring**: Prometheus metrics integration
 
 ## Prerequisites
 

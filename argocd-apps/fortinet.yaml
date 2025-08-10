@@ -1,0 +1,76 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: fortinet
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/version: v1.0.0
+    app.kubernetes.io/component: backend
+    gitops.toolkit.io/strategy: kustomize
+    project: jclee-infrastructure
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployment-notifications
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: deployment-alerts
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io  # 리소스 정리 보장
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/jclee/app.git
+    path: fortinet/k8s/overlays/production
+    targetRevision: master
+    kustomize:
+      images:
+        - registry.jclee.me/fortinet:latest
+      commonAnnotations:
+        gitops.argocd.argoproj.io/managed: "true"
+        deployment.kubernetes.io/managed-by: "argocd"
+      commonLabels:
+        app.kubernetes.io/managed-by: argocd
+        gitops.strategy: pull-based
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet
+  syncPolicy:
+    automated:
+      selfHeal: true       # 드리프트 감지시 자동 회복
+      prune: true          # 불필요한 리소스 자동 제거
+      allowEmpty: false    # 빈 배포 방지
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true  # 변경된 리소스만 적용
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true     # Server-side apply 사용
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 10
+  # GitOps 관찰성 향상
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas  # HPA에 의한 replicas 변경 무시
+        - /metadata/annotations/deployment.kubernetes.io~1revision
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+  # 헬스 체크 설정
+  info:
+    - name: "Registry"
+      value: "registry.jclee.me/fortinet"
+    - name: "Health Check"
+      value: "https://fortinet.jclee.me/api/health"
+    - name: "Internal Access"
+      value: "http://192.168.50.110:30777"
+    - name: "Monitoring"
+      value: "ArgoCD + GitOps"

@@ -1,4 +1,4 @@
-name: GitOps CI/CD Pipeline
+name: 🚀 GitOps CI/CD Pipeline (jclee.me)
 
 on:
   push:
@@ -11,6 +11,10 @@ env:
   REGISTRY: registry.jclee.me
   IMAGE_NAME: fortinet
   APP_NAME: fortinet
+  K8S_NAMESPACE: fortinet
+  ARGOCD_SERVER: argo.jclee.me
+  DEPLOYMENT_HOST: 192.168.50.110
+  DEPLOYMENT_PORT: 30777
 
 jobs:
   # 테스트 단계 (간소화)
@@ -36,26 +40,28 @@ jobs:
           pytest tests/ -v --tb=short || echo "Tests completed"
           flake8 src/ --max-line-length=120 --ignore=E203,W503 || echo "Linting completed"
 
-  # Docker 빌드 및 푸시
+  # 🐳 Docker 빌드 및 Registry 푸시
   build:
     runs-on: self-hosted
     needs: [test]
     if: github.event_name != 'pull_request'
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # GitOps 히스토리 전체 필요
 
-      - name: Set up Docker Buildx
+      - name: 🔧 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Harbor Registry
+      - name: 🔑 Log in to jclee.me Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Extract metadata
+      - name: 📋 Extract GitOps metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -63,10 +69,16 @@ jobs:
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
-            type=sha,prefix={{branch}}-
+            type=sha,prefix={{branch}}-,format=short
             type=raw,value=latest,enable={{is_default_branch}}
+          labels: |
+            org.opencontainers.image.title=FortiGate Nextrade
+            org.opencontainers.image.description=Network monitoring and analysis platform
+            org.opencontainers.image.vendor=jclee.me
+            gitops.strategy=pull-based
+            gitops.managed-by=argocd
 
-      - name: Build and push Docker image
+      - name: 🚀 Build and push to Registry
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -75,105 +87,196 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Output image digest
+      - name: 📊 Image build summary
         run: |
-          echo "Image pushed successfully with tags:"
+          echo "🎉 Docker 이미지 빌드 완료!"
+          echo "📦 Registry: ${{ env.REGISTRY }}"
+          echo "🏷️ Tags:"
           echo "${{ steps.meta.outputs.tags }}"
+          echo "📝 Labels:"
+          echo "${{ steps.meta.outputs.labels }}"
 
-  # Helm 차트 패키징 및 배포
-  helm-deploy:
+  # ⚙️ GitOps 매니페스트 업데이트 (Kustomize)
+  gitops-update:
     runs-on: self-hosted
     needs: build
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout code with token
         uses: actions/checkout@v4
-
-      - name: Install Helm
-        uses: azure/setup-helm@v3
         with:
-          version: 'v3.12.0'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Determine version
-        id: version
+      - name: 🏷️ Extract image tag
+        id: extract
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            VERSION=$(echo "${{ github.ref_name }}" | sed 's/v//')
+          IMAGE_TAG=$(echo "${{ github.sha }}" | cut -c1-8)
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "Using image tag: ${IMAGE_TAG}"
+
+      - name: 🔄 Update Kustomize overlay
+        run: |
+          cd k8s/overlays/production
+          
+          # Kustomize 이미지 태그 업데이트
+          sed -i "s/newTag:.*/newTag: ${{ steps.extract.outputs.IMAGE_TAG }}/" kustomization.yaml
+          
+          # 변경사항 확인
+          echo "📝 Updated kustomization.yaml:"
+          cat kustomization.yaml
+
+      - name: 📤 Commit GitOps changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions (GitOps)"
+          
+          git add k8s/overlays/production/kustomization.yaml
+          
+          if git diff --staged --quiet; then
+            echo "⚠️ 변경사항이 없습니다."
           else
-            VERSION="1.0.0-$(git rev-parse --short HEAD)"
+            git commit -m "🚀 GitOps: Deploy fortinet:${{ steps.extract.outputs.IMAGE_TAG }}
+            
+            🔄 GitOps 자동 배포
+            - Image: registry.jclee.me/fortinet:${{ steps.extract.outputs.IMAGE_TAG }}
+            - Namespace: ${{ env.K8S_NAMESPACE }}
+            - ArgoCD: ${{ env.ARGOCD_SERVER }}
+            - Commit: ${{ github.sha }}
+            
+            Co-authored-by: GitHub Actions <action@github.com>"
+            
+            git push
+            echo "✅ GitOps 매니페스트 업데이트 완료!"
           fi
-          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Using version: ${VERSION}"
 
-      - name: Update Chart version
+      - name: ⏱️ ArgoCD 동기화 대기
         run: |
-          sed -i "s/^version:.*/version: ${{ steps.version.outputs.VERSION }}/" ./charts/${{ env.APP_NAME }}/Chart.yaml
-          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.VERSION }}\"/" ./charts/${{ env.APP_NAME }}/Chart.yaml
+          echo "🔄 ArgoCD가 GitOps 변경사항을 감지하고 자동 동기화를 시작합니다..."
+          echo "📊 ArgoCD Dashboard: https://${{ env.ARGOCD_SERVER }}"
+          echo "⌛ 동기화 완료까지 약 1-2분 소요됩니다."
 
-      - name: Package Helm chart
-        run: |
-          helm package ./charts/${{ env.APP_NAME }}
-
-      - name: Push to ChartMuseum
-        run: |
-          curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
-            --data-binary "@${{ env.APP_NAME }}-${{ steps.version.outputs.VERSION }}.tgz" \
-            ${{ secrets.CHARTMUSEUM_URL }}/api/charts
-
-      - name: Trigger ArgoCD Sync
-        run: |
-          echo "Chart version ${{ steps.version.outputs.VERSION }} pushed to ChartMuseum"
-          echo "ArgoCD will automatically sync the application"
-
-  # 배포 검증
+  # 🔍 GitOps 배포 검증
   verify-deployment:
     runs-on: self-hosted
-    needs: helm-deploy
+    needs: gitops-update
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     steps:
-      - name: Wait for deployment
+      - name: ⏱️ ArgoCD 동기화 대기
         run: |
-          echo "Waiting for ArgoCD to sync..."
-          sleep 60
+          echo "⏱️ ArgoCD 자동 동기화 대기 중..."
+          echo "🔄 Pull 기반 GitOps 모델로 ArgoCD가 변경사항을 감지합니다."
+          sleep 90  # ArgoCD 동기화 시간 확보
 
-      - name: Verify GitOps deployment
+      - name: 🏥 배포 상태 검증
         run: |
-          max_attempts=10
+          max_attempts=15
           attempt=1
+          
+          echo "🔍 GitOps 배포 상태 검증 시작..."
+          echo "🎯 Target: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
+          
           while [ $attempt -le $max_attempts ]; do
-            echo "Attempt $attempt: Checking GitOps deployment health..."
-            if curl -f -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health > /dev/null; then
-              echo "✅ GitOps deployment verified successfully!"
-              curl -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health | jq . || curl -s http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health
+            echo "🔄 시도 $attempt/$max_attempts: GitOps 배포 헬스체크..."
+            
+            if curl -f -s --connect-timeout 10 --max-time 20 "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" > /dev/null; then
+              echo "✅ GitOps 배포 검증 성공!"
+              echo "📊 헬스체크 응답:"
+              curl -s "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" | jq . 2>/dev/null || curl -s "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
+              echo ""
+              echo "🎉 배포 완료!"
               break
             else
-              echo "❌ Health check failed, retrying in 30s..."
+              echo "⚠️ 헬스체크 실패 (시도 $attempt/$max_attempts)"
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ 최대 시도 횟수 도달. 배포 검증 실패!"
+                echo "🔍 문제 해결을 위해 다음을 확인하세요:"
+                echo "   - ArgoCD 대시보드: https://${{ env.ARGOCD_SERVER }}"
+                echo "   - Pod 상태: kubectl get pods -n ${{ env.K8S_NAMESPACE }}"
+                echo "   - Service 상태: kubectl get svc -n ${{ env.K8S_NAMESPACE }}"
+                exit 1
+              fi
+              echo "⏳ 30초 후 재시도..."
               sleep 30
               attempt=$((attempt + 1))
             fi
           done
-          
-          if [ $attempt -gt $max_attempts ]; then
-            echo "❌ GitOps deployment verification failed after $max_attempts attempts"
-            exit 1
-          fi
 
-  # 배포 완료 알림
+      - name: 📊 배포 정보 수집
+        if: success()
+        run: |
+          echo "📋 GitOps 배포 정보:"
+          echo "🏷️ Image Tag: $(echo "${{ github.sha }}" | cut -c1-8)"
+          echo "🌐 External URL: https://fortinet.jclee.me"
+          echo "🔗 Internal URL: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}"
+          echo "📊 ArgoCD: https://${{ env.ARGOCD_SERVER }}"
+          echo "📦 Registry: https://registry.jclee.me"
+
+  # 📢 GitOps 파이프라인 완료 알림
   notify:
     runs-on: self-hosted
-    needs: [verify-deployment]
+    needs: [test, build, gitops-update, verify-deployment]
     if: always() && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     steps:
-      - name: Deployment Status Notification
+      - name: 📊 GitOps 파이프라인 상태 리포트
         run: |
+          echo "🚀 GITOPS PIPELINE REPORT"
+          echo "========================="
+          echo ""
+          
+          # 각 단계 상태 확인
+          echo "📋 파이프라인 단계별 상태:"
+          echo "  🧪 Test: ${{ needs.test.result }}"
+          echo "  🐳 Build: ${{ needs.build.result }}"
+          echo "  ⚙️ GitOps Update: ${{ needs.gitops-update.result }}"
+          echo "  🔍 Verification: ${{ needs.verify-deployment.result }}"
+          echo ""
+          
           if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
-            echo "🎉 GitOps Pipeline completed successfully!"
-            echo "🔗 Application: http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}"
-            echo "🔗 ArgoCD Dashboard: https://argo.jclee.me"
-            echo "🔗 Harbor Registry: https://registry.jclee.me"
-            echo "🔗 ChartMuseum: https://charts.jclee.me"
+            echo "🎉 GitOps 파이프라인 완전 성공!"
+            echo ""
+            echo "🔗 서비스 접근 정보:"
+            echo "  🌐 External: https://fortinet.jclee.me"
+            echo "  🔗 Internal: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}"
+            echo "  🏥 Health: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
+            echo ""
+            echo "📊 인프라 대시보드:"
+            echo "  🔄 ArgoCD: https://${{ env.ARGOCD_SERVER }}"
+            echo "  📦 Registry: https://registry.jclee.me"
+            echo "  📈 Charts: https://charts.jclee.me"
+            echo ""
+            echo "🏷️ 배포 정보:"
+            echo "  📦 Image: registry.jclee.me/fortinet:$(echo "${{ github.sha }}" | cut -c1-8)"
+            echo "  🔄 Commit: ${{ github.sha }}"
+            echo "  👤 Author: ${{ github.actor }}"
+            echo "  📅 Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            
+          elif [ "${{ needs.test.result }}" != "success" ]; then
+            echo "❌ 테스트 단계 실패!"
+            echo "🔍 테스트 로그를 확인해주세요."
+            
+          elif [ "${{ needs.build.result }}" != "success" ]; then
+            echo "❌ Docker 빌드 단계 실패!"
+            echo "🔍 빌드 로그를 확인해주세요."
+            
+          elif [ "${{ needs.gitops-update.result }}" != "success" ]; then
+            echo "❌ GitOps 매니페스트 업데이트 실패!"
+            echo "🔍 Kustomize 설정을 확인해주세요."
+            
+          elif [ "${{ needs.verify-deployment.result }}" != "success" ]; then
+            echo "❌ 배포 검증 실패!"
+            echo "🔍 다음을 확인해주세요:"
+            echo "  - ArgoCD 대시보드: https://${{ env.ARGOCD_SERVER }}"
+            echo "  - Pod 로그: kubectl logs -l app=fortinet -n ${{ env.K8S_NAMESPACE }}"
+            echo "  - Service 상태: kubectl get svc -n ${{ env.K8S_NAMESPACE }}"
           else
-            echo "❌ GitOps Pipeline failed!"
-            echo "🔍 Check ArgoCD dashboard for details"
+            echo "❌ 알 수 없는 오류로 파이프라인 실패!"
           fi
+          
+          echo ""
+          echo "GitOps 전략: Pull-based (CNCF 표준)"
+          echo "관리 도구: ArgoCD + Kustomize"
+          echo "보안 모델: 최소 권한 + Service Account"

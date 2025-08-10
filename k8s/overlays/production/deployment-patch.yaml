@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    environment: production
+spec:
+  replicas: 3  # 프로덕션 환경 고가용성
+  template:
+    spec:
+      containers:
+      - name: fortinet
+        env:
+        - name: APP_MODE
+          value: "production"
+        - name: OFFLINE_MODE
+          value: "false"  # 프로덕션에서는 실제 API 사용
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: METRICS_ENABLED
+          value: "true"
+        - name: MONITORING_ENABLED
+          value: "true"
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+            ephemeral-storage: 2Gi
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+            ephemeral-storage: 1Gi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 60
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 7777
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 15

@@ -8,9 +8,23 @@ resources:
 
 images:
 - name: registry.jclee.me/fortinet
-  newTag: c2ab400-20250811-000259
+  newTag: latest  # ArgoCD에서 자동 업데이트
+
+replicas:
+- name: fortinet
+  count: 2
+
+patchesStrategicMerge:
+- deployment-patch.yaml
 
 labels:
 - includeSelectors: true
   pairs:
     environment: production
+    tier: backend
+    gitops.strategy: pull-based
+
+commonAnnotations:
+  gitops.argocd.argoproj.io/managed: "true"
+  environment: production
+  deployment.strategy: rolling-update

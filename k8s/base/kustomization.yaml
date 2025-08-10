@@ -3,12 +3,16 @@ kind: Kustomization
 
 metadata:
   name: fortinet-base
+  annotations:
+    gitops.argocd.argoproj.io/managed: "true"
 
 resources:
 - namespace.yaml
+- serviceaccount.yaml
 - configmap.yaml
 - deployment.yaml
 - service.yaml
+- ingress.yaml
 
 images:
 - name: registry.jclee.me/fortinet
@@ -18,6 +22,12 @@ labels:
 - includeSelectors: true
   pairs:
     app: fortinet
-    version: "1.0.5"
+    app.kubernetes.io/name: fortinet
+    app.kubernetes.io/managed-by: argocd
+    gitops.strategy: pull-based
+
+commonAnnotations:
+  gitops.argocd.argoproj.io/managed: "true"
+  deployment.kubernetes.io/managed-by: "argocd"
 
 namespace: fortinet
