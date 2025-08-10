@@ -262,9 +262,7 @@ class UnifiedCacheManager:
 
         # 메모리 백엔드 (항상 마지막에 추가 - fallback)
         if self.config["memory"]["enabled"]:
-            memory_backend = MemoryCacheBackend(
-                max_size=self.config["memory"]["max_size"]
-            )
+            memory_backend = MemoryCacheBackend(max_size=self.config["memory"]["max_size"])
             self.backends.append(memory_backend)
             self.memory_cache = memory_backend
 
@@ -352,9 +350,7 @@ class UnifiedCacheManager:
     def get_stats(self) -> Dict:
         """캐시 통계 반환"""
         total_requests = self.stats["hits"] + self.stats["misses"]
-        hit_rate = (
-            (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
-        )
+        hit_rate = (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
 
         return {
             **self.stats,
@@ -392,9 +388,7 @@ def cached(ttl: int = 300, key_prefix: str = "cache"):
             cache_manager = get_cache_manager()
 
             # 캐시 키 생성
-            cache_key = cache_manager.generate_cache_key(
-                f"{key_prefix}:{func.__name__}", *args, **kwargs
-            )
+            cache_key = cache_manager.generate_cache_key(f"{key_prefix}:{func.__name__}", *args, **kwargs)
 
             # 캐시에서 조회
             result = cache_manager.get(cache_key)

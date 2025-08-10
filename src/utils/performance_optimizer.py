@@ -146,9 +146,7 @@ class PerformanceMonitor:
             # psutil이 없는 경우 간단한 추정
             return len(gc.get_objects())
 
-    def _record_metrics(
-        self, func_name: str, exec_time: float, memory_delta: int, success: bool
-    ):
+    def _record_metrics(self, func_name: str, exec_time: float, memory_delta: int, success: bool):
         """메트릭 기록"""
         with self._lock:
             metrics_list = self.metrics[func_name]
@@ -157,9 +155,7 @@ class PerformanceMonitor:
             if metrics_list:
                 last_metric = metrics_list[-1]
                 call_count = last_metric.call_count + 1
-                avg_time = (
-                    last_metric.avg_time * last_metric.call_count + exec_time
-                ) / call_count
+                avg_time = (last_metric.avg_time * last_metric.call_count + exec_time) / call_count
                 max_time = max(last_metric.max_time, exec_time)
                 min_time = min(last_metric.min_time, exec_time)
             else:
@@ -199,8 +195,7 @@ class PerformanceMonitor:
                     "max_execution_time": latest.max_time,
                     "min_execution_time": latest.min_time,
                     "last_execution_time": latest.execution_time,
-                    "avg_memory_delta": sum(m.memory_usage for m in metrics_list)
-                    / len(metrics_list),
+                    "avg_memory_delta": sum(m.memory_usage for m in metrics_list) / len(metrics_list),
                     "last_updated": latest.timestamp.isoformat(),
                 }
 
@@ -249,10 +244,7 @@ class AsyncBatchProcessor:
         processed_count = 0
 
         # 배치로 나누기
-        batches = [
-            items[i : i + self.batch_size]
-            for i in range(0, len(items), self.batch_size)
-        ]
+        batches = [items[i : i + self.batch_size] for i in range(0, len(items), self.batch_size)]
 
         for batch in batches:
             # 세마포어로 동시 실행 제한
@@ -318,16 +310,12 @@ class MemoryOptimizer:
             if isinstance(value, list) and len(value) > 1000:
                 # 큰 리스트는 제너레이터로 변환 고려
                 optimized[key] = value[:100]  # 샘플만 유지
-                logger.debug(
-                    f"Truncated large list {key} from {len(value)} to 100 items"
-                )
+                logger.debug(f"Truncated large list {key} from {len(value)} to 100 items")
             elif isinstance(value, dict) and len(value) > 100:
                 # 큰 딕셔너리는 중요한 키만 유지
                 important_keys = list(value.keys())[:50]
                 optimized[key] = {k: value[k] for k in important_keys if k in value}
-                logger.debug(
-                    f"Reduced large dict {key} from {len(value)} to {len(optimized[key])} items"
-                )
+                logger.debug(f"Reduced large dict {key} from {len(value)} to {len(optimized[key])} items")
             else:
                 optimized[key] = value
 
@@ -429,12 +417,8 @@ def optimize_regex_compilation():
     compiled_patterns = {
         "ip_address": re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"),
         "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
-        "url": re.compile(
-            r"https?://(?:[-\w.])+(?:\:[0-9]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?"
-        ),
-        "uuid": re.compile(
-            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-        ),
+        "url": re.compile(r"https?://(?:[-\w.])+(?:\:[0-9]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?"),
+        "uuid": re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),
     }
 
     return compiled_patterns

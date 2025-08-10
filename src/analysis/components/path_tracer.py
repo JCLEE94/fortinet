@@ -166,9 +166,7 @@ class PathTracer:
             if route_type == "connected":
                 description = f"목적지가 직접 연결된 네트워크 {destination}에 있음"
             elif gateway:
-                description = (
-                    f"게이트웨이 {gateway}를 통해 {interface} 인터페이스로 라우팅"
-                )
+                description = f"게이트웨이 {gateway}를 통해 {interface} 인터페이스로 라우팅"
             else:
                 description = f"{interface} 인터페이스로 직접 라우팅"
 
@@ -253,11 +251,9 @@ class PathTracer:
         # 서로를 gateway로 참조하는 경우
         if gateway1 and gateway2:
             try:
-                if ipaddress.ip_address(gateway1) in ipaddress.ip_network(
-                    dest2, strict=False
-                ) and ipaddress.ip_address(gateway2) in ipaddress.ip_network(
-                    dest1, strict=False
-                ):
+                if ipaddress.ip_address(gateway1) in ipaddress.ip_network(dest2, strict=False) and ipaddress.ip_address(
+                    gateway2
+                ) in ipaddress.ip_network(dest1, strict=False):
                     return True
             except ValueError:
                 pass

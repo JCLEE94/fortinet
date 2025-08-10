@@ -157,9 +157,7 @@ class RealtimeAlertSystem:
         # 심각도별 통계
         for severity in AlertSeverity:
             stats["by_severity"][severity.value] = sum(
-                1
-                for a in self.active_alerts.values()
-                if a["severity"] == severity.value
+                1 for a in self.active_alerts.values() if a["severity"] == severity.value
             )
 
         # 유형별 통계
@@ -169,16 +167,12 @@ class RealtimeAlertSystem:
             )
 
         # 확인된 알림
-        stats["acknowledged"] = sum(
-            1 for a in self.active_alerts.values() if a["acknowledged"]
-        )
+        stats["acknowledged"] = sum(1 for a in self.active_alerts.values() if a["acknowledged"])
 
         # 최근 24시간 알림
         cutoff = datetime.now().timestamp() - 86400
         stats["recent_24h"] = sum(
-            1
-            for a in self.alert_history
-            if datetime.fromisoformat(a["timestamp"]).timestamp() > cutoff
+            1 for a in self.alert_history if datetime.fromisoformat(a["timestamp"]).timestamp() > cutoff
         )
 
         return stats
@@ -245,18 +239,14 @@ class RealtimeAlertSystem:
 
     def _format_message(self, rule: Dict, metrics: Dict) -> str:
         """알림 메시지 포맷팅"""
-        template = rule.get(
-            "message_template", "{metric} 값이 임계값을 초과했습니다: {value}"
-        )
+        template = rule.get("message_template", "{metric} 값이 임계값을 초과했습니다: {value}")
 
         condition = rule.get("condition", {})
         metric_name = condition.get("metric", "unknown")
         metric_value = metrics.get(metric_name, "N/A")
         threshold = rule.get("threshold", "N/A")
 
-        return template.format(
-            metric=metric_name, value=metric_value, threshold=threshold
-        )
+        return template.format(metric=metric_name, value=metric_value, threshold=threshold)
 
     def _process_alert(self, alert: Dict):
         """알림 처리"""

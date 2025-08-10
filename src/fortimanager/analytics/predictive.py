@@ -34,9 +34,7 @@ class PredictiveAnalytics:
 
         logger.info(f"Model {model.name} trained with accuracy: {model.accuracy}")
 
-    def generate_model_predictions(
-        self, model: PredictiveModel, data: Dict, horizon: int
-    ) -> List[Dict]:
+    def generate_model_predictions(self, model: PredictiveModel, data: Dict, horizon: int) -> List[Dict]:
         """Generate predictions using a trained model"""
         if model.last_trained is None:
             logger.warning(f"Model {model.name} has not been trained")
@@ -69,9 +67,7 @@ class PredictiveAnalytics:
 
         return predictions
 
-    def generate_forecast(
-        self, metric: AnalyticsMetric, historical_data: List[Dict]
-    ) -> Dict[str, Any]:
+    def generate_forecast(self, metric: AnalyticsMetric, historical_data: List[Dict]) -> Dict[str, Any]:
         """Generate forecast for a specific metric"""
         if len(historical_data) < 10:
             return {"forecast": [], "confidence": 0.0}
@@ -118,9 +114,7 @@ class PredictiveAnalytics:
                 "utilization": min(100, projected_utilization),
                 "capacity_needed": projected_utilization > 80,
                 "urgency": (
-                    "high"
-                    if projected_utilization > 90
-                    else "medium" if projected_utilization > 70 else "low"
+                    "high" if projected_utilization > 90 else "medium" if projected_utilization > 70 else "low"
                 ),
             }
 
@@ -131,9 +125,7 @@ class PredictiveAnalytics:
             "recommendations": self._generate_capacity_recommendations(projections),
         }
 
-    def _generate_time_series_predictions(
-        self, model: PredictiveModel, data: Dict, horizon: int
-    ) -> List[Dict]:
+    def _generate_time_series_predictions(self, model: PredictiveModel, data: Dict, horizon: int) -> List[Dict]:
         """Generate time series predictions"""
         predictions = []
         base_value = data.get("last_value", 100)
@@ -154,9 +146,7 @@ class PredictiveAnalytics:
 
         return predictions
 
-    def _generate_anomaly_predictions(
-        self, model: PredictiveModel, data: Dict
-    ) -> List[Dict]:
+    def _generate_anomaly_predictions(self, model: PredictiveModel, data: Dict) -> List[Dict]:
         """Generate anomaly detection predictions"""
         # Mock anomaly detection
         return [
@@ -170,9 +160,7 @@ class PredictiveAnalytics:
             }
         ]
 
-    def _generate_regression_predictions(
-        self, model: PredictiveModel, data: Dict, horizon: int
-    ) -> List[Dict]:
+    def _generate_regression_predictions(self, model: PredictiveModel, data: Dict, horizon: int) -> List[Dict]:
         """Generate regression predictions"""
         predictions = []
         base_value = data.get("current_value", 50)
@@ -200,13 +188,9 @@ class PredictiveAnalytics:
             recommendations.append("Consider capacity expansion within 3 months")
 
         if projections.get("6_months", {}).get("urgency") == "high":
-            recommendations.append(
-                "High priority: Plan capacity upgrade for 6-month horizon"
-            )
+            recommendations.append("High priority: Plan capacity upgrade for 6-month horizon")
 
         if projections.get("12_months", {}).get("utilization", 0) > 95:
-            recommendations.append(
-                "Long-term planning: Significant capacity increase needed within 12 months"
-            )
+            recommendations.append("Long-term planning: Significant capacity increase needed within 12 months")
 
         return recommendations
