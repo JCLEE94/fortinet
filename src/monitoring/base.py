@@ -16,7 +16,9 @@ from typing import Callable, Dict, List, Optional
 class MonitoringBase(ABC):
     """모든 모니터링 모듈의 기반 클래스"""
 
-    def __init__(self, name: str, collection_interval: float = 5.0, max_history: int = 1000):
+    def __init__(
+        self, name: str, collection_interval: float = 5.0, max_history: int = 1000
+    ):
         """
         Args:
             name: 모니터링 모듈 이름
@@ -180,7 +182,8 @@ class MonitoringBase(ABC):
             return [
                 data
                 for data in self.data_history
-                if "timestamp" in data and datetime.fromisoformat(data["timestamp"]) > cutoff
+                if "timestamp" in data
+                and datetime.fromisoformat(data["timestamp"]) > cutoff
             ]
 
     def get_statistics(self) -> Dict:
@@ -189,8 +192,12 @@ class MonitoringBase(ABC):
             stats = self.stats.copy()
 
             if stats["total_collections"] > 0:
-                stats["success_rate"] = stats["successful_collections"] / stats["total_collections"] * 100
-                stats["error_rate"] = stats["failed_collections"] / stats["total_collections"] * 100
+                stats["success_rate"] = (
+                    stats["successful_collections"] / stats["total_collections"] * 100
+                )
+                stats["error_rate"] = (
+                    stats["failed_collections"] / stats["total_collections"] * 100
+                )
             else:
                 stats["success_rate"] = 0.0
                 stats["error_rate"] = 0.0
@@ -306,9 +313,13 @@ class MonitoringBase(ABC):
 
                 # 평균 수집 시간 계산
                 total_time = (
-                    self.stats["average_collection_time"] * (self.stats["successful_collections"] - 1) + collection_time
+                    self.stats["average_collection_time"]
+                    * (self.stats["successful_collections"] - 1)
+                    + collection_time
                 )
-                self.stats["average_collection_time"] = total_time / self.stats["successful_collections"]
+                self.stats["average_collection_time"] = (
+                    total_time / self.stats["successful_collections"]
+                )
             else:
                 self.stats["failed_collections"] += 1
 
@@ -430,7 +441,11 @@ class ThresholdMixin:
         """임계값 위반 히스토리 조회"""
         cutoff = datetime.now() - timedelta(hours=hours)
 
-        return [v for v in self.threshold_violations if datetime.fromisoformat(v["timestamp"]) > cutoff]
+        return [
+            v
+            for v in self.threshold_violations
+            if datetime.fromisoformat(v["timestamp"]) > cutoff
+        ]
 
 
 # 전역 모니터링 레지스트리

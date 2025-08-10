@@ -126,7 +126,9 @@ def clear_performance_cache():
 
     except Exception as e:
         logger.error(f"캐시 삭제 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache clear failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False, message=f"Cache clear failed: {str(e)}", status_code=500
+        )
 
 
 @performance_bp.route("/cache/warmup", methods=["POST"])
@@ -195,7 +197,9 @@ def warmup_performance_cache():
 
     except Exception as e:
         logger.error(f"캐시 예열 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache warming failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False, message=f"Cache warming failed: {str(e)}", status_code=500
+        )
 
 
 @performance_bp.route("/cache/stats", methods=["GET"])

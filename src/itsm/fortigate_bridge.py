@@ -123,7 +123,11 @@ class ITSMFortiGateBridge:
             firewall_requests = self.itsm_scraper.get_firewall_requests()
 
             # 2. 미처리 요청 필터링
-            new_requests = [req for req in firewall_requests if req["id"] not in self.processed_requests]
+            new_requests = [
+                req
+                for req in firewall_requests
+                if req["id"] not in self.processed_requests
+            ]
 
             if not new_requests:
                 logger.debug("새로운 방화벽 요청이 없습니다")
@@ -152,10 +156,14 @@ class ITSMFortiGateBridge:
             request_detail = self.itsm_scraper.get_request_detail(request_id)
 
             # 2. 정책 매핑
-            mapping_result = self.policy_mapper.map_itsm_to_fortigate_policy(request_detail)
+            mapping_result = self.policy_mapper.map_itsm_to_fortigate_policy(
+                request_detail
+            )
 
             if mapping_result["mapping_status"] != "success":
-                logger.error(f"요청 {request_id} 매핑 실패: {mapping_result.get('error_message')}")
+                logger.error(
+                    f"요청 {request_id} 매핑 실패: {mapping_result.get('error_message')}"
+                )
                 return
 
             # 3. 캐시에 저장
@@ -181,7 +189,9 @@ class ITSMFortiGateBridge:
             logger.error(f"요청 {request_id} 처리 중 오류: {str(e)}")
             raise
 
-    async def _implement_policies(self, request_id: str, mapping_result: Dict[str, Any]):
+    async def _implement_policies(
+        self, request_id: str, mapping_result: Dict[str, Any]
+    ):
         """FortiGate 정책 구현"""
         try:
             if self.dry_run:
@@ -207,17 +217,23 @@ class ITSMFortiGateBridge:
                     implementation_results.append(result)
 
                     if result["success"]:
-                        logger.info(f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}")
+                        logger.info(
+                            f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}"
+                        )
                     else:
                         logger.error(f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}")
 
                 except Exception as e:
                     logger.error(f"FortiGate {fw_id} 정책 구현 중 오류: {str(e)}")
-                    implementation_results.append({"firewall_id": fw_id, "success": False, "error": str(e)})
+                    implementation_results.append(
+                        {"firewall_id": fw_id, "success": False, "error": str(e)}
+                    )
 
             # 구현 결과 캐시 업데이트
             if request_id in self.policy_cache:
-                self.policy_cache[request_id]["implementation_results"] = implementation_results
+                self.policy_cache[request_id][
+                    "implementation_results"
+                ] = implementation_results
                 self.policy_cache[request_id]["status"] = "implemented"
 
             logger.info(f"요청 {request_id}의 정책 구현 완료")
@@ -226,12 +242,19 @@ class ITSMFortiGateBridge:
             logger.error(f"정책 구현 중 오류: {str(e)}")
             raise
 
-    async def _implement_single_policy(self, fg_client: FortiGateAPIClient, policy: Dict[str, Any]) -> Dict[str, Any]:
+    async def _implement_single_policy(
+        self, fg_client: FortiGateAPIClient, policy: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """단일 FortiGate 정책 구현"""
         try:
             # 1. 주소 객체 생성
-            for addr in policy["configuration"]["source_addresses"] + policy["configuration"]["destination_addresses"]:
-                addr_result = fg_client.create_address_object(name=addr["name"], subnet=addr["subnet"])
+            for addr in (
+                policy["configuration"]["source_addresses"]
+                + policy["configuration"]["destination_addresses"]
+            ):
+                addr_result = fg_client.create_address_object(
+                    name=addr["name"], subnet=addr["subnet"]
+                )
                 if not addr_result.get("success", False):
                     logger.warning(f"주소 객체 생성 실패: {addr['name']}")
 
@@ -250,8 +273,13 @@ class ITSMFortiGateBridge:
                 "name": policy["policy_name"],
                 "srcintf": [policy["configuration"]["source_zone"]],
                 "dstintf": [policy["configuration"]["destination_zone"]],
-                "srcaddr": [addr["name"] for addr in policy["configuration"]["source_addresses"]],
-                "dstaddr": [addr["name"] for addr in policy["configuration"]["destination_addresses"]],
+                "srcaddr": [
+                    addr["name"] for addr in policy["configuration"]["source_addresses"]
+                ],
+                "dstaddr": [
+                    addr["name"]
+                    for addr in policy["configuration"]["destination_addresses"]
+                ],
                 "service": [svc["name"] for svc in policy["configuration"]["services"]],
                 "action": policy["configuration"]["action"],
                 "logtraffic": "all",
@@ -286,7 +314,9 @@ class ITSMFortiGateBridge:
         logger.info("=== DRY RUN: FortiGate 정책 구현 시뮬레이션 ===")
 
         for policy in mapping_result.get("fortigate_policies", []):
-            logger.info(f"FortiGate: {policy['firewall_name']} ({policy['firewall_id']})")
+            logger.info(
+                f"FortiGate: {policy['firewall_name']} ({policy['firewall_id']})"
+            )
             logger.info(f"정책명: {policy['policy_name']}")
             logger.info(
                 f"구성: {policy['configuration']['source_zone']} -> {policy['configuration']['destination_zone']}"
@@ -322,7 +352,9 @@ class ITSMFortiGateBridge:
             # 비동기 작업을 동기적으로 실행
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(self._implement_policies(request_id, cached_request["mapping_result"]))
+            loop.run_until_complete(
+                self._implement_policies(request_id, cached_request["mapping_result"])
+            )
             loop.close()
 
             return {"success": True, "message": "정책 구현 완료"}
