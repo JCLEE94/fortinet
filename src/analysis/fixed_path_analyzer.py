@@ -270,7 +270,9 @@ class FixedPathAnalyzer:
                 "firewall_name": f"FW-{i+1:02d}",
                 "src_ip": route["from"],
                 "dst_ip": route["to"],
-                "policy_id": (policy_id if i == 0 else None),  # 첫 번째 홉에서만 정책 적용
+                "policy_id": (
+                    policy_id if i == 0 else None
+                ),  # 첫 번째 홉에서만 정책 적용
                 "policy": policy if i == 0 else None,
                 "action": policy["action"] if i == 0 else "forward",
                 "interface_in": route["interface"],
@@ -310,7 +312,9 @@ class FixedPathAnalyzer:
                 "policy_description": policy["description"],
                 "analysis_time": datetime.now().isoformat(),
             },
-            "recommendations": self.generate_recommendations(src_ip, dst_ip, port, allowed, policy),
+            "recommendations": self.generate_recommendations(
+                src_ip, dst_ip, port, allowed, policy
+            ),
         }
 
         return result
@@ -335,7 +339,11 @@ class FixedPathAnalyzer:
             src_zone = self.get_zone_for_ip(src_ip)
             dst_zone = self.get_zone_for_ip(dst_ip)
             for pol_id, pol in self.firewall_policies.items():
-                if pol["source_zone"] == src_zone and pol["dest_zone"] == dst_zone and pol["action"] == "allow":
+                if (
+                    pol["source_zone"] == src_zone
+                    and pol["dest_zone"] == dst_zone
+                    and pol["action"] == "allow"
+                ):
                     recommendations.append(
                         {
                             "type": "info",

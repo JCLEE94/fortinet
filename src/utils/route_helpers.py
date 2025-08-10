@@ -18,7 +18,9 @@ from utils.unified_logger import get_logger
 logger = get_logger(__name__)
 
 
-def standard_api_response(success: bool = True, data: Any = None, message: str = "", status_code: int = 200) -> tuple:
+def standard_api_response(
+    success: bool = True, data: Any = None, message: str = "", status_code: int = 200
+) -> tuple:
     """표준화된 API 응답 생성"""
     response = {
         "status": "success" if success else "error",
@@ -46,7 +48,9 @@ def handle_api_exceptions(f: Callable) -> Callable:
             return f(*args, **kwargs)
         except ValueError as e:
             logger.warning(f"Validation error in {f.__name__}: {str(e)}")
-            return standard_api_response(success=False, message=f"Validation error: {str(e)}", status_code=400)
+            return standard_api_response(
+                success=False, message=f"Validation error: {str(e)}", status_code=400
+            )
         except KeyError as e:
             logger.warning(f"Missing parameter in {f.__name__}: {str(e)}")
             return standard_api_response(
@@ -79,7 +83,9 @@ def require_json_data(f: Callable) -> Callable:
 
         data = request.get_json()
         if data is None:
-            return standard_api_response(success=False, message="No JSON data provided", status_code=400)
+            return standard_api_response(
+                success=False, message="No JSON data provided", status_code=400
+            )
 
         return f(*args, **kwargs)
 
@@ -95,7 +101,9 @@ def validate_required_fields(required_fields: list) -> Callable:
             data = request.get_json()
 
             if not data:
-                return standard_api_response(success=False, message="No data provided", status_code=400)
+                return standard_api_response(
+                    success=False, message="No data provided", status_code=400
+                )
 
             missing_fields = [field for field in required_fields if field not in data]
 
@@ -153,7 +161,9 @@ def get_pagination_params() -> Dict[str, int]:
     return {"page": page, "per_page": per_page, "offset": (page - 1) * per_page}
 
 
-def format_paginated_response(items: list, total: int, page: int, per_page: int) -> Dict[str, Any]:
+def format_paginated_response(
+    items: list, total: int, page: int, per_page: int
+) -> Dict[str, Any]:
     """페이지네이션된 응답 형식화"""
     total_pages = (total + per_page - 1) // per_page
 
@@ -192,7 +202,8 @@ def validate_ip_address(ip: str) -> bool:
 
         # IP 주소가 아니면 도메인 이름으로 검증
         domain_pattern = (
-            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?" r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
+            r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?"
+            r"(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$"
         )
         return bool(re.match(domain_pattern, ip)) and len(ip) <= 253
 
@@ -224,7 +235,9 @@ def sanitize_string(value: str, max_length: int = 255) -> str:
     return sanitized
 
 
-def log_api_access(endpoint: str, method: str, success: bool, execution_time: float = None) -> None:
+def log_api_access(
+    endpoint: str, method: str, success: bool, execution_time: float = None
+) -> None:
     """API 접근 로그 기록"""
     log_data = {
         "endpoint": endpoint,

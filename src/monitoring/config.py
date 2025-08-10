@@ -55,7 +55,9 @@ class APIPerformanceConfig:
     def __post_init__(self):
         if self.thresholds is None:
             self.thresholds = {
-                "response_time_warning": ThresholdConfig(1000.0, 3000.0, "ms", "응답 시간"),
+                "response_time_warning": ThresholdConfig(
+                    1000.0, 3000.0, "ms", "응답 시간"
+                ),
                 "error_rate": ThresholdConfig(5.0, 10.0, "%", "오류율"),
                 "throughput_min": ThresholdConfig(10.0, 5.0, "req/min", "최소 처리량"),
             }
@@ -168,7 +170,9 @@ class MonitoringConfigManager:
             config_file: 설정 파일 경로 (기본값: data/monitoring_config.json)
         """
         if config_file is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            base_dir = os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            )
             config_file = os.path.join(base_dir, "data", "monitoring_config.json")
 
         self.config_file = config_file
@@ -278,7 +282,9 @@ class MonitoringConfigManager:
         """자동 복구 설정 조회"""
         return self.config.auto_recovery
 
-    def update_threshold(self, module: str, name: str, warning: float, critical: float) -> bool:
+    def update_threshold(
+        self, module: str, name: str, warning: float, critical: float
+    ) -> bool:
         """임계값 업데이트"""
         try:
             with self._lock:
@@ -286,15 +292,23 @@ class MonitoringConfigManager:
                     self.config.system_metrics.thresholds[name] = ThresholdConfig(
                         warning,
                         critical,
-                        self.config.system_metrics.thresholds.get(name, ThresholdConfig(0, 0)).unit,
-                        self.config.system_metrics.thresholds.get(name, ThresholdConfig(0, 0)).description,
+                        self.config.system_metrics.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).unit,
+                        self.config.system_metrics.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).description,
                     )
                 elif module == "api":
                     self.config.api_performance.thresholds[name] = ThresholdConfig(
                         warning,
                         critical,
-                        self.config.api_performance.thresholds.get(name, ThresholdConfig(0, 0)).unit,
-                        self.config.api_performance.thresholds.get(name, ThresholdConfig(0, 0)).description,
+                        self.config.api_performance.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).unit,
+                        self.config.api_performance.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).description,
                     )
                 else:
                     return False
@@ -525,7 +539,9 @@ class MonitoringConfigManager:
             ]:
                 for name, threshold in thresholds.items():
                     if threshold.warning >= threshold.critical:
-                        errors.append(f"{module_name}.{name}: 경고 임계값이 위험 임계값보다 크거나 같습니다")
+                        errors.append(
+                            f"{module_name}.{name}: 경고 임계값이 위험 임계값보다 크거나 같습니다"
+                        )
 
         except Exception as e:
             errors.append(f"설정 검사 중 오류: {e}")

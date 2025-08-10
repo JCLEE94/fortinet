@@ -30,7 +30,9 @@ class FirewallRuleAnalyzer:
             dict: 분석 결과
         """
         try:
-            self.logger.info(f"경로 분석 시작: {src_ip} -> {dst_ip}:{dst_port}/{protocol}")
+            self.logger.info(
+                f"경로 분석 시작: {src_ip} -> {dst_ip}:{dst_port}/{protocol}"
+            )
 
             # 기본 분석 결과 반환 (모의 데이터)
             result = {

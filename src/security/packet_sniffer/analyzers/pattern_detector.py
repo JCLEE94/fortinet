@@ -80,7 +80,8 @@ class PatternDetector:
             self._update_statistics(patterns)
 
             logger.info(
-                f"패턴 탐지 완료: 총 {len(packets)}개 패킷에서 " f"{sum(len(p) for p in patterns.values())}개 패턴 탐지"
+                f"패턴 탐지 완료: 총 {len(packets)}개 패킷에서 "
+                f"{sum(len(p) for p in patterns.values())}개 패턴 탐지"
             )
 
             return {
@@ -99,7 +100,9 @@ class PatternDetector:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def _detect_periodic_patterns(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_periodic_patterns(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """주기적 패턴 탐지"""
         try:
             if len(sorted_packets) < self.thresholds["periodic_min_packets"]:
@@ -124,7 +127,8 @@ class PatternDetector:
             # 주기성 판단 (편차가 작은 경우)
             if (
                 max_interval > 0
-                and (max_interval - min_interval) / avg_interval < self.thresholds["periodic_variance_ratio"]
+                and (max_interval - min_interval) / avg_interval
+                < self.thresholds["periodic_variance_ratio"]
             ):
                 # 주기적 패킷 그룹 식별
                 periodic_groups = defaultdict(
@@ -162,8 +166,14 @@ class PatternDetector:
                     if group["count"] >= self.thresholds["periodic_min_packets"]:
                         # 주기성 점수 계산
                         duration = group["last_seen"] - group["first_seen"]
-                        expected_intervals = duration / avg_interval if avg_interval > 0 else 0
-                        periodicity_score = group["count"] / expected_intervals if expected_intervals > 0 else 0
+                        expected_intervals = (
+                            duration / avg_interval if avg_interval > 0 else 0
+                        )
+                        periodicity_score = (
+                            group["count"] / expected_intervals
+                            if expected_intervals > 0
+                            else 0
+                        )
 
                         periodic_patterns.append(
                             {
@@ -188,7 +198,9 @@ class PatternDetector:
             logger.error(f"주기적 패턴 탐지 오류: {e}")
             return []
 
-    def _detect_burst_patterns(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_burst_patterns(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """버스트 패턴 탐지 (짧은 시간 내 다수의 유사 패킷)"""
         try:
             if len(sorted_packets) < self.thresholds["burst_min_packets"]:
@@ -203,7 +215,9 @@ class PatternDetector:
                 end_packet = sorted_packets[i + min_packets - 1]
 
                 # 시간 윈도우 확인
-                time_diff = end_packet.get("timestamp", 0) - start_packet.get("timestamp", 0)
+                time_diff = end_packet.get("timestamp", 0) - start_packet.get(
+                    "timestamp", 0
+                )
 
                 if time_diff <= burst_window:
                     # 같은 출발지/목적지 확인
@@ -222,7 +236,11 @@ class PatternDetector:
                             "protocols": list(protocols),
                             "packet_count": min_packets,
                             "duration": time_diff,
-                            "intensity": (min_packets / time_diff if time_diff > 0 else float("inf")),
+                            "intensity": (
+                                min_packets / time_diff
+                                if time_diff > 0
+                                else float("inf")
+                            ),
                         }
 
                         # 확장된 버스트 확인 (더 많은 패킷이 같은 패턴인지)
@@ -232,7 +250,8 @@ class PatternDetector:
                             next_time = next_packet.get("timestamp", 0)
 
                             if (
-                                next_time - start_packet.get("timestamp", 0) <= burst_window
+                                next_time - start_packet.get("timestamp", 0)
+                                <= burst_window
                                 and next_packet.get("src_ip") == burst["src_ip"]
                                 and next_packet.get("dst_ip") == burst["dst_ip"]
                             ):
@@ -244,14 +263,17 @@ class PatternDetector:
 
                         burst["packet_count"] = extended_count
                         burst["intensity"] = (
-                            extended_count / burst["duration"] if burst["duration"] > 0 else float("inf")
+                            extended_count / burst["duration"]
+                            if burst["duration"] > 0
+                            else float("inf")
                         )
 
                         # 중복 제거 (유사한 시간대의 버스트)
                         is_duplicate = False
                         for existing_burst in burst_patterns:
                             if (
-                                abs(existing_burst["start_time"] - burst["start_time"]) < 1.0
+                                abs(existing_burst["start_time"] - burst["start_time"])
+                                < 1.0
                                 and existing_burst["src_ip"] == burst["src_ip"]
                                 and existing_burst["dst_ip"] == burst["dst_ip"]
                             ):
@@ -267,7 +289,9 @@ class PatternDetector:
             logger.error(f"버스트 패턴 탐지 오류: {e}")
             return []
 
-    def _detect_scan_patterns(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_scan_patterns(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """스캔 패턴 탐지 (포트 스캔, 호스트 스캔 등)"""
         try:
             scan_patterns = []
@@ -286,7 +310,9 @@ class PatternDetector:
             logger.error(f"스캔 패턴 탐지 오류: {e}")
             return []
 
-    def _detect_port_scans(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_port_scans(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """포트 스캔 탐지"""
         try:
             port_scans = defaultdict(
@@ -331,7 +357,10 @@ class PatternDetector:
                 port_count = len(scan["ports"])
                 duration = scan["end_time"] - scan["start_time"]
 
-                if port_count >= self.thresholds["scan_min_ports"] and duration <= self.thresholds["scan_max_duration"]:
+                if (
+                    port_count >= self.thresholds["scan_min_ports"]
+                    and duration <= self.thresholds["scan_max_duration"]
+                ):
                     # 스캔 유형 분류
                     scan_type = "unknown"
                     if "SYN" in scan["tcp_flags"] and "ACK" not in scan["tcp_flags"]:
@@ -348,12 +377,16 @@ class PatternDetector:
                             "src_ip": scan["src_ip"],
                             "dst_ip": scan["dst_ip"],
                             "port_count": port_count,
-                            "ports": sorted(list(scan["ports"]))[:20],  # 최대 20개 포트만 표시
+                            "ports": sorted(list(scan["ports"]))[
+                                :20
+                            ],  # 최대 20개 포트만 표시
                             "packet_count": scan["packet_count"],
                             "duration": duration,
                             "start_time": scan["start_time"],
                             "end_time": scan["end_time"],
-                            "scan_rate": (port_count / duration if duration > 0 else float("inf")),
+                            "scan_rate": (
+                                port_count / duration if duration > 0 else float("inf")
+                            ),
                         }
                     )
 
@@ -363,7 +396,9 @@ class PatternDetector:
             logger.error(f"포트 스캔 탐지 오류: {e}")
             return []
 
-    def _detect_host_scans(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_host_scans(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """호스트 스캔 탐지"""
         try:
             host_scans = defaultdict(
@@ -407,13 +442,17 @@ class PatternDetector:
                             "type": "host_scan",
                             "src_ip": scan["src_ip"],
                             "host_count": host_count,
-                            "dst_ips": sorted(list(scan["dst_ips"]))[:10],  # 최대 10개 호스트만 표시
+                            "dst_ips": sorted(list(scan["dst_ips"]))[
+                                :10
+                            ],  # 최대 10개 호스트만 표시
                             "protocols": list(scan["protocols"]),
                             "packet_count": scan["packet_count"],
                             "duration": duration,
                             "start_time": scan["start_time"],
                             "end_time": scan["end_time"],
-                            "scan_rate": (host_count / duration if duration > 0 else float("inf")),
+                            "scan_rate": (
+                                host_count / duration if duration > 0 else float("inf")
+                            ),
                         }
                     )
 
@@ -423,7 +462,9 @@ class PatternDetector:
             logger.error(f"호스트 스캔 탐지 오류: {e}")
             return []
 
-    def _detect_targeted_patterns(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_targeted_patterns(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """표적화된 통신 패턴 탐지"""
         try:
             # 특정 목적지로의 집중적인 통신 분석
@@ -461,7 +502,9 @@ class PatternDetector:
             total_packets = len(sorted_packets)
 
             for dst_ip, target in target_analysis.items():
-                packet_ratio = target["count"] / total_packets if total_packets > 0 else 0
+                packet_ratio = (
+                    target["count"] / total_packets if total_packets > 0 else 0
+                )
                 source_count = len(target["sources"])
                 protocol_count = len(target["protocols"])
 
@@ -480,13 +523,19 @@ class PatternDetector:
                             "packet_count": target["count"],
                             "packet_ratio": packet_ratio,
                             "source_count": source_count,
-                            "sources": sorted(list(target["sources"]))[:5],  # 최대 5개 발신지
+                            "sources": sorted(list(target["sources"]))[
+                                :5
+                            ],  # 최대 5개 발신지
                             "protocols": list(target["protocols"]),
                             "total_bytes": target["total_bytes"],
                             "duration": duration,
                             "start_time": target["start_time"],
                             "end_time": target["end_time"],
-                            "traffic_intensity": (target["count"] / duration if duration > 0 else float("inf")),
+                            "traffic_intensity": (
+                                target["count"] / duration
+                                if duration > 0
+                                else float("inf")
+                            ),
                         }
                     )
 
@@ -496,7 +545,9 @@ class PatternDetector:
             logger.error(f"표적화 패턴 탐지 오류: {e}")
             return []
 
-    def _detect_unusual_patterns(self, sorted_packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _detect_unusual_patterns(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """비정상 패턴 탐지"""
         try:
             unusual_patterns = []
@@ -527,7 +578,9 @@ class PatternDetector:
             logger.error(f"비정상 패턴 탐지 오류: {e}")
             return []
 
-    def _detect_unusual_protocols(self, sorted_packets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _detect_unusual_protocols(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """비정상 프로토콜 탐지"""
         common_protocols = {"TCP", "UDP", "ICMP", "DNS", "HTTP", "HTTPS", "ARP"}
         unusual_protocols = set()
@@ -547,7 +600,9 @@ class PatternDetector:
 
         return None
 
-    def _detect_large_packets(self, sorted_packets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _detect_large_packets(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """큰 패킷 탐지"""
         large_packets = []
         threshold = self.thresholds["large_packet_threshold"]
@@ -572,12 +627,15 @@ class PatternDetector:
                 "packet_count": len(large_packets),
                 "packets": large_packets[:5],  # 최대 5개만 표시
                 "max_size": max(p["length"] for p in large_packets),
-                "avg_size": sum(p["length"] for p in large_packets) / len(large_packets),
+                "avg_size": sum(p["length"] for p in large_packets)
+                / len(large_packets),
             }
 
         return None
 
-    def _detect_flag_anomalies(self, sorted_packets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _detect_flag_anomalies(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """TCP 플래그 이상 탐지"""
         flag_anomalies = []
 
@@ -616,7 +674,9 @@ class PatternDetector:
 
         return None
 
-    def _detect_time_anomalies(self, sorted_packets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _detect_time_anomalies(
+        self, sorted_packets: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """시간 이상 탐지"""
         if len(sorted_packets) < 2:
             return None
@@ -624,7 +684,9 @@ class PatternDetector:
         # 시간 간격 분석
         time_gaps = []
         for i in range(1, len(sorted_packets)):
-            gap = sorted_packets[i].get("timestamp", 0) - sorted_packets[i - 1].get("timestamp", 0)
+            gap = sorted_packets[i].get("timestamp", 0) - sorted_packets[i - 1].get(
+                "timestamp", 0
+            )
             time_gaps.append(gap)
 
         if not time_gaps:
@@ -649,7 +711,9 @@ class PatternDetector:
     def _update_statistics(self, patterns: Dict[str, List]):
         """통계 정보 업데이트"""
         try:
-            self.statistics["patterns_detected"] = sum(len(p) for p in patterns.values())
+            self.statistics["patterns_detected"] = sum(
+                len(p) for p in patterns.values()
+            )
             self.statistics["periodic_patterns"] = len(patterns.get("periodic", []))
             self.statistics["burst_patterns"] = len(patterns.get("burst", []))
             self.statistics["scan_patterns"] = len(patterns.get("scan", []))
@@ -681,7 +745,9 @@ class PatternDetector:
             # 보안 우려사항 식별
             if patterns.get("scan"):
                 summary["security_concerns"].append("포트/호스트 스캔 활동 탐지")
-                summary["recommendations"].append("방화벽 정책 검토 및 침입 탐지 시스템 강화")
+                summary["recommendations"].append(
+                    "방화벽 정책 검토 및 침입 탐지 시스템 강화"
+                )
 
             if patterns.get("unusual"):
                 summary["security_concerns"].append("비정상적인 네트워크 활동 탐지")
@@ -689,10 +755,14 @@ class PatternDetector:
 
             if patterns.get("targeted"):
                 summary["security_concerns"].append("표적화된 공격 패턴 의심")
-                summary["recommendations"].append("해당 대상의 보안 상태 점검 및 접근 제어 강화")
+                summary["recommendations"].append(
+                    "해당 대상의 보안 상태 점검 및 접근 제어 강화"
+                )
 
             if patterns.get("burst"):
-                summary["security_concerns"].append("버스트 트래픽으로 인한 DDoS 공격 가능성")
+                summary["security_concerns"].append(
+                    "버스트 트래픽으로 인한 DDoS 공격 가능성"
+                )
                 summary["recommendations"].append("트래픽 제한 및 부하 분산 검토")
 
             return summary

@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class AutoFixMixin:
     """Mixin for automatic vulnerability fixing"""
 
-    def auto_fix_vulnerabilities(self, scan_result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def auto_fix_vulnerabilities(
+        self, scan_result: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """취약점 자동 수정"""
         try:
             logger.info("취약점 자동 수정 시작")
@@ -44,7 +46,9 @@ class AutoFixMixin:
                 "total_failed": len(failed_fixes),
             }
 
-            logger.info(f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패")
+            logger.info(
+                f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패"
+            )
             return result
 
         except Exception as e:
