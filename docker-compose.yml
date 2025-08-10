@@ -89,6 +89,9 @@ services:
       - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
       - "com.fortinet.nextrade.version=${VERSION:-latest}"
       - "com.fortinet.nextrade.managed-by=docker-compose"
+      # Watchtower 자동 업데이트 활성화
+      - "com.centurylinklabs.watchtower.enable=true"
+      - "com.centurylinklabs.watchtower.scope=fortinet-scope"
       # Traefik 통합 (선택사항)
       - "traefik.enable=${TRAEFIK_ENABLE:-false}"
       - "traefik.http.routers.fortinet.rule=Host(`${TRAEFIK_HOST:-fortinet.local}`)"

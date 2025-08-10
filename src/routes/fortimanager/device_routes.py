@@ -141,9 +141,7 @@ def get_device_interfaces(device_id):
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             interfaces = dummy_generator.generate_device_interfaces(device_id)
-            return jsonify(
-                {"device_id": device_id, "interfaces": interfaces, "mode": "test"}
-            )
+            return jsonify({"device_id": device_id, "interfaces": interfaces, "mode": "test"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -173,9 +171,7 @@ def get_device_monitoring(device_id):
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             monitoring_data = dummy_generator.generate_monitoring_data(device_id)
-            return jsonify(
-                {"device_id": device_id, "monitoring": monitoring_data, "mode": "test"}
-            )
+            return jsonify({"device_id": device_id, "monitoring": monitoring_data, "mode": "test"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
