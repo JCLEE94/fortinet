@@ -9,13 +9,7 @@ from utils.common_imports import Blueprint, jsonify, os, time
 from utils.unified_cache_manager import cached
 from utils.unified_logger import get_logger
 
-from .utils import (
-    format_uptime,
-    get_cpu_usage,
-    get_memory_usage,
-    get_system_uptime,
-    optimized_response,
-)
+from .utils import format_uptime, get_cpu_usage, get_memory_usage, get_system_uptime, optimized_response
 
 logger = get_logger(__name__)
 

@@ -12,13 +12,7 @@ from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 # Import from the new modular structure
 from .analytics import AdvancedAnalyticsEngine as ModularAnalyticsEngine
-from .analytics import (
-    AnalyticsInsight,
-    AnalyticsMetric,
-    AnalyticsType,
-    PredictiveModel,
-    ReportFormat,
-)
+from .analytics import AnalyticsInsight, AnalyticsMetric, AnalyticsType, PredictiveModel, ReportFormat
 
 logger = logging.getLogger(__name__)
 

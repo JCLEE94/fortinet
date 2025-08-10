@@ -6,13 +6,7 @@ Modular analytics and reporting system
 
 from .calculations import AnalyticsCalculator
 from .engine import AdvancedAnalyticsEngine
-from .models import (
-    AnalyticsInsight,
-    AnalyticsMetric,
-    AnalyticsType,
-    PredictiveModel,
-    ReportFormat,
-)
+from .models import AnalyticsInsight, AnalyticsMetric, AnalyticsType, PredictiveModel, ReportFormat
 from .predictive import PredictiveAnalytics
 from .reports import ReportGenerator
 
