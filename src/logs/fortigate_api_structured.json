@@ -1,3 +1,0 @@
-
-{"timestamp": "2025-08-08T06:40:32.947518+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}
-{"timestamp": "2025-08-09T07:21:13.369098+00:00", "level": "WARNING", "logger": "fortigate_api", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 119}

@@ -12,7 +12,7 @@ from typing import Dict, List
 sys.path.insert(0, os.path.dirname(__file__))
 
 
-def test_result(name: str, success: bool, details: str = "") -> Dict:
+def create_test_result(name: str, success: bool, details: str = "") -> Dict:
     """Create standardized test result"""
     return {
         "name": name,
@@ -27,11 +27,11 @@ def test_basic_imports() -> Dict:
     try:
         pass
 
-        return test_result(
+        return create_test_result(
             "Basic Imports", True, "All core modules imported successfully"
         )
     except Exception as e:
-        return test_result("Basic Imports", False, f"Import error: {str(e)}")
+        return create_test_result("Basic Imports", False, f"Import error: {str(e)}")
 
 
 def test_flask_app_creation() -> Dict:
@@ -41,14 +41,14 @@ def test_flask_app_creation() -> Dict:
 
         app = create_app()
         if app:
-            return test_result(
+            return create_test_result(
                 "Flask App Creation",
                 True,
                 f"App created with {len(app.blueprints)} blueprints",
             )
-        return test_result("Flask App Creation", False, "App creation returned None")
+        return create_test_result("Flask App Creation", False, "App creation returned None")
     except Exception as e:
-        return test_result("Flask App Creation", False, f"Error: {str(e)}")
+        return create_test_result("Flask App Creation", False, f"Error: {str(e)}")
 
 
 def test_api_clients() -> Dict:
@@ -63,13 +63,13 @@ def test_api_clients() -> Dict:
         FortiManagerAPIClient(host="127.0.0.1", username="test", password="test")
         FAZClient(host="127.0.0.1", username="test", password="test")
 
-        return test_result(
+        return create_test_result(
             "API Clients",
             True,
             "FortiGate, FortiManager, and FortiAnalyzer clients initialized",
         )
     except Exception as e:
-        return test_result("API Clients", False, f"Error: {str(e)}")
+        return create_test_result("API Clients", False, f"Error: {str(e)}")
 
 
 def test_fortimanager_advanced_hub() -> Dict:
@@ -88,18 +88,18 @@ def test_fortimanager_advanced_hub() -> Dict:
         ]
         for module in modules:
             if not hasattr(hub, module):
-                return test_result(
+                return create_test_result(
                     "FortiManager Advanced Hub", False, f"Missing module: {module}"
                 )
 
         capabilities = hub.get_module_capabilities()
-        return test_result(
+        return create_test_result(
             "FortiManager Advanced Hub",
             True,
             f"Hub initialized with {len(capabilities)} modules",
         )
     except Exception as e:
-        return test_result("FortiManager Advanced Hub", False, f"Error: {str(e)}")
+        return create_test_result("FortiManager Advanced Hub", False, f"Error: {str(e)}")
 
 
 def test_itsm_automation() -> Dict:
@@ -115,13 +115,13 @@ def test_itsm_automation() -> Dict:
         zones = len(engine.network_zones)
         devices = len(engine.firewall_devices)
 
-        return test_result(
+        return create_test_result(
             "ITSM Automation",
             True,
             f"Engine initialized with {zones} zones and {devices} devices",
         )
     except Exception as e:
-        return test_result("ITSM Automation", False, f"Error: {str(e)}")
+        return create_test_result("ITSM Automation", False, f"Error: {str(e)}")
 
 
 def test_monitoring_system() -> Dict:
@@ -135,13 +135,13 @@ def test_monitoring_system() -> Dict:
         get_monitor()
         RealtimeAlertSystem()
 
-        return test_result(
+        return create_test_result(
             "Monitoring System",
             True,
             "Unified manager, real-time monitor, and alert system initialized",
         )
     except Exception as e:
-        return test_result("Monitoring System", False, f"Error: {str(e)}")
+        return create_test_result("Monitoring System", False, f"Error: {str(e)}")
 
 
 def test_security_features() -> Dict:
@@ -153,13 +153,13 @@ def test_security_features() -> Dict:
         get_security_scanner()
         get_packet_sniffer_api()
 
-        return test_result(
+        return create_test_result(
             "Security Features",
             True,
             "Security scanner and packet sniffer API initialized",
         )
     except Exception as e:
-        return test_result("Security Features", False, f"Error: {str(e)}")
+        return create_test_result("Security Features", False, f"Error: {str(e)}")
 
 
 def test_data_pipeline() -> Dict:
@@ -173,13 +173,13 @@ def test_data_pipeline() -> Dict:
         FirewallRuleAnalyzer()
         PathVisualizer()
 
-        return test_result(
+        return create_test_result(
             "Data Pipeline",
             True,
             "Data transformer, analyzer, and visualizer initialized",
         )
     except Exception as e:
-        return test_result("Data Pipeline", False, f"Error: {str(e)}")
+        return create_test_result("Data Pipeline", False, f"Error: {str(e)}")
 
 
 def test_caching_system() -> Dict:
@@ -190,13 +190,13 @@ def test_caching_system() -> Dict:
         cache_manager = get_cache_manager()
 
         cache_stats = cache_manager.get_stats()
-        return test_result(
+        return create_test_result(
             "Caching System",
             True,
             f"Cache manager with {cache_stats['backends']} backends",
         )
     except Exception as e:
-        return test_result("Caching System", False, f"Error: {str(e)}")
+        return create_test_result("Caching System", False, f"Error: {str(e)}")
 
 
 def test_api_endpoints() -> Dict:
@@ -209,7 +209,7 @@ def test_api_endpoints() -> Dict:
             # Test health endpoint
             health_response = client.get("/api/health")
             if health_response.status_code != 200:
-                return test_result(
+                return create_test_result(
                     "API Endpoints",
                     False,
                     f"Health endpoint returned {health_response.status_code}",
@@ -218,17 +218,17 @@ def test_api_endpoints() -> Dict:
             # Test settings endpoint
             settings_response = client.get("/api/settings")
             if settings_response.status_code != 200:
-                return test_result(
+                return create_test_result(
                     "API Endpoints",
                     False,
                     f"Settings endpoint returned {settings_response.status_code}",
                 )
 
-            return test_result(
+            return create_test_result(
                 "API Endpoints", True, "Core API endpoints responding correctly"
             )
     except Exception as e:
-        return test_result("API Endpoints", False, f"Error: {str(e)}")
+        return create_test_result("API Endpoints", False, f"Error: {str(e)}")
 
 
 def run_comprehensive_feature_test() -> List[Dict]:

@@ -1,3 +1,0 @@
-
-{"timestamp": "2025-08-08T06:40:32.966158+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 309}
-{"timestamp": "2025-08-09T07:21:13.394593+00:00", "level": "INFO", "logger": "SessionManager", "message": "세션 매니저 초기화됨", "module": "session_manager", "function": "__init__", "line": 301}

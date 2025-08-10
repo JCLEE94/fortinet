@@ -210,6 +210,8 @@ class UnifiedCacheManager:
 
         # 백엔드 초기화
         self.backends = []
+        self.memory_cache = None
+        self.redis_cache = None
         self._init_backends()
 
         logger.info(f"캐시 매니저 초기화 완료: {len(self.backends)}개 백엔드")
@@ -256,6 +258,7 @@ class UnifiedCacheManager:
             )
             if redis_backend.connected:
                 self.backends.append(redis_backend)
+                self.redis_cache = redis_backend
 
         # 메모리 백엔드 (항상 마지막에 추가 - fallback)
         if self.config["memory"]["enabled"]:
@@ -263,6 +266,7 @@ class UnifiedCacheManager:
                 max_size=self.config["memory"]["max_size"]
             )
             self.backends.append(memory_backend)
+            self.memory_cache = memory_backend
 
         if not self.backends:
             logger.warning("사용 가능한 캐시 백엔드가 없음")

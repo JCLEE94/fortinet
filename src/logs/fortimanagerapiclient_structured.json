@@ -1,4 +1,0 @@
-{"timestamp": "2025-08-08T06:40:32.948295+00:00", "level": "WARNING", "logger": "fortimanagerapiclient", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 114}
-{"timestamp": "2025-08-08T06:40:32.949098+00:00", "level": "WARNING", "logger": "fortimanagerapiclient", "message": "🔓 SSL 검증 비활성화됨 - 호스트: None", "module": "base_api_client", "function": "__init__", "line": 114}
-{"timestamp": "2025-08-09T07:21:13.370026+00:00", "level": "WARNING", "logger": "fortimanagerapiclient", "message": "🔓 SSL 검증 비활성화됨 - 호스트: 127.0.0.1", "module": "base_api_client", "function": "__init__", "line": 119}
-{"timestamp": "2025-08-09T07:21:13.370721+00:00", "level": "WARNING", "logger": "fortimanagerapiclient", "message": "🔓 SSL 검증 비활성화됨 - 호스트: None", "module": "base_api_client", "function": "__init__", "line": 119}

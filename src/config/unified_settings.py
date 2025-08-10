@@ -74,8 +74,8 @@ class UnifiedSettings:
         self.validate_settings()
 
     def _get_app_mode(self) -> str:
-        """앱 모드 결정 - 항상 production"""
-        return "production"
+        """앱 모드 결정 - 환경변수 우선"""
+        return os.getenv("APP_MODE", "production")
 
     def _init_webapp_config(self) -> WebAppConfig:
         """웹앱 설정 초기화"""
@@ -116,8 +116,9 @@ class UnifiedSettings:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
-            # app_mode는 항상 production
-            self.app_mode = "production"
+            # app_mode는 환경변수를 우선 적용
+            if not os.getenv("APP_MODE"):
+                self.app_mode = data.get("app_mode", self.app_mode)
 
             # API 설정 업데이트
             self._update_api_from_json("fortimanager", data.get("fortimanager", {}))
