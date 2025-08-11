@@ -8,7 +8,7 @@ resources:
 
 images:
 - name: registry.jclee.me/fortinet
-  newTag: production-5a229a7-20250811-143422  # GitOps 자동 업데이트
+  newTag: f3699358
 
 replicas:
 - name: fortinet
