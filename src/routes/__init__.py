@@ -1,3 +1,0 @@
-"""
-Nextrade Fortigate - Route Modules
-"""
