@@ -150,7 +150,7 @@ class BasicLoggerStrategy(LoggerStrategy):
 
             # Fix permissions if needed
             if os.path.exists(log_file):
-                os.chmod(log_file, 0o666)
+                os.chmod(log_file, 0o644)  # Security fix: Use secure file permissions
 
         except Exception as e:
             # If file logging fails, log to console
@@ -233,7 +233,7 @@ class AdvancedLoggerStrategy(LoggerStrategy):
                 troubleshoot_file,
             ]:
                 if os.path.exists(file_path):
-                    os.chmod(file_path, 0o666)
+                    os.chmod(file_path, 0o644)  # Security fix: Use secure file permissions
 
         except Exception as e:
             # If file logging fails, log to console

@@ -6,10 +6,10 @@ Compliance reporting and dashboard generation
 
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from .compliance_rules import ComplianceRule, ComplianceRuleManager, ComplianceSeverity
 from .compliance_checker import ComplianceCheckResult, ComplianceStatus
+from .compliance_rules import ComplianceRuleManager, ComplianceSeverity
 
 
 class ComplianceReportGenerator:

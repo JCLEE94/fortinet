@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
+
 from .compliance_rules import ComplianceRule, ComplianceRuleManager, ComplianceSeverity, ComplianceStatus
 
 logger = logging.getLogger(__name__)

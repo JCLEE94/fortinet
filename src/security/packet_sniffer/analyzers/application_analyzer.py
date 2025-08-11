@@ -173,7 +173,7 @@ class ApplicationAnalyzer:
                 payload_str = payload.decode("utf-8", errors="ignore")
                 analysis["sample_content"] = payload_str[:100]  # 첫 100자만
                 analysis["line_count"] = payload_str.count("\n")
-            except:
+            except Exception:
                 pass
 
         return analysis

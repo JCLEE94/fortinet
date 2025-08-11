@@ -292,7 +292,8 @@ class AuthManager:
                 "id": 1,
             }
 
-            response = requests.post(login_url, json=login_data, verify=False, timeout=30)
+            # Security fix: Enable SSL verification (use verify=True or certificate path)
+            response = requests.post(login_url, json=login_data, verify=True, timeout=30)
 
             if response.status_code == 200:
                 data = response.json()
@@ -376,7 +377,7 @@ class AuthManager:
                 logout_url,
                 json=logout_data,
                 cookies=session.cookies,
-                verify=False,
+                verify=True,  # Security fix: Enable SSL verification
                 timeout=10,
             )
 

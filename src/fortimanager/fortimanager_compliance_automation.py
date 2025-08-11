@@ -10,9 +10,10 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
-from .compliance_rules import ComplianceRuleManager, ComplianceRule, ComplianceSeverity, ComplianceStatus
+
 from .compliance_checker import ComplianceChecker, ComplianceCheckResult
 from .compliance_reports import ComplianceReportGenerator
+from .compliance_rules import ComplianceRule, ComplianceRuleManager, ComplianceSeverity, ComplianceStatus
 
 logger = logging.getLogger(__name__)
 

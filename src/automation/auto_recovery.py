@@ -404,7 +404,11 @@ class AutoRecoveryEngine:
         try:
             logger.info(f"커스텀 명령 실행: {command}")
 
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=60)
+            # Security fix: Use shlex.split to avoid shell=True
+            import shlex
+
+            command_args = shlex.split(command)
+            result = subprocess.run(command_args, capture_output=True, text=True, timeout=60)
 
             if result.returncode == 0:
                 logger.info(f"명령 실행 성공: {command}")

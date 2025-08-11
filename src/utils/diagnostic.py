@@ -182,7 +182,7 @@ class DiagnosticTool:
                                     "method": "get",
                                     "params": [{"url": "/sys/status"}],
                                 },
-                                verify=False,
+                                verify=True,  # Security fix: Enable SSL verification
                                 timeout=5,
                             )
                             result["api_test"] = response.status_code == 200

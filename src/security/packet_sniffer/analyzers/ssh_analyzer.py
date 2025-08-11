@@ -6,7 +6,7 @@ SSH 연결 및 보안 분석
 
 import logging
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 

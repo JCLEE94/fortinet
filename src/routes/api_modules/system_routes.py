@@ -36,7 +36,8 @@ def health_check():
             build_json_path = "/app/build-info.json"
             if os.path.exists(build_json_path):
                 import json
-                with open(build_json_path, 'r') as f:
+
+                with open(build_json_path, "r") as f:
                     build_data = json.load(f)
                     build_info = {
                         "gitops_managed": build_data.get("gitops", {}).get("immutable", False),
@@ -45,7 +46,7 @@ def health_check():
                         "git_branch": build_data.get("git", {}).get("branch", "unknown"),
                         "build_timestamp": build_data.get("build", {}).get("timestamp", "unknown"),
                         "registry_image": build_data.get("registry", {}).get("full_image", "unknown"),
-                        "gitops_principles": build_data.get("gitops", {}).get("principles", [])
+                        "gitops_principles": build_data.get("gitops", {}).get("principles", []),
                     }
             else:
                 # 환경변수에서 GitOps 정보 가져오기 (Docker 환경)
@@ -56,7 +57,7 @@ def health_check():
                     "git_branch": os.environ.get("GIT_BRANCH", "unknown"),
                     "build_timestamp": os.environ.get("BUILD_TIMESTAMP", "unknown"),
                     "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
-                    "gitops_principles": ["declarative", "git-source", "pull-based", "immutable"]
+                    "gitops_principles": ["declarative", "git-source", "pull-based", "immutable"],
                 }
         except Exception as e:
             logger.warning(f"Failed to load build info: {e}")
@@ -85,7 +86,6 @@ def health_check():
                 gitops_status = "compliant"
             else:
                 gitops_status = "non-compliant"
-        
         health_status["gitops_status"] = gitops_status
 
         return jsonify(health_status)

@@ -300,7 +300,9 @@ class TroubleshootingLoop:
         try:
             # 캐시 정리
             subprocess.run(["sync"], check=True)
-            subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"], shell=True, check=True)
+            # Security fix: Use proper file writing instead of shell redirection
+            with open("/proc/sys/vm/drop_caches", "w") as f:
+                f.write("3")
 
             # 사용하지 않는 Docker 컨테이너 정리
             subprocess.run(["docker", "container", "prune", "-f"], check=True)
