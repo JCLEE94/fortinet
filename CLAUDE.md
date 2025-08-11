@@ -70,13 +70,15 @@ from src.utils.unified_logger import get_logger
 
 ### Local Development
 ```bash
-# Install dependencies
+# Install dependencies (supports pyproject.toml)
 pip install -r requirements.txt
+# OR with development dependencies
+pip install -e ".[dev]"
 
 # Run application (monolithic mode)
 cd src && python main.py --web
 
-# Run with mock mode
+# Run with mock mode (activates simple mock server on port 6666)
 APP_MODE=test python src/main.py --web
 
 # Run specific test categories
@@ -84,13 +86,19 @@ pytest -m "unit" -v                        # Unit tests only
 pytest -m "integration" -v                 # Integration tests only
 pytest -m "not slow" -v                    # Skip slow tests
 pytest tests/manual/ -v                    # Manual testing suite (26 files)
+pytest tests/functional/ -v                # Feature validation tests
 pytest --cov=src --cov-report=html -v      # With coverage
 
-# Code quality
+# Code quality (configured in pyproject.toml)
 black src/ && isort src/ && flake8 src/ --max-line-length=120 --ignore=E203,W503
 
+# Alternative: Use pyproject.toml configured tools
+python -m black src/
+python -m isort src/
+python -m flake8 src/
+
 # Run feature test (validates 10 core features)
-cd src && python3 test_features.py
+pytest tests/functional/test_features.py -v
 ```
 
 ### MSA Development
@@ -112,15 +120,22 @@ docker-compose -f docker-compose.msa.yml ps
 
 ### Docker Development
 ```bash
-# Build production image
+# Build production image (multi-stage build)
 docker build -f Dockerfile.production -t fortigate-nextrade:latest .
 
-# Run with mock mode
+# Run with mock mode (uses start.sh for production startup)
 docker run -d --name fortigate-nextrade \
   -p 7777:7777 \
   -e APP_MODE=test \
   -e OFFLINE_MODE=true \
+  -e WEB_APP_PORT=7777 \
   fortigate-nextrade:latest
+
+# Development with simple mock server
+docker run -d --name fortinet-debug \
+  -p 7777:7777 \
+  -v $(pwd)/dev-tools:/app/dev-tools \
+  python:3.11-slim python /app/dev-tools/simple-mock-server.py
 ```
 
 ### Deployment & Monitoring
@@ -174,6 +189,30 @@ hub = FortiManagerAdvancedHub(api_client)
 2. **Compliance Framework**: `hub.compliance_framework` - Automated compliance checks
 3. **Security Fabric**: `hub.security_fabric` - Integrated security management
 4. **Analytics Engine**: `hub.analytics_engine` - Advanced analytics and reporting
+
+### Connection Pool Management
+Located in `src/core/connection_pool.py`:
+- **connection_pool_manager**: Global connection pool for API clients
+- **Session reuse**: Prevents connection exhaustion
+- **Thread-safe**: Supports concurrent requests
+- **Auto-cleanup**: Handles connection lifecycle
+
+### Development & Automation Tools
+Located in `scripts/` directory with 50+ automation scripts:
+- **GitOps**: Complete GitOps pipeline setup and management
+- **Deployment**: Multi-environment deployment automation
+- **Testing**: Integration test runners and validation
+- **Infrastructure**: K8s, ArgoCD, Helm automation
+- **Monitoring**: Health checks and status monitoring
+
+Key scripts:
+```bash
+./scripts/deploy.sh                    # Main deployment script
+./scripts/gitops-deploy.sh            # GitOps deployment
+./scripts/setup-kong-routes.sh        # MSA API Gateway setup
+./scripts/healthcheck.sh              # Application health validation
+./dev-tools/simple-mock-server.py     # Container debugging server
+```
 
 ### Packet Sniffer System
 Located in `src/security/packet_sniffer/`:
@@ -350,10 +389,11 @@ argocd app sync fortinet --prune
 
 ### Testing Best Practices
 - Mark tests appropriately: `@pytest.mark.unit`, `@pytest.mark.integration`
-- Use fixtures for common test data
+- Use fixtures for common test data (defined in `tests/conftest.py`)
 - Mock external API calls in unit tests
 - Use `APP_MODE=test` for integration tests
-- Run the feature test to validate core functionality: `python src/test_features.py`
+- Run the feature test to validate core functionality: `pytest tests/functional/test_features.py -v`
+- Use custom Rust-style test framework: `@test_framework.test("description")`
 
 ## MSA Service Architecture
 
@@ -395,10 +435,16 @@ pytest tests/unit/test_specific.py -xvs
 ### Performance Testing
 ```bash
 # Run feature validation (10 core features)
-cd src && python3 test_features.py
+pytest tests/functional/test_features.py -v
 
-# Run integration test suite
+# Run integration test suite (comprehensive)
 python src/utils/test_master_integration_suite.py
+
+# Run MSA-specific tests
+pytest tests/msa/ -v
+
+# Run manual test suite (26 test files)
+pytest tests/manual/ -v
 ```
 
 ## High-Level Architecture
@@ -442,27 +488,112 @@ When `APP_MODE=test`, the system automatically:
 - Disables external API calls
 - Uses test database connections
 
+## Advanced Architecture Patterns
+
+### Flask Application Factory Pattern
+The system uses a sophisticated Flask application factory with blueprint modularity:
+```python
+def create_app():
+    app = Flask(__name__)
+    # Security configurations
+    # Blueprint registration
+    # Cache manager initialization
+    return app
+```
+- 8 blueprints handle domain-specific routing
+- Unified security headers and CSRF protection
+- Dynamic SocketIO integration based on OFFLINE_MODE
+
+### Offline-First Architecture
+**CRITICAL**: System automatically detects and adapts to offline environments:
+```python
+OFFLINE_MODE = (
+    os.getenv("OFFLINE_MODE", "false").lower() == "true"
+    or os.getenv("NO_INTERNET", "false").lower() == "true"
+    or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
+)
+```
+- Disables SocketIO, updates, and telemetry
+- Activates mock servers on port 6666
+- Uses JSON file storage instead of external databases
+
+### Unified Logging & Cache Architecture
+Located in `src/utils/`:
+- **unified_logger.py**: Centralized logging with structured JSON output
+- **unified_cache_manager.py**: Redis + memory fallback caching
+- **common_imports.py**: Centralized import management to reduce duplication
+
+### Security-First Design
+Multiple security layers implemented:
+- **Enhanced security**: `src/utils/enhanced_security.py`
+- **Security fixes**: `src/utils/security_fixes.py` (critical import at line 210)
+- **Security scanner**: `src/utils/security_scanner.py`
+- **Rate limiting**: Built into Flask routes
+- **CSRF protection**: Automatic token generation
+
+### Packet Analysis Engine Architecture
+Located in `src/security/packet_sniffer/`:
+```
+packet_sniffer/
+├── analyzers/           # Protocol-specific analyzers (8 modules)
+├── exporters/          # Multi-format data export (5 modules)  
+├── filters/            # BPF and advanced filtering (3 modules)
+├── inspectors/         # Deep packet inspection
+├── base_sniffer.py     # Core capture engine
+├── session_manager.py  # Stateful session tracking
+└── web_compatibility.py # Flask integration
+```
+
+### FortiManager Advanced Hub Integration
+Four-tier architecture accessible via hub pattern:
+```python
+from fortimanager.advanced_hub import FortiManagerAdvancedHub
+hub = FortiManagerAdvancedHub(api_client)
+
+# Access specialized modules
+hub.policy_orchestrator    # AI-driven policy management
+hub.compliance_framework   # Automated compliance checks  
+hub.security_fabric       # Integrated security management
+hub.analytics_engine      # Advanced analytics & reporting
+```
+
+### Configuration Hierarchy Pattern
+Strict 3-tier configuration loading:
+1. **data/config.json** (runtime configuration - highest priority)
+2. **Environment variables** (deployment-specific)
+3. **src/config/unified_settings.py** (application defaults)
+
+Each config module in `src/config/` handles specific aspects:
+- **services.py**: Service URLs and ports
+- **network.py**: Network configuration
+- **limits.py**: Resource limits and timeouts
+
 ## Recent Updates & Current State
 
 ### System Status
 - **ALL hardcoded values removed** - project uses environment variables
 - **Import paths fixed** - All files use relative imports within src/
-- **Feature test passing** - 10/10 core features verified
+- **Feature test passing** - 10/10 core features verified (tests/functional/test_features.py)
 - **NodePort standardized** - Consistent use of 30777
 - **MSA architecture implemented** - 7 microservices with full infrastructure
 - **Critical import bug fixed** - `src/utils/security_fixes.py:210`
 - **Docker security enhanced** - Non-root user enabled, bytecode compilation fixed
+- **Offline-first design** - Comprehensive fallback mechanisms implemented
 
 ### Code Quality Metrics
 - **Black formatting**: Applied to all Python files
-- **Import sorting**: Fixed with isort
+- **Import sorting**: Fixed with isort  
 - **Flake8 compliance**: 269 issues remaining (down from 338)
-- **Test coverage**: Growing (minimum 5% enforced)
+- **Test coverage**: Growing (minimum 5% enforced in pytest.ini)
 - **File count**: 142 Python files in src/, 76 test files
+- **Custom test framework**: Rust-style testing in `src/utils/integration_test_framework.py`
 
 ### Deployment Notes
 - Harbor Registry path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
-- Helm chart version: 1.0.5
+- Helm chart version: 1.0.5 with Traefik ingress
 - TLS currently disabled due to certificate issues
-- Self-hosted GitHub Actions runners in use
-- GitOps pipeline: Test → Build → Helm → ArgoCD
+- Self-hosted GitHub Actions runners in `/home/jclee/app/github_runner/`
+- GitOps pipeline: Test → Build → Kustomize → ArgoCD sync
+- **ArgoCD Image Updater**: Automated image tag updates via Kustomize
+- **Package management**: Supports both requirements.txt and pyproject.toml (version 1.0.5)
+- **Production startup**: Uses start.sh script with Gunicorn for production deployment

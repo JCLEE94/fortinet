@@ -1,14 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: fortinet
+namespace: fortinet-prod
 
 resources:
 - ../../base
 
 images:
 - name: registry.jclee.me/fortinet
-  newTag: latest  # ArgoCD에서 자동 업데이트
+  newTag: production-5a229a7-20250811-143422  # GitOps 자동 업데이트
 
 replicas:
 - name: fortinet

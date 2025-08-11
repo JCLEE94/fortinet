@@ -13,7 +13,7 @@ metadata:
     deployment.kubernetes.io/revision: "1"
     gitops.argocd.argoproj.io/managed: "true"
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -64,11 +64,11 @@ spec:
         resources:
           limits:
             cpu: 1000m
-            memory: 2Gi
+            memory: 512Mi
             ephemeral-storage: 1Gi
           requests:
             cpu: 500m
-            memory: 1Gi
+            memory: 256Mi
             ephemeral-storage: 500Mi
         livenessProbe:
           httpGet:
