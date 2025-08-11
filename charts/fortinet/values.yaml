@@ -65,6 +65,8 @@ env:
   WEB_APP_PORT: "7777"
   APP_MODE: production
   OFFLINE_MODE: "false"
+  SECRET_KEY: "fortinet-secure-key-2025-production"
+  FLASK_ENV: "production"
   MICROSERVICE_NAME: fortinet
   CLUSTER_NAME: microservices-cluster
   NAMESPACE: fortinet
