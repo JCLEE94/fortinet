@@ -221,8 +221,8 @@ class UnifiedCacheManager:
         # 환경 변수 기반 기본 설정
         config = {
             "redis": {
-                "enabled": os.getenv("REDIS_ENABLED", "false").lower() == "true",
-                "host": os.getenv("REDIS_HOST", "localhost"),
+                "enabled": os.getenv("REDIS_ENABLED", "true").lower() == "true",
+                "host": os.getenv("REDIS_HOST", "redis"),
                 "port": int(os.getenv("REDIS_PORT", "6379")),
                 "db": int(os.getenv("REDIS_DB", "0")),
                 "password": os.getenv("REDIS_PASSWORD"),

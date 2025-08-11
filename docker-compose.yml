@@ -6,12 +6,51 @@
 version: '3.8'
 
 services:
+  # Redis 캐시 서버
+  redis:
+    image: redis:7.2-alpine
+    container_name: ${REDIS_CONTAINER_NAME:-fortinet-redis}
+    hostname: redis
+    restart: unless-stopped
+    
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    
+    volumes:
+      - fortinet-redis-data:/data:rw
+    
+    networks:
+      - fortinet-network
+    
+    # Redis 헬스체크
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    
+    # 보안 옵션
+    security_opt:
+      - no-new-privileges:true
+    
+    labels:
+      - "com.fortinet.nextrade.service=redis"
+      - "com.fortinet.nextrade.environment=${APP_MODE:-production}"
+
   # 메인 애플리케이션 컨테이너
   fortinet:
     image: ${DOCKER_REGISTRY:-registry.jclee.me}/${DOCKER_IMAGE_NAME:-fortinet}:${DOCKER_TAG:-latest}
     container_name: ${CONTAINER_NAME:-fortinet}
     hostname: ${HOSTNAME:-fortinet}
     restart: unless-stopped
+    
+    depends_on:
+      redis:
+        condition: service_healthy
     
     ports:
       - "${WEB_APP_PORT:-7777}:${WEB_APP_PORT:-7777}"
@@ -46,6 +85,13 @@ services:
       - WORKER_CONNECTIONS=${WORKER_CONNECTIONS:-1000}
       - MAX_REQUESTS=${MAX_REQUESTS:-1000}
       - TIMEOUT=${TIMEOUT:-120}
+      
+      # Redis 캐시 설정
+      - REDIS_ENABLED=${REDIS_ENABLED:-true}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_DB=${REDIS_DB:-0}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
       
       # 보안 설정
       - SECRET_KEY=${SECRET_KEY:-change-this-secure-key}
@@ -168,3 +214,12 @@ volumes:
       - "com.fortinet.nextrade.volume=uploads"
       - "com.fortinet.nextrade.description=User uploaded files"
       - "com.fortinet.nextrade.backup=daily"
+
+  # Redis 데이터
+  fortinet-redis-data:
+    name: ${REDIS_DATA_VOLUME_NAME:-fortinet-redis-data}
+    driver: local
+    labels:
+      - "com.fortinet.nextrade.volume=redis-data"
+      - "com.fortinet.nextrade.description=Redis cache data"
+      - "com.fortinet.nextrade.backup=weekly"
