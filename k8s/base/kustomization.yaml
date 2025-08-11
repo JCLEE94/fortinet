@@ -5,7 +5,11 @@ metadata:
   name: fortinet-base
   annotations:
     gitops.argocd.argoproj.io/managed: "true"
+    gitops.principle.declarative: "true"
+    gitops.principle.git-source: "https://github.com/JCLEE94/fortinet"
+    gitops.principle.pull-based: "true"
 
+# GitOps 4원칙 준수: 선언적 구성 (Declarative)
 resources:
 - namespace.yaml
 - serviceaccount.yaml
@@ -13,21 +17,37 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
+- hpa.yaml
+- servicemonitor.yaml
 
+# GitOps 4원칙 준수: 불변 인프라 (Immutable) 
+# Base에서는 고정 태그, overlay에서 동적 태그 적용
 images:
 - name: registry.jclee.me/fortinet
-  newTag: latest
+  newTag: base-stable-v1.0.0
 
+# GitOps 4원칙 준수: Git이 유일한 진실의 소스 (Git as Source of Truth)
 labels:
 - includeSelectors: true
   pairs:
     app: fortinet
     app.kubernetes.io/name: fortinet
+    app.kubernetes.io/component: backend-api
+    app.kubernetes.io/part-of: fortigate-nextrade
     app.kubernetes.io/managed-by: argocd
     gitops.strategy: pull-based
+    gitops.source: git
+    gitops.immutable: "true"
 
+# GitOps 4원칙 준수: 모든 리소스에 GitOps 메타데이터 적용
 commonAnnotations:
   gitops.argocd.argoproj.io/managed: "true"
+  gitops.principle.declarative: "configuration-as-code"
+  gitops.principle.git-source-truth: "single-source-of-truth"
+  gitops.principle.pull-based: "controller-driven"
+  gitops.principle.immutable: "versioned-deployments"
   deployment.kubernetes.io/managed-by: "argocd"
+  app.version: "1.1.5"
 
+# 기본 네임스페이스는 overlay에서 재정의됨
 namespace: fortinet

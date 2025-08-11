@@ -19,7 +19,7 @@ system_bp = Blueprint("api_system", __name__)
 @system_bp.route("/health", methods=["GET"])
 @cached(ttl=10)  # Short cache for health checks
 def health_check():
-    """System health check endpoint"""
+    """GitOps 4원칙 준수: 불변 빌드 정보 포함 Health Check"""
     try:
         health_status = {
             "status": "healthy",
@@ -29,7 +29,42 @@ def health_check():
             "environment": getattr(unified_settings, "APP_MODE", "production"),
         }
 
-        # Add additional health metrics
+        # GitOps 불변 빌드 정보 추가
+        build_info = {}
+        try:
+            # build-info.json 파일에서 GitOps 메타데이터 읽기
+            build_json_path = "/app/build-info.json"
+            if os.path.exists(build_json_path):
+                import json
+                with open(build_json_path, 'r') as f:
+                    build_data = json.load(f)
+                    build_info = {
+                        "gitops_managed": build_data.get("gitops", {}).get("immutable", False),
+                        "immutable_tag": build_data.get("build", {}).get("immutable_tag", "unknown"),
+                        "git_sha": build_data.get("git", {}).get("sha", "unknown"),
+                        "git_branch": build_data.get("git", {}).get("branch", "unknown"),
+                        "build_timestamp": build_data.get("build", {}).get("timestamp", "unknown"),
+                        "registry_image": build_data.get("registry", {}).get("full_image", "unknown"),
+                        "gitops_principles": build_data.get("gitops", {}).get("principles", [])
+                    }
+            else:
+                # 환경변수에서 GitOps 정보 가져오기 (Docker 환경)
+                build_info = {
+                    "gitops_managed": os.environ.get("GITOPS_MANAGED", "false").lower() == "true",
+                    "immutable_tag": os.environ.get("IMMUTABLE_TAG", "unknown"),
+                    "git_sha": os.environ.get("GIT_SHA", "unknown"),
+                    "git_branch": os.environ.get("GIT_BRANCH", "unknown"),
+                    "build_timestamp": os.environ.get("BUILD_TIMESTAMP", "unknown"),
+                    "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
+                    "gitops_principles": ["declarative", "git-source", "pull-based", "immutable"]
+                }
+        except Exception as e:
+            logger.warning(f"Failed to load build info: {e}")
+            build_info = {"error": "build info unavailable"}
+
+        health_status["build_info"] = build_info
+
+        # 시스템 메트릭 추가
         try:
             memory = get_memory_usage()
             cpu_usage = get_cpu_usage()
@@ -42,6 +77,16 @@ def health_check():
         except Exception as e:
             logger.warning(f"Failed to get system metrics: {e}")
             health_status["metrics"] = {"error": "metrics unavailable"}
+
+        # GitOps 배포 검증
+        gitops_status = "unknown"
+        if build_info.get("gitops_managed"):
+            if build_info.get("immutable_tag", "").startswith(("production-", "development-", "staging-")):
+                gitops_status = "compliant"
+            else:
+                gitops_status = "non-compliant"
+        
+        health_status["gitops_status"] = gitops_status
 
         return jsonify(health_status)
 

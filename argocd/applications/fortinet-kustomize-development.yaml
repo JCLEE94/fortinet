@@ -1,0 +1,80 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet-development
+  namespace: argocd
+  annotations:
+    # GitOps 4원칙 준수: 개발환경도 불변 이미지 사용
+    argocd-image-updater.argoproj.io/image-list: fortinet=registry.jclee.me/fortinet
+    argocd-image-updater.argoproj.io/fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/fortinet.allow-tags: regexp:^development-[0-9]{8}-[0-9]{6}.*$
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
+    argocd-image-updater.argoproj.io/fortinet.pull-secret: pullsecret:argocd/harbor-registry
+    # GitOps 메타데이터
+    gitops.argocd.argoproj.io/managed: "true"
+    gitops.principle.declarative: "true"
+    gitops.principle.git-source: "https://github.com/JCLEE94/fortinet"
+    gitops.principle.pull-based: "true"
+    gitops.principle.immutable: "true"
+  labels:
+    app: fortinet
+    environment: development
+    gitops.strategy: pull-based
+spec:
+  project: default
+  
+  # GitOps 4원칙 준수: Git이 유일한 진실의 소스 (Git as Source of Truth)
+  source:
+    repoURL: https://github.com/JCLEE94/fortinet
+    targetRevision: HEAD
+    path: k8s/overlays/development
+  
+  # GitOps 4원칙 준수: Pull 기반 배포 (Pull-based Deployment)
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet-dev
+  
+  # GitOps 4원칙 준수: 개발환경 빠른 동기화 설정
+  syncPolicy:
+    automated:
+      prune: true      # 삭제된 리소스 자동 제거
+      selfHeal: true   # 드리프트 자동 수정
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true           # 네임스페이스 자동 생성
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true       # 변경된 리소스만 적용
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=false         # Client-side apply 사용
+    retry:
+      limit: 3  # 개발환경은 빠른 실패
+      backoff:
+        duration: 3s
+        factor: 1.5
+        maxDuration: 1m
+
+  # 개발환경 특화: 더 관대한 차이점 무시
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+    - /spec/template/spec/containers/0/env  # 개발환경 환경변수 변경 허용
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP
+  - group: ""
+    kind: ConfigMap
+    jsonPointers:
+    - /data  # 개발환경 ConfigMap 변경 허용
+
+  # 개발환경 리비전 히스토리 제한 (리소스 절약)
+  revisionHistoryLimit: 3
+
+  # 개발환경 빠른 상태 체크
+  health:
+    syncPolicy:
+      - timeout: 60  # 1분 타임아웃

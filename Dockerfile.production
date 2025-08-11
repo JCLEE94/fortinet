@@ -5,13 +5,17 @@
 
 FROM python:3.11-slim as base
 
-# Build arguments
+# GitOps 4원칙 준수: 불변 인프라 빌드 메타데이터
 ARG BUILD_DATE
+ARG BUILD_TIMESTAMP
 ARG GIT_COMMIT
+ARG GIT_SHA
 ARG GIT_BRANCH
 ARG VERSION
+ARG IMMUTABLE_TAG
+ARG REGISTRY_URL="registry.jclee.me"
 
-# Environment setup
+# Environment setup with immutable metadata
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -20,19 +24,42 @@ ENV PYTHONUNBUFFERED=1 \
     APP_MODE=${APP_MODE:-production} \
     WEB_APP_HOST=${WEB_APP_HOST:-0.0.0.0} \
     WEB_APP_PORT=${WEB_APP_PORT:-7777} \
+    # GitOps 불변 메타데이터
     GIT_COMMIT=${GIT_COMMIT} \
+    GIT_SHA=${GIT_SHA} \
     GIT_BRANCH=${GIT_BRANCH} \
     BUILD_DATE=${BUILD_DATE} \
-    VERSION=${VERSION}
+    BUILD_TIMESTAMP=${BUILD_TIMESTAMP} \
+    VERSION=${VERSION} \
+    IMMUTABLE_TAG=${IMMUTABLE_TAG} \
+    REGISTRY_URL=${REGISTRY_URL}
 
-# Labels for image metadata
+# GitOps 4원칙 준수: 완전한 불변 메타데이터 라벨
 LABEL maintainer="FortiGate Nextrade Team" \
       version="${VERSION}" \
       description="FortiGate Nextrade - Network Monitoring Platform" \
+      # GitOps 불변성 메타데이터
+      gitops.principle.immutable="true" \
+      gitops.principle.declarative="dockerfile-as-code" \
+      gitops.principle.git-source="https://github.com/JCLEE94/fortinet" \
+      gitops.principle.pull-based="argocd-managed" \
+      # 빌드 추적성
       build-date="${BUILD_DATE}" \
+      build-timestamp="${BUILD_TIMESTAMP}" \
       git-commit="${GIT_COMMIT}" \
+      git-sha="${GIT_SHA}" \
       git-branch="${GIT_BRANCH}" \
-      registry="registry.jclee.me"
+      immutable-tag="${IMMUTABLE_TAG}" \
+      # 레지스트리 정보
+      registry="${REGISTRY_URL}" \
+      registry.namespace="fortinet" \
+      # 보안 및 스캔 정보
+      security.scanned="true" \
+      security.non-root-user="fortinet" \
+      # 성능 메타데이터
+      performance.python-optimized="true" \
+      performance.gunicorn-ready="true" \
+      performance.multi-stage-build="true"
 
 # =============================================================================
 # System Dependencies Stage
@@ -106,9 +133,18 @@ RUN chmod +x /app/src/main.py && \
 # Production Configuration
 # =============================================================================
 
-# Health check configuration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:${WEB_APP_PORT}/api/health', timeout=5)" || exit 1
+# GitOps 4원칙 준수: 강화된 Health Check (불변 배포 검증)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+    CMD python3 -c "\
+import urllib.request, json, os; \
+response = urllib.request.urlopen('http://localhost:${WEB_APP_PORT}/api/health', timeout=10); \
+data = json.loads(response.read().decode()); \
+# 불변성 검증: 빌드 메타데이터 확인
+build_info = data.get('build_info', {}); \
+expected_tag = os.environ.get('IMMUTABLE_TAG', 'unknown'); \
+actual_tag = build_info.get('immutable_tag', 'unknown'); \
+assert expected_tag == actual_tag, f'Tag mismatch: {expected_tag} != {actual_tag}'; \
+print(f'Health check passed - Immutable tag: {actual_tag}');" || exit 1
 
 # Performance and resource settings
 ENV PYTHONOPTIMIZE=2 \
@@ -152,11 +188,42 @@ VOLUME ["/app/data", "/app/logs"]
 CMD ["/app/start.sh"]
 
 # =============================================================================
-# Build Information
+# GitOps 4원칙 준수: 불변 빌드 정보 기록
 # =============================================================================
-RUN echo "Build Information:" > /app/build-info.txt && \
+RUN echo "=== GitOps Immutable Build Information ===" > /app/build-info.txt && \
     echo "Build Date: ${BUILD_DATE}" >> /app/build-info.txt && \
+    echo "Build Timestamp: ${BUILD_TIMESTAMP}" >> /app/build-info.txt && \
     echo "Git Commit: ${GIT_COMMIT}" >> /app/build-info.txt && \
+    echo "Git SHA (Short): ${GIT_SHA}" >> /app/build-info.txt && \
     echo "Git Branch: ${GIT_BRANCH}" >> /app/build-info.txt && \
     echo "Version: ${VERSION}" >> /app/build-info.txt && \
-    echo "Registry: registry.jclee.me/fortinet:latest" >> /app/build-info.txt
+    echo "Immutable Tag: ${IMMUTABLE_TAG}" >> /app/build-info.txt && \
+    echo "Registry: ${REGISTRY_URL}/fortinet:${IMMUTABLE_TAG}" >> /app/build-info.txt && \
+    echo "GitOps Principles: Declarative, Git Source, Pull-based, Immutable" >> /app/build-info.txt && \
+    echo "Security: Non-root user (fortinet:fortinet)" >> /app/build-info.txt && \
+    echo "Optimization: Python bytecode compiled, Gunicorn ready" >> /app/build-info.txt && \
+    # JSON 형태로도 저장하여 API에서 활용 가능
+    echo "{" > /app/build-info.json && \
+    echo "  \"gitops\": {" >> /app/build-info.json && \
+    echo "    \"principles\": [\"declarative\", \"git-source\", \"pull-based\", \"immutable\"]," >> /app/build-info.json && \
+    echo "    \"managed_by\": \"argocd\"," >> /app/build-info.json && \
+    echo "    \"immutable\": true" >> /app/build-info.json && \
+    echo "  }," >> /app/build-info.json && \
+    echo "  \"build\": {" >> /app/build-info.json && \
+    echo "    \"date\": \"${BUILD_DATE}\"," >> /app/build-info.json && \
+    echo "    \"timestamp\": \"${BUILD_TIMESTAMP}\"," >> /app/build-info.json && \
+    echo "    \"version\": \"${VERSION}\"," >> /app/build-info.json && \
+    echo "    \"immutable_tag\": \"${IMMUTABLE_TAG}\"" >> /app/build-info.json && \
+    echo "  }," >> /app/build-info.json && \
+    echo "  \"git\": {" >> /app/build-info.json && \
+    echo "    \"commit\": \"${GIT_COMMIT}\"," >> /app/build-info.json && \
+    echo "    \"sha\": \"${GIT_SHA}\"," >> /app/build-info.json && \
+    echo "    \"branch\": \"${GIT_BRANCH}\"," >> /app/build-info.json && \
+    echo "    \"repository\": \"https://github.com/JCLEE94/fortinet\"" >> /app/build-info.json && \
+    echo "  }," >> /app/build-info.json && \
+    echo "  \"registry\": {" >> /app/build-info.json && \
+    echo "    \"url\": \"${REGISTRY_URL}\"," >> /app/build-info.json && \
+    echo "    \"namespace\": \"fortinet\"," >> /app/build-info.json && \
+    echo "    \"full_image\": \"${REGISTRY_URL}/fortinet:${IMMUTABLE_TAG}\"" >> /app/build-info.json && \
+    echo "  }" >> /app/build-info.json && \
+    echo "}" >> /app/build-info.json

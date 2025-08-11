@@ -90,8 +90,8 @@ class ConfigMigration:
             self.base_dir / "src" / "routes" / "fortimanager_routes.py",
         ]
 
-        old_import = "from src.config.settings import settings"
-        new_import = "from src.config.unified_settings import unified_settings as settings"
+        old_import = "from config.settings import settings"
+        new_import = "from config.unified_settings import unified_settings as settings"
 
         for file_path in files_to_update:
             if file_path.exists():

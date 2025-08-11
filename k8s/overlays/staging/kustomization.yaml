@@ -1,11 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# GitOps 4원칙 준수: 환경별 네임스페이스 분리
 namespace: fortinet-staging
 
 resources:
 - ../../base
 
+# 스테이징 환경 서비스 포트 패치 (충돌 방지)
 patches:
 - target:
     kind: Service
@@ -13,13 +15,41 @@ patches:
   patch: |-
     - op: replace
       path: /spec/ports/0/nodePort
-      value: 30881
+      value: 30990  # 스테이징 전용 포트
 
+# GitOps 4원칙 준수: 불변 이미지 태그 (스테이징 환경)
+# 스테이징은 운영과 동일한 이미지를 사전 테스트
 images:
 - name: registry.jclee.me/fortinet
-  newTag: staging-latest
+  newTag: staging-20250811-151500-pre-prod  # 불변 태그 (Immutable)
 
+# 스테이징 환경 중간 규모 설정
+replicas:
+- name: fortinet
+  count: 2  # 스테이징 환경 중간 규모
+
+# 스테이징 환경 라벨링
 labels:
 - includeSelectors: true
   pairs:
     environment: staging
+    tier: backend
+    stability: testing
+    deployment.type: blue-green
+    gitops.strategy: pull-based
+    gitops.environment: staging
+    monitoring.enabled: "true"
+    testing.enabled: "true"
+
+# GitOps 스테이징 환경 메타데이터
+commonAnnotations:
+  gitops.argocd.argoproj.io/managed: "true"
+  gitops.environment: staging
+  gitops.stability: testing
+  gitops.immutable-tag: "staging-20250811-151500"
+  deployment.strategy: blue-green
+  testing.pre-production: "true"
+  monitoring.prometheus.io/scrape: "true"
+  monitoring.prometheus.io/port: "7777"
+  security.policy: moderate
+  app.mode: "staging"

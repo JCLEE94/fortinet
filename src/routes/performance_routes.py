@@ -13,7 +13,7 @@ from utils.security import rate_limit
 from utils.unified_cache_manager import get_cache_manager
 from utils.unified_logger import get_logger
 
-# from src.utils.api_optimizer import get_api_optimizer, optimized_response
+# from utils.api_optimizer import get_api_optimizer, optimized_response
 
 
 # Dummy decorator to replace optimized_response

@@ -1,0 +1,126 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: fortinet-project
+  namespace: argocd
+  annotations:
+    gitops.argocd.argoproj.io/managed: "true"
+    gitops.principle.declarative: "true"
+    gitops.principle.git-source: "https://github.com/JCLEE94/fortinet"
+    gitops.principle.pull-based: "true"
+    gitops.principle.immutable: "true"
+  labels:
+    project: fortinet
+    team: nextrade
+    gitops.strategy: pull-based
+spec:
+  # GitOps 보안: 프로젝트별 접근 제한
+  description: "FortiGate Nextrade GitOps Project - Multi-Environment Deployment"
+  
+  # GitOps 4원칙 준수: Git이 유일한 진실의 소스
+  sourceRepos:
+  - 'https://github.com/JCLEE94/fortinet'
+  - 'https://charts.jclee.me'  # Helm Chart Repository
+  - 'registry.jclee.me/*'      # Container Registry
+  
+  # 허용된 배포 대상 (환경별 네임스페이스)
+  destinations:
+  - namespace: fortinet-dev
+    server: https://kubernetes.default.svc
+    name: development
+  - namespace: fortinet-staging
+    server: https://kubernetes.default.svc
+    name: staging
+  - namespace: fortinet-prod
+    server: https://kubernetes.default.svc
+    name: production
+  
+  # GitOps 보안 정책: 클러스터 리소스 제한
+  clusterResourceWhitelist:
+  - group: ""
+    kind: Namespace
+  - group: "rbac.authorization.k8s.io"
+    kind: ClusterRole
+  - group: "rbac.authorization.k8s.io"
+    kind: ClusterRoleBinding
+  - group: "apiextensions.k8s.io"
+    kind: CustomResourceDefinition
+  
+  # 허용된 네임스페이스 리소스
+  namespaceResourceWhitelist:
+  - group: ""
+    kind: ConfigMap
+  - group: ""
+    kind: Secret
+  - group: ""
+    kind: Service
+  - group: ""
+    kind: ServiceAccount
+  - group: "apps"
+    kind: Deployment
+  - group: "apps"
+    kind: ReplicaSet
+  - group: "autoscaling"
+    kind: HorizontalPodAutoscaler
+  - group: "networking.k8s.io"
+    kind: Ingress
+  - group: "monitoring.coreos.com"
+    kind: ServiceMonitor
+  - group: "monitoring.coreos.com"
+    kind: PrometheusRule
+  
+  # GitOps 보안: 리소스 제한 정책
+  resourceQuota:
+    hard:
+      requests.cpu: "4"      # 최대 4 CPU
+      requests.memory: 8Gi   # 최대 8GB 메모리  
+      persistentvolumeclaims: "5"
+      services.nodeports: "10"
+  
+  # 환경별 동기화 설정
+  syncWindows:
+  - kind: allow
+    schedule: '0 9-17 * * 1-5'  # 평일 9-17시만 운영 배포 허용
+    duration: 8h
+    applications:
+    - fortinet-production
+    manualSync: false
+  - kind: allow
+    schedule: '* * * * *'       # 개발환경은 항상 배포 허용
+    duration: 24h
+    applications:
+    - fortinet-development
+    - fortinet-staging
+    manualSync: true
+  
+  # 역할 기반 접근 제어 (RBAC)
+  roles:
+  - name: developer
+    description: Development environment access
+    policies:
+    - p, proj:fortinet-project:developer, applications, get, fortinet-project/fortinet-development, allow
+    - p, proj:fortinet-project:developer, applications, sync, fortinet-project/fortinet-development, allow
+    - p, proj:fortinet-project:developer, applications, action/*, fortinet-project/fortinet-development, allow
+    groups:
+    - fortinet-developers
+  
+  - name: devops
+    description: Full project access for DevOps team
+    policies:
+    - p, proj:fortinet-project:devops, applications, *, fortinet-project/*, allow
+    - p, proj:fortinet-project:devops, repositories, *, *, allow
+    groups:
+    - fortinet-devops
+    - fortinet-admin
+  
+  - name: readonly
+    description: Read-only access for monitoring
+    policies:
+    - p, proj:fortinet-project:readonly, applications, get, fortinet-project/*, allow
+    - p, proj:fortinet-project:readonly, logs, get, fortinet-project/*, allow
+    groups:
+    - fortinet-monitoring
+  
+  # 서명 검증 (이미지 보안)
+  signatureKeys:
+  - keyID: registry.jclee.me/fortinet

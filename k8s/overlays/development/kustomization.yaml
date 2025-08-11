@@ -1,11 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# GitOps 4원칙 준수: 환경별 네임스페이스 분리
 namespace: fortinet-dev
 
 resources:
 - ../../base
 
+# 개발환경 서비스 포트 패치 (충돌 방지)
 patches:
 - target:
     kind: Service
@@ -15,11 +17,39 @@ patches:
       path: /spec/ports/0/nodePort
       value: 30880
 
+# GitOps 4원칙 준수: 불변 이미지 태그 (개발환경도 불변 태그 적용)
+# 개발환경에서도 불변성 원칙 적용 (latest 태그 금지)
 images:
 - name: registry.jclee.me/fortinet
-  newTag: dev-latest
+  newTag: development-20250811-151400-dev-build  # 불변 태그 (Immutable)
 
+# 개발환경 단일 인스턴스 설정
+replicas:
+- name: fortinet
+  count: 1  # 개발환경 리소스 최적화
+
+# 개발환경 라벨링
 labels:
 - includeSelectors: true
   pairs:
     environment: development
+    tier: backend
+    stability: experimental
+    deployment.type: recreate
+    gitops.strategy: pull-based
+    gitops.environment: development
+    monitoring.enabled: "true"
+    debug.enabled: "true"
+
+# GitOps 개발환경 메타데이터
+commonAnnotations:
+  gitops.argocd.argoproj.io/managed: "true"
+  gitops.environment: development
+  gitops.stability: experimental
+  gitops.immutable-tag: "development-20250811-151400"
+  deployment.strategy: recreate
+  development.fast-iteration: "true"
+  monitoring.prometheus.io/scrape: "true"
+  monitoring.prometheus.io/port: "7777"
+  security.policy: permissive
+  app.mode: "test"

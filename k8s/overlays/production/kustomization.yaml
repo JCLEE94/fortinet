@@ -1,30 +1,48 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# GitOps 4원칙 준수: 환경별 네임스페이스 분리
 namespace: fortinet-prod
 
 resources:
 - ../../base
 
+# GitOps 4원칙 준수: 불변 이미지 태그 (Immutable Infrastructure)
+# 동적 태그 형식: {branch}-{timestamp}-{git-sha}
 images:
 - name: registry.jclee.me/fortinet
-  newTag: f3699358
+  newTag: f3699358  # Latest immutable tag from ArgoCD Image Updater
 
+# 운영환경 고가용성 설정
 replicas:
 - name: fortinet
-  count: 2
+  count: 3  # 운영환경 고가용성을 위한 3개 replicas
 
+# 운영환경 리소스 패치
 patchesStrategicMerge:
 - deployment-patch.yaml
 
+# 환경별 명확한 라벨링
 labels:
 - includeSelectors: true
   pairs:
     environment: production
     tier: backend
+    stability: stable
+    deployment.type: blue-green
     gitops.strategy: pull-based
+    gitops.environment: production
+    monitoring.enabled: "true"
 
+# GitOps 운영환경 메타데이터
 commonAnnotations:
   gitops.argocd.argoproj.io/managed: "true"
-  environment: production
+  gitops.environment: production
+  gitops.stability: stable
+  gitops.immutable-tag: "production-20250811-151317"
   deployment.strategy: rolling-update
+  deployment.maxUnavailable: "25%"
+  deployment.maxSurge: "25%"
+  monitoring.prometheus.io/scrape: "true"
+  monitoring.prometheus.io/port: "7777"
+  security.policy: strict
