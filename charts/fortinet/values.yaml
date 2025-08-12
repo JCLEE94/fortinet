@@ -1,10 +1,11 @@
-# MSA 기본 설정 (jclee.me 인프라 최적화)
-replicaCount: 1
+# FortiGate Nextrade Enterprise 설정 (v1.2.0)
+# GitOps 파이프라인 최적화 버전
+replicaCount: 2
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxUnavailable: 1
-    maxSurge: 1
+    maxUnavailable: 25%
+    maxSurge: 25%
 
 image:
   repository: registry.jclee.me/fortinet
@@ -40,15 +41,15 @@ ingress:
       hosts:
         - fortinet.jclee.me
 
-# MSA 리소스 최적화 (보안 강화)
+# Enterprise 리소스 최적화 (Production Grade)
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 1000m
+    memory: 1024Mi
     ephemeral-storage: 2Gi
   requests:
-    cpu: 100m
-    memory: 128Mi
+    cpu: 200m
+    memory: 256Mi
     ephemeral-storage: 1Gi
 
 # HPA (Horizontal Pod Autoscaler)

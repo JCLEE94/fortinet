@@ -1,25 +1,59 @@
 #!/bin/bash
 
-# ArgoCD Initial Setup Script
+# ArgoCD GitOps Setup Script - 보안 강화 버전
 # FortiGate Nextrade 프로젝트를 위한 ArgoCD 설정
+# 모든 민감한 정보는 환경 변수로 관리
 
 set -e
 
-# Configuration
-ARGOCD_SERVER="argo.jclee.me"
-ADMIN_USER="admin"
-ADMIN_PASS="bingogo1"
-NEW_USER="jclee"
-NEW_USER_PASS="bingogo1"
-GITHUB_USER="JCLEE94"
-GITHUB_TOKEN="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"
-REGISTRY_URL="registry.jclee.me"
-REGISTRY_USER="qws9411"
-REGISTRY_PASS="bingogo1"
-NAMESPACE="argocd"
-APP_NAMESPACE="fortinet"
+# 색상 정의
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-echo "🎯 ArgoCD 초기 설정 시작..."
+# 환경 변수에서 설정 로드 (보안 강화)
+ARGOCD_SERVER="${ARGOCD_SERVER:-argo.jclee.me}"
+ADMIN_USER="${ARGOCD_ADMIN_USER:-admin}"
+ADMIN_PASS="${ARGOCD_ADMIN_PASS}"
+NEW_USER="${ARGOCD_NEW_USER:-jclee}"
+NEW_USER_PASS="${ARGOCD_NEW_USER_PASS}"
+GITHUB_USER="${GITHUB_USER:-JCLEE94}"
+GITHUB_TOKEN="${GITHUB_TOKEN}"
+REGISTRY_URL="${REGISTRY_URL:-registry.jclee.me}"
+REGISTRY_USER="${REGISTRY_USER:-admin}"
+REGISTRY_PASS="${REGISTRY_PASSWORD}"
+NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+APP_NAMESPACE="${APP_NAMESPACE:-fortinet}"
+
+# 필수 환경 변수 검증
+check_required_vars() {
+    local missing_vars=()
+    
+    [ -z "$ADMIN_PASS" ] && missing_vars+=("ARGOCD_ADMIN_PASS")
+    [ -z "$GITHUB_TOKEN" ] && missing_vars+=("GITHUB_TOKEN")
+    [ -z "$REGISTRY_PASS" ] && missing_vars+=("REGISTRY_PASSWORD")
+    
+    if [ ${#missing_vars[@]} -gt 0 ]; then
+        echo -e "${RED}❌ 필수 환경 변수가 설정되지 않았습니다:${NC}"
+        for var in "${missing_vars[@]}"; do
+            echo "  - $var"
+        done
+        echo ""
+        echo "사용법: source scripts/export-credentials.sh"
+        exit 1
+    fi
+}
+
+echo -e "${GREEN}╔════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║     ArgoCD GitOps 파이프라인 설정          ║${NC}"
+echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
+echo ""
+
+# 환경 변수 검증
+check_required_vars
+
+echo -e "${GREEN}🎯 ArgoCD 초기 설정 시작...${NC}"
 
 # 1. ArgoCD CLI 설치 확인
 if ! command -v argocd &> /dev/null; then
