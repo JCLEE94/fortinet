@@ -263,7 +263,7 @@ def run_comprehensive_feature_test() -> List[Dict]:
                 failed += 1
 
         except Exception as e:
-            error_result = test_result(test_func.__name__, False, f"Unexpected error: {str(e)}")
+            error_result = create_test_result(test_func.__name__, False, f"Unexpected error: {str(e)}")
             results.append(error_result)
             print(f"   {error_result['status']} {error_result['name']}")
             print(f"   📝 {error_result['details']}")

@@ -1,0 +1,259 @@
+name: 🔄 GitOps Rollback Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      rollback_target:
+        description: '롤백 대상 (commit SHA 또는 tag)'
+        required: true
+        type: string
+      rollback_reason:
+        description: '롤백 사유'
+        required: true
+        type: string
+      emergency:
+        description: '긴급 롤백 여부'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: registry.jclee.me
+  IMAGE_NAME: fortinet
+  K8S_NAMESPACE: fortinet-prod
+  DEPLOYMENT_HOST: 192.168.50.110
+  DEPLOYMENT_PORT: 30777
+
+jobs:
+  # 롤백 전 검증
+  pre-rollback-check:
+    runs-on: self-hosted
+    outputs:
+      rollback-safe: ${{ steps.safety-check.outputs.safe }}
+      current-image: ${{ steps.current-state.outputs.image }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 현재 상태 확인
+        id: current-state
+        run: |
+          echo "🔍 현재 배포 상태 확인..."
+          
+          # 현재 kustomization.yaml에서 이미지 태그 추출
+          current_tag=$(grep "newTag:" k8s/overlays/production/kustomization.yaml | awk '{print $2}')
+          echo "현재 이미지 태그: $current_tag"
+          echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$current_tag" >> $GITHUB_OUTPUT
+          
+          # 현재 서비스 상태 확인
+          if curl -f -s --connect-timeout 10 "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" > /dev/null; then
+            echo "✅ 현재 서비스 상태: 정상"
+            echo "current-status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "❌ 현재 서비스 상태: 비정상"
+            echo "current-status=unhealthy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🔍 롤백 대상 검증
+        run: |
+          echo "🔍 롤백 대상 검증 중..."
+          rollback_target="${{ inputs.rollback_target }}"
+          
+          # Git 커밋/태그 존재 확인
+          if git rev-parse --verify "$rollback_target" >/dev/null 2>&1; then
+            echo "✅ 롤백 대상 유효: $rollback_target"
+            rollback_sha=$(git rev-parse "$rollback_target")
+            echo "롤백 SHA: $rollback_sha"
+          else
+            echo "❌ 롤백 대상 무효: $rollback_target"
+            exit 1
+          fi
+          
+          # Docker 이미지 존재 확인
+          rollback_image="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$rollback_target"
+          if docker manifest inspect "$rollback_image" >/dev/null 2>&1; then
+            echo "✅ 롤백 이미지 존재: $rollback_image"
+          else
+            echo "❌ 롤백 이미지 없음: $rollback_image"
+            echo "🔄 이미지 빌드가 필요할 수 있습니다."
+          fi
+
+      - name: 🛡️ 안전성 검사
+        id: safety-check
+        run: |
+          echo "🛡️ 롤백 안전성 검사..."
+          
+          # 긴급 롤백인 경우 안전성 검사 생략
+          if [ "${{ inputs.emergency }}" = "true" ]; then
+            echo "🚨 긴급 롤백 모드 - 안전성 검사 생략"
+            echo "safe=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # 일반 롤백 안전성 검사
+          rollback_safe=true
+          
+          # 1. 현재 서비스가 정상인지 확인
+          if [ "${{ steps.current-state.outputs.current-status }}" = "healthy" ]; then
+            echo "⚠️ 현재 서비스가 정상 상태입니다. 롤백이 필요한지 재검토해주세요."
+            read -p "계속 진행하시겠습니까? (y/N): " confirm
+            if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+              rollback_safe=false
+            fi
+          fi
+          
+          # 2. 최근 커밋인지 확인 (안전성을 위해)
+          rollback_commit_date=$(git log -1 --format="%at" "${{ inputs.rollback_target }}")
+          week_ago=$(($(date +%s) - 604800))  # 7일 전
+          
+          if [ "$rollback_commit_date" -lt "$week_ago" ]; then
+            echo "⚠️ 1주일 이전 커밋으로의 롤백입니다. 데이터 호환성을 확인해주세요."
+          fi
+          
+          echo "safe=$rollback_safe" >> $GITHUB_OUTPUT
+
+  # GitOps 롤백 실행
+  execute-rollback:
+    runs-on: self-hosted
+    needs: pre-rollback-check
+    if: needs.pre-rollback-check.outputs.rollback-safe == 'true'
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 🔄 Kustomize 롤백 실행
+        run: |
+          echo "🔄 GitOps 롤백 실행 중..."
+          
+          rollback_target="${{ inputs.rollback_target }}"
+          echo "롤백 대상: $rollback_target"
+          
+          cd k8s/overlays/production
+          
+          # 백업 생성
+          cp kustomization.yaml kustomization.yaml.backup.$(date +%Y%m%d-%H%M%S)
+          
+          # 새로운 이미지 태그로 업데이트
+          sed -i "s/newTag:.*/newTag: $rollback_target  # GitOps 롤백/" kustomization.yaml
+          
+          echo "📝 업데이트된 kustomization.yaml:"
+          cat kustomization.yaml
+
+      - name: 📤 롤백 커밋 및 푸시
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Actions (Rollback)"
+          
+          git add k8s/overlays/production/kustomization.yaml
+          
+          git commit -m "🔄 GitOps Rollback: ${{{ inputs.rollback_target }}}
+
+          🔄 GitOps 자동 롤백
+          - Target: ${{ inputs.rollback_target }}
+          - Reason: ${{ inputs.rollback_reason }}
+          - Emergency: ${{ inputs.emergency }}
+          - Initiated by: ${{ github.actor }}
+          - Timestamp: $(date -u)
+          
+          Previous image: ${{ needs.pre-rollback-check.outputs.current-image }}
+          Rollback image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.rollback_target }}
+          
+          Co-authored-by: GitHub Actions (Rollback) <action@github.com>"
+          
+          git push
+          echo "✅ 롤백 변경사항 커밋 완료!"
+
+      - name: ⏱️ ArgoCD 동기화 대기
+        run: |
+          echo "🔄 ArgoCD가 롤백 변경사항을 감지하고 동기화를 시작합니다..."
+          echo "⏱️ 롤백 완료까지 약 2-3분 소요됩니다."
+          sleep 120  # ArgoCD 동기화 시간 확보
+
+  # 롤백 검증
+  verify-rollback:
+    runs-on: self-hosted
+    needs: execute-rollback
+    steps:
+      - name: 🏥 롤백 결과 검증
+        run: |
+          max_attempts=12
+          attempt=1
+          
+          echo "🔍 롤백 결과 검증 시작..."
+          echo "🎯 Target: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "🔄 시도 $attempt/$max_attempts: 롤백 상태 확인..."
+            
+            if curl -f -s --connect-timeout 10 --max-time 20 "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" > health.json; then
+              echo "✅ 롤백 후 서비스 정상!"
+              echo "📊 헬스체크 응답:"
+              cat health.json | jq . 2>/dev/null || cat health.json
+              
+              # 이미지 정보 확인
+              if grep -q "${{ inputs.rollback_target }}" health.json; then
+                echo "✅ 롤백 이미지 확인됨: ${{ inputs.rollback_target }}"
+              fi
+              
+              echo "🎉 롤백 완료!"
+              break
+            else
+              echo "⚠️ 롤백 검증 실패 (시도 $attempt/$max_attempts)"
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ 롤백 검증 실패! 긴급 조치 필요!"
+                echo "🆘 다음 조치를 즉시 수행하세요:"
+                echo "   1. ArgoCD 대시보드 확인: https://argo.jclee.me"
+                echo "   2. Pod 상태 확인: kubectl get pods -n ${{ env.K8S_NAMESPACE }}"
+                echo "   3. Pod 로그 확인: kubectl logs -l app=fortinet -n ${{ env.K8S_NAMESPACE }}"
+                echo "   4. 필요시 수동 롤백 실행"
+                exit 1
+              fi
+              echo "⏳ 20초 후 재시도..."
+              sleep 20
+              attempt=$((attempt + 1))
+            fi
+          done
+
+      - name: 📊 롤백 완료 보고서
+        if: success()
+        run: |
+          echo "📋 롤백 완료 보고서"
+          echo "==================="
+          echo "롤백 대상: ${{ inputs.rollback_target }}"
+          echo "롤백 사유: ${{ inputs.rollback_reason }}"
+          echo "실행자: ${{ github.actor }}"
+          echo "완료 시간: $(date -u)"
+          echo "서비스 URL: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}"
+          echo "ArgoCD: https://argo.jclee.me"
+          echo ""
+          echo "✅ 롤백이 성공적으로 완료되었습니다!"
+
+  # 롤백 실패 시 알림
+  rollback-failure-notification:
+    runs-on: self-hosted
+    needs: [pre-rollback-check, execute-rollback, verify-rollback]
+    if: failure()
+    steps:
+      - name: 🚨 롤백 실패 긴급 알림
+        run: |
+          echo "🚨 롤백 실패 - 긴급 알림 발송!"
+          echo ""
+          echo "❌ FortiGate Nextrade 롤백 실패"
+          echo "대상: ${{ inputs.rollback_target }}"
+          echo "사유: ${{ inputs.rollback_reason }}"
+          echo "실행자: ${{ github.actor }}"
+          echo "실패 시간: $(date -u)"
+          echo ""
+          echo "🆘 즉시 수동 개입이 필요합니다!"
+          
+          # Slack 알림 (실제 구현에서 활성화)
+          # if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+          #   curl -X POST -H 'Content-type: application/json' \
+          #     --data '{"text": "🚨 URGENT: FortiGate Nextrade 롤백 실패!"}' \
+          #     ${{ secrets.SLACK_WEBHOOK_URL }}
+          # fi
