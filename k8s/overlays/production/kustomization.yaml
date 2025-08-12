@@ -8,10 +8,10 @@ resources:
 - ../../base
 
 # GitOps 4원칙 준수: 불변 이미지 태그 (Immutable Infrastructure)
-# 동적 태그 형식: {branch}-{timestamp}-{git-sha}
+# 동적 태그 형식: {version}-{date}-{git-sha}
 images:
 - name: registry.jclee.me/fortinet
-  newTag: a03b619d
+  newTag: v1.0.20250812-aec63e7
 
 # 운영환경 고가용성 설정
 replicas:
@@ -39,7 +39,7 @@ commonAnnotations:
   gitops.argocd.argoproj.io/managed: "true"
   gitops.environment: production
   gitops.stability: stable
-  gitops.immutable-tag: "production-20250811-151317"
+  gitops.immutable-tag: "v1.0.20250812-aec63e7"
   deployment.strategy: rolling-update
   deployment.maxUnavailable: "25%"
   deployment.maxSurge: "25%"
