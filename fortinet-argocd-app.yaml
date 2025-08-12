@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  labels:
+    app.kubernetes.io/name: fortinet
+    app.kubernetes.io/instance: production
+    gitops.managed-by: argocd
+    gitops.owner: jclee94
+spec:
+  project: default
+  
+  # 소스: GitHub 저장소의 Kustomize 설정
+  source:
+    repoURL: https://github.com/JCLEE94/fortinet.git
+    targetRevision: master
+    path: k8s/overlays/production
+    kustomize:
+      images:
+      - registry.jclee.me/fortinet:v1.0.20250812-aec63e7
+
+  # 대상: Kubernetes 클러스터
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet-prod
+
+  # GitOps 4원칙 동기화 정책
+  syncPolicy:
+    # 자동 동기화 활성화 (Pull-based GitOps)
+    automated:
+      prune: true      # 삭제된 리소스 자동 정리
+      selfHeal: true   # 변경사항 자동 복구
+      allowEmpty: false # 빈 매니페스트 동기화 방지
+      
+    # 동기화 옵션
+    syncOptions:
+    - CreateNamespace=true                    # 네임스페이스 자동 생성
+    - PrunePropagationPolicy=foreground       # Foreground deletion
+    - PruneLast=true                          # 마지막에 prune 실행
+    - RespectIgnoreDifferences=true           # ignoreDifferences 존중
+    - ApplyOutOfSyncOnly=true                 # Out of sync 리소스만 적용
+
+    # 재시도 정책
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # 차이점 무시 설정
+  ignoreDifferences:
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+  - group: ""
+    kind: Service  
+    jsonPointers:
+    - /spec/clusterIP
+
+  # 리비전 히스토리 제한
+  revisionHistoryLimit: 10
