@@ -210,7 +210,7 @@ def get_env_config(prefix: str = "") -> Dict[str, Any]:
     for key, value in os.environ.items():
         if not prefix or key.startswith(prefix):
             # 프리픽스 제거
-            config_key = key[len(prefix) :] if prefix else key
+            config_key = key[len(prefix):] if prefix else key
 
             # 값 타입 변환 시도
             config[config_key.lower()] = convert_env_value(value)

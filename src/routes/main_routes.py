@@ -77,7 +77,7 @@ def batch_results():
     """배치 분석 결과 페이지"""
     from flask import session
 
-    from config.batch_defaults import get_default_batch_results
+    from config.result_defaults import get_default_batch_results
 
     # 세션에서 배치 분석 결과 가져오기
     results = session.get("batch_results")

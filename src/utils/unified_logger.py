@@ -361,7 +361,10 @@ class LoggerRegistry:
                 handlers_to_remove = []
                 for handler in logger.logger.handlers[:]:
                     try:
-                        if hasattr(handler, "stream") and hasattr(handler.stream, "closed"):
+                        if (
+                            hasattr(handler, "stream")
+                            and hasattr(handler.stream, "closed")
+                        ):
                             if not handler.stream.closed:
                                 handler.flush()
                                 if hasattr(handler, "close"):

@@ -36,7 +36,6 @@ from utils.security import rate_limit
 from utils.unified_cache_manager import cached
 from utils.unified_logger import setup_logger
 
-# from utils.api_utils import get_data_source, is_test_mode, get_api_manager  # 순환 임포트 방지
 
 # 상수 정의
 DEFAULT_TIMEOUT = 30

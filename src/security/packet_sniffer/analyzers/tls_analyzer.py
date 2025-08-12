@@ -146,13 +146,13 @@ class TLSAnalyzer:
             try:
                 # TLS 레코드 헤더 (5바이트)
                 content_type = data[offset]
-                version = struct.unpack(">H", data[offset + 1 : offset + 3])[0]
-                length = struct.unpack(">H", data[offset + 3 : offset + 5])[0]
+                version = struct.unpack(">H", data[offset + 1: offset + 3])[0]
+                length = struct.unpack(">H", data[offset + 3: offset + 5])[0]
 
                 if offset + 5 + length > len(data):
                     break
 
-                record_data = data[offset + 5 : offset + 5 + length]
+                record_data = data[offset + 5: offset + 5 + length]
 
                 record = {
                     "content_type": self.TLS_CONTENT_TYPES.get(content_type, f"unknown_{content_type}"),
@@ -191,7 +191,7 @@ class TLSAnalyzer:
             }
 
             if len(data) >= 4 + msg_length:
-                msg_data = data[4 : 4 + msg_length]
+                msg_data = data[4: 4 + msg_length]
 
                 # Client Hello 파싱
                 if msg_type == 1:
@@ -226,29 +226,29 @@ class TLSAnalyzer:
             offset = 0
 
             # 프로토콜 버전
-            client_version = struct.unpack(">H", data[offset : offset + 2])[0]
+            client_version = struct.unpack(">H", data[offset: offset + 2])[0]
             offset += 2
 
             # 랜덤 값 (32바이트)
-            random = data[offset : offset + 32]
+            random = data[offset: offset + 32]
             offset += 32
 
             # 세션 ID
             session_id_length = data[offset]
             offset += 1
-            session_id = data[offset : offset + session_id_length] if session_id_length > 0 else b""
+            session_id = data[offset: offset + session_id_length] if session_id_length > 0 else b""
             offset += session_id_length
 
             # 암호화 스위트
             if offset + 2 > len(data):
                 return None
-            cipher_suites_length = struct.unpack(">H", data[offset : offset + 2])[0]
+            cipher_suites_length = struct.unpack(">H", data[offset: offset + 2])[0]
             offset += 2
 
             cipher_suites = []
             cipher_end = offset + cipher_suites_length
             while offset < cipher_end and offset + 2 <= len(data):
-                suite = struct.unpack(">H", data[offset : offset + 2])[0]
+                suite = struct.unpack(">H", data[offset: offset + 2])[0]
                 cipher_suites.append(f"0x{suite:04x}")
                 offset += 2
 
@@ -273,23 +273,23 @@ class TLSAnalyzer:
             offset = 0
 
             # 프로토콜 버전
-            server_version = struct.unpack(">H", data[offset : offset + 2])[0]
+            server_version = struct.unpack(">H", data[offset: offset + 2])[0]
             offset += 2
 
             # 랜덤 값
-            random = data[offset : offset + 32]
+            random = data[offset: offset + 32]
             offset += 32
 
             # 세션 ID
             session_id_length = data[offset]
             offset += 1
-            session_id = data[offset : offset + session_id_length] if session_id_length > 0 else b""
+            session_id = data[offset: offset + session_id_length] if session_id_length > 0 else b""
             offset += session_id_length
 
             # 선택된 암호화 스위트
             if offset + 2 > len(data):
                 return None
-            chosen_cipher_suite = struct.unpack(">H", data[offset : offset + 2])[0]
+            chosen_cipher_suite = struct.unpack(">H", data[offset: offset + 2])[0]
             offset += 2
 
             # 압축 방법
@@ -323,13 +323,13 @@ class TLSAnalyzer:
                 if offset + 3 > len(data):
                     break
 
-                cert_length = struct.unpack(">I", b"\x00" + data[offset : offset + 3])[0]
+                cert_length = struct.unpack(">I", b"\x00" + data[offset: offset + 3])[0]
                 offset += 3
 
                 if offset + cert_length > len(data):
                     break
 
-                cert_data = data[offset : offset + cert_length]
+                cert_data = data[offset: offset + cert_length]
                 offset += cert_length
 
                 # 인증서 정보 추출
