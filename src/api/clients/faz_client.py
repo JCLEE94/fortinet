@@ -284,11 +284,13 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
         # return self._make_api_request("get", "/dvmdb/device")
 
         # Mock data for demonstration
+        from config.environment import env_config
+        
         mock_devices = [
             {
                 "name": "FortiGate-VM64-1",
                 "hostname": "FortiGate-VM64-1",
-                "ip": "192.168.1.1",
+                "ip": env_config.get_mock_ip(1),
                 "platform": "FortiGate-VM64",
                 "version": "v7.4.5",
                 "adom": "root",
@@ -300,7 +302,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
             {
                 "name": "FortiGate-100F-2",
                 "hostname": "FortiGate-100F-2",
-                "ip": "192.168.2.1",
+                "ip": env_config.get_mock_ip(2),
                 "platform": "FortiGate-100F",
                 "version": "v7.4.3",
                 "adom": "root",

@@ -66,7 +66,7 @@ const NextradeUtils = {
 
         return await response.text();
       } catch (error) {
-        console.warn(`API request attempt ${attempt} failed:`, error.message);
+        // API request attempt failed, will retry if attempts remaining
 
         if (attempt === NextradeConfig.api.retryAttempts) {
           throw error;
@@ -88,25 +88,33 @@ const NextradeUtils = {
     return function executedFunction(...args) {
       const later = () => {
         timeout = null;
-        if (!immediate) func.apply(this, args);
+        if (!immediate) {
+        func.apply(this, args);
+      }
       };
       const callNow = immediate && !timeout;
       clearTimeout(timeout);
       timeout = setTimeout(later, wait);
-      if (callNow) func.apply(this, args);
+      if (callNow) {
+        func.apply(this, args);
+      }
     };
   },
 
   // Format date for display
-  formatDate(date, format = "YYYY-MM-DD HH:mm:ss") {
-    if (!date) return "-";
+  formatDate(date) {
+    if (!date) {
+      return "-";
+    }
     const d = new Date(date);
     return d.toLocaleString("ko-KR");
   },
 
   // Format bytes to human readable
   formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return "0 Bytes";
+    if (bytes === 0) {
+      return "0 Bytes";
+    }
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
     const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
@@ -119,8 +127,8 @@ const NextradeUtils = {
     try {
       await navigator.clipboard.writeText(text);
       this.showNotification("클립보드에 복사되었습니다.", "success");
-    } catch (err) {
-      console.error("클립보드 복사 실패:", err);
+    } catch {
+      // Clipboard copy failed
       this.showNotification("클립보드 복사에 실패했습니다.", "error");
     }
   },
@@ -184,7 +192,9 @@ const NextradeUtils = {
       element = document.querySelector(element);
     }
 
-    if (!element) return;
+    if (!element) {
+      return;
+    }
 
     element.innerHTML = `
             <div class="loading-spinner">
@@ -229,7 +239,9 @@ const NextradeUtils = {
       element = document.querySelector(element);
     }
 
-    if (!element) return;
+    if (!element) {
+      return;
+    }
 
     const spinner = element.querySelector(".loading-spinner");
     if (spinner) {
@@ -541,7 +553,7 @@ const NextradeUI = {
 // 5. Auto-initialization
 // ========================================
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Nextrade Unified Module loaded");
+  // Nextrade Unified Module loaded
   NextradeUI.init();
 });
 

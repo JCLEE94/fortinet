@@ -39,12 +39,12 @@ DNS_SERVERS: Dict[str, str] = {
 # 테스트용 IP 주소
 TEST_IPS: Dict[str, str] = {
     "internal_host": os.getenv("TEST_INTERNAL_HOST", "192.168.1.100"),
-    "internal_gateway": "192.168.1.1",
-    "internal_dns": "192.168.1.10",
+    "internal_gateway": os.getenv("TEST_INTERNAL_GATEWAY", "192.168.1.1"),
+    "internal_dns": os.getenv("TEST_INTERNAL_DNS", "192.168.1.10"),
     "dmz_server": os.getenv("TEST_DMZ_SERVER", "172.16.10.100"),
-    "dmz_gateway": "172.16.1.1",
+    "dmz_gateway": os.getenv("TEST_DMZ_GATEWAY", "172.16.1.1"),
     "external_host": os.getenv("TEST_EXTERNAL_HOST", "203.0.113.50"),
-    "external_gateway": "203.0.113.1",
+    "external_gateway": os.getenv("TEST_EXTERNAL_GATEWAY", "203.0.113.1"),
     "guest_host": os.getenv("TEST_GUEST_HOST", "10.10.1.50"),
     "localhost": "127.0.0.1",
     "ipv6_localhost": "::1",

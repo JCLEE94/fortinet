@@ -10,8 +10,8 @@ const socket = io("/dashboard", {
 
 // 전역 차트 변수
 let performanceChart = null;
-let trafficChart = null;
-let anomalyChart = null;
+// let trafficChart = null; // Unused
+// let anomalyChart = null; // Unused
 
 // 실시간 메트릭 업데이트
 socket.on("metrics_update", (data) => {
@@ -31,14 +31,14 @@ socket.on("anomaly_detected", (anomaly) => {
 
 // 연결 상태
 socket.on("connect", () => {
-  console.log("Dashboard connected to real-time updates");
+  // Dashboard connected to real-time updates
   updateConnectionStatus("connected");
   // FortiManager 상태 자동 로드
   loadFortiManagerStatus();
 });
 
 socket.on("disconnect", () => {
-  console.log("Dashboard disconnected from real-time updates");
+  // Dashboard disconnected from real-time updates
   updateConnectionStatus("disconnected");
 });
 
@@ -90,7 +90,9 @@ function updateDashboardMetrics(metrics) {
 // 숫자 애니메이션
 function animateValue(id, value, duration = 500) {
   const element = document.getElementById(id);
-  if (!element) return;
+  if (!element) {
+    return;
+  }
 
   const current = parseInt(element.textContent) || 0;
   const increment = (value - current) / (duration / 16);
@@ -176,7 +178,9 @@ function displayAnomaly(anomaly) {
 
 // 성능 차트 업데이트
 function updatePerformanceChart(data) {
-  if (!performanceChart) return;
+  if (!performanceChart) {
+    return;
+  }
 
   const now = new Date();
   const label = formatChartTime(now);
@@ -199,7 +203,9 @@ function updatePerformanceChart(data) {
 // 상위 디바이스 업데이트
 function updateTopDevices(devices) {
   const deviceList = document.querySelector(".device-list");
-  if (!deviceList) return;
+  if (!deviceList) {
+    return;
+  }
 
   const html = devices
     .map(
@@ -255,8 +261,8 @@ async function loadAdvancedAnalytics() {
     if (bottlenecksData.status === "success") {
       updateBottlenecks(bottlenecksData.bottlenecks);
     }
-  } catch (error) {
-    console.error("Failed to load advanced analytics:", error);
+  } catch {
+    // Failed to load advanced analytics
   }
 }
 
@@ -276,10 +282,58 @@ function updateTrafficPatterns(patterns) {
   }
 }
 
+// 프로토콜 차트 업데이트
+function updateProtocolChart(distribution) {
+  const chartContainer = document.getElementById("protocol-chart-container");
+  if (!chartContainer) {
+    return;
+  }
+
+  const ctx = chartContainer.querySelector("canvas");
+  if (!ctx) {
+    return;
+  }
+
+  // Chart.js를 사용한 프로토콜 분포 차트 업데이트
+  if (window.Chart) {
+    new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: Object.keys(distribution),
+        datasets: [
+          {
+            data: Object.values(distribution),
+            backgroundColor: [
+              "#3b82f6",
+              "#22c55e",
+              "#f59e0b",
+              "#ef4444",
+              "#8b5cf6"
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: {
+              color: "#94a3b8",
+            },
+          },
+        },
+      },
+    });
+  }
+}
+
 // 성능 병목 표시
 function updateBottlenecks(bottlenecks) {
   const container = document.getElementById("bottlenecks-container");
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   if (bottlenecks.length === 0) {
     container.innerHTML =
@@ -346,7 +400,7 @@ async function generateReport() {
     } else {
       showNotification("리포트 생성 실패", "error");
     }
-  } catch (error) {
+  } catch {
     showNotification("리포트 생성 중 오류 발생", "error");
   } finally {
     btn.innerHTML = originalContent;
@@ -364,8 +418,8 @@ function downloadReport(reportId) {
   document.body.removeChild(link);
 }
 
-// 알림 확인
-async function acknowledgeAlert(alertId) {
+// 알림 확인 - HTML에서 직접 호출됨
+window.acknowledgeAlert = async function(alertId) {
   try {
     const response = await fetch(`/api/alerts/acknowledge/${alertId}`, {
       method: "POST",
@@ -379,10 +433,10 @@ async function acknowledgeAlert(alertId) {
         alertElement.classList.add("acknowledged");
       }
     }
-  } catch (error) {
-    console.error("Failed to acknowledge alert:", error);
+  } catch {
+    // Failed to acknowledge alert
   }
-}
+};
 
 // 유틸리티 함수들
 function getAlertIcon(severity) {
@@ -437,9 +491,15 @@ function formatTime(timestamp) {
   const now = new Date();
   const diff = now - date;
 
-  if (diff < 60000) return "방금 전";
-  if (diff < 3600000) return Math.floor(diff / 60000) + "분 전";
-  if (diff < 86400000) return Math.floor(diff / 3600000) + "시간 전";
+  if (diff < 60000) {
+    return "방금 전";
+  }
+  if (diff < 3600000) {
+    return Math.floor(diff / 60000) + "분 전";
+  }
+  if (diff < 86400000) {
+    return Math.floor(diff / 3600000) + "시간 전";
+  }
   return date.toLocaleDateString();
 }
 
@@ -640,8 +700,8 @@ async function loadChartData(range) {
       performanceChart.data = data.chartData;
       performanceChart.update();
     }
-  } catch (error) {
-    console.error("Failed to load chart data:", error);
+  } catch {
+    // Failed to load chart data
   }
 }
 
@@ -662,7 +722,7 @@ async function loadFortiManagerStatus() {
       });
     }
   } catch (error) {
-    console.error("Failed to load FortiManager status:", error);
+    // Failed to load FortiManager status
     updateFortiManagerStatus({
       status: "error",
       error: error.message,
@@ -730,8 +790,8 @@ async function loadPolicyData() {
       service_objects: serviceData.success ? serviceData.data.length : 0,
       firewall_policies: policyData.success ? policyData.data.length : 0,
     });
-  } catch (error) {
-    console.error("Failed to load policy data:", error);
+  } catch {
+    // Failed to load policy data
   }
 }
 
@@ -739,24 +799,32 @@ async function loadPolicyData() {
 function updatePolicyCounters(data) {
   if (data.firewall_policies !== undefined) {
     const element = document.getElementById("firewall-policies-count");
-    if (element) element.textContent = data.firewall_policies;
+    if (element) {
+      element.textContent = data.firewall_policies;
+    }
   }
 
   if (data.address_objects !== undefined) {
     const element = document.getElementById("address-objects-count");
-    if (element) element.textContent = data.address_objects;
+    if (element) {
+      element.textContent = data.address_objects;
+    }
   }
 
   if (data.service_objects !== undefined) {
     const element = document.getElementById("service-objects-count");
-    if (element) element.textContent = data.service_objects;
+    if (element) {
+      element.textContent = data.service_objects;
+    }
   }
 }
 
 // 보안 이벤트 추가
 function addSecurityEvent(event) {
   const eventsList = document.getElementById("security-events-list");
-  if (!eventsList) return;
+  if (!eventsList) {
+    return;
+  }
 
   const severityClass =
     {
@@ -771,7 +839,7 @@ function addSecurityEvent(event) {
   eventElement.innerHTML = `
         <div class="security-event-header">
             <span class="security-event-type">${escapeHtml(event.type)}</span>
-            <span class="security-event-time">${formatTime(event.timestamp)}</span>
+            <span class="security-event-time">${formatKoreanTime(event.timestamp)}</span>
         </div>
         <div class="security-event-details">
             <span class="security-event-source">${escapeHtml(event.source_ip || "Unknown")}</span>
@@ -796,7 +864,8 @@ function addSecurityEvent(event) {
 }
 
 // FortiManager 상태 새로고침
-function refreshFortiManagerStatus() {
+// Note: This function is called by HTML onclick attributes
+window.refreshFortiManagerStatus = function() {
   const button = document.querySelector(
     'button[onclick="refreshFortiManagerStatus()"]',
   );
@@ -811,35 +880,35 @@ function refreshFortiManagerStatus() {
       button.innerHTML = '<i class="fas fa-sync-alt"></i> 상태 새로고침';
     }
   });
-}
+};
 
-// 빠른 작업 함수들
-function openTrafficAnalysis() {
+// 빠른 작업 함수들 - 이 함수들은 HTML에서 직접 호출됨
+window.openTrafficAnalysis = function() {
   window.location.href = "/analytics";
-}
+};
 
-function openPolicyOptimization() {
+window.openPolicyOptimization = function() {
   window.location.href = "/fortimanager/policy-optimization";
-}
+};
 
-function openPolicyAnalysis() {
+window.openPolicyAnalysis = function() {
   window.location.href = "/policy-scenarios";
-}
+};
 
-function generateReport() {
+window.openFortiManagerReports = function() {
   window.location.href = "/fortimanager/reports";
-}
+};
 
-function openSecurityDiagnostics() {
+window.openSecurityDiagnostics = function() {
   window.location.href = "/fortimanager/security-diagnostics";
-}
+};
 
-function viewAllSecurityEvents() {
+window.viewAllSecurityEvents = function() {
   window.location.href = "/fortimanager/security-events";
-}
+};
 
-// 시간 포맷팅
-function formatTime(timestamp) {
+// 시간 포맷팅 (한국 시간)
+function formatKoreanTime(timestamp) {
   const date = new Date(timestamp * 1000);
   return date.toLocaleTimeString("ko-KR", {
     hour: "2-digit",

@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, request
 
 from config.constants import DEFAULT_PORTS, TRAFFIC_THRESHOLDS
+from config.environment import env_config
 
 app = Flask(__name__)
 
@@ -31,7 +32,7 @@ def initialize_mock_data():
         {
             "id": "FGT1001",
             "name": "FortiGate-Seoul-HQ",
-            "ip": "192.168.1.100",
+            "ip": env_config.get_mock_ip(100),
             "status": "online",
             "model": "FortiGate-100F",
             "firmware": "7.2.5",
@@ -40,7 +41,7 @@ def initialize_mock_data():
         {
             "id": "FGT1002",
             "name": "FortiGate-Busan-Branch",
-            "ip": "192.168.2.100",
+            "ip": env_config.get_mock_ip(200),
             "status": "online",
             "model": "FortiGate-60F",
             "firmware": "7.2.5",
@@ -49,7 +50,7 @@ def initialize_mock_data():
         {
             "id": "FGT1003",
             "name": "FortiGate-Daejeon-DC",
-            "ip": "192.168.3.100",
+            "ip": env_config.get_mock_ip(300),
             "status": "online",
             "model": "FortiGate-200F",
             "firmware": "7.2.4",
@@ -82,7 +83,7 @@ def initialize_mock_data():
                 "name": "Core-Switch-1",
                 "type": "switch",
                 "status": "online",
-                "ip": "192.168.1.1",
+                "ip": env_config.get_mock_ip(1),
                 "x": 400,
                 "y": 300,
             },
@@ -91,7 +92,7 @@ def initialize_mock_data():
                 "name": "Edge-Router-1",
                 "type": "router",
                 "status": "online",
-                "ip": "10.0.0.1",
+                "ip": env_config.get_mock_ip(10),
                 "x": 400,
                 "y": 100,
             },

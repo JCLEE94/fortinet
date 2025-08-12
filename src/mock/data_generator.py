@@ -8,6 +8,8 @@ import random
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
+from config.environment import env_config
+
 
 class DummyDataGenerator:
     """Generates mock data for dashboard and testing purposes"""
@@ -38,7 +40,7 @@ class DummyDataGenerator:
                 "name": f"FW-{random.choice(self.locations)}-{i+1:02d}",
                 "type": random.choice(self.device_types),
                 "status": random.choice(self.statuses),
-                "ip_address": f"192.168.{random.randint(1, 255)}.{random.randint(1, 254)}",
+                "ip_address": env_config.get_mock_ip(i),
                 "location": random.choice(self.locations),
                 "uptime": f"{random.randint(1, 365)} days",
                 "version": f"{random.randint(6, 7)}.{random.randint(0, 4)}.{random.randint(0, 9)}",
@@ -73,7 +75,7 @@ class DummyDataGenerator:
                     f"{random.randint(1, 255)}.{random.randint(1, 255)}."
                     f"{random.randint(1, 255)}.{random.randint(1, 255)}"
                 ),
-                "destination_ip": f"192.168.{random.randint(1, 255)}.{random.randint(1, 254)}",
+                "destination_ip": env_config.get_mock_ip(),
                 "timestamp": datetime.now() - timedelta(minutes=random.randint(0, 1440)),
                 "device": f"FW-{random.choice(self.locations)}-{random.randint(1, 20):02d}",
                 "description": f"Security event detected on {random.choice(self.device_types)}",
@@ -176,8 +178,8 @@ if __name__ == "__main__":
 
     print("\n✅ Policy Analysis:")
     analysis = generator.generate_policy_analysis_result(
-        os.getenv("TEST_SRC_IP", "10.10.1.100"),
-        os.getenv("TEST_DST_IP", "10.20.1.50"),
+        os.getenv("TEST_SRC_IP", env_config.get_mock_ip(100)),
+        os.getenv("TEST_DST_IP", env_config.get_mock_ip(50)),
         80,
     )
     print(f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}")

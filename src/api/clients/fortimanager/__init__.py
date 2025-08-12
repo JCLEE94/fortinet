@@ -8,10 +8,12 @@ from .advanced_features import AdvancedFeaturesMixin
 from .auth_connection import AuthConnectionMixin
 from .device_management import DeviceManagementMixin
 from .policy_management import PolicyManagementMixin
+from .task_management import TaskManagementMixin
 
 __all__ = [
     "AuthConnectionMixin",
     "DeviceManagementMixin",
     "PolicyManagementMixin",
     "AdvancedFeaturesMixin",
+    "TaskManagementMixin",
 ]
