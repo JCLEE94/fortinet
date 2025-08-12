@@ -9,7 +9,7 @@ from flask import Blueprint
 
 from utils.unified_logger import get_logger
 
-from .api_modules import system_bp
+from .api_modules import system_bp, settings_bp
 
 logger = get_logger(__name__)
 
@@ -18,3 +18,4 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 # Register all sub-module blueprints
 api_bp.register_blueprint(system_bp)
+api_bp.register_blueprint(settings_bp)
