@@ -84,7 +84,9 @@ def create_app():
     app.config["SECRET_KEY"] = secret_key
 
     # 보안 강화: 세션 쿠키 보안 설정
-    app.config["SESSION_COOKIE_SECURE"] = os.environ.get("APP_MODE", "production").lower() == "production"
+    app.config["SESSION_COOKIE_SECURE"] = (
+        os.environ.get("APP_MODE", "production").lower() == "production"
+    )
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["PERMANENT_SESSION_LIFETIME"] = 900  # 15분 세션 만료
@@ -297,7 +299,9 @@ def main():
 
     # 서버 실행
     if socketio and not DISABLE_SOCKETIO:
-        socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)
+        socketio.run(
+            app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True
+        )
     else:
         app.run(host=host, port=port, debug=debug)
 

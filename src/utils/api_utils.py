@@ -62,11 +62,15 @@ def get_data_source() -> Tuple[Any, None, bool]:
 class ConnectionTestMixin:
     """연결 테스트 공통 로직을 제공하는 믹스인"""
 
-    def perform_token_auth_test(self, test_endpoint: str) -> Tuple[bool, str, Optional[int]]:
+    def perform_token_auth_test(
+        self, test_endpoint: str
+    ) -> Tuple[bool, str, Optional[int]]:
         """토큰 인증 테스트 수행"""
         test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-        success, result, status_code = self._make_request("GET", test_url, headers=self.headers)
+        success, result, status_code = self._make_request(
+            "GET", test_url, headers=self.headers
+        )
 
         if success:
             return (
@@ -88,12 +92,18 @@ class ConnectionTestMixin:
         test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
         auth = (username, password)
 
-        success, result, status_code = self._make_request("GET", test_url, auth=auth)
+        success, result, status_code = self._make_request(
+            "GET", test_url, auth=auth
+        )
 
         if success:
             return True, "Basic authentication successful", status_code
         else:
-            return False, f"Basic authentication failed: {status_code}", status_code
+            return (
+                False,
+                f"Basic authentication failed: {status_code}",
+                status_code,
+            )
 
 
 # ========== Rate Limiter ==========
@@ -116,7 +126,9 @@ class RateLimiter:
             # 오래된 요청 기록 제거
             if identifier in self.requests:
                 self.requests[identifier] = [
-                    req_time for req_time in self.requests[identifier] if now - req_time < self.window_seconds
+                    req_time
+                    for req_time in self.requests[identifier]
+                    if now - req_time < self.window_seconds
                 ]
             else:
                 self.requests[identifier] = []
@@ -131,7 +143,10 @@ class RateLimiter:
     def get_wait_time(self, identifier: str) -> float:
         """다음 요청까지 대기 시간 반환"""
         with self.lock:
-            if identifier not in self.requests or not self.requests[identifier]:
+            if (
+                identifier not in self.requests
+                or not self.requests[identifier]
+            ):
                 return 0
 
             oldest_request = min(self.requests[identifier])
@@ -159,7 +174,9 @@ class APIOptimizer:
             "avg_response_time": 0,
         }
 
-    def compress_response(self, data: Union[dict, list, str]) -> Tuple[bytes, str]:
+    def compress_response(
+        self, data: Union[dict, list, str]
+    ) -> Tuple[bytes, str]:
         """응답 데이터 압축"""
         if isinstance(data, (dict, list)):
             data_str = json.dumps(data, ensure_ascii=False)
@@ -178,7 +195,9 @@ class APIOptimizer:
 
         return compressed, "gzip"
 
-    def paginate_response(self, data: List[Any], page: int = 1, page_size: Optional[int] = None) -> Dict[str, Any]:
+    def paginate_response(
+        self, data: List[Any], page: int = 1, page_size: Optional[int] = None
+    ) -> Dict[str, Any]:
         """응답 데이터 페이지네이션"""
         if page_size is None:
             page_size = self.default_page_size
@@ -236,7 +255,9 @@ class APIOptimizer:
             if request.method == "GET":
                 cached = self.get_cached_response(cache_key)
                 if cached is not None:
-                    response = Response(json.dumps(cached), content_type="application/json")
+                    response = Response(
+                        json.dumps(cached), content_type="application/json"
+                    )
                     response.headers["X-Cache"] = "HIT"
                     return response
 
@@ -250,7 +271,9 @@ class APIOptimizer:
                 page_size = request.args.get("page_size", type=int)
 
                 if "data" in result and isinstance(result["data"], list):
-                    result = self.paginate_response(result["data"], page, page_size)
+                    result = self.paginate_response(
+                        result["data"], page, page_size
+                    )
 
                 # 캐싱
                 if request.method == "GET":
@@ -284,7 +307,9 @@ class APIOptimizer:
         current_avg = self.metrics["avg_response_time"]
         total_requests = self.metrics["total_requests"]
 
-        self.metrics["avg_response_time"] = (current_avg * (total_requests - 1) + response_time) / total_requests
+        self.metrics["avg_response_time"] = (
+            current_avg * (total_requests - 1) + response_time
+        ) / total_requests
 
 
 # ========== Global Instances ==========
@@ -300,7 +325,9 @@ api_optimizer = APIOptimizer()
 # ========== Decorators ==========
 
 
-def rate_limit(max_requests: Optional[int] = None, window_seconds: Optional[int] = None):
+def rate_limit(
+    max_requests: Optional[int] = None, window_seconds: Optional[int] = None
+):
     """Rate limiting decorator"""
 
     def decorator(func):
@@ -321,7 +348,12 @@ def rate_limit(max_requests: Optional[int] = None, window_seconds: Optional[int]
             if not limiter.is_allowed(identifier):
                 wait_time = limiter.get_wait_time(identifier)
                 return (
-                    jsonify({"error": "Rate limit exceeded", "retry_after": wait_time}),
+                    jsonify(
+                        {
+                            "error": "Rate limit exceeded",
+                            "retry_after": wait_time,
+                        }
+                    ),
                     429,
                 )
 

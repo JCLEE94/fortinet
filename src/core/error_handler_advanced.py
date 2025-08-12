@@ -4,18 +4,16 @@ Advanced Error Handling System
 Enterprise-grade error management with recovery strategies
 """
 
-import asyncio
 import hashlib
 import json
 import logging
 import os
-import sys
 import traceback
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Type
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +142,9 @@ class ApplicationError(Exception):
         elif self.severity == ErrorSeverity.WARNING:
             return f"Warning: {self.message}"
         elif self.severity in [ErrorSeverity.ERROR, ErrorSeverity.CRITICAL]:
-            return f"An error occurred: {self.message}. Error code: {self.code}"
+            return (
+                f"An error occurred: {self.message}. Error code: {self.code}"
+            )
         else:
             return "A system error occurred. Please contact support."
 
@@ -165,7 +165,11 @@ class RetryStrategy(ErrorRecoveryStrategy):
     """Retry strategy with exponential backoff"""
 
     def __init__(
-        self, max_retries: int = 3, initial_delay: float = 1.0, max_delay: float = 60.0, exponential_base: float = 2.0
+        self,
+        max_retries: int = 3,
+        initial_delay: float = 1.0,
+        max_delay: float = 60.0,
+        exponential_base: float = 2.0,
     ):
         self.max_retries = max_retries
         self.initial_delay = initial_delay
@@ -189,12 +193,17 @@ class RetryStrategy(ErrorRecoveryStrategy):
         last_error = error
 
         for attempt in range(self.max_retries):
-            delay = min(self.initial_delay * (self.exponential_base**attempt), self.max_delay)
+            delay = min(
+                self.initial_delay * (self.exponential_base**attempt),
+                self.max_delay,
+            )
 
             if error.retry_after:
                 delay = max(delay, error.retry_after)
 
-            logger.info(f"Retry attempt {attempt + 1}/{self.max_retries} after {delay}s")
+            logger.info(
+                f"Retry attempt {attempt + 1}/{self.max_retries} after {delay}s"
+            )
 
             import time
 
@@ -232,7 +241,10 @@ class CircuitBreakerStrategy(ErrorRecoveryStrategy):
     """Circuit breaker pattern implementation"""
 
     def __init__(
-        self, failure_threshold: int = 5, recovery_timeout: int = 60, expected_exception: Type[Exception] = Exception
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: int = 60,
+        expected_exception: Type[Exception] = Exception,
     ):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
@@ -290,7 +302,9 @@ class CircuitBreakerStrategy(ErrorRecoveryStrategy):
 
         if self.failure_count >= self.failure_threshold:
             self.state = "open"
-            logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
+            logger.warning(
+                f"Circuit breaker opened after {self.failure_count} failures"
+            )
 
 
 class ErrorHandler:
@@ -333,7 +347,9 @@ class ErrorHandler:
             except Exception as e:
                 logger.error(f"Failed to load error configuration: {e}")
 
-    def handle_error(self, error: Exception, context: ErrorContext = None) -> Dict[str, Any]:
+    def handle_error(
+        self, error: Exception, context: ErrorContext = None
+    ) -> Dict[str, Any]:
         """
         Handle error with recovery strategies
 
@@ -363,17 +379,30 @@ class ErrorHandler:
             if strategy.can_handle(app_error):
                 try:
                     recovery_result = strategy.recover(
-                        app_error, {"operation": context.additional_data.get("operation")} if context else {}
+                        app_error,
+                        {"operation": context.additional_data.get("operation")}
+                        if context
+                        else {},
                     )
-                    logger.info(f"Error recovered using {strategy.__class__.__name__}")
-                    return {"recovered": True, "result": recovery_result, "error": app_error.to_dict()}
+                    logger.info(
+                        f"Error recovered using {strategy.__class__.__name__}"
+                    )
+                    return {
+                        "recovered": True,
+                        "result": recovery_result,
+                        "error": app_error.to_dict(),
+                    }
                 except Exception as recovery_error:
-                    logger.warning(f"Recovery strategy failed: {recovery_error}")
+                    logger.warning(
+                        f"Recovery strategy failed: {recovery_error}"
+                    )
 
         # No recovery possible
         return {"recovered": False, "error": app_error.to_dict()}
 
-    def _convert_to_application_error(self, error: Exception, context: ErrorContext = None) -> ApplicationError:
+    def _convert_to_application_error(
+        self, error: Exception, context: ErrorContext = None
+    ) -> ApplicationError:
         """Convert standard exception to ApplicationError"""
         # Check error mappings
         error_type = type(error).__name__
@@ -411,13 +440,17 @@ class ErrorHandler:
         if len(self.error_history) > self.max_history:
             self.error_history = self.error_history[-self.max_history :]
 
-    def _database_fallback(self, error: ApplicationError, context: Dict) -> Any:
+    def _database_fallback(
+        self, error: ApplicationError, context: Dict
+    ) -> Any:
         """Fallback for database errors"""
         logger.info("Using cache fallback for database error")
         # Return cached data or default
         return context.get("cached_result", {"status": "cached"})
 
-    def _external_service_fallback(self, error: ApplicationError, context: Dict) -> Any:
+    def _external_service_fallback(
+        self, error: ApplicationError, context: Dict
+    ) -> Any:
         """Fallback for external service errors"""
         logger.info("Using mock response for external service error")
         # Return mock data
@@ -428,20 +461,33 @@ class ErrorHandler:
         if not self.error_history:
             return {"total": 0}
 
-        stats = {"total": len(self.error_history), "by_severity": {}, "by_category": {}, "recent_errors": []}
+        stats = {
+            "total": len(self.error_history),
+            "by_severity": {},
+            "by_category": {},
+            "recent_errors": [],
+        }
 
         for error in self.error_history:
             # Count by severity
             severity = error.severity.value
-            stats["by_severity"][severity] = stats["by_severity"].get(severity, 0) + 1
+            stats["by_severity"][severity] = (
+                stats["by_severity"].get(severity, 0) + 1
+            )
 
             # Count by category
             category = error.category.value
-            stats["by_category"][category] = stats["by_category"].get(category, 0) + 1
+            stats["by_category"][category] = (
+                stats["by_category"].get(category, 0) + 1
+            )
 
         # Get recent errors
         stats["recent_errors"] = [
-            {"code": e.code, "message": e.message, "timestamp": e.timestamp.isoformat()}
+            {
+                "code": e.code,
+                "message": e.message,
+                "timestamp": e.timestamp.isoformat(),
+            }
             for e in self.error_history[-10:]
         ]
 
@@ -474,7 +520,11 @@ def handle_errors(
 
                 if not isinstance(e, ApplicationError):
                     e = ApplicationError(
-                        str(e), severity=severity, category=category, context=context, recoverable=recoverable
+                        str(e),
+                        severity=severity,
+                        category=category,
+                        context=context,
+                        recoverable=recoverable,
                     )
 
                 result = error_handler.handle_error(e, context)
@@ -489,7 +539,10 @@ def handle_errors(
     return decorator
 
 
-def async_handle_errors(severity: ErrorSeverity = ErrorSeverity.ERROR, category: ErrorCategory = ErrorCategory.UNKNOWN):
+def async_handle_errors(
+    severity: ErrorSeverity = ErrorSeverity.ERROR,
+    category: ErrorCategory = ErrorCategory.UNKNOWN,
+):
     """Decorator for async error handling"""
 
     def decorator(func):
@@ -499,7 +552,9 @@ def async_handle_errors(severity: ErrorSeverity = ErrorSeverity.ERROR, category:
                 return await func(*args, **kwargs)
             except Exception as e:
                 # Similar error handling for async
-                raise ApplicationError(str(e), severity=severity, category=category)
+                raise ApplicationError(
+                    str(e), severity=severity, category=category
+                )
 
         return wrapper
 

@@ -93,7 +93,9 @@ class FortiGateDevice:
             "status": self.status,
             "interfaces": self.interfaces,
             "policies": self.policies,
-            "last_seen": self.last_seen.isoformat() if self.last_seen else None,
+            "last_seen": self.last_seen.isoformat()
+            if self.last_seen
+            else None,
         }
 
 
@@ -128,7 +130,9 @@ class DeviceManager:
         """네트워크 인터페이스 초기화"""
         try:
             self._discover_network_interfaces()
-            self.logger.info(f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨")
+            self.logger.info(
+                f"{len(self.network_interfaces)}개의 네트워크 인터페이스 발견됨"
+            )
         except Exception as e:
             self.logger.error(f"네트워크 인터페이스 초기화 실패: {e}")
 
@@ -146,18 +150,26 @@ class DeviceManager:
                 # netifaces를 사용한 인터페이스 발견
                 for interface_name in netifaces.interfaces():
                     try:
-                        interface_info = self._get_interface_details(interface_name)
+                        interface_info = self._get_interface_details(
+                            interface_name
+                        )
                         if interface_info:
-                            self.network_interfaces[interface_name] = interface_info
+                            self.network_interfaces[
+                                interface_name
+                            ] = interface_info
                     except Exception as e:
-                        self.logger.debug(f"인터페이스 {interface_name} 정보 획득 실패: {e}")
+                        self.logger.debug(
+                            f"인터페이스 {interface_name} 정보 획득 실패: {e}"
+                        )
 
             except Exception as e:
                 self.logger.error(f"인터페이스 발견 중 오류: {e}")
                 # 기본 인터페이스 추가
                 self._add_default_interfaces()
 
-    def _get_interface_details(self, interface_name: str) -> Optional[NetworkInterface]:
+    def _get_interface_details(
+        self, interface_name: str
+    ) -> Optional[NetworkInterface]:
         """인터페이스 상세 정보 조회"""
         if not HAS_NETIFACES:
             return None
@@ -193,7 +205,9 @@ class DeviceManager:
 
             # 루프백 인터페이스 감지
             is_loopback = (
-                interface_name.startswith("lo") or interface_name.startswith("Loopback") or "127.0.0.1" in ip_addresses
+                interface_name.startswith("lo")
+                or interface_name.startswith("Loopback")
+                or "127.0.0.1" in ip_addresses
             )
 
             return NetworkInterface(
@@ -218,7 +232,9 @@ class DeviceManager:
             return "Loopback"
         elif interface_name.startswith("eth"):
             return f"Ethernet ({interface_name})"
-        elif interface_name.startswith("wlan") or interface_name.startswith("wifi"):
+        elif interface_name.startswith("wlan") or interface_name.startswith(
+            "wifi"
+        ):
             return f"Wireless ({interface_name})"
         elif interface_name.startswith("docker"):
             return f"Docker ({interface_name})"
@@ -235,7 +251,9 @@ class DeviceManager:
             "wlan0": "Primary Wireless interface",
             "docker0": "Docker bridge interface",
         }
-        return descriptions.get(interface_name, f"Network interface {interface_name}")
+        return descriptions.get(
+            interface_name, f"Network interface {interface_name}"
+        )
 
     def _add_default_interfaces(self) -> None:
         """기본 인터페이스 추가 (fallback)"""
@@ -298,9 +316,14 @@ class DeviceManager:
     def get_available_interfaces(self) -> List[Dict[str, Any]]:
         """사용 가능한 네트워크 인터페이스 목록"""
         with self.device_lock:
-            return [interface.to_dict() for interface in self.network_interfaces.values()]
+            return [
+                interface.to_dict()
+                for interface in self.network_interfaces.values()
+            ]
 
-    def get_interface_details(self, interface_name: str) -> Optional[Dict[str, Any]]:
+    def get_interface_details(
+        self, interface_name: str
+    ) -> Optional[Dict[str, Any]]:
         """특정 인터페이스 상세 정보"""
         with self.device_lock:
             interface = self.network_interfaces.get(interface_name)
@@ -422,7 +445,9 @@ class DeviceManager:
                     {"name": "port1", "ip": "192.168.2.1", "status": "up"},
                     {"name": "port2", "ip": "10.0.1.1", "status": "up"},
                 ],
-                "policies": [{"id": 1, "name": "Internal_Access", "action": "accept"}],
+                "policies": [
+                    {"id": 1, "name": "Internal_Access", "action": "accept"}
+                ],
                 "last_seen": datetime.now().isoformat(),
             },
         ]
@@ -449,7 +474,9 @@ class DeviceManager:
     def get_fortigate_devices(self) -> List[Dict[str, Any]]:
         """FortiGate 장치 목록 조회"""
         with self.device_lock:
-            return [device.to_dict() for device in self.fortigate_devices.values()]
+            return [
+                device.to_dict() for device in self.fortigate_devices.values()
+            ]
 
     def get_fortigate_device(self, host: str) -> Optional[Dict[str, Any]]:
         """특정 FortiGate 장치 정보 조회"""
@@ -468,14 +495,24 @@ class DeviceManager:
                     "status": "up",
                     "type": "internal",
                 },
-                {"name": "port2", "ip": "10.0.0.1", "status": "up", "type": "internal"},
+                {
+                    "name": "port2",
+                    "ip": "10.0.0.1",
+                    "status": "up",
+                    "type": "internal",
+                },
                 {
                     "name": "wan1",
                     "ip": "203.0.113.1",
                     "status": "up",
                     "type": "external",
                 },
-                {"name": "dmz", "ip": "172.16.0.1", "status": "down", "type": "dmz"},
+                {
+                    "name": "dmz",
+                    "ip": "172.16.0.1",
+                    "status": "down",
+                    "type": "dmz",
+                },
             ]
 
         try:
@@ -509,10 +546,14 @@ class DeviceManager:
             else:
                 ping_cmd = ["ping", "-c", "1", "-W", "3", host]
 
-            ping_result = subprocess.run(ping_cmd, capture_output=True, timeout=5, text=True)
+            ping_result = subprocess.run(
+                ping_cmd, capture_output=True, timeout=5, text=True
+            )
 
             result["ping"] = ping_result.returncode == 0
-            result["response_time"] = round((time.time() - start_time) * 1000, 2)
+            result["response_time"] = round(
+                (time.time() - start_time) * 1000, 2
+            )
 
             # API 테스트 (FortiGate가 설정된 경우)
             if result["ping"] and host == self.config.fortigate_host:

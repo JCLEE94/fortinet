@@ -51,7 +51,11 @@ CSP_SOURCES: Dict[str, List[str]] = {
         "https://fonts.googleapis.com",
         "https://stackpath.bootstrapcdn.com",
     ],
-    "font-src": ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+    "font-src": [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "https://cdnjs.cloudflare.com",
+    ],
     "img-src": ["'self'", "data:", "https:"],
     "connect-src": ["'self'", "wss:", "https:"],
 }
@@ -147,13 +151,15 @@ def get_fortimanager_config() -> Optional[Dict[str, Any]]:
     """
     # 환경변수에서 FortiManager 설정 로드
     config = {
-        "enabled": os.getenv("FORTIMANAGER_ENABLED", "false").lower() == "true",
+        "enabled": os.getenv("FORTIMANAGER_ENABLED", "false").lower()
+        == "true",
         "host": os.getenv("FORTIMANAGER_HOST", ""),
         "port": int(os.getenv("FORTIMANAGER_PORT", "443")),
         "username": os.getenv("FORTIMANAGER_USERNAME", "admin"),
         "password": os.getenv("FORTIMANAGER_PASSWORD", ""),
         "api_token": os.getenv("FORTIMANAGER_API_TOKEN", ""),
-        "verify_ssl": os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true",
+        "verify_ssl": os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower()
+        == "true",
         "timeout": int(os.getenv("FORTIMANAGER_TIMEOUT", "30")),
     }
 
@@ -167,7 +173,11 @@ def get_fortimanager_config() -> Optional[Dict[str, Any]]:
 # Fortinet 제품 설정
 FORTINET_PRODUCTS = {
     "fortigate": {"default_port": 443, "api_version": "v2", "timeout": 30},
-    "fortimanager": {"default_port": 443, "api_version": "jsonrpc", "timeout": 30},
+    "fortimanager": {
+        "default_port": 443,
+        "api_version": "jsonrpc",
+        "timeout": 30,
+    },
     "fortianalyzer": {"default_port": 443, "api_version": "v1", "timeout": 30},
 }
 

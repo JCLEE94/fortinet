@@ -24,7 +24,10 @@ async def check_compliance():
         data = request.get_json()
 
         if not data:
-            return jsonify({"error": "Compliance check parameters are required"}), 400
+            return (
+                jsonify({"error": "Compliance check parameters are required"}),
+                400,
+            )
 
         devices = data.get("devices", [])
         frameworks = data.get("frameworks", ["PCI-DSS"])
@@ -35,7 +38,9 @@ async def check_compliance():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            compliance_results = dummy_generator.generate_compliance_check(devices, frameworks)
+            compliance_results = dummy_generator.generate_compliance_check(
+                devices, frameworks
+            )
             return jsonify(
                 {
                     "compliance_check": compliance_results,
@@ -57,7 +62,9 @@ async def check_compliance():
 
         # 비동기 컴플라이언스 검사 수행
         compliance_result = await hub.compliance_framework.check_compliance(
-            devices=devices, frameworks=frameworks, auto_remediate=auto_remediate
+            devices=devices,
+            frameworks=frameworks,
+            auto_remediate=auto_remediate,
         )
 
         return jsonify(
@@ -83,18 +90,26 @@ async def remediate_violations():
         data = request.get_json()
 
         if not data:
-            return jsonify({"error": "Remediation parameters are required"}), 400
+            return (
+                jsonify({"error": "Remediation parameters are required"}),
+                400,
+            )
 
         devices = data.get("devices", [])
         violations = data.get("violations", [])
         dry_run = data.get("dry_run", True)  # 기본값: 테스트 실행
 
         if not devices or not violations:
-            return jsonify({"error": "Devices and violations are required"}), 400
+            return (
+                jsonify({"error": "Devices and violations are required"}),
+                400,
+            )
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            remediation_results = dummy_generator.generate_remediation_results(violations)
+            remediation_results = dummy_generator.generate_remediation_results(
+                violations
+            )
             return jsonify(
                 {
                     "remediation": remediation_results,
@@ -115,8 +130,10 @@ async def remediate_violations():
         hub = FortiManagerAdvancedHub(fm_client)
 
         # 비동기 위반 사항 수정
-        remediation_result = await hub.compliance_framework.remediate_violations(
-            devices=devices, violations=violations, dry_run=dry_run
+        remediation_result = (
+            await hub.compliance_framework.remediate_violations(
+                devices=devices, violations=violations, dry_run=dry_run
+            )
         )
 
         return jsonify(
@@ -144,7 +161,9 @@ def get_policy_templates():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            templates = dummy_generator.generate_policy_templates(category, framework)
+            templates = dummy_generator.generate_policy_templates(
+                category, framework
+            )
             return jsonify(
                 {
                     "templates": templates,
@@ -163,7 +182,9 @@ def get_policy_templates():
         # FortiManager 고급 허브 사용
         hub = FortiManagerAdvancedHub(fm_client)
 
-        templates = hub.policy_orchestrator.get_available_templates(category=category, framework=framework)
+        templates = hub.policy_orchestrator.get_available_templates(
+            category=category, framework=framework
+        )
 
         return jsonify(
             {
@@ -188,7 +209,9 @@ async def apply_policy_template():
 
         if not data:
             return (
-                jsonify({"error": "Template application parameters are required"}),
+                jsonify(
+                    {"error": "Template application parameters are required"}
+                ),
                 400,
             )
 
@@ -260,7 +283,9 @@ def get_compliance_reports():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            reports = dummy_generator.generate_compliance_reports(devices, frameworks, date_range)
+            reports = dummy_generator.generate_compliance_reports(
+                devices, frameworks, date_range
+            )
             return jsonify(
                 {
                     "reports": reports,
@@ -350,7 +375,11 @@ def create_scheduled_check():
 
         if not name or not devices or not frameworks or not schedule:
             return (
-                jsonify({"error": "Name, devices, frameworks, and schedule are required"}),
+                jsonify(
+                    {
+                        "error": "Name, devices, frameworks, and schedule are required"
+                    }
+                ),
                 400,
             )
 
@@ -394,7 +423,10 @@ def create_scheduled_check():
                 }
             )
         else:
-            return jsonify({"error": "Failed to schedule compliance check"}), 500
+            return (
+                jsonify({"error": "Failed to schedule compliance check"}),
+                500,
+            )
 
     except Exception as e:
         logger.error(f"컴플라이언스 검사 예약 중 오류: {str(e)}")

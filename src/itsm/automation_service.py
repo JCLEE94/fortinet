@@ -61,7 +61,9 @@ class ITSMAutomationService:
                     config = json.load(f)
                     self._initialize_from_config(config)
             else:
-                logger.warning(f"Config file not found: {self.config_file}. Using default configuration.")
+                logger.warning(
+                    f"Config file not found: {self.config_file}. Using default configuration."
+                )
                 self._create_default_config()
 
         except Exception as e:
@@ -87,7 +89,9 @@ class ITSMAutomationService:
                 "password": "",
                 "api_token": "",
                 "poll_interval": 300,
-                "custom_headers": {"User-Agent": "FortiGate-Nextrade-AutoDeploy/1.0"},
+                "custom_headers": {
+                    "User-Agent": "FortiGate-Nextrade-AutoDeploy/1.0"
+                },
             },
             "fortimanager": {
                 "enabled": True,
@@ -157,7 +161,9 @@ class ITSMAutomationService:
                 )
 
             # 자동화 엔진 초기화
-            self.automation_engine = PolicyAutomationEngine(self.fortimanager_client)
+            self.automation_engine = PolicyAutomationEngine(
+                self.fortimanager_client
+            )
 
             # 자동화 설정 적용
             automation_config = config.get("automation", {})
@@ -233,7 +239,9 @@ class ITSMAutomationService:
 
         try:
             # ITSM 요청 수집 및 처리
-            reports = await self.automation_engine.process_itsm_requests(self.connector)
+            reports = await self.automation_engine.process_itsm_requests(
+                self.connector
+            )
 
             # 통계 업데이트
             self.service_stats["last_check"] = cycle_start
@@ -247,9 +255,13 @@ class ITSMAutomationService:
 
             # 처리 결과 로그
             if reports:
-                successful = len([r for r in reports if r.result.value == "success"])
+                successful = len(
+                    [r for r in reports if r.result.value == "success"]
+                )
                 failed = len(reports) - successful
-                logger.info(f"Cycle completed: {successful} successful, {failed} failed deployments")
+                logger.info(
+                    f"Cycle completed: {successful} successful, {failed} failed deployments"
+                )
             else:
                 logger.info("Cycle completed: No new requests found")
 
@@ -271,7 +283,9 @@ class ITSMAutomationService:
             # 여기서 웹훅, 이메일 등으로 알림 전송
             # 실제 구현은 설정에 따라 다름
 
-    async def manual_process(self, since_hours: int = 1) -> List[DeploymentReport]:
+    async def manual_process(
+        self, since_hours: int = 1
+    ) -> List[DeploymentReport]:
         """수동 처리 (즉시 실행)"""
         logger.info(f"Starting manual processing for last {since_hours} hours")
 
@@ -302,7 +316,9 @@ class ITSMAutomationService:
                         f"Manual deployment successful: {', '.join(report.affected_firewalls)}",
                     )
 
-            logger.info(f"Manual processing completed: {len(reports)} requests processed")
+            logger.info(
+                f"Manual processing completed: {len(reports)} requests processed"
+            )
             return reports
 
         except Exception as e:
@@ -313,14 +329,24 @@ class ITSMAutomationService:
         """서비스 상태 조회"""
         uptime = None
         if self.service_stats["start_time"]:
-            uptime = (datetime.now() - self.service_stats["start_time"]).total_seconds()
+            uptime = (
+                datetime.now() - self.service_stats["start_time"]
+            ).total_seconds()
 
         status = {
             "is_running": self.is_running,
             "uptime_seconds": uptime,
-            "last_check": (self.service_stats["last_check"].isoformat() if self.service_stats["last_check"] else None),
-            "total_requests_processed": self.service_stats["total_requests_processed"],
-            "successful_deployments": self.service_stats["successful_deployments"],
+            "last_check": (
+                self.service_stats["last_check"].isoformat()
+                if self.service_stats["last_check"]
+                else None
+            ),
+            "total_requests_processed": self.service_stats[
+                "total_requests_processed"
+            ],
+            "successful_deployments": self.service_stats[
+                "successful_deployments"
+            ],
             "failed_deployments": self.service_stats["failed_deployments"],
             "success_rate": (
                 self.service_stats["successful_deployments"]
@@ -329,15 +355,25 @@ class ITSMAutomationService:
             ),
             "last_error": self.service_stats["last_error"],
             "connector_status": {
-                "connected": self.connector.is_connected if self.connector else False,
-                "platform": (self.connector.config.platform.value if self.connector else None),
-                "base_url": self.connector.config.base_url if self.connector else None,
+                "connected": self.connector.is_connected
+                if self.connector
+                else False,
+                "platform": (
+                    self.connector.config.platform.value
+                    if self.connector
+                    else None
+                ),
+                "base_url": self.connector.config.base_url
+                if self.connector
+                else None,
             },
             "automation_engine_status": {
                 "initialized": self.automation_engine is not None,
                 "fortimanager_enabled": self.fortimanager_client is not None,
                 "deployment_history_count": (
-                    len(self.automation_engine.deployment_history) if self.automation_engine else 0
+                    len(self.automation_engine.deployment_history)
+                    if self.automation_engine
+                    else 0
                 ),
             },
         }
@@ -362,7 +398,9 @@ class ITSMAutomationService:
         serializable_reports = []
         for report in reports:
             report_dict = asdict(report)
-            report_dict["deployment_time"] = report_dict["deployment_time"].isoformat()
+            report_dict["deployment_time"] = report_dict[
+                "deployment_time"
+            ].isoformat()
             report_dict["result"] = report_dict["result"].value
             serializable_reports.append(report_dict)
 
@@ -378,7 +416,9 @@ class ITSMAutomationService:
 
             if connected:
                 # 테스트 요청 수집 시도
-                test_requests = await self.connector.fetch_firewall_requests(datetime.now() - timedelta(hours=1))
+                test_requests = await self.connector.fetch_firewall_requests(
+                    datetime.now() - timedelta(hours=1)
+                )
 
                 return {
                     "success": True,
@@ -387,7 +427,10 @@ class ITSMAutomationService:
                     "test_requests_found": len(test_requests),
                 }
             else:
-                return {"success": False, "error": "Failed to connect to ITSM system"}
+                return {
+                    "success": False,
+                    "error": "Failed to connect to ITSM system",
+                }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -399,7 +442,9 @@ class ITSMAutomationService:
 
             # 서비스가 실행 중이면 재시작 필요
             if self.is_running:
-                logger.warning("Configuration updated. Service restart required.")
+                logger.warning(
+                    "Configuration updated. Service restart required."
+                )
 
             self._initialize_from_config(new_config)
             return True

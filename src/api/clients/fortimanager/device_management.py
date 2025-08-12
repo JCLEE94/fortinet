@@ -16,7 +16,9 @@ class DeviceManagementMixin:
     def get_devices(self, adom="root"):
         """Get list of devices in ADOM"""
         data = {"adom": adom}
-        return self._make_api_request("get", "/dvmdb/adom/{adom}/device".format(adom=adom), data=data)
+        return self._make_api_request(
+            "get", "/dvmdb/adom/{adom}/device".format(adom=adom), data=data
+        )
 
     def get_managed_devices(self, adom="root"):
         """Get managed devices with detailed information"""
@@ -46,7 +48,9 @@ class DeviceManagementMixin:
         """Get device status and information"""
         try:
             data = {"adom": adom, "device": device_name}
-            response = self._make_api_request("get", f"/dvmdb/adom/{adom}/device/{device_name}", data=data)
+            response = self._make_api_request(
+                "get", f"/dvmdb/adom/{adom}/device/{device_name}", data=data
+            )
 
             if response and "data" in response:
                 device_info = response["data"]
@@ -54,20 +58,29 @@ class DeviceManagementMixin:
                     "status": "success",
                     "data": {
                         "name": device_info.get("name", device_name),
-                        "connection_status": device_info.get("conn_status", "Unknown"),
+                        "connection_status": device_info.get(
+                            "conn_status", "Unknown"
+                        ),
                         "platform": device_info.get("platform_str", "Unknown"),
                         "version": device_info.get("os_ver", "Unknown"),
                         "serial_number": device_info.get("sn", "Unknown"),
                         "ip_address": device_info.get("ip", "Unknown"),
-                        "last_checkin": device_info.get("last_checkin", "Unknown"),
+                        "last_checkin": device_info.get(
+                            "last_checkin", "Unknown"
+                        ),
                     },
                 }
-            return {"status": "error", "message": f"Device {device_name} not found"}
+            return {
+                "status": "error",
+                "message": f"Device {device_name} not found",
+            }
         except Exception as e:
             logger.error(f"Error getting device status for {device_name}: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_device_global_settings(self, device_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_device_global_settings(
+        self, device_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """Get global settings from a managed device"""
         try:
             data = {
@@ -76,7 +89,11 @@ class DeviceManagementMixin:
                 "option": "object member",
             }
 
-            response = self._make_api_request("get", f"/pm/config/device/{device_name}/global/{cli_path}", data=data)
+            response = self._make_api_request(
+                "get",
+                f"/pm/config/device/{device_name}/global/{cli_path}",
+                data=data,
+            )
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -110,7 +127,11 @@ class DeviceManagementMixin:
                 "data": settings_data,
             }
 
-            response = self._make_api_request("set", f"/pm/config/device/{device_name}/global/{cli_path}", data=data)
+            response = self._make_api_request(
+                "set",
+                f"/pm/config/device/{device_name}/global/{cli_path}",
+                data=data,
+            )
 
             if response and response.get("status", {}).get("code") == 0:
                 return {

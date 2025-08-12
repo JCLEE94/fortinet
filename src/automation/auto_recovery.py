@@ -53,7 +53,9 @@ class AutoRecoveryEngine:
             return
 
         self.is_running = True
-        self.recovery_thread = threading.Thread(target=self._recovery_loop, daemon=True)
+        self.recovery_thread = threading.Thread(
+            target=self._recovery_loop, daemon=True
+        )
         self.recovery_thread.start()
         logger.info("자동 복구 엔진 시작됨")
 
@@ -69,11 +71,15 @@ class AutoRecoveryEngine:
         if callback not in self.listeners:
             self.listeners.append(callback)
 
-    def trigger_recovery(self, issue_type: str, severity: str, details: Dict) -> bool:
+    def trigger_recovery(
+        self, issue_type: str, severity: str, details: Dict
+    ) -> bool:
         """수동 복구 트리거"""
         logger.info(f"수동 복구 트리거: {issue_type} ({severity})")
 
-        recovery_action = self._find_recovery_action(issue_type, severity, details)
+        recovery_action = self._find_recovery_action(
+            issue_type, severity, details
+        )
 
         if recovery_action:
             return self._execute_recovery(recovery_action, details)
@@ -97,7 +103,11 @@ class AutoRecoveryEngine:
             "total_recoveries": self.stats["total_recoveries"],
             "successful_recoveries": self.stats["successful_recoveries"],
             "failed_recoveries": self.stats["failed_recoveries"],
-            "success_rate": (self.stats["successful_recoveries"] / max(self.stats["total_recoveries"], 1)) * 100,
+            "success_rate": (
+                self.stats["successful_recoveries"]
+                / max(self.stats["total_recoveries"], 1)
+            )
+            * 100,
             "by_type": dict(self.stats["by_type"]),
             "by_severity": dict(self.stats["by_severity"]),
             "recent_recoveries": list(self.recovery_history)[-10:],
@@ -153,7 +163,9 @@ class AutoRecoveryEngine:
                 self.consecutive_failures[issue_type] += 1
 
                 # 심각도 결정
-                severity = self._determine_severity(issue_type, self.consecutive_failures[issue_type])
+                severity = self._determine_severity(
+                    issue_type, self.consecutive_failures[issue_type]
+                )
 
                 logger.warning(f"이상 상태 감지: {issue_type} (심각도: {severity})")
 
@@ -190,10 +202,14 @@ class AutoRecoveryEngine:
             success = False
 
             if action_type == "restart_service":
-                success = self._restart_service(action_params.get("service_name"))
+                success = self._restart_service(
+                    action_params.get("service_name")
+                )
 
             elif action_type == "restart_container":
-                success = self._restart_container(action_params.get("container_name"))
+                success = self._restart_container(
+                    action_params.get("container_name")
+                )
 
             elif action_type == "clear_cache":
                 success = self._clear_cache(action_params.get("cache_type"))
@@ -293,7 +309,9 @@ class AutoRecoveryEngine:
             if cache_type == "system":
                 # 시스템 캐시 정리
                 subprocess.run(["sync"], timeout=10)
-                subprocess.run(["echo", "3", ">", "/proc/sys/vm/drop_caches"], timeout=10)
+                subprocess.run(
+                    ["echo", "3", ">", "/proc/sys/vm/drop_caches"], timeout=10
+                )
 
             elif cache_type == "docker":
                 # Docker 캐시 정리
@@ -333,7 +351,9 @@ class AutoRecoveryEngine:
                         # 중요하지 않은 프로세스만 종료
                         if proc.info["name"] in ["chrome", "firefox", "code"]:
                             proc.terminate()
-                            logger.info(f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}")
+                            logger.info(
+                                f"메모리 해제를 위해 프로세스 종료: {proc.info['name']}"
+                            )
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
@@ -410,7 +430,9 @@ class AutoRecoveryEngine:
             import shlex
 
             command_args = shlex.split(command)
-            result = subprocess.run(command_args, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                command_args, capture_output=True, text=True, timeout=60
+            )
 
             if result.returncode == 0:
                 logger.info(f"명령 실행 성공: {command}")
@@ -432,7 +454,9 @@ class AutoRecoveryEngine:
             if alert_type == "webhook":
                 webhook_url = params.get("webhook_url")
                 if webhook_url:
-                    response = requests.post(webhook_url, json={"message": message}, timeout=10)
+                    response = requests.post(
+                        webhook_url, json={"message": message}, timeout=10
+                    )
                     return response.status_code == 200
 
             elif alert_type == "log":
@@ -470,7 +494,9 @@ class AutoRecoveryEngine:
             "cpu_usage": psutil.cpu_percent(interval=1),
             "memory_usage": psutil.virtual_memory().percent,
             "disk_usage": psutil.disk_usage("/").percent,
-            "load_average": os.getloadavg()[0] if hasattr(os, "getloadavg") else 0,
+            "load_average": os.getloadavg()[0]
+            if hasattr(os, "getloadavg")
+            else 0,
         }
 
     def _check_network_health(self) -> Dict:
@@ -487,12 +513,18 @@ class AutoRecoveryEngine:
             from config.services import APP_CONFIG
 
             local_host = SPECIAL_IPS.get("localhost", "127.0.0.1")
-            response = requests.get(f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings', timeout=5)
+            response = requests.get(
+                f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings',
+                timeout=5,
+            )
             local_service_ok = response.status_code == 200
         except Exception:
             local_service_ok = False
 
-        return {"internet_connectivity": internet_ok, "local_service": local_service_ok}
+        return {
+            "internet_connectivity": internet_ok,
+            "local_service": local_service_ok,
+        }
 
     def _check_application_health(self) -> Dict:
         """애플리케이션 헬스 체크"""
@@ -500,7 +532,10 @@ class AutoRecoveryEngine:
             from config.services import APP_CONFIG
 
             local_host = SPECIAL_IPS.get("localhost", "127.0.0.1")
-            response = requests.get(f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings', timeout=10)
+            response = requests.get(
+                f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings',
+                timeout=10,
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -510,7 +545,10 @@ class AutoRecoveryEngine:
                     "status": data.get("status", "unknown"),
                 }
             else:
-                return {"responsive": False, "status_code": response.status_code}
+                return {
+                    "responsive": False,
+                    "status_code": response.status_code,
+                }
         except Exception as e:
             return {"responsive": False, "error": str(e)}
 
@@ -720,7 +758,9 @@ class AutoRecoveryEngine:
 
     def _set_cooldown(self, issue_type: str, cooldown_seconds: int):
         """쿨다운 설정"""
-        self.recovery_cooldown[issue_type] = datetime.now() + timedelta(seconds=cooldown_seconds)
+        self.recovery_cooldown[issue_type] = datetime.now() + timedelta(
+            seconds=cooldown_seconds
+        )
 
     def _manage_cooldowns(self):
         """만료된 쿨다운 정리"""
@@ -730,7 +770,9 @@ class AutoRecoveryEngine:
         for key in expired:
             del self.recovery_cooldown[key]
 
-    def _find_recovery_action(self, issue_type: str, severity: str, details: Dict) -> Optional[Dict]:
+    def _find_recovery_action(
+        self, issue_type: str, severity: str, details: Dict
+    ) -> Optional[Dict]:
         """복구 액션 찾기"""
         for rule in self.recovery_rules:
             if rule["name"] == issue_type:

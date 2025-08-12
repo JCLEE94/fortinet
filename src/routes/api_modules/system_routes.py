@@ -40,24 +40,52 @@ def health_check():
                 with open(build_json_path, "r") as f:
                     build_data = json.load(f)
                     build_info = {
-                        "gitops_managed": build_data.get("gitops", {}).get("immutable", False),
-                        "immutable_tag": build_data.get("build", {}).get("immutable_tag", "unknown"),
-                        "git_sha": build_data.get("git", {}).get("sha", "unknown"),
-                        "git_branch": build_data.get("git", {}).get("branch", "unknown"),
-                        "build_timestamp": build_data.get("build", {}).get("timestamp", "unknown"),
-                        "registry_image": build_data.get("registry", {}).get("full_image", "unknown"),
-                        "gitops_principles": build_data.get("gitops", {}).get("principles", []),
+                        "gitops_managed": build_data.get("gitops", {}).get(
+                            "immutable", False
+                        ),
+                        "immutable_tag": build_data.get("build", {}).get(
+                            "immutable_tag", "unknown"
+                        ),
+                        "git_sha": build_data.get("git", {}).get(
+                            "sha", "unknown"
+                        ),
+                        "git_branch": build_data.get("git", {}).get(
+                            "branch", "unknown"
+                        ),
+                        "build_timestamp": build_data.get("build", {}).get(
+                            "timestamp", "unknown"
+                        ),
+                        "registry_image": build_data.get("registry", {}).get(
+                            "full_image", "unknown"
+                        ),
+                        "gitops_principles": build_data.get("gitops", {}).get(
+                            "principles", []
+                        ),
                     }
             else:
                 # 환경변수에서 GitOps 정보 가져오기 (Docker 환경)
                 build_info = {
-                    "gitops_managed": os.environ.get("GITOPS_MANAGED", "false").lower() == "true",
-                    "immutable_tag": os.environ.get("IMMUTABLE_TAG", "unknown"),
+                    "gitops_managed": os.environ.get(
+                        "GITOPS_MANAGED", "false"
+                    ).lower()
+                    == "true",
+                    "immutable_tag": os.environ.get(
+                        "IMMUTABLE_TAG", "unknown"
+                    ),
                     "git_sha": os.environ.get("GIT_SHA", "unknown"),
                     "git_branch": os.environ.get("GIT_BRANCH", "unknown"),
-                    "build_timestamp": os.environ.get("BUILD_TIMESTAMP", "unknown"),
-                    "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
-                    "gitops_principles": ["declarative", "git-source", "pull-based", "immutable"],
+                    "build_timestamp": os.environ.get(
+                        "BUILD_TIMESTAMP", "unknown"
+                    ),
+                    "registry_url": os.environ.get(
+                        "REGISTRY_URL", "registry.jclee.me"
+                    ),
+                    "gitops_principles": [
+                        "declarative",
+                        "git-source",
+                        "pull-based",
+                        "immutable",
+                    ],
                 }
         except Exception as e:
             logger.warning(f"Failed to load build info: {e}")
@@ -82,7 +110,9 @@ def health_check():
         # GitOps 배포 검증
         gitops_status = "unknown"
         if build_info.get("gitops_managed"):
-            if build_info.get("immutable_tag", "").startswith(("production-", "development-", "staging-")):
+            if build_info.get("immutable_tag", "").startswith(
+                ("production-", "development-", "staging-")
+            ):
                 gitops_status = "compliant"
             else:
                 gitops_status = "non-compliant"
@@ -93,7 +123,13 @@ def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return (
-            jsonify({"status": "unhealthy", "timestamp": time.time(), "error": str(e)}),
+            jsonify(
+                {
+                    "status": "unhealthy",
+                    "timestamp": time.time(),
+                    "error": str(e),
+                }
+            ),
             500,
         )
 

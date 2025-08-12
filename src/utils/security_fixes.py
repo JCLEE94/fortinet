@@ -51,7 +51,9 @@ class SecurityFixer:
         all_patterns = md5_patterns + sha1_patterns + random_patterns
 
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
+        for root, dirs, files in os.walk(
+            os.path.join(self.project_root, "src")
+        ):
             for file in files:
                 if file.endswith(".py"):
                     file_path = os.path.join(root, file)
@@ -94,11 +96,15 @@ class SecurityFixer:
         ]
 
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
+        for root, dirs, files in os.walk(
+            os.path.join(self.project_root, "src")
+        ):
             for file in files:
                 if file.endswith(".py"):
                     file_path = os.path.join(root, file)
-                    if self._apply_patterns_to_file(file_path, unsafe_patterns):
+                    if self._apply_patterns_to_file(
+                        file_path, unsafe_patterns
+                    ):
                         fixes.append(f"안전하지 않은 역직렬화 수정: {file_path}")
 
         return fixes
@@ -128,11 +134,15 @@ class SecurityFixer:
         ]
 
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
+        for root, dirs, files in os.walk(
+            os.path.join(self.project_root, "src")
+        ):
             for file in files:
                 if file.endswith(".py"):
                     file_path = os.path.join(root, file)
-                    if self._apply_patterns_to_file(file_path, secret_patterns):
+                    if self._apply_patterns_to_file(
+                        file_path, secret_patterns
+                    ):
                         fixes.append(f"하드코딩된 비밀정보 수정: {file_path}")
 
         return fixes
@@ -153,7 +163,9 @@ class SecurityFixer:
         ]
 
         # src 디렉토리의 모든 Python 파일 처리
-        for root, dirs, files in os.walk(os.path.join(self.project_root, "src")):
+        for root, dirs, files in os.walk(
+            os.path.join(self.project_root, "src")
+        ):
             for file in files:
                 if file.endswith(".py"):
                     file_path = os.path.join(root, file)
@@ -162,7 +174,9 @@ class SecurityFixer:
 
         return fixes
 
-    def _apply_patterns_to_file(self, file_path: str, patterns: List[Tuple[str, str]]) -> bool:
+    def _apply_patterns_to_file(
+        self, file_path: str, patterns: List[Tuple[str, str]]
+    ) -> bool:
         """파일에 패턴 적용"""
         try:
             with open(file_path, "r", encoding="utf-8") as f:
@@ -171,7 +185,9 @@ class SecurityFixer:
             original_content = content
 
             for pattern, replacement in patterns:
-                content = re.sub(pattern, replacement, content, flags=re.MULTILINE)
+                content = re.sub(
+                    pattern, replacement, content, flags=re.MULTILINE
+                )
 
             # 변경사항이 있으면 파일 업데이트
             if content != original_content:
@@ -203,7 +219,9 @@ class SecurityFixer:
                 # 임포트 섹션에 보안 관련 임포트 추가
                 if not imports_added and line.startswith("from flask import"):
                     new_lines.append(line)
-                    new_lines.append("from utils.security import rate_limit, validate_request, csrf_protect\n")
+                    new_lines.append(
+                        "from utils.security import rate_limit, validate_request, csrf_protect\n"
+                    )
                     imports_added = True
                     modified = True
                 elif re.search(
@@ -211,7 +229,9 @@ class SecurityFixer:
                     line,
                 ):
                     # 민감한 라우트에 보안 데코레이터 추가
-                    new_lines.append("    @rate_limit(max_requests=30, window=60)\n")
+                    new_lines.append(
+                        "    @rate_limit(max_requests=30, window=60)\n"
+                    )
                     new_lines.append("    @csrf_protect\n")
                     new_lines.append(line)
                     modified = True
@@ -377,9 +397,13 @@ if __name__ == "__main__":
     parser.add_argument("--fix-all", action="store_true", help="모든 취약점 수정")
     parser.add_argument("--weak-crypto", action="store_true", help="약한 암호화 수정")
     parser.add_argument("--auth", action="store_true", help="인증 누락 수정")
-    parser.add_argument("--deserialization", action="store_true", help="역직렬화 수정")
+    parser.add_argument(
+        "--deserialization", action="store_true", help="역직렬화 수정"
+    )
     parser.add_argument("--secrets", action="store_true", help="하드코딩된 비밀정보 수정")
-    parser.add_argument("--path-traversal", action="store_true", help="경로 탐색 수정")
+    parser.add_argument(
+        "--path-traversal", action="store_true", help="경로 탐색 수정"
+    )
 
     args = parser.parse_args()
 

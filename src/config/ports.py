@@ -75,7 +75,13 @@ PROTOCOL_PORTS: Dict[str, Dict[str, int]] = {
         "imap": 143,
         "imaps": 993,
     },
-    "file_transfer": {"ftp": 21, "ftp_data": 20, "ftps": 990, "sftp": 22, "tftp": 69},
+    "file_transfer": {
+        "ftp": 21,
+        "ftp_data": 20,
+        "ftps": 990,
+        "sftp": 22,
+        "tftp": 69,
+    },
     "remote_access": {"ssh": 22, "telnet": 23, "rdp": 3389, "vnc": 5900},
     "database": {
         "mysql": 3306,
@@ -107,7 +113,12 @@ def get_service_port(service_name: str) -> int:
         포트 번호
     """
     # 우선순위: SERVICE_PORTS > FORTIGATE_PORTS > STANDARD_PORTS
-    return SERVICE_PORTS.get(service_name) or FORTIGATE_PORTS.get(service_name) or STANDARD_PORTS.get(service_name) or 0
+    return (
+        SERVICE_PORTS.get(service_name)
+        or FORTIGATE_PORTS.get(service_name)
+        or STANDARD_PORTS.get(service_name)
+        or 0
+    )
 
 
 def get_protocol_ports(protocol_category: str) -> Dict[str, int]:

@@ -17,9 +17,13 @@ class ConfigMigration:
     def __init__(self):
         self.base_dir = Path(__file__).resolve().parent.parent.parent
         self.backup_dir = self.base_dir / "config_backup"
-        self.legacy_settings_file = self.base_dir / "src" / "config" / "settings.py"
+        self.legacy_settings_file = (
+            self.base_dir / "src" / "config" / "settings.py"
+        )
         self.old_config_file = self.base_dir / "data" / "config.json"
-        self.default_config_file = self.base_dir / "data" / "default_config.json"
+        self.default_config_file = (
+            self.base_dir / "data" / "default_config.json"
+        )
 
     def backup_existing_configs(self):
         """기존 설정 파일들을 백업"""
@@ -91,14 +95,18 @@ class ConfigMigration:
         ]
 
         old_import = "from config.settings import settings"
-        new_import = "from config.unified_settings import unified_settings as settings"
+        new_import = (
+            "from config.unified_settings import unified_settings as settings"
+        )
 
         for file_path in files_to_update:
             if file_path.exists():
                 try:
                     content = file_path.read_text(encoding="utf-8")
                     if old_import in content:
-                        updated_content = content.replace(old_import, new_import)
+                        updated_content = content.replace(
+                            old_import, new_import
+                        )
                         file_path.write_text(updated_content, encoding="utf-8")
                         print(f"  ✅ {file_path.relative_to(self.base_dir)}")
                 except Exception as e:
@@ -115,9 +123,13 @@ class ConfigMigration:
                 "app_mode": settings.app_mode,
                 "offline_mode": settings.offline_mode,
                 "enabled_services": {
-                    "fortimanager": settings.is_service_enabled("fortimanager"),
+                    "fortimanager": settings.is_service_enabled(
+                        "fortimanager"
+                    ),
                     "fortigate": settings.is_service_enabled("fortigate"),
-                    "fortianalyzer": settings.is_service_enabled("fortianalyzer"),
+                    "fortianalyzer": settings.is_service_enabled(
+                        "fortianalyzer"
+                    ),
                     "redis": settings.redis.enabled,
                 },
                 "webapp_config": {
@@ -165,8 +177,12 @@ class ConfigMigration:
         print("=" * 50)
         print(f"📁 백업 디렉토리: {self.backup_dir}")
         print(f"🔧 현재 모드: {report['current_settings']['app_mode']}")
-        print(f"🌐 웹앱 포트: {report['current_settings']['webapp_config']['port']}")
-        print(f"📊 활성화된 서비스: {list(k for k, v in report['current_settings']['enabled_services'].items() if v)}")
+        print(
+            f"🌐 웹앱 포트: {report['current_settings']['webapp_config']['port']}"
+        )
+        print(
+            f"📊 활성화된 서비스: {list(k for k, v in report['current_settings']['enabled_services'].items() if v)}"
+        )
 
         return True
 

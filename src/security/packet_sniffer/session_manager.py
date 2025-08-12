@@ -80,7 +80,9 @@ class SessionInfo:
             "session_id": self.session_id,
             "config": self.config.to_dict(),
             "status": self.status.value,
-            "start_time": self.start_time.isoformat() if self.start_time else None,
+            "start_time": self.start_time.isoformat()
+            if self.start_time
+            else None,
             "end_time": self.end_time.isoformat() if self.end_time else None,
             "packets_captured": self.packets_captured,
             "packets_filtered": self.packets_filtered,
@@ -187,7 +189,9 @@ class CaptureSession:
 
         # 통계 업데이트 스레드 시작
         self._stats_thread = threading.Thread(
-            target=self._stats_updater, daemon=True, name=f"stats_{self.session_id[:8]}"
+            target=self._stats_updater,
+            daemon=True,
+            name=f"stats_{self.session_id[:8]}",
         )
         self._stats_thread.start()
 
@@ -239,7 +243,9 @@ class CaptureSession:
         self.logger.info(f"세션 중지됨: {self.session_id} (상태: {status.value})")
         return True
 
-    def get_packets(self, limit: Optional[int] = None, offset: int = 0) -> List[PacketInfo]:
+    def get_packets(
+        self, limit: Optional[int] = None, offset: int = 0
+    ) -> List[PacketInfo]:
         """패킷 조회"""
         with self.packet_lock:
             packets = self.packets[offset:]
@@ -381,13 +387,16 @@ class SessionManager:
             return [
                 session_id
                 for session_id, session in self.sessions.items()
-                if session.info.status in [SessionStatus.RUNNING, SessionStatus.PAUSED]
+                if session.info.status
+                in [SessionStatus.RUNNING, SessionStatus.PAUSED]
             ]
 
     def get_all_sessions(self) -> List[Dict[str, Any]]:
         """모든 세션 정보 조회"""
         with self.session_lock:
-            return [session.info.to_dict() for session in self.sessions.values()]
+            return [
+                session.info.to_dict() for session in self.sessions.values()
+            ]
 
     def get_session_details(self, session_id: str) -> Optional[Dict[str, Any]]:
         """세션 상세 정보 조회"""
@@ -396,14 +405,18 @@ class SessionManager:
             return session.info.to_dict()
         return None
 
-    def add_packet_to_session(self, session_id: str, packet: PacketInfo) -> bool:
+    def add_packet_to_session(
+        self, session_id: str, packet: PacketInfo
+    ) -> bool:
         """세션에 패킷 추가"""
         session = self.get_session(session_id)
         if session:
             return session.add_packet(packet)
         return False
 
-    def register_session_callback(self, session_id: str, callback: Callable) -> bool:
+    def register_session_callback(
+        self, session_id: str, callback: Callable
+    ) -> bool:
         """세션 콜백 등록"""
         session = self.get_session(session_id)
         if session:
@@ -422,12 +435,34 @@ class SessionManager:
         """전체 세션 통계"""
         with self.session_lock:
             total_sessions = len(self.sessions)
-            running_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.RUNNING])
-            paused_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.PAUSED])
-            completed_sessions = len([s for s in self.sessions.values() if s.info.status == SessionStatus.COMPLETED])
+            running_sessions = len(
+                [
+                    s
+                    for s in self.sessions.values()
+                    if s.info.status == SessionStatus.RUNNING
+                ]
+            )
+            paused_sessions = len(
+                [
+                    s
+                    for s in self.sessions.values()
+                    if s.info.status == SessionStatus.PAUSED
+                ]
+            )
+            completed_sessions = len(
+                [
+                    s
+                    for s in self.sessions.values()
+                    if s.info.status == SessionStatus.COMPLETED
+                ]
+            )
 
-            total_packets = sum(s.info.packets_captured for s in self.sessions.values())
-            total_bytes = sum(s.info.total_bytes for s in self.sessions.values())
+            total_packets = sum(
+                s.info.packets_captured for s in self.sessions.values()
+            )
+            total_bytes = sum(
+                s.info.total_bytes for s in self.sessions.values()
+            )
 
             return {
                 "total_sessions": total_sessions,
@@ -441,7 +476,9 @@ class SessionManager:
 
     def _start_cleanup_thread(self) -> None:
         """정리 스레드 시작"""
-        self._cleanup_thread = threading.Thread(target=self._cleanup_worker, daemon=True, name="session_cleanup")
+        self._cleanup_thread = threading.Thread(
+            target=self._cleanup_worker, daemon=True, name="session_cleanup"
+        )
         self._cleanup_thread.start()
 
     def _cleanup_worker(self) -> None:
@@ -468,7 +505,9 @@ class SessionManager:
                     SessionStatus.ERROR,
                 ]:
                     if session.info.end_time:
-                        age = (current_time - session.info.end_time).total_seconds()
+                        age = (
+                            current_time - session.info.end_time
+                        ).total_seconds()
                         if age > self.session_timeout or force:
                             should_delete = True
 

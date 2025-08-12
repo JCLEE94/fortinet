@@ -12,9 +12,15 @@ DEFAULT_STATS = {
     "uptime_percentage": float(os.getenv("DEFAULT_UPTIME_PERCENTAGE", "99.8")),
     "network_traffic": os.getenv("DEFAULT_NETWORK_TRAFFIC", "2.4 Gbps"),
     "active_alerts": int(os.getenv("DEFAULT_ACTIVE_ALERTS", "3")),
-    "trend_device_increase": int(os.getenv("DEFAULT_TREND_DEVICE_INCREASE", "12")),
-    "trend_uptime_increase": float(os.getenv("DEFAULT_TREND_UPTIME_INCREASE", "0.2")),
-    "trend_traffic_decrease": int(os.getenv("DEFAULT_TREND_TRAFFIC_DECREASE", "8")),
+    "trend_device_increase": int(
+        os.getenv("DEFAULT_TREND_DEVICE_INCREASE", "12")
+    ),
+    "trend_uptime_increase": float(
+        os.getenv("DEFAULT_TREND_UPTIME_INCREASE", "0.2")
+    ),
+    "trend_traffic_decrease": int(
+        os.getenv("DEFAULT_TREND_TRAFFIC_DECREASE", "8")
+    ),
 }
 
 # 차트 설정
@@ -23,16 +29,23 @@ CHART_CONFIG = {
         "hours_display": int(os.getenv("CHART_HOURS_DISPLAY", "24")),
         "inbound_color": os.getenv("CHART_INBOUND_COLOR", "#22c55e"),
         "outbound_color": os.getenv("CHART_OUTBOUND_COLOR", "#3b82f6"),
-        "grid_color": os.getenv("CHART_GRID_COLOR", "rgba(148, 163, 184, 0.1)"),
+        "grid_color": os.getenv(
+            "CHART_GRID_COLOR", "rgba(148, 163, 184, 0.1)"
+        ),
         "text_color": os.getenv("CHART_TEXT_COLOR", "#94a3b8"),
     }
 }
 
 # CDN 및 외부 리소스
 EXTERNAL_RESOURCES = {
-    "chartjs_cdn": os.getenv("CHARTJS_CDN_URL", "https://cdn.jsdelivr.net/npm/chart.js"),
-    "socketio_cdn": os.getenv("SOCKETIO_CDN_URL", "https://cdn.socket.io/4.5.4/socket.io.min.js"),
-    "fallback_enabled": os.getenv("CDN_FALLBACK_ENABLED", "true").lower() == "true",
+    "chartjs_cdn": os.getenv(
+        "CHARTJS_CDN_URL", "https://cdn.jsdelivr.net/npm/chart.js"
+    ),
+    "socketio_cdn": os.getenv(
+        "SOCKETIO_CDN_URL", "https://cdn.socket.io/4.5.4/socket.io.min.js"
+    ),
+    "fallback_enabled": os.getenv("CDN_FALLBACK_ENABLED", "true").lower()
+    == "true",
 }
 
 # 알림 템플릿
@@ -64,7 +77,9 @@ ALERT_TEMPLATES = [
         "icon": "info-circle",
         "color": os.getenv("ALERT_INFO_COLOR", "var(--info)"),
         "title_template": os.getenv("ALERT_INFO_TITLE", "장치 연결 해제"),
-        "description_template": os.getenv("ALERT_INFO_DESC", "{device}가 네트워크에서 연결 해제되었습니다."),
+        "description_template": os.getenv(
+            "ALERT_INFO_DESC", "{device}가 네트워크에서 연결 해제되었습니다."
+        ),
     },
 ]
 
@@ -72,14 +87,19 @@ ALERT_TEMPLATES = [
 DEVICE_LIST_CONFIG = {
     "top_devices_limit": int(os.getenv("TOP_DEVICES_LIMIT", "5")),
     "bandwidth_display_unit": os.getenv("BANDWIDTH_DISPLAY_UNIT", "Mbps"),
-    "trend_calculation_enabled": os.getenv("DEVICE_TREND_ENABLED", "true").lower() == "true",
+    "trend_calculation_enabled": os.getenv(
+        "DEVICE_TREND_ENABLED", "true"
+    ).lower()
+    == "true",
     "trend_max_percentage": int(os.getenv("DEVICE_TREND_MAX_PCT", "20")),
 }
 
 # 보안 이벤트 설정
 SECURITY_EVENTS_CONFIG = {
     "max_events_display": int(os.getenv("MAX_SECURITY_EVENTS", "10")),
-    "event_retention_hours": int(os.getenv("SECURITY_EVENT_RETENTION_HOURS", "24")),
+    "event_retention_hours": int(
+        os.getenv("SECURITY_EVENT_RETENTION_HOURS", "24")
+    ),
     "severity_colors": {
         "critical": os.getenv("SEVERITY_CRITICAL_COLOR", "#FF6B6B"),
         "high": os.getenv("SEVERITY_HIGH_COLOR", "#FF8E53"),
@@ -90,18 +110,33 @@ SECURITY_EVENTS_CONFIG = {
 
 # 대시보드 새로고침 설정
 REFRESH_CONFIG = {
-    "auto_refresh_enabled": os.getenv("DASHBOARD_AUTO_REFRESH", "true").lower() == "true",
-    "refresh_interval_seconds": int(os.getenv("DASHBOARD_REFRESH_INTERVAL", "30")),
+    "auto_refresh_enabled": os.getenv("DASHBOARD_AUTO_REFRESH", "true").lower()
+    == "true",
+    "refresh_interval_seconds": int(
+        os.getenv("DASHBOARD_REFRESH_INTERVAL", "30")
+    ),
     "chart_update_interval": int(os.getenv("CHART_UPDATE_INTERVAL", "60")),
     "stats_update_interval": int(os.getenv("STATS_UPDATE_INTERVAL", "15")),
 }
 
 # 퀵 액션 버튼 설정
 QUICK_ACTIONS_CONFIG = {
-    "traffic_analysis_enabled": os.getenv("QUICK_ACTION_TRAFFIC_ANALYSIS", "true").lower() == "true",
-    "policy_optimization_enabled": os.getenv("QUICK_ACTION_POLICY_OPT", "true").lower() == "true",
-    "report_generation_enabled": os.getenv("QUICK_ACTION_REPORT_GEN", "true").lower() == "true",
-    "security_diagnostics_enabled": os.getenv("QUICK_ACTION_SECURITY_DIAG", "true").lower() == "true",
+    "traffic_analysis_enabled": os.getenv(
+        "QUICK_ACTION_TRAFFIC_ANALYSIS", "true"
+    ).lower()
+    == "true",
+    "policy_optimization_enabled": os.getenv(
+        "QUICK_ACTION_POLICY_OPT", "true"
+    ).lower()
+    == "true",
+    "report_generation_enabled": os.getenv(
+        "QUICK_ACTION_REPORT_GEN", "true"
+    ).lower()
+    == "true",
+    "security_diagnostics_enabled": os.getenv(
+        "QUICK_ACTION_SECURITY_DIAG", "true"
+    ).lower()
+    == "true",
 }
 
 
@@ -174,6 +209,10 @@ def get_chart_data_points(hours: int = 24) -> Dict[str, List]:
 
     return {
         "labels": labels,
-        "inbound_data": [round(random.random() * 3 + 1, 2) for _ in range(hours)],
-        "outbound_data": [round(random.random() * 2 + 0.5, 2) for _ in range(hours)],
+        "inbound_data": [
+            round(random.random() * 3 + 1, 2) for _ in range(hours)
+        ],
+        "outbound_data": [
+            round(random.random() * 2 + 0.5, 2) for _ in range(hours)
+        ],
     }

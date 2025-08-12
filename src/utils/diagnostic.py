@@ -93,7 +93,9 @@ class DiagnosticTool:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
             result = sock.connect_ex(("localhost", port))
-            network_status["port_checks"][port] = "open" if result == 0 else "closed"
+            network_status["port_checks"][port] = (
+                "open" if result == 0 else "closed"
+            )
             sock.close()
 
         return network_status
@@ -111,7 +113,9 @@ class DiagnosticTool:
             with open("/proc/self/cgroup", "r") as f:
                 for line in f:
                     if "docker" in line:
-                        docker_info["container_id"] = line.split("/")[-1].strip()
+                        docker_info["container_id"] = line.split("/")[
+                            -1
+                        ].strip()
                         break
         except Exception:
             pass
@@ -220,7 +224,11 @@ class DiagnosticTool:
 
     def _check_logs(self) -> Dict[str, Any]:
         """로그 파일 체크"""
-        log_info = {"log_directory": "/app/logs", "files": {}, "recent_errors": []}
+        log_info = {
+            "log_directory": "/app/logs",
+            "files": {},
+            "recent_errors": [],
+        }
 
         if os.path.exists("/app/logs"):
             for filename in os.listdir("/app/logs"):
@@ -229,7 +237,9 @@ class DiagnosticTool:
                     stat = os.stat(filepath)
                     log_info["files"][filename] = {
                         "size": stat.st_size,
-                        "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                        "modified": datetime.fromtimestamp(
+                            stat.st_mtime
+                        ).isoformat(),
                         "readable": os.access(filepath, os.R_OK),
                         "writable": os.access(filepath, os.W_OK),
                     }
@@ -355,7 +365,8 @@ class DiagnosticTool:
                 "total": stat.f_blocks * stat.f_frsize,
                 "available": stat.f_bavail * stat.f_frsize,
                 "used": (stat.f_blocks - stat.f_bavail) * stat.f_frsize,
-                "percentage": ((stat.f_blocks - stat.f_bavail) / stat.f_blocks) * 100,
+                "percentage": ((stat.f_blocks - stat.f_bavail) / stat.f_blocks)
+                * 100,
             }
         except Exception:
             return {}
@@ -413,7 +424,9 @@ class DiagnosticTool:
         report_file = os.path.join(report_dir, f"diagnosis_{timestamp}.json")
 
         with open(report_file, "w", encoding="utf-8") as f:
-            json.dump(self.results, f, indent=2, ensure_ascii=False, default=str)
+            json.dump(
+                self.results, f, indent=2, ensure_ascii=False, default=str
+            )
 
         self.logger.info(f"Diagnosis report saved: {report_file}")
 

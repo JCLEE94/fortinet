@@ -36,9 +36,13 @@ class TroubleshootingLoop:
         self.logger = logging.getLogger("TroubleshootingLoop")
         self.logger.setLevel(logging.INFO)
 
-        log_path = os.path.join(DEFAULT_PATHS["LOG_DIR"], "troubleshooting_loop.log")
+        log_path = os.path.join(
+            DEFAULT_PATHS["LOG_DIR"], "troubleshooting_loop.log"
+        )
         handler = logging.FileHandler(log_path)
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
 
@@ -87,7 +91,9 @@ class TroubleshootingLoop:
         loop_thread.start()
 
         # 성능 모니터링 스레드
-        perf_thread = threading.Thread(target=self._performance_monitor_loop, daemon=True)
+        perf_thread = threading.Thread(
+            target=self._performance_monitor_loop, daemon=True
+        )
         perf_thread.start()
 
         return loop_thread, perf_thread
@@ -157,7 +163,12 @@ class TroubleshootingLoop:
                 timeout=self.monitors["web_app"]["timeout"],
             )
             if response.status_code != 200:
-                issues.append({"type": "web_app_down", "status_code": response.status_code})
+                issues.append(
+                    {
+                        "type": "web_app_down",
+                        "status_code": response.status_code,
+                    }
+                )
         except Exception as e:
             issues.append({"type": "web_app_down", "error": str(e)})
 
@@ -168,7 +179,12 @@ class TroubleshootingLoop:
                 timeout=self.monitors["mock_server"]["timeout"],
             )
             if response.status_code != 200:
-                issues.append({"type": "mock_server_down", "status_code": response.status_code})
+                issues.append(
+                    {
+                        "type": "mock_server_down",
+                        "status_code": response.status_code,
+                    }
+                )
         except Exception as e:
             issues.append({"type": "mock_server_down", "error": str(e)})
 
@@ -186,7 +202,9 @@ class TroubleshootingLoop:
 
         # 로그 파일이 100MB 이상이면 로테이션 필요
         if total_log_size > 100 * 1024 * 1024:
-            issues.append({"type": "log_rotation_needed", "size": total_log_size})
+            issues.append(
+                {"type": "log_rotation_needed", "size": total_log_size}
+            )
 
         # 기존 issues 리스트와 병합
         issues.extend(self.issues)
@@ -203,7 +221,10 @@ class TroubleshootingLoop:
             if issue_type not in self.recovery_attempts:
                 self.recovery_attempts[issue_type] = 0
 
-            if self.recovery_attempts[issue_type] >= self.max_recovery_attempts:
+            if (
+                self.recovery_attempts[issue_type]
+                >= self.max_recovery_attempts
+            ):
                 error_msg = f"{issue_type} 복구 실패 (최대 시도 횟수 초과)"
                 self.logger.error(error_msg)
 
@@ -259,11 +280,15 @@ class TroubleshootingLoop:
         """Mock 서버 복구"""
         try:
             # 프로세스 재시작
-            subprocess.run(["supervisorctl", "restart", "mock_server"], check=True)
+            subprocess.run(
+                ["supervisorctl", "restart", "mock_server"], check=True
+            )
             time.sleep(10)  # 시작 대기 (짧은 대기 시간은 하드코딩 유지)
 
             # 상태 확인
-            response = requests.get(self.monitors["mock_server"]["url"], timeout=5)
+            response = requests.get(
+                self.monitors["mock_server"]["url"], timeout=5
+            )
             return response.status_code == 200
         except Exception as e:
             self.logger.error(f"Mock 서버 복구 오류: {str(e)}")
@@ -280,7 +305,10 @@ class TroubleshootingLoop:
                 filepath = os.path.join(log_dir, filename)
                 if os.path.isfile(filepath):
                     # 7일 이상 된 파일 삭제
-                    if current_time - os.path.getmtime(filepath) > 7 * 24 * 3600:
+                    if (
+                        current_time - os.path.getmtime(filepath)
+                        > 7 * 24 * 3600
+                    ):
                         os.remove(filepath)
                         self.logger.info(f"오래된 로그 파일 삭제: {filename}")
 
@@ -288,7 +316,10 @@ class TroubleshootingLoop:
             subprocess.run(["docker", "system", "prune", "-f"], check=True)
 
             # 임시 파일 정리
-            subprocess.run(["find", "/tmp", "-type", "f", "-atime", "+7", "-delete"], check=True)
+            subprocess.run(
+                ["find", "/tmp", "-type", "f", "-atime", "+7", "-delete"],
+                check=True,
+            )
 
             return True
         except Exception as e:
@@ -367,7 +398,10 @@ class TroubleshootingLoop:
                         archive_name = f"{filename}.{timestamp}.gz"
                         subprocess.run(
                             ["gzip", "-c", filepath],
-                            stdout=open(os.path.join(log_dir, "archive", archive_name), "wb"),
+                            stdout=open(
+                                os.path.join(log_dir, "archive", archive_name),
+                                "wb",
+                            ),
                         )
 
                         # 원본 파일 비우기
@@ -411,7 +445,9 @@ class TroubleshootingLoop:
         self.logger.info("트러블슈팅 루프 중지")
 
         # 종료 로깅
-        self.logger.info(f"FortiGate 트러블슈팅 시스템 중지: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        self.logger.info(
+            f"FortiGate 트러블슈팅 시스템 중지: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
 
 
 if __name__ == "__main__":

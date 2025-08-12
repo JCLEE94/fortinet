@@ -77,7 +77,9 @@ def build_api_url(host: str, port: int, service_type: str) -> str:
     return f"https://{host}:{port}{api_version}"
 
 
-def build_health_check_url(host: str = "localhost", port: Optional[int] = None) -> str:
+def build_health_check_url(
+    host: str = "localhost", port: Optional[int] = None
+) -> str:
     """Build health check URL"""
     if port is None:
         port = get_web_port()
@@ -123,15 +125,23 @@ def validate_configuration() -> Dict[str, Any]:
                 web_port = get_web_port()
                 mock_port = get_mock_port()
                 if web_port == mock_port:
-                    issues.append(f"Port conflict: both web and mock using port {web_port}")
+                    issues.append(
+                        f"Port conflict: both web and mock using port {web_port}"
+                    )
 
                     # Check data directory exists
                     data_dir = get_data_path("DATA_DIR")
                     if not os.path.exists(data_dir):
-                        warnings.append(f"Data directory does not exist: {data_dir}")
+                        warnings.append(
+                            f"Data directory does not exist: {data_dir}"
+                        )
 
                         return {
-                            "status": ("error" if issues else ("warning" if warnings else "ok")),
+                            "status": (
+                                "error"
+                                if issues
+                                else ("warning" if warnings else "ok")
+                            ),
                             "issues": issues,
                             "warnings": warnings,
                             "config": {

@@ -38,7 +38,9 @@ class SystemMetricsConfig:
                 "cpu_usage": ThresholdConfig(80.0, 95.0, "%", "CPU 사용률"),
                 "memory_usage": ThresholdConfig(85.0, 95.0, "%", "메모리 사용률"),
                 "disk_usage": ThresholdConfig(85.0, 95.0, "%", "디스크 사용률"),
-                "network_error_rate": ThresholdConfig(1.0, 5.0, "%", "네트워크 오류율"),
+                "network_error_rate": ThresholdConfig(
+                    1.0, 5.0, "%", "네트워크 오류율"
+                ),
                 "load_average": ThresholdConfig(2.0, 4.0, "", "시스템 로드"),
             }
 
@@ -55,9 +57,13 @@ class APIPerformanceConfig:
     def __post_init__(self):
         if self.thresholds is None:
             self.thresholds = {
-                "response_time_warning": ThresholdConfig(1000.0, 3000.0, "ms", "응답 시간"),
+                "response_time_warning": ThresholdConfig(
+                    1000.0, 3000.0, "ms", "응답 시간"
+                ),
                 "error_rate": ThresholdConfig(5.0, 10.0, "%", "오류율"),
-                "throughput_min": ThresholdConfig(10.0, 5.0, "req/min", "최소 처리량"),
+                "throughput_min": ThresholdConfig(
+                    10.0, 5.0, "req/min", "최소 처리량"
+                ),
             }
 
 
@@ -168,8 +174,12 @@ class MonitoringConfigManager:
             config_file: 설정 파일 경로 (기본값: data/monitoring_config.json)
         """
         if config_file is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            config_file = os.path.join(base_dir, "data", "monitoring_config.json")
+            base_dir = os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            )
+            config_file = os.path.join(
+                base_dir, "data", "monitoring_config.json"
+            )
 
         self.config_file = config_file
         self.config = MonitoringConfig()
@@ -278,23 +288,37 @@ class MonitoringConfigManager:
         """자동 복구 설정 조회"""
         return self.config.auto_recovery
 
-    def update_threshold(self, module: str, name: str, warning: float, critical: float) -> bool:
+    def update_threshold(
+        self, module: str, name: str, warning: float, critical: float
+    ) -> bool:
         """임계값 업데이트"""
         try:
             with self._lock:
                 if module == "system":
-                    self.config.system_metrics.thresholds[name] = ThresholdConfig(
+                    self.config.system_metrics.thresholds[
+                        name
+                    ] = ThresholdConfig(
                         warning,
                         critical,
-                        self.config.system_metrics.thresholds.get(name, ThresholdConfig(0, 0)).unit,
-                        self.config.system_metrics.thresholds.get(name, ThresholdConfig(0, 0)).description,
+                        self.config.system_metrics.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).unit,
+                        self.config.system_metrics.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).description,
                     )
                 elif module == "api":
-                    self.config.api_performance.thresholds[name] = ThresholdConfig(
+                    self.config.api_performance.thresholds[
+                        name
+                    ] = ThresholdConfig(
                         warning,
                         critical,
-                        self.config.api_performance.thresholds.get(name, ThresholdConfig(0, 0)).unit,
-                        self.config.api_performance.thresholds.get(name, ThresholdConfig(0, 0)).description,
+                        self.config.api_performance.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).unit,
+                        self.config.api_performance.thresholds.get(
+                            name, ThresholdConfig(0, 0)
+                        ).description,
                     )
                 else:
                     return False
@@ -317,7 +341,9 @@ class MonitoringConfigManager:
             logger.error(f"임계값 업데이트 실패: {e}")
             return False
 
-    def get_threshold(self, module: str, name: str) -> Optional[ThresholdConfig]:
+    def get_threshold(
+        self, module: str, name: str
+    ) -> Optional[ThresholdConfig]:
         """임계값 조회"""
         try:
             if module == "system":
@@ -362,7 +388,9 @@ class MonitoringConfigManager:
                 )
 
             system_config = SystemMetricsConfig(
-                collection_interval=system_data.get("collection_interval", 5.0),
+                collection_interval=system_data.get(
+                    "collection_interval", 5.0
+                ),
                 max_history=system_data.get("max_history", 1000),
                 thresholds=system_thresholds if system_thresholds else None,
             )
@@ -515,7 +543,10 @@ class MonitoringConfigManager:
                 ("security_scan", self.config.security_scan),
                 ("auto_recovery", self.config.auto_recovery),
             ]:
-                if hasattr(config_obj, "max_history") and config_obj.max_history <= 0:
+                if (
+                    hasattr(config_obj, "max_history")
+                    and config_obj.max_history <= 0
+                ):
                     errors.append(f"{config_name} 최대 히스토리는 0보다 커야 합니다")
 
             # 임계값 검사
@@ -525,7 +556,9 @@ class MonitoringConfigManager:
             ]:
                 for name, threshold in thresholds.items():
                     if threshold.warning >= threshold.critical:
-                        errors.append(f"{module_name}.{name}: 경고 임계값이 위험 임계값보다 크거나 같습니다")
+                        errors.append(
+                            f"{module_name}.{name}: 경고 임계값이 위험 임계값보다 크거나 같습니다"
+                        )
 
         except Exception as e:
             errors.append(f"설정 검사 중 오류: {e}")
@@ -562,9 +595,13 @@ def get_threshold(module: str, name: str) -> Optional[ThresholdConfig]:
     return get_config_manager().get_threshold(module, name)
 
 
-def update_threshold(module: str, name: str, warning: float, critical: float) -> bool:
+def update_threshold(
+    module: str, name: str, warning: float, critical: float
+) -> bool:
     """임계값 업데이트"""
-    return get_config_manager().update_threshold(module, name, warning, critical)
+    return get_config_manager().update_threshold(
+        module, name, warning, critical
+    )
 
 
 if __name__ == "__main__":
@@ -574,11 +611,15 @@ if __name__ == "__main__":
     print("현재 설정:")
     config = config_manager.get_config()
     print(f"시스템 메트릭 간격: {config.system_metrics.collection_interval}")
-    print(f"CPU 경고 임계값: {config.system_metrics.thresholds['cpu_usage'].warning}")
+    print(
+        f"CPU 경고 임계값: {config.system_metrics.thresholds['cpu_usage'].warning}"
+    )
 
     # 임계값 업데이트 테스트
     print("\n임계값 업데이트 테스트...")
-    success = config_manager.update_threshold("system", "cpu_usage", 75.0, 90.0)
+    success = config_manager.update_threshold(
+        "system", "cpu_usage", 75.0, 90.0
+    )
     print(f"업데이트 성공: {success}")
 
     # 설정 검증 테스트

@@ -79,20 +79,28 @@ class AppConfig:
     api_retry_delay: int = 1
 
     # FortiGate settings
-    fortigate_verify_ssl: bool = os.getenv("FORTIGATE_VERIFY_SSL", "false").lower() == "true"
+    fortigate_verify_ssl: bool = (
+        os.getenv("FORTIGATE_VERIFY_SSL", "false").lower() == "true"
+    )
     fortigate_timeout: int = TIMEOUTS["API_REQUEST"]
 
     # FortiManager settings
-    fortimanager_verify_ssl: bool = os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true"
+    fortimanager_verify_ssl: bool = (
+        os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true"
+    )
     fortimanager_timeout: int = TIMEOUTS["API_REQUEST"]
 
     # Test mode settings
     # Test mode removed - production only
 
     # Monitoring settings
-    monitoring_enabled: bool = os.getenv("MONITORING_ENABLED", "true").lower() == "true"
+    monitoring_enabled: bool = (
+        os.getenv("MONITORING_ENABLED", "true").lower() == "true"
+    )
     monitoring_interval: int = int(os.getenv("MONITORING_INTERVAL", "5"))
-    websocket_enabled: bool = os.getenv("DISABLE_SOCKETIO", "false").lower() != "true"
+    websocket_enabled: bool = (
+        os.getenv("DISABLE_SOCKETIO", "false").lower() != "true"
+    )
 
     # Cache settings
     cache_default_ttl: int = int(os.getenv("CACHE_TTL", "300"))
@@ -102,7 +110,9 @@ class AppConfig:
     deploy_host: Optional[str] = os.getenv("DEPLOY_HOST")
     deploy_port: int = int(os.getenv("DEPLOY_PORT", "22"))
     deploy_user: Optional[str] = os.getenv("DEPLOY_USER")
-    deploy_path: Optional[str] = os.getenv("DEPLOY_PATH", "/opt/fortigate-nextrade")
+    deploy_path: Optional[str] = os.getenv(
+        "DEPLOY_PATH", "/opt/fortigate-nextrade"
+    )
     deploy_user_password: Optional[str] = os.getenv("DEPLOY_USER_PASSWORD")
 
 
@@ -134,7 +144,14 @@ class ConfigManager:
     def _load_default_sources(self):
         """Load default configuration sources."""
         # Environment variables (highest priority)
-        self.add_source(ConfigSource(path="ENV", format=ConfigFormat.ENV, required=False, priority=100))
+        self.add_source(
+            ConfigSource(
+                path="ENV",
+                format=ConfigFormat.ENV,
+                required=False,
+                priority=100,
+            )
+        )
 
         # Main config file
         config_paths = [
@@ -147,7 +164,11 @@ class ConfigManager:
         for config_path in config_paths:
             full_path = self._base_dir / config_path
             if full_path.exists():
-                format_type = ConfigFormat.YAML if config_path.endswith(".yaml") else ConfigFormat.JSON
+                format_type = (
+                    ConfigFormat.YAML
+                    if config_path.endswith(".yaml")
+                    else ConfigFormat.JSON
+                )
                 self.add_source(
                     ConfigSource(
                         path=str(full_path),
@@ -195,9 +216,13 @@ class ConfigManager:
                     self._merge_config(self._config_data, data)
             except Exception as e:
                 if source.required:
-                    raise RuntimeError(f"Failed to load required config source {source.path}: {e}")
+                    raise RuntimeError(
+                        f"Failed to load required config source {source.path}: {e}"
+                    )
                 else:
-                    print(f"Warning: Failed to load optional config source {source.path}: {e}")
+                    print(
+                        f"Warning: Failed to load optional config source {source.path}: {e}"
+                    )
 
         # Create app config object
         self._app_config = self._create_app_config()
@@ -264,13 +289,20 @@ class ConfigManager:
             if value is not None:
                 try:
                     if converter == bool:
-                        config[config_key] = value.lower() in ("true", "1", "yes", "on")
+                        config[config_key] = value.lower() in (
+                            "true",
+                            "1",
+                            "yes",
+                            "on",
+                        )
                     elif callable(converter):
                         config[config_key] = converter(value)
                     else:
                         config[config_key] = converter(value)
                 except (ValueError, TypeError) as e:
-                    print(f"Warning: Invalid value for {env_var}: {value} ({e})")
+                    print(
+                        f"Warning: Invalid value for {env_var}: {value} ({e})"
+                    )
 
         return config
 
@@ -303,7 +335,9 @@ class ConfigManager:
             with open(path, "r", encoding="utf-8") as f:
                 return yaml.safe_load(f)
         except ImportError:
-            raise ImportError("PyYAML is required for YAML config files. Install with: pip install PyYAML")
+            raise ImportError(
+                "PyYAML is required for YAML config files. Install with: pip install PyYAML"
+            )
 
     def _merge_config(self, base: Dict[str, Any], override: Dict[str, Any]):
         """
@@ -314,7 +348,11 @@ class ConfigManager:
             override: Override configuration
         """
         for key, value in override.items():
-            if key in base and isinstance(base[key], dict) and isinstance(value, dict):
+            if (
+                key in base
+                and isinstance(base[key], dict)
+                and isinstance(value, dict)
+            ):
                 self._merge_config(base[key], value)
             else:
                 base[key] = value
@@ -327,7 +365,9 @@ class ConfigManager:
             AppConfig instance
         """
         # Get all field names from AppConfig
-        config_fields = {f.name: f for f in AppConfig.__dataclass_fields__.values()}
+        config_fields = {
+            f.name: f for f in AppConfig.__dataclass_fields__.values()
+        }
 
         # Create kwargs from config data
         kwargs = {}
@@ -403,7 +443,9 @@ class ConfigManager:
         """
         return self._config_data.copy()
 
-    def save_to_file(self, path: str, format_type: ConfigFormat = ConfigFormat.JSON):
+    def save_to_file(
+        self, path: str, format_type: ConfigFormat = ConfigFormat.JSON
+    ):
         """
         Save current configuration to file.
 
@@ -426,7 +468,9 @@ class ConfigManager:
                         allow_unicode=True,
                     )
             except ImportError:
-                raise ImportError("PyYAML is required for YAML output. Install with: pip install PyYAML")
+                raise ImportError(
+                    "PyYAML is required for YAML output. Install with: pip install PyYAML"
+                )
         else:
             raise ValueError(f"Unsupported format for saving: {format_type}")
 
@@ -440,9 +484,14 @@ class ConfigManager:
         errors = []
 
         # Required fields validation
-        if not self.app.secret_key or self.app.secret_key == "dev-secret-key-change-in-production":
+        if (
+            not self.app.secret_key
+            or self.app.secret_key == "dev-secret-key-change-in-production"
+        ):
             if self.app.flask_env == "production":
-                errors.append("SECRET_KEY must be set to a secure value in production")
+                errors.append(
+                    "SECRET_KEY must be set to a secure value in production"
+                )
 
         # Port validation
         if not (1 <= self.app.flask_port <= 65535):
@@ -453,9 +502,13 @@ class ConfigManager:
 
         # SSL validation
         if self.app.ssl_enabled:
-            if not self.app.ssl_cert_path or not os.path.exists(self.app.ssl_cert_path):
+            if not self.app.ssl_cert_path or not os.path.exists(
+                self.app.ssl_cert_path
+            ):
                 errors.append("SSL certificate file not found")
-            if not self.app.ssl_key_path or not os.path.exists(self.app.ssl_key_path):
+            if not self.app.ssl_key_path or not os.path.exists(
+                self.app.ssl_key_path
+            ):
                 errors.append("SSL key file not found")
 
         # Log level validation
@@ -518,7 +571,9 @@ class ConfigManager:
                     "stream": "ext://sys.stdout",
                 }
             },
-            "loggers": {"": {"level": self.app.log_level, "handlers": ["console"]}},
+            "loggers": {
+                "": {"level": self.app.log_level, "handlers": ["console"]}
+            },
         }
 
         # Add file handler if log file is specified
@@ -574,7 +629,9 @@ class ConfigManager:
             "flask_env": "production",
         }
 
-    def _merge_configs(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_configs(
+        self, base: Dict[str, Any], override: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Merge two configuration dictionaries.
 

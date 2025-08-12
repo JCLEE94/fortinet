@@ -43,7 +43,9 @@ SIZE_LIMITS: Dict[str, int] = {
     "max_file_size": int(os.getenv("MAX_FILE_SIZE", "104857600")),  # 100MB
     "max_upload_size": int(os.getenv("MAX_UPLOAD_SIZE", "52428800")),  # 50MB
     "max_payload_size": int(os.getenv("MAX_PAYLOAD_SIZE", "10485760")),  # 10MB
-    "max_log_file_size": int(os.getenv("MAX_LOG_FILE_SIZE", "1073741824")),  # 1GB
+    "max_log_file_size": int(
+        os.getenv("MAX_LOG_FILE_SIZE", "1073741824")
+    ),  # 1GB
     "buffer_size": int(os.getenv("BUFFER_SIZE", "8192")),  # 8KB
     "chunk_size": int(os.getenv("CHUNK_SIZE", "4096")),  # 4KB
     "max_json_size": 5242880,  # 5MB
@@ -69,7 +71,9 @@ CRYPTO_LIMITS: Dict[str, int] = {
 
 # 성능 관련 설정
 PERFORMANCE_LIMITS: Dict[str, int] = {
-    "max_concurrent_connections": int(os.getenv("MAX_CONCURRENT_CONNECTIONS", "1000")),
+    "max_concurrent_connections": int(
+        os.getenv("MAX_CONCURRENT_CONNECTIONS", "1000")
+    ),
     "max_queue_size": int(os.getenv("MAX_QUEUE_SIZE", "10000")),
     "batch_size": int(os.getenv("BATCH_SIZE", "100")),
     "worker_threads": int(os.getenv("WORKER_THREADS", "4")),
@@ -132,7 +136,9 @@ ARRAY_LIMITS: Dict[str, int] = {
 
 # 메트릭 제한
 METRICS_LIMITS: Dict[str, int] = {
-    "max_metrics_per_request": int(os.getenv("MAX_METRICS_PER_REQUEST", "1000")),
+    "max_metrics_per_request": int(
+        os.getenv("MAX_METRICS_PER_REQUEST", "1000")
+    ),
     "metrics_buffer_size": 10000,
     "metrics_flush_interval": 60,  # seconds
     "histogram_buckets": 10,
@@ -196,7 +202,9 @@ def format_bytes(bytes_value: float) -> str:
     return f"{bytes_value:.1f} PB"
 
 
-def is_within_limit(value: int, limit_type: str, limit_category: str = "SIZE_LIMITS") -> bool:
+def is_within_limit(
+    value: int, limit_type: str, limit_category: str = "SIZE_LIMITS"
+) -> bool:
     """
     값이 제한 내에 있는지 확인합니다.
 

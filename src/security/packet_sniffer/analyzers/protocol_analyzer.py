@@ -106,13 +106,17 @@ class ProtocolAnalyzer:
         except ImportError as e:
             self.logger.warning(f"일부 분석기 등록 실패: {e}")
 
-    def register_analyzer(self, name: str, analyzer: BaseProtocolAnalyzer) -> None:
+    def register_analyzer(
+        self, name: str, analyzer: BaseProtocolAnalyzer
+    ) -> None:
         """분석기 등록"""
         self.analyzers[name] = analyzer
         self.stats["analyzer_usage"][name] = 0
         self.logger.debug(f"분석기 등록됨: {name}")
 
-    def perform_deep_packet_inspection(self, packet: PacketInfo) -> Dict[str, Any]:
+    def perform_deep_packet_inspection(
+        self, packet: PacketInfo
+    ) -> Dict[str, Any]:
         """심층 패킷 검사 - 원래의 거대한 함수를 대체"""
         try:
             # 캐시 확인
@@ -128,7 +132,9 @@ class ProtocolAnalyzer:
             src_port, dst_port, payload = self._extract_packet_info(packet)
 
             # 1단계: 명시적 프로토콜 분석
-            explicit_result = self._analyze_explicit_protocols(packet, payload, inspection_result)
+            explicit_result = self._analyze_explicit_protocols(
+                packet, payload, inspection_result
+            )
 
             # 2단계: 바이너리 시그니처 분석
             if not explicit_result:
@@ -191,11 +197,15 @@ class ProtocolAnalyzer:
             "analysis_time": time.time(),
         }
 
-    def _extract_packet_info(self, packet: PacketInfo) -> Tuple[int, int, bytes]:
+    def _extract_packet_info(
+        self, packet: PacketInfo
+    ) -> Tuple[int, int, bytes]:
         """패킷에서 기본 정보 추출"""
         return packet.src_port, packet.dst_port, packet.payload
 
-    def _analyze_explicit_protocols(self, packet: PacketInfo, payload: bytes, result: Dict[str, Any]) -> bool:
+    def _analyze_explicit_protocols(
+        self, packet: PacketInfo, payload: bytes, result: Dict[str, Any]
+    ) -> bool:
         """명시적 프로토콜 분석"""
         analyzed = False
 
@@ -225,7 +235,9 @@ class ProtocolAnalyzer:
 
         return analyzed
 
-    def _analyze_binary_signatures(self, payload: bytes, result: Dict[str, Any]) -> bool:
+    def _analyze_binary_signatures(
+        self, payload: bytes, result: Dict[str, Any]
+    ) -> bool:
         """바이너리 시그니처 기반 분석"""
         if not payload:
             return False
@@ -248,10 +260,14 @@ class ProtocolAnalyzer:
 
         return False
 
-    def _analyze_port_based_protocols(self, packet: PacketInfo, result: Dict[str, Any]) -> None:
+    def _analyze_port_based_protocols(
+        self, packet: PacketInfo, result: Dict[str, Any]
+    ) -> None:
         """포트 기반 프로토콜 분석"""
         # 목적지 포트 기반 식별
-        dst_protocol = ProtocolIdentifier.identify_by_port(packet.dst_port, packet.protocol)
+        dst_protocol = ProtocolIdentifier.identify_by_port(
+            packet.dst_port, packet.protocol
+        )
         if dst_protocol:
             if result.get("confidence", 0) < 0.5:
                 result["protocol"] = dst_protocol
@@ -259,7 +275,9 @@ class ProtocolAnalyzer:
                 result["details"]["detection_method"] = "dst_port"
 
         # 출발지 포트 기반 식별 (낮은 우선순위)
-        src_protocol = ProtocolIdentifier.identify_by_port(packet.src_port, packet.protocol)
+        src_protocol = ProtocolIdentifier.identify_by_port(
+            packet.src_port, packet.protocol
+        )
         if src_protocol and result.get("confidence", 0) < 0.3:
             result["protocol"] = src_protocol
             result["confidence"] = 0.3
@@ -273,7 +291,9 @@ class ProtocolAnalyzer:
                 result["details"].update(network_result.details)
                 self.stats["analyzer_usage"]["network"] += 1
 
-    def _detect_security_flags(self, packet: PacketInfo, result: Dict[str, Any]) -> None:
+    def _detect_security_flags(
+        self, packet: PacketInfo, result: Dict[str, Any]
+    ) -> None:
         """보안 플래그 감지"""
         security_flags = {}
 
@@ -304,13 +324,17 @@ class ProtocolAnalyzer:
             security_flags["potential_scan"] = True
 
         # 비표준 포트 사용 감지
-        standard_ports = list(ProtocolIdentifier.TCP_PORTS.keys()) + list(ProtocolIdentifier.UDP_PORTS.keys())
+        standard_ports = list(ProtocolIdentifier.TCP_PORTS.keys()) + list(
+            ProtocolIdentifier.UDP_PORTS.keys()
+        )
         if packet.dst_port not in standard_ports and packet.dst_port > 1024:
             security_flags["non_standard_port"] = True
 
         result["security_flags"] = security_flags
 
-    def _detect_suspicious_patterns(self, payload: bytes, result: Dict[str, Any]) -> None:
+    def _detect_suspicious_patterns(
+        self, payload: bytes, result: Dict[str, Any]
+    ) -> None:
         """이상 패턴 감지"""
         anomalies = []
 
@@ -318,7 +342,12 @@ class ProtocolAnalyzer:
             payload_str = payload.decode("utf-8", errors="ignore")
 
             # SQL 인젝션 패턴
-            sql_patterns = ["union select", "drop table", "insert into", "' or '1'='1"]
+            sql_patterns = [
+                "union select",
+                "drop table",
+                "insert into",
+                "' or '1'='1",
+            ]
             for pattern in sql_patterns:
                 if pattern.lower() in payload_str.lower():
                     anomalies.append(f"Potential SQL injection: {pattern}")
@@ -344,7 +373,9 @@ class ProtocolAnalyzer:
 
         result["anomalies"] = anomalies
 
-    def _build_protocol_hierarchy(self, packet: PacketInfo, result: Dict[str, Any]) -> None:
+    def _build_protocol_hierarchy(
+        self, packet: PacketInfo, result: Dict[str, Any]
+    ) -> None:
         """프로토콜 계층 구조 구성"""
         hierarchy = []
 
@@ -371,7 +402,10 @@ class ProtocolAnalyzer:
         verification_bonus = 0.0
 
         # 프로토콜 시그니처가 있으면 신뢰도 증가
-        if result.get("details", {}).get("detection_method") == "binary_signature":
+        if (
+            result.get("details", {}).get("detection_method")
+            == "binary_signature"
+        ):
             verification_bonus += 0.2
 
         # 포트와 프로토콜이 일치하면 신뢰도 증가
@@ -385,7 +419,11 @@ class ProtocolAnalyzer:
         final_confidence = min(base_confidence + verification_bonus, 1.0)
         return round(final_confidence, 3)
 
-    def _merge_analysis_result(self, main_result: Dict[str, Any], analyzer_result: ProtocolAnalysisResult) -> None:
+    def _merge_analysis_result(
+        self,
+        main_result: Dict[str, Any],
+        analyzer_result: ProtocolAnalysisResult,
+    ) -> None:
         """분석 결과 병합"""
         if analyzer_result.confidence > main_result.get("confidence", 0):
             main_result["protocol"] = analyzer_result.protocol
@@ -409,7 +447,9 @@ class ProtocolAnalyzer:
         ]
         return "_".join(key_parts)
 
-    def _cache_result(self, cache_key: str, result: ProtocolAnalysisResult) -> None:
+    def _cache_result(
+        self, cache_key: str, result: ProtocolAnalysisResult
+    ) -> None:
         """결과 캐시에 저장"""
         if len(self.analysis_cache) >= self.cache_max_size:
             # 가장 오래된 항목 제거 (간단한 LRU)
@@ -435,9 +475,13 @@ class ProtocolAnalyzer:
         return {
             "total_analyzed": self.stats["total_analyzed"],
             "cache_hits": self.stats["cache_hits"],
-            "cache_hit_rate": self.stats["cache_hits"] / max(self.stats["total_analyzed"], 1) * 100,
+            "cache_hit_rate": self.stats["cache_hits"]
+            / max(self.stats["total_analyzed"], 1)
+            * 100,
             "analysis_errors": self.stats["analysis_errors"],
-            "error_rate": self.stats["analysis_errors"] / max(self.stats["total_analyzed"], 1) * 100,
+            "error_rate": self.stats["analysis_errors"]
+            / max(self.stats["total_analyzed"], 1)
+            * 100,
             "analyzer_usage": self.stats["analyzer_usage"].copy(),
             "cache_size": len(self.analysis_cache),
             "registered_analyzers": list(self.analyzers.keys()),
@@ -448,7 +492,9 @@ class ProtocolAnalyzer:
         self.analysis_cache.clear()
         self.logger.info("분석 캐시 정리됨")
 
-    def analyze_packet_batch(self, packets: List[PacketInfo]) -> List[Dict[str, Any]]:
+    def analyze_packet_batch(
+        self, packets: List[PacketInfo]
+    ) -> List[Dict[str, Any]]:
         """패킷 배치 분석"""
         results = []
         for packet in packets:

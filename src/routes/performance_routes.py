@@ -61,7 +61,9 @@ def get_real_time_monitor():
 
 logger = get_logger(__name__)
 
-performance_bp = Blueprint("performance", __name__, url_prefix="/api/performance")
+performance_bp = Blueprint(
+    "performance", __name__, url_prefix="/api/performance"
+)
 
 
 @performance_bp.route("/metrics", methods=["GET"])
@@ -126,7 +128,11 @@ def clear_performance_cache():
 
     except Exception as e:
         logger.error(f"캐시 삭제 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache clear failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False,
+            message=f"Cache clear failed: {str(e)}",
+            status_code=500,
+        )
 
 
 @performance_bp.route("/cache/warmup", methods=["POST"])
@@ -177,8 +183,12 @@ def warmup_performance_cache():
 
         # 예열 작업 추가
         warmer.add_warming_task("devices", "list", warm_devices, ttl=300)
-        warmer.add_warming_task("dashboard", "stats", warm_dashboard_stats, ttl=180)
-        warmer.add_warming_task("monitoring", "data", warm_monitoring_data, ttl=120)
+        warmer.add_warming_task(
+            "dashboard", "stats", warm_dashboard_stats, ttl=180
+        )
+        warmer.add_warming_task(
+            "monitoring", "data", warm_monitoring_data, ttl=120
+        )
 
         # 예열 실행
         results = warmer.warm_cache()
@@ -195,7 +205,11 @@ def warmup_performance_cache():
 
     except Exception as e:
         logger.error(f"캐시 예열 실패: {e}")
-        return standard_api_response(success=False, message=f"Cache warming failed: {str(e)}", status_code=500)
+        return standard_api_response(
+            success=False,
+            message=f"Cache warming failed: {str(e)}",
+            status_code=500,
+        )
 
 
 @performance_bp.route("/cache/stats", methods=["GET"])
@@ -254,12 +268,14 @@ def test_compression():
         "description": "This is a compression test with repeated data " * 100,
         "repeated_array": ["same_value"] * 1000,
         "numbers": list(range(1000)),
-        "text_data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 200,
+        "text_data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+        * 200,
         "nested_structures": [
             {
                 "id": i,
                 "name": f"Item {i}",
-                "description": "A very long description that repeats many times " * 10,
+                "description": "A very long description that repeats many times "
+                * 10,
                 "tags": ["tag1", "tag2", "tag3"] * 5,
             }
             for i in range(100)

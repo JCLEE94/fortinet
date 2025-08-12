@@ -62,7 +62,10 @@ def get_default_batch_results():
             "blocked_by": {"firewall": "FortiGate-DMZ-01", "policy_id": "202"},
             "path_data": {
                 "allowed": False,
-                "blocked_by": {"firewall_name": "FortiGate-DMZ-01", "policy_id": "202"},
+                "blocked_by": {
+                    "firewall_name": "FortiGate-DMZ-01",
+                    "policy_id": "202",
+                },
                 "path": [
                     {
                         "firewall_name": "FortiGate-DMZ-01",

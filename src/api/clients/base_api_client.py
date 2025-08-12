@@ -79,7 +79,9 @@ class BaseApiClient(ABC):
             self.logger = logging.getLogger(self.logger_name)
             if not self.logger.handlers:
                 handler = logging.StreamHandler()
-                formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+                formatter = logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
                 self.logger.setLevel(logging.INFO)
@@ -98,13 +100,22 @@ class BaseApiClient(ABC):
         # SSL verification (보안 강화: 기본값 True)
         if verify_ssl is None:
             # 개발 환경에서만 SSL 검증 비활성화 허용
-            if os.environ.get("APP_MODE", "production").lower() == "development":
-                self.verify_ssl = os.environ.get("VERIFY_SSL", "false").lower() == "true"
+            if (
+                os.environ.get("APP_MODE", "production").lower()
+                == "development"
+            ):
+                self.verify_ssl = (
+                    os.environ.get("VERIFY_SSL", "false").lower() == "true"
+                )
                 if not self.verify_ssl:
-                    self.logger.warning("⚠️  개발 환경: SSL 검증이 비활성화되었습니다. 프로덕션에서는 사용하지 마세요")
+                    self.logger.warning(
+                        "⚠️  개발 환경: SSL 검증이 비활성화되었습니다. 프로덕션에서는 사용하지 마세요"
+                    )
             else:
                 # 프로덕션/테스트 환경에서는 기본적으로 SSL 검증 활성화
-                self.verify_ssl = os.environ.get("VERIFY_SSL", "true").lower() == "true"
+                self.verify_ssl = (
+                    os.environ.get("VERIFY_SSL", "true").lower() == "true"
+                )
         else:
             self.verify_ssl = verify_ssl
 
@@ -148,9 +159,14 @@ class BaseApiClient(ABC):
     def _init_session(self):
         """Initialize requests session using connection pool manager"""
         # Use connection pool manager for better performance
-        session_id = f"{self.logger_name or self.__class__.__name__}_{self.host}"
+        session_id = (
+            f"{self.logger_name or self.__class__.__name__}_{self.host}"
+        )
         self.session = connection_pool_manager.get_session(
-            identifier=session_id, pool_connections=20, pool_maxsize=50, max_retries=3
+            identifier=session_id,
+            pool_connections=20,
+            pool_maxsize=50,
+            max_retries=3,
         )
         self.session.verify = self.verify_ssl
 
@@ -176,7 +192,10 @@ class BaseApiClient(ABC):
             "username": os.environ.get(f"{prefix}_USERNAME"),
             "password": os.environ.get(f"{prefix}_PASSWORD"),
             "port": os.environ.get(f"{prefix}_PORT"),
-            "verify_ssl": os.environ.get(f"{prefix}_VERIFY_SSL", "false").lower() == "true",
+            "verify_ssl": os.environ.get(
+                f"{prefix}_VERIFY_SSL", "false"
+            ).lower()
+            == "true",
         }
 
     def _setup_headers(self):
@@ -189,7 +208,9 @@ class BaseApiClient(ABC):
         else:
             self.headers = {"Content-Type": "application/json"}
 
-    def _make_request(self, method, url, data=None, params=None, headers=None, timeout=None):
+    def _make_request(
+        self, method, url, data=None, params=None, headers=None, timeout=None
+    ):
         """
         Make an HTTP request with error handling and logging
 
@@ -213,7 +234,11 @@ class BaseApiClient(ABC):
         )
         if offline_mode:
             self.logger.warning("🔒 외부 API 호출이 오프라인 모드에 의해 차단됨")
-            return False, {"error": "Offline mode - external connections disabled"}, 503
+            return (
+                False,
+                {"error": "Offline mode - external connections disabled"},
+                503,
+            )
 
         # Use default timeout if not specified
         if timeout is None:
@@ -225,7 +250,9 @@ class BaseApiClient(ABC):
 
         # Log the request (sanitizing sensitive information)
         sanitized_data = self._sanitize_data(data) if data else None
-        sanitized_headers = self._sanitize_headers(headers) if headers else None
+        sanitized_headers = (
+            self._sanitize_headers(headers) if headers else None
+        )
         self.logger.debug(f"API Request: {method} {url}")
         if sanitized_data:
             self.logger.debug(f"Request Data: {sanitized_data}")
@@ -247,11 +274,17 @@ class BaseApiClient(ABC):
             if response.ok:
                 self.logger.debug(f"API Response: {response.status_code} OK")
             else:
-                self.logger.warning(f"API Response: {response.status_code} {response.reason}")
+                self.logger.warning(
+                    f"API Response: {response.status_code} {response.reason}"
+                )
 
             # Return success flag, response data, and status code
             if response.ok:
-                return True, self._parse_response(response), response.status_code
+                return (
+                    True,
+                    self._parse_response(response),
+                    response.status_code,
+                )
             else:
                 return False, response.text, response.status_code
 
@@ -305,7 +338,12 @@ class BaseApiClient(ABC):
                 if isinstance(value, dict):
                     result[key] = _sanitize_dict(value)
                 elif isinstance(value, list):
-                    result[key] = [_sanitize_dict(item) if isinstance(item, dict) else item for item in value]
+                    result[key] = [
+                        _sanitize_dict(item)
+                        if isinstance(item, dict)
+                        else item
+                        for item in value
+                    ]
                 elif any(sk in key.lower() for sk in sensitive_keys):
                     result[key] = "********"
                 else:
@@ -328,7 +366,13 @@ class BaseApiClient(ABC):
             return {}
 
         sanitized = headers.copy()
-        sensitive_keys = ["Authorization", "api-key", "token", "password", "secret"]
+        sensitive_keys = [
+            "Authorization",
+            "api-key",
+            "token",
+            "password",
+            "secret",
+        ]
 
         for key in sanitized:
             for sensitive_key in sensitive_keys:
@@ -351,16 +395,24 @@ class BaseApiClient(ABC):
 
         # Try token authentication first if available
         if self.auth_method == "token":
-            self.logger.info(f"Testing {self.__class__.__name__} API connection with token")
+            self.logger.info(
+                f"Testing {self.__class__.__name__} API connection with token"
+            )
 
             # Get the test endpoint for this client type
-            test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
+            test_endpoint = getattr(
+                self, "test_endpoint", "/monitor/system/status"
+            )
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request("GET", test_url, None, None, self.headers)
+            success, result, status_code = self._make_request(
+                "GET", test_url, None, None, self.headers
+            )
 
             if success:
-                self.logger.info(f"{self.__class__.__name__} API token authentication successful")
+                self.logger.info(
+                    f"{self.__class__.__name__} API token authentication successful"
+                )
                 return True, result
             else:
                 self.logger.warning(
@@ -391,26 +443,38 @@ class BaseApiClient(ABC):
             return self.login()
         else:
             # Fallback: try basic auth
-            self.logger.info(f"Testing {self.__class__.__name__} API connection with credentials")
+            self.logger.info(
+                f"Testing {self.__class__.__name__} API connection with credentials"
+            )
 
             # Set up basic auth headers
             import base64
 
-            credentials = base64.b64encode(f"{self.username}:{self.password}".encode()).decode()
+            credentials = base64.b64encode(
+                f"{self.username}:{self.password}".encode()
+            ).decode()
             headers = self.headers.copy()
             headers["Authorization"] = f"Basic {credentials}"
 
             # Get the test endpoint
-            test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
+            test_endpoint = getattr(
+                self, "test_endpoint", "/monitor/system/status"
+            )
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request("GET", test_url, None, None, headers)
+            success, result, status_code = self._make_request(
+                "GET", test_url, None, None, headers
+            )
 
             if success:
-                self.logger.info(f"{self.__class__.__name__} credential authentication successful")
+                self.logger.info(
+                    f"{self.__class__.__name__} credential authentication successful"
+                )
                 return True, "Credential authentication successful"
             else:
-                self.logger.error(f"{self.__class__.__name__} credential authentication failed: {status_code}")
+                self.logger.error(
+                    f"{self.__class__.__name__} credential authentication failed: {status_code}"
+                )
                 return False, f"Credential authentication failed: {result}"
 
 
@@ -450,9 +514,13 @@ class RealtimeMonitoringMixin:
         self.connection_error_count = 0
 
         # Start monitoring thread
-        self.monitoring_thread = threading.Thread(target=self._monitoring_loop, args=(interval,), daemon=True)
+        self.monitoring_thread = threading.Thread(
+            target=self._monitoring_loop, args=(interval,), daemon=True
+        )
         self.monitoring_thread.start()
-        self.logger.info(f"Real-time monitoring started with {interval}s interval")
+        self.logger.info(
+            f"Real-time monitoring started with {interval}s interval"
+        )
 
     def stop_realtime_monitoring(self):
         """Stop real-time monitoring"""
@@ -491,13 +559,20 @@ class RealtimeMonitoringMixin:
                         try:
                             callback(data)
                         except Exception as e:
-                            self.logger.error(f"Error in monitoring callback: {e}")
+                            self.logger.error(
+                                f"Error in monitoring callback: {e}"
+                            )
                 else:
                     # Handle connection error
                     self.connection_error_count += 1
-                    if self.connection_error_count >= self.max_connection_errors:
+                    if (
+                        self.connection_error_count
+                        >= self.max_connection_errors
+                    ):
                         self.is_connected = False
-                        self.logger.error("Max connection errors reached, marking as disconnected")
+                        self.logger.error(
+                            "Max connection errors reached, marking as disconnected"
+                        )
 
             except Exception as e:
                 self.logger.error(f"Error in monitoring loop: {e}")
@@ -513,7 +588,9 @@ class RealtimeMonitoringMixin:
         Returns:
             dict: Monitoring data or None if error
         """
-        raise NotImplementedError("Classes using RealtimeMonitoringMixin must implement _get_monitoring_data")
+        raise NotImplementedError(
+            "Classes using RealtimeMonitoringMixin must implement _get_monitoring_data"
+        )
 
 
 # API Error Classes

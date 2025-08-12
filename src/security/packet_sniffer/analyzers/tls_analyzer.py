@@ -48,13 +48,23 @@ class TLSAnalyzer:
     }
 
     # 알려진 취약한 암호화 스위트
-    WEAK_CIPHER_SUITES = {"NULL", "RC4", "MD5", "SHA1", "DES", "3DES", "EXPORT"}
+    WEAK_CIPHER_SUITES = {
+        "NULL",
+        "RC4",
+        "MD5",
+        "SHA1",
+        "DES",
+        "3DES",
+        "EXPORT",
+    }
 
     def __init__(self):
         self.connections = {}  # TLS 연결 추적
         self.certificates = {}  # 인증서 캐시
 
-    def analyze(self, packet_data: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         TLS 패킷 분석
 
@@ -71,7 +81,9 @@ class TLSAnalyzer:
 
             tls_analysis = {
                 "protocol": "TLS/SSL",
-                "timestamp": packet_info.get("timestamp", datetime.now().isoformat()),
+                "timestamp": packet_info.get(
+                    "timestamp", datetime.now().isoformat()
+                ),
                 "src_ip": packet_info.get("src_ip"),
                 "dst_ip": packet_info.get("dst_ip"),
                 "src_port": packet_info.get("src_port"),
@@ -89,7 +101,9 @@ class TLSAnalyzer:
 
                 # 핸드셰이크 분석
                 if record.get("content_type") == "handshake":
-                    handshake_analysis = self._analyze_handshake(record, packet_info)
+                    handshake_analysis = self._analyze_handshake(
+                        record, packet_info
+                    )
                     if handshake_analysis:
                         tls_analysis.update(handshake_analysis)
 
@@ -105,7 +119,9 @@ class TLSAnalyzer:
                 f"{packet_info.get('dst_ip')}:{packet_info.get('dst_port')}"
             )
             if connection_key in self.connections:
-                tls_analysis["connection_info"] = self.connections[connection_key]
+                tls_analysis["connection_info"] = self.connections[
+                    connection_key
+                ]
 
             # 보안 검사
             security_issues = self._check_security_issues(tls_analysis)
@@ -118,13 +134,22 @@ class TLSAnalyzer:
             return {
                 "protocol": "TLS/SSL",
                 "error": str(e),
-                "timestamp": packet_info.get("timestamp", datetime.now().isoformat()),
+                "timestamp": packet_info.get(
+                    "timestamp", datetime.now().isoformat()
+                ),
             }
 
-    def _is_tls_packet(self, packet_data: bytes, packet_info: Dict[str, Any]) -> bool:
+    def _is_tls_packet(
+        self, packet_data: bytes, packet_info: Dict[str, Any]
+    ) -> bool:
         """TLS 패킷인지 확인"""
         # 포트 기반 확인
-        if packet_info.get("dst_port") in [443, 993, 995, 636] or packet_info.get("src_port") in [443, 993, 995, 636]:
+        if packet_info.get("dst_port") in [
+            443,
+            993,
+            995,
+            636,
+        ] or packet_info.get("src_port") in [443, 993, 995, 636]:
             return True
 
         # TLS 레코드 헤더 확인
@@ -132,7 +157,10 @@ class TLSAnalyzer:
             content_type = packet_data[0]
             version = struct.unpack(">H", packet_data[1:3])[0]
 
-            if content_type in self.TLS_CONTENT_TYPES and version in self.TLS_VERSIONS:
+            if (
+                content_type in self.TLS_CONTENT_TYPES
+                and version in self.TLS_VERSIONS
+            ):
                 return True
 
         return False
@@ -155,8 +183,12 @@ class TLSAnalyzer:
                 record_data = data[offset + 5 : offset + 5 + length]
 
                 record = {
-                    "content_type": self.TLS_CONTENT_TYPES.get(content_type, f"unknown_{content_type}"),
-                    "version": self.TLS_VERSIONS.get(version, f"unknown_{version:04x}"),
+                    "content_type": self.TLS_CONTENT_TYPES.get(
+                        content_type, f"unknown_{content_type}"
+                    ),
+                    "version": self.TLS_VERSIONS.get(
+                        version, f"unknown_{version:04x}"
+                    ),
                     "length": length,
                     "data": record_data,
                 }
@@ -186,7 +218,9 @@ class TLSAnalyzer:
             msg_length = struct.unpack(">I", b"\x00" + data[1:4])[0]
 
             handshake_info = {
-                "handshake_type": self.HANDSHAKE_TYPES.get(msg_type, f"unknown_{msg_type}"),
+                "handshake_type": self.HANDSHAKE_TYPES.get(
+                    msg_type, f"unknown_{msg_type}"
+                ),
                 "message_length": msg_length,
             }
 
@@ -236,13 +270,19 @@ class TLSAnalyzer:
             # 세션 ID
             session_id_length = data[offset]
             offset += 1
-            session_id = data[offset : offset + session_id_length] if session_id_length > 0 else b""
+            session_id = (
+                data[offset : offset + session_id_length]
+                if session_id_length > 0
+                else b""
+            )
             offset += session_id_length
 
             # 암호화 스위트
             if offset + 2 > len(data):
                 return None
-            cipher_suites_length = struct.unpack(">H", data[offset : offset + 2])[0]
+            cipher_suites_length = struct.unpack(
+                ">H", data[offset : offset + 2]
+            )[0]
             offset += 2
 
             cipher_suites = []
@@ -253,7 +293,9 @@ class TLSAnalyzer:
                 offset += 2
 
             return {
-                "client_version": self.TLS_VERSIONS.get(client_version, f"unknown_{client_version:04x}"),
+                "client_version": self.TLS_VERSIONS.get(
+                    client_version, f"unknown_{client_version:04x}"
+                ),
                 "random": random.hex(),
                 "session_id": session_id.hex() if session_id else "",
                 "cipher_suites": cipher_suites,
@@ -283,20 +325,28 @@ class TLSAnalyzer:
             # 세션 ID
             session_id_length = data[offset]
             offset += 1
-            session_id = data[offset : offset + session_id_length] if session_id_length > 0 else b""
+            session_id = (
+                data[offset : offset + session_id_length]
+                if session_id_length > 0
+                else b""
+            )
             offset += session_id_length
 
             # 선택된 암호화 스위트
             if offset + 2 > len(data):
                 return None
-            chosen_cipher_suite = struct.unpack(">H", data[offset : offset + 2])[0]
+            chosen_cipher_suite = struct.unpack(
+                ">H", data[offset : offset + 2]
+            )[0]
             offset += 2
 
             # 압축 방법
             compression_method = data[offset] if offset < len(data) else 0
 
             return {
-                "server_version": self.TLS_VERSIONS.get(server_version, f"unknown_{server_version:04x}"),
+                "server_version": self.TLS_VERSIONS.get(
+                    server_version, f"unknown_{server_version:04x}"
+                ),
                 "random": random.hex(),
                 "session_id": session_id.hex() if session_id else "",
                 "chosen_cipher_suite": f"0x{chosen_cipher_suite:04x}",
@@ -323,7 +373,9 @@ class TLSAnalyzer:
                 if offset + 3 > len(data):
                     break
 
-                cert_length = struct.unpack(">I", b"\x00" + data[offset : offset + 3])[0]
+                cert_length = struct.unpack(
+                    ">I", b"\x00" + data[offset : offset + 3]
+                )[0]
                 offset += 3
 
                 if offset + cert_length > len(data):
@@ -346,7 +398,9 @@ class TLSAnalyzer:
             logger.error(f"Certificate 파싱 오류: {e}")
             return None
 
-    def _analyze_certificate(self, cert_data: bytes) -> Optional[Dict[str, Any]]:
+    def _analyze_certificate(
+        self, cert_data: bytes
+    ) -> Optional[Dict[str, Any]]:
         """X.509 인증서 분석"""
         try:
             # 실제 구현에서는 cryptography 라이브러리 사용
@@ -373,7 +427,9 @@ class TLSAnalyzer:
 
         return hashlib.sha256(data).hexdigest()
 
-    def _analyze_handshake(self, record: Dict[str, Any], packet_info: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_handshake(
+        self, record: Dict[str, Any], packet_info: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """핸드셰이크 분석"""
         try:
             connection_key = (
@@ -401,7 +457,8 @@ class TLSAnalyzer:
                         "timestamp": packet_info.get("timestamp"),
                         "direction": (
                             "client_to_server"
-                            if packet_info.get("src_port") > packet_info.get("dst_port")
+                            if packet_info.get("src_port")
+                            > packet_info.get("dst_port")
                             else "server_to_client"
                         ),
                     }
@@ -416,7 +473,9 @@ class TLSAnalyzer:
 
             if "chosen_cipher_suite" in record:
                 connection["negotiated_cipher"] = record["chosen_cipher_suite"]
-                connection["security_level"] = self._assess_cipher_security(record["chosen_cipher_suite"])
+                connection["security_level"] = self._assess_cipher_security(
+                    record["chosen_cipher_suite"]
+                )
 
             if "certificates" in record:
                 connection["certificates"].extend(record["certificates"])
@@ -427,7 +486,9 @@ class TLSAnalyzer:
             logger.error(f"핸드셰이크 분석 오류: {e}")
             return None
 
-    def _analyze_alert(self, record: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_alert(
+        self, record: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """TLS 경고 분석"""
         try:
             data = record.get("data", b"")
@@ -465,8 +526,12 @@ class TLSAnalyzer:
 
                 return {
                     "type": "tls_alert",
-                    "level": alert_levels.get(alert_level, f"unknown_{alert_level}"),
-                    "description": alert_descriptions.get(alert_description, f"unknown_{alert_description}"),
+                    "level": alert_levels.get(
+                        alert_level, f"unknown_{alert_level}"
+                    ),
+                    "description": alert_descriptions.get(
+                        alert_description, f"unknown_{alert_description}"
+                    ),
                     "severity": "high" if alert_level == 2 else "medium",
                 }
 
@@ -485,7 +550,9 @@ class TLSAnalyzer:
 
             # 현대적인 암호화 스위트 검사
             modern_ciphers = ["AES256", "CHACHA20", "GCM", "ECDHE"]
-            if any(cipher in cipher_suite.upper() for cipher in modern_ciphers):
+            if any(
+                cipher in cipher_suite.upper() for cipher in modern_ciphers
+            ):
                 return "strong"
 
             return "medium"
@@ -493,7 +560,9 @@ class TLSAnalyzer:
         except Exception:
             return "unknown"
 
-    def _check_security_issues(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _check_security_issues(
+        self, analysis: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """보안 문제 검사"""
         issues = []
 
@@ -501,7 +570,11 @@ class TLSAnalyzer:
             # 취약한 TLS 버전 검사
             for record in analysis.get("records", []):
                 version = record.get("version", "")
-                if "SSL" in version or "TLS 1.0" in version or "TLS 1.1" in version:
+                if (
+                    "SSL" in version
+                    or "TLS 1.0" in version
+                    or "TLS 1.1" in version
+                ):
                     issues.append(
                         {
                             "type": "weak_tls_version",

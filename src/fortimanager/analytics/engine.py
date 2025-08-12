@@ -139,7 +139,12 @@ class AdvancedAnalyticsEngine:
                 name="Traffic Volume Forecast",
                 model_type="time_series",
                 target_metric="traffic_volume",
-                features=["hour_of_day", "day_of_week", "month", "historical_avg"],
+                features=[
+                    "hour_of_day",
+                    "day_of_week",
+                    "month",
+                    "historical_avg",
+                ],
                 parameters={
                     "forecast_horizon": 24,
                     "seasonality": "daily",
@@ -201,7 +206,9 @@ class AdvancedAnalyticsEngine:
         """List all available metrics"""
         return list(self.metrics.values())
 
-    async def analyze_metric(self, metric_id: str, start_time: datetime, end_time: datetime) -> Dict[str, Any]:
+    async def analyze_metric(
+        self, metric_id: str, start_time: datetime, end_time: datetime
+    ) -> Dict[str, Any]:
         """Analyze a specific metric"""
         metric = self.get_metric(metric_id)
         if not metric:
@@ -219,13 +226,17 @@ class AdvancedAnalyticsEngine:
             "trend": self.calculator.identify_trend(data),
             "seasonality": self.calculator.detect_seasonality(data),
             "anomalies": self.calculator.detect_anomalies(data),
-            "threshold_violations": self.calculator.check_threshold_violations(data, metric),
+            "threshold_violations": self.calculator.check_threshold_violations(
+                data, metric
+            ),
             "aggregated": self.calculator.aggregate_metric_data(data, metric),
         }
 
         return analysis
 
-    async def generate_insights(self, analysis_results: List[Dict]) -> List[AnalyticsInsight]:
+    async def generate_insights(
+        self, analysis_results: List[Dict]
+    ) -> List[AnalyticsInsight]:
         """Generate actionable insights from analysis results"""
         insights = []
 
@@ -243,14 +254,18 @@ class AdvancedAnalyticsEngine:
                     title=f"{metric.name} Threshold Violation",
                     description=f"{metric.name} exceeded {violation['violation']['level']} threshold",
                     affected_metrics=[metric.metric_id],
-                    recommendations=self._get_threshold_recommendations(metric, violation),
+                    recommendations=self._get_threshold_recommendations(
+                        metric, violation
+                    ),
                 )
                 insights.append(insight)
 
             # Check for trends
             trend = analysis.get("trend", {})
             if trend.get("direction") in ["increasing", "decreasing"]:
-                severity = "warning" if trend.get("strength", 0) > 0.5 else "info"
+                severity = (
+                    "warning" if trend.get("strength", 0) > 0.5 else "info"
+                )
                 insight = AnalyticsInsight(
                     insight_id=f"trend_{metric.metric_id}_{len(insights)}",
                     timestamp=datetime.now(),
@@ -259,7 +274,9 @@ class AdvancedAnalyticsEngine:
                     title=f"{metric.name} Trend Analysis",
                     description=f"{metric.name} is {trend['direction']} with strength {trend.get('strength', 0):.2f}",
                     affected_metrics=[metric.metric_id],
-                    recommendations=self._get_trend_recommendations(metric, trend),
+                    recommendations=self._get_trend_recommendations(
+                        metric, trend
+                    ),
                 )
                 insights.append(insight)
 
@@ -274,7 +291,9 @@ class AdvancedAnalyticsEngine:
                     title=f"{metric.name} Anomaly Detected",
                     description=f"Anomalous value detected: {anomaly['value']} (Z-score: {anomaly['z_score']:.2f})",
                     affected_metrics=[metric.metric_id],
-                    recommendations=self._get_anomaly_recommendations(metric, anomaly),
+                    recommendations=self._get_anomaly_recommendations(
+                        metric, anomaly
+                    ),
                 )
                 insights.append(insight)
 
@@ -307,7 +326,9 @@ class AdvancedAnalyticsEngine:
                     "trend": "stable",
                 }  # Mock value
 
-        return self.report_generator.generate_report(template_name, report_data, format_type)
+        return self.report_generator.generate_report(
+            template_name, report_data, format_type
+        )
 
     async def _collect_metric_data(
         self, metric: AnalyticsMetric, start_time: datetime, end_time: datetime
@@ -316,25 +337,38 @@ class AdvancedAnalyticsEngine:
         # This would integrate with the actual FortiManager API
         # For now, return mock data
         return [
-            {"timestamp": start_time + timedelta(minutes=i), "value": 50 + (i % 20)}
-            for i in range(0, int((end_time - start_time).total_seconds() / 60), 5)
+            {
+                "timestamp": start_time + timedelta(minutes=i),
+                "value": 50 + (i % 20),
+            }
+            for i in range(
+                0, int((end_time - start_time).total_seconds() / 60), 5
+            )
         ]
 
-    def _get_threshold_recommendations(self, metric: AnalyticsMetric, violation: Dict) -> List[str]:
+    def _get_threshold_recommendations(
+        self, metric: AnalyticsMetric, violation: Dict
+    ) -> List[str]:
         """Get recommendations for threshold violations"""
         recommendations = []
         level = violation["violation"]["level"]
 
         if level == "critical":
-            recommendations.append(f"Immediate action required for {metric.name}")
-            recommendations.append("Consider scaling resources or investigating root cause")
+            recommendations.append(
+                f"Immediate action required for {metric.name}"
+            )
+            recommendations.append(
+                "Consider scaling resources or investigating root cause"
+            )
         elif level == "warning":
             recommendations.append(f"Monitor {metric.name} closely")
             recommendations.append("Consider preventive measures")
 
         return recommendations
 
-    def _get_trend_recommendations(self, metric: AnalyticsMetric, trend: Dict) -> List[str]:
+    def _get_trend_recommendations(
+        self, metric: AnalyticsMetric, trend: Dict
+    ) -> List[str]:
         """Get recommendations for trend analysis"""
         recommendations = []
         direction = trend.get("direction")
@@ -344,18 +378,24 @@ class AdvancedAnalyticsEngine:
             recommendations.append(f"{metric.name} shows strong upward trend")
             recommendations.append("Consider capacity planning")
         elif direction == "decreasing" and strength > 0.5:
-            recommendations.append(f"{metric.name} shows strong downward trend")
+            recommendations.append(
+                f"{metric.name} shows strong downward trend"
+            )
             recommendations.append("Investigate potential causes")
 
         return recommendations
 
-    def _get_anomaly_recommendations(self, metric: AnalyticsMetric, anomaly: Dict) -> List[str]:
+    def _get_anomaly_recommendations(
+        self, metric: AnalyticsMetric, anomaly: Dict
+    ) -> List[str]:
         """Get recommendations for anomaly detection"""
         recommendations = []
         severity = anomaly.get("severity", "medium")
 
         if severity == "high":
-            recommendations.append(f"High-severity anomaly detected in {metric.name}")
+            recommendations.append(
+                f"High-severity anomaly detected in {metric.name}"
+            )
             recommendations.append("Immediate investigation recommended")
         else:
             recommendations.append(f"Anomaly detected in {metric.name}")

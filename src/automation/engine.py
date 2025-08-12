@@ -61,7 +61,12 @@ class AutomationEngine:
         logger.info(f"워크플로우 생성: {name} (ID: {workflow_id})")
         return workflow_id
 
-    def schedule_task(self, task_type: AutomationTask, schedule: str, params: Optional[Dict] = None) -> str:
+    def schedule_task(
+        self,
+        task_type: AutomationTask,
+        schedule: str,
+        params: Optional[Dict] = None,
+    ) -> str:
         """작업 스케줄링"""
         task_id = f"task_{datetime.now().timestamp()}_{task_type.value}"
 
@@ -79,7 +84,9 @@ class AutomationEngine:
         logger.info(f"작업 스케줄링: {task_type.value} (ID: {task_id})")
         return task_id
 
-    async def execute_task(self, task_type: AutomationTask, params: Optional[Dict] = None) -> Dict:
+    async def execute_task(
+        self, task_type: AutomationTask, params: Optional[Dict] = None
+    ) -> Dict:
         """작업 실행"""
         task_id = f"task_{datetime.now().timestamp()}"
 
@@ -110,8 +117,12 @@ class AutomationEngine:
                 raise ValueError(f"Unknown task type: {task_type}")
 
             # 작업 완료
-            self.running_tasks[task_id]["status"] = AutomationStatus.COMPLETED.value
-            self.running_tasks[task_id]["completed_at"] = datetime.now().isoformat()
+            self.running_tasks[task_id][
+                "status"
+            ] = AutomationStatus.COMPLETED.value
+            self.running_tasks[task_id][
+                "completed_at"
+            ] = datetime.now().isoformat()
             self.running_tasks[task_id]["result"] = result
 
             # 히스토리에 추가
@@ -124,9 +135,13 @@ class AutomationEngine:
             logger.error(f"작업 실행 실패: {str(e)}")
 
             # 작업 실패 처리
-            self.running_tasks[task_id]["status"] = AutomationStatus.FAILED.value
+            self.running_tasks[task_id][
+                "status"
+            ] = AutomationStatus.FAILED.value
             self.running_tasks[task_id]["error"] = str(e)
-            self.running_tasks[task_id]["failed_at"] = datetime.now().isoformat()
+            self.running_tasks[task_id][
+                "failed_at"
+            ] = datetime.now().isoformat()
 
             # 히스토리에 추가
             self.task_history.append(self.running_tasks[task_id])
@@ -270,7 +285,10 @@ class AutomationEngine:
             }
 
             # 이슈 검출
-            if health_report["components"]["system_resources"]["cpu_usage"] > 80:
+            if (
+                health_report["components"]["system_resources"]["cpu_usage"]
+                > 80
+            ):
                 health_report["issues"].append(
                     {
                         "severity": "warning",
@@ -357,7 +375,11 @@ class AutomationEngine:
         logger.info("문제 자동 해결 시작")
 
         issues = params.get("issues", [])
-        resolution_results = {"resolved": [], "failed": [], "actions_taken": []}
+        resolution_results = {
+            "resolved": [],
+            "failed": [],
+            "actions_taken": [],
+        }
 
         try:
             for issue in issues:
@@ -385,7 +407,9 @@ class AutomationEngine:
                     resolution_results["resolved"].append(issue)
 
                 else:
-                    resolution_results["failed"].append({"issue": issue, "reason": "Unknown issue type"})
+                    resolution_results["failed"].append(
+                        {"issue": issue, "reason": "Unknown issue type"}
+                    )
 
             return resolution_results
 
@@ -463,8 +487,12 @@ class AutomationEngine:
     def cancel_task(self, task_id: str) -> bool:
         """작업 취소"""
         if task_id in self.running_tasks:
-            self.running_tasks[task_id]["status"] = AutomationStatus.CANCELLED.value
-            self.running_tasks[task_id]["cancelled_at"] = datetime.now().isoformat()
+            self.running_tasks[task_id][
+                "status"
+            ] = AutomationStatus.CANCELLED.value
+            self.running_tasks[task_id][
+                "cancelled_at"
+            ] = datetime.now().isoformat()
 
             # 히스토리에 추가
             self.task_history.append(self.running_tasks[task_id])

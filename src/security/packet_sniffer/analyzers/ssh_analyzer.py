@@ -19,7 +19,9 @@ class SSHAnalyzer:
         self.key_exchanges = []
         self.sessions = {}
 
-    def analyze_ssh(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_ssh(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """SSH 패킷 분석"""
 
         try:
@@ -51,10 +53,19 @@ class SSHAnalyzer:
 
             # 암호화 협상 분석
             if "aes" in payload_str.lower():
-                analysis["encryption"] = self._analyze_encryption_methods(payload_str)
+                analysis["encryption"] = self._analyze_encryption_methods(
+                    payload_str
+                )
 
             # 인증 시도 탐지
-            if any(keyword in payload_str.lower() for keyword in ["password", "publickey", "keyboard-interactive"]):
+            if any(
+                keyword in payload_str.lower()
+                for keyword in [
+                    "password",
+                    "publickey",
+                    "keyboard-interactive",
+                ]
+            ):
                 analysis["connection_stage"] = "authentication"
                 analysis["auth_method"] = self._detect_auth_method(payload_str)
 
@@ -72,7 +83,11 @@ class SSHAnalyzer:
 
         except Exception as e:
             logger.error(f"SSH 분석 오류: {e}")
-            return {"protocol": "SSH", "error": str(e), "payload_size": len(payload)}
+            return {
+                "protocol": "SSH",
+                "error": str(e),
+                "payload_size": len(payload),
+            }
 
     def _analyze_encryption_methods(self, payload_str: str) -> Dict[str, Any]:
         """암호화 방법 분석"""
@@ -102,7 +117,9 @@ class SSHAnalyzer:
         elif any("128" in cipher for cipher in encryption_info["ciphers"]):
             encryption_info["strength"] = "medium"
         elif any(
-            weak in cipher.lower() for cipher in encryption_info["ciphers"] for weak in ["3des", "blowfish", "cast"]
+            weak in cipher.lower()
+            for cipher in encryption_info["ciphers"]
+            for weak in ["3des", "blowfish", "cast"]
         ):
             encryption_info["strength"] = "weak"
 
@@ -122,15 +139,23 @@ class SSHAnalyzer:
         else:
             return "unknown"
 
-    def _detect_ssh_tunneling(self, payload: bytes, packet_info: Dict[str, Any]) -> bool:
+    def _detect_ssh_tunneling(
+        self, payload: bytes, packet_info: Dict[str, Any]
+    ) -> bool:
         """SSH 터널링 탐지"""
 
         # 포트 포워딩 패턴 검사
-        port_forward_patterns = [b"tcpip-forward", b"direct-tcpip", b"forwarded-tcpip"]
+        port_forward_patterns = [
+            b"tcpip-forward",
+            b"direct-tcpip",
+            b"forwarded-tcpip",
+        ]
 
         return any(pattern in payload for pattern in port_forward_patterns)
 
-    def _check_ssh_security(self, analysis: Dict[str, Any], payload_str: str) -> List[str]:
+    def _check_ssh_security(
+        self, analysis: Dict[str, Any], payload_str: str
+    ) -> List[str]:
         """SSH 보안 검사"""
 
         issues = []
@@ -160,9 +185,15 @@ class SSHAnalyzer:
         """브루트포스 공격 패턴 탐지"""
 
         # 반복적인 실패 패턴 검사
-        failure_patterns = ["authentication failed", "invalid user", "permission denied"]
+        failure_patterns = [
+            "authentication failed",
+            "invalid user",
+            "permission denied",
+        ]
 
-        return any(pattern in payload_str.lower() for pattern in failure_patterns)
+        return any(
+            pattern in payload_str.lower() for pattern in failure_patterns
+        )
 
     def get_ssh_session_info(self, src_ip: str, dst_ip: str) -> Dict[str, Any]:
         """SSH 세션 정보 조회"""
@@ -170,7 +201,9 @@ class SSHAnalyzer:
         session_key = f"{src_ip}:{dst_ip}"
         return self.sessions.get(session_key, {})
 
-    def update_ssh_session(self, src_ip: str, dst_ip: str, analysis: Dict[str, Any]):
+    def update_ssh_session(
+        self, src_ip: str, dst_ip: str, analysis: Dict[str, Any]
+    ):
         """SSH 세션 정보 업데이트"""
 
         session_key = f"{src_ip}:{dst_ip}"
@@ -200,15 +233,23 @@ class SSHAnalyzer:
         """SSH 분석 통계"""
 
         total_sessions = len(self.sessions)
-        successful_auths = sum(1 for s in self.sessions.values() if s.get("successful_auth"))
-        failed_auths = sum(s.get("auth_failures", 0) for s in self.sessions.values())
+        successful_auths = sum(
+            1 for s in self.sessions.values() if s.get("successful_auth")
+        )
+        failed_auths = sum(
+            s.get("auth_failures", 0) for s in self.sessions.values()
+        )
 
         # 가장 많이 사용된 SSH 버전
         version_counts = {}
         for version in self.ssh_versions:
             version_counts[version] = version_counts.get(version, 0) + 1
 
-        most_common_version = max(version_counts.items(), key=lambda x: x[1])[0] if version_counts else "unknown"
+        most_common_version = (
+            max(version_counts.items(), key=lambda x: x[1])[0]
+            if version_counts
+            else "unknown"
+        )
 
         return {
             "total_sessions": total_sessions,
@@ -216,5 +257,7 @@ class SSHAnalyzer:
             "failed_authentications": failed_auths,
             "most_common_version": most_common_version,
             "version_distribution": version_counts,
-            "active_sessions": len([s for s in self.sessions.values() if s.get("successful_auth")]),
+            "active_sessions": len(
+                [s for s in self.sessions.values() if s.get("successful_auth")]
+            ),
         }

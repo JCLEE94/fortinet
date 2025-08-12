@@ -22,7 +22,9 @@ def get_devices():
         fortigate_client = api_manager.get_fortigate_client()
 
         if not fortigate_client:
-            return jsonify({"success": False, "message": "FortiGate not configured"})
+            return jsonify(
+                {"success": False, "message": "FortiGate not configured"}
+            )
 
         devices = fortigate_client.get_managed_devices()
         return jsonify({"success": True, "data": devices or []})
@@ -41,7 +43,9 @@ def get_device_details(device_id):
         fortigate_client = api_manager.get_fortigate_client()
 
         if not fortigate_client:
-            return jsonify({"success": False, "message": "FortiGate not configured"})
+            return jsonify(
+                {"success": False, "message": "FortiGate not configured"}
+            )
 
         device_info = fortigate_client.get_device_info(device_id)
         return jsonify({"success": True, "data": device_info or {}})

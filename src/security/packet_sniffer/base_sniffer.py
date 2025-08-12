@@ -37,10 +37,14 @@ class SnifferConfig:
 
     def __post_init__(self):
         """환경변수에서 설정 로드"""
-        self.offline_mode = os.getenv("OFFLINE_MODE", "false").lower() == "true"
+        self.offline_mode = (
+            os.getenv("OFFLINE_MODE", "false").lower() == "true"
+        )
         # Mock data removed - production only
         self.fortigate_host = os.getenv("FORTIGATE_HOST", self.fortigate_host)
-        self.fortigate_token = os.getenv("FORTIGATE_API_TOKEN", self.fortigate_token)
+        self.fortigate_token = os.getenv(
+            "FORTIGATE_API_TOKEN", self.fortigate_token
+        )
 
 
 @dataclass
@@ -140,7 +144,9 @@ class BaseSniffer(ABC):
             if stats["start_time"]:
                 stats["uptime_seconds"] = time.time() - stats["start_time"]
                 if stats["uptime_seconds"] > 0:
-                    stats["packets_per_second"] = stats["packets_captured"] / stats["uptime_seconds"]
+                    stats["packets_per_second"] = (
+                        stats["packets_captured"] / stats["uptime_seconds"]
+                    )
             return stats
 
     def reset_stats(self) -> None:
@@ -234,7 +240,14 @@ class ProtocolIdentifier:
 
     # 프로토콜 시그니처
     PROTOCOL_SIGNATURES = {
-        "HTTP": [b"GET ", b"POST ", b"PUT ", b"DELETE ", b"HEAD ", b"OPTIONS "],
+        "HTTP": [
+            b"GET ",
+            b"POST ",
+            b"PUT ",
+            b"DELETE ",
+            b"HEAD ",
+            b"OPTIONS ",
+        ],
         "HTTPS": [b"\x16\x03"],  # TLS 핸드셰이크
         "SSH": [b"SSH-"],
         "FTP": [b"220 ", b"USER ", b"PASS "],
@@ -266,12 +279,17 @@ class ProtocolIdentifier:
         return None
 
     @classmethod
-    def get_confidence_score(cls, protocol: str, port: int, payload: bytes) -> float:
+    def get_confidence_score(
+        cls, protocol: str, port: int, payload: bytes
+    ) -> float:
         """프로토콜 식별 신뢰도 계산"""
         score = 0.0
 
         # 포트 기반 점수
-        if cls.identify_by_port(port, "TCP") == protocol or cls.identify_by_port(port, "UDP") == protocol:
+        if (
+            cls.identify_by_port(port, "TCP") == protocol
+            or cls.identify_by_port(port, "UDP") == protocol
+        ):
             score += 0.7
 
         # 시그니처 기반 점수
@@ -293,7 +311,9 @@ class MockDataGenerator:
             protocol = secrets.choice(protocols)
 
         # 일반적인 IP 주소 패턴
-        src_ip = f"192.168.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 254)}"
+        src_ip = (
+            f"192.168.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 254)}"
+        )
         dst_ip = f"10.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 255)}.{secrets.randbelow(1, 254)}"
 
         # 포트 선택
@@ -304,7 +324,9 @@ class MockDataGenerator:
         else:  # ICMP
             common_ports = [0]
 
-        src_port = secrets.choice(common_ports + [secrets.randbelow(1024, 65535)])
+        src_port = secrets.choice(
+            common_ports + [secrets.randbelow(1024, 65535)]
+        )
         dst_port = secrets.choice(common_ports)
 
         # 패킷 크기
@@ -324,7 +346,12 @@ class MockDataGenerator:
         if app_protocol and app_protocol in payload_samples:
             payload = payload_samples[app_protocol]
         else:
-            payload = bytes([secrets.randbelow(256) for _ in range(secrets.randbelow(90) + 10)])
+            payload = bytes(
+                [
+                    secrets.randbelow(256)
+                    for _ in range(secrets.randbelow(90) + 10)
+                ]
+            )
 
         return PacketInfo(
             timestamp=time.time(),

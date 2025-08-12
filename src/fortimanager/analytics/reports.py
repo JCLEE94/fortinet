@@ -65,8 +65,15 @@ class ReportGenerator:
                 },
                 {
                     "title": "Security Analysis",
-                    "metrics": ["threat_count", "blocked_attempts", "policy_hits"],
-                    "analytics": ["threat_intelligence", "security_effectiveness"],
+                    "metrics": [
+                        "threat_count",
+                        "blocked_attempts",
+                        "policy_hits",
+                    ],
+                    "analytics": [
+                        "threat_intelligence",
+                        "security_effectiveness",
+                    ],
                 },
                 {
                     "title": "Operational Insights",
@@ -97,7 +104,11 @@ class ReportGenerator:
                 },
                 {
                     "title": "Remediation Actions",
-                    "analytics": ["action_items", "timeline", "responsible_parties"],
+                    "analytics": [
+                        "action_items",
+                        "timeline",
+                        "responsible_parties",
+                    ],
                 },
             ],
         }
@@ -131,7 +142,9 @@ class ReportGenerator:
             section_data = {
                 "title": section["title"],
                 "metrics": self._extract_section_metrics(section, report_data),
-                "analytics": self._extract_section_analytics(section, report_data),
+                "analytics": self._extract_section_analytics(
+                    section, report_data
+                ),
                 "visualizations": section.get("visualizations", []),
             }
             report_content["sections"].append(section_data)
@@ -165,21 +178,27 @@ class ReportGenerator:
             "performance_score": report_data.get("overall_score", 85),
         }
 
-    def _extract_section_metrics(self, section: Dict, report_data: Dict) -> Dict[str, Any]:
+    def _extract_section_metrics(
+        self, section: Dict, report_data: Dict
+    ) -> Dict[str, Any]:
         """Extract metrics for a report section"""
         metrics = {}
         for metric_name in section.get("metrics", []):
             metrics[metric_name] = report_data.get("metrics", {}).get(
-                metric_name, {"value": 0, "status": "unknown", "trend": "stable"}
+                metric_name,
+                {"value": 0, "status": "unknown", "trend": "stable"},
             )
         return metrics
 
-    def _extract_section_analytics(self, section: Dict, report_data: Dict) -> Dict[str, Any]:
+    def _extract_section_analytics(
+        self, section: Dict, report_data: Dict
+    ) -> Dict[str, Any]:
         """Extract analytics for a report section"""
         analytics = {}
         for analytics_name in section.get("analytics", []):
             analytics[analytics_name] = report_data.get("analytics", {}).get(
-                analytics_name, {"insights": [], "trends": [], "recommendations": []}
+                analytics_name,
+                {"insights": [], "trends": [], "recommendations": []},
             )
         return analytics
 
@@ -216,7 +235,8 @@ class ReportGenerator:
             content += f"<div class='section'><h2>{section['title']}</h2>"
             for metric_name, metric_data in section["metrics"].items():
                 content += (
-                    f"<div class='metric'><strong>{metric_name}:</strong> " f"{metric_data.get('value', 'N/A')}</div>"
+                    f"<div class='metric'><strong>{metric_name}:</strong> "
+                    f"{metric_data.get('value', 'N/A')}</div>"
                 )
             content += "</div>"
 
@@ -229,7 +249,9 @@ class ReportGenerator:
     def _format_pdf_report(self, report_data: Dict) -> bytes:
         """Format report as PDF (placeholder)"""
         # This would require a PDF library like reportlab or weasyprint
-        logger.warning("PDF generation not implemented - returning HTML as bytes")
+        logger.warning(
+            "PDF generation not implemented - returning HTML as bytes"
+        )
         return self._format_html_report(report_data).encode("utf-8")
 
     def _format_csv_report(self, report_data: Dict) -> str:

@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class AutoFixMixin:
     """Mixin for automatic vulnerability fixing"""
 
-    def auto_fix_vulnerabilities(self, scan_result: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def auto_fix_vulnerabilities(
+        self, scan_result: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """취약점 자동 수정"""
         try:
             logger.info("취약점 자동 수정 시작")
@@ -25,7 +27,9 @@ class AutoFixMixin:
 
             # 스캔 결과에서 수정 가능한 취약점들 처리
             if scan_result and "results" in scan_result:
-                vuln_scan = scan_result["results"].get("vulnerability_scan", {})
+                vuln_scan = scan_result["results"].get(
+                    "vulnerability_scan", {}
+                )
                 if "vulnerabilities" in vuln_scan:
                     for vuln in vuln_scan["vulnerabilities"]:
                         fix_result = self._fix_single_vulnerability(vuln)
@@ -44,7 +48,9 @@ class AutoFixMixin:
                 "total_failed": len(failed_fixes),
             }
 
-            logger.info(f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패")
+            logger.info(
+                f"자동 수정 완료: {len(fixed_issues)}개 수정, {len(failed_fixes)}개 실패"
+            )
             return result
 
         except Exception as e:
@@ -140,7 +146,11 @@ class AutoFixMixin:
                     "reason": "안전하지 않은 파일에 대한 권한 변경 거부",
                 }
         except Exception as e:
-            return {"vulnerability": vulnerability, "success": False, "error": str(e)}
+            return {
+                "vulnerability": vulnerability,
+                "success": False,
+                "error": str(e),
+            }
 
     def _fix_ssh_configuration(self, vulnerability: Dict) -> Dict:
         """

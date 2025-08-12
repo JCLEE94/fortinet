@@ -52,7 +52,10 @@ class NetworkException(Exception):
 # 예외 매핑 테이블
 EXCEPTION_MAPPING = {
     # 네트워크 관련
-    requests.exceptions.ConnectionError: (NetworkException, "Connection failed"),
+    requests.exceptions.ConnectionError: (
+        NetworkException,
+        "Connection failed",
+    ),
     requests.exceptions.Timeout: (NetworkException, "Request timeout"),
     requests.exceptions.RequestException: (NetworkException, "Network error"),
     # 데이터 검증 관련
@@ -60,7 +63,10 @@ EXCEPTION_MAPPING = {
     TypeError: (ValidationException, "Invalid type"),
     KeyError: (ValidationException, "Missing required key"),
     # 설정 관련
-    FileNotFoundError: (ConfigurationException, "Configuration file not found"),
+    FileNotFoundError: (
+        ConfigurationException,
+        "Configuration file not found",
+    ),
     PermissionError: (ConfigurationException, "Permission denied"),
 }
 
@@ -71,7 +77,9 @@ class ExceptionHandler:
     def __init__(self, logger_name: str = "exception_handler"):
         self.logger = setup_module_logger(logger_name)
 
-    def handle_api_exception(self, e: Exception, api_type: str = "unknown") -> tuple:
+    def handle_api_exception(
+        self, e: Exception, api_type: str = "unknown"
+    ) -> tuple:
         """API 관련 예외 처리"""
         if isinstance(e, (FortiGateAPIException, FortiManagerAPIException)):
             return self._format_api_error(str(e), api_type, 500)
@@ -79,11 +87,17 @@ class ExceptionHandler:
         # requests 관련 예외들
         if isinstance(e, requests.exceptions.HTTPError):
             if e.response.status_code == 401:
-                return self._format_api_error("Authentication failed", api_type, 401)
+                return self._format_api_error(
+                    "Authentication failed", api_type, 401
+                )
             elif e.response.status_code == 403:
-                return self._format_api_error("Access forbidden", api_type, 403)
+                return self._format_api_error(
+                    "Access forbidden", api_type, 403
+                )
             elif e.response.status_code == 404:
-                return self._format_api_error("Resource not found", api_type, 404)
+                return self._format_api_error(
+                    "Resource not found", api_type, 404
+                )
             else:
                 return self._format_api_error(
                     f"HTTP {e.response.status_code}: {str(e)}",
@@ -92,18 +106,28 @@ class ExceptionHandler:
                 )
 
         if isinstance(e, requests.exceptions.ConnectionError):
-            return self._format_api_error("Connection failed - check network connectivity", api_type, 503)
+            return self._format_api_error(
+                "Connection failed - check network connectivity", api_type, 503
+            )
 
         if isinstance(e, requests.exceptions.Timeout):
-            return self._format_api_error("Request timeout - API server not responding", api_type, 504)
+            return self._format_api_error(
+                "Request timeout - API server not responding", api_type, 504
+            )
 
         if isinstance(e, requests.exceptions.SSLError):
-            return self._format_api_error("SSL certificate verification failed", api_type, 495)
+            return self._format_api_error(
+                "SSL certificate verification failed", api_type, 495
+            )
 
         # 기본 처리
-        return self._format_api_error(f"Unexpected error: {str(e)}", api_type, 500)
+        return self._format_api_error(
+            f"Unexpected error: {str(e)}", api_type, 500
+        )
 
-    def _format_api_error(self, message: str, api_type: str, status_code: int) -> tuple:
+    def _format_api_error(
+        self, message: str, api_type: str, status_code: int
+    ) -> tuple:
         """API 에러 응답 포맷팅"""
         self.logger.error(f"{api_type} API Error: {message}")
         return (
@@ -166,7 +190,9 @@ class ExceptionHandler:
         self.logger.error(f"Network Error: {message}")
         return format_error_response(message, status_code)
 
-    def handle_generic_exception(self, e: Exception, context: str = "") -> tuple:
+    def handle_generic_exception(
+        self, e: Exception, context: str = ""
+    ) -> tuple:
         """일반적인 예외 처리 (최후의 수단)"""
         # 스택 트레이스 로깅
         self.logger.error(f"Unexpected error in {context}: {str(e)}")
@@ -223,7 +249,11 @@ def configuration_exception_handler(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except (ConfigurationException, FileNotFoundError, PermissionError) as e:
+        except (
+            ConfigurationException,
+            FileNotFoundError,
+            PermissionError,
+        ) as e:
             return exception_handler.handle_configuration_exception(e)
         except Exception as e:
             return exception_handler.handle_generic_exception(e, func.__name__)
@@ -262,19 +292,27 @@ def comprehensive_exception_handler(api_type: str = "unknown"):
                 return exception_handler.handle_api_exception(e, api_type)
             except (ValidationException, ValueError, TypeError, KeyError) as e:
                 return exception_handler.handle_validation_exception(e)
-            except (ConfigurationException, FileNotFoundError, PermissionError) as e:
+            except (
+                ConfigurationException,
+                FileNotFoundError,
+                PermissionError,
+            ) as e:
                 return exception_handler.handle_configuration_exception(e)
             except (NetworkException,) as e:
                 return exception_handler.handle_network_exception(e)
             except Exception as e:
-                return exception_handler.handle_generic_exception(e, func.__name__)
+                return exception_handler.handle_generic_exception(
+                    e, func.__name__
+                )
 
         return wrapper
 
     return decorator
 
 
-def safe_execute(func: Callable, *args, default_return=None, log_errors=True, **kwargs):
+def safe_execute(
+    func: Callable, *args, default_return=None, log_errors=True, **kwargs
+):
     """안전한 함수 실행 유틸리티"""
     try:
         return func(*args, **kwargs)
@@ -285,7 +323,9 @@ def safe_execute(func: Callable, *args, default_return=None, log_errors=True, **
         return default_return
 
 
-def convert_exception(original_exception: Exception, context: str = "") -> Exception:
+def convert_exception(
+    original_exception: Exception, context: str = ""
+) -> Exception:
     """기존 예외를 더 구체적인 예외로 변환"""
     exc_type = type(original_exception)
 

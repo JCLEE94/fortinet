@@ -14,7 +14,9 @@ from .compliance_routes import compliance_bp
 from .device_routes import device_bp
 
 # 메인 FortiManager Blueprint 생성
-fortimanager_bp = Blueprint("fortimanager", __name__, url_prefix="/api/fortimanager")
+fortimanager_bp = Blueprint(
+    "fortimanager", __name__, url_prefix="/api/fortimanager"
+)
 
 # 서브 블루프린트 등록
 fortimanager_bp.register_blueprint(device_bp)

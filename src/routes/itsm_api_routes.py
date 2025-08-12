@@ -18,11 +18,20 @@ def scrape_itsm_requests():
         scraper = ITSMScraper()
         requests = scraper.get_firewall_requests()
 
-        return jsonify({"status": "success", "requests": requests, "total": len(requests)})
+        return jsonify(
+            {"status": "success", "requests": requests, "total": len(requests)}
+        )
 
     except Exception as e:
         return (
-            jsonify({"status": "error", "message": str(e), "requests": [], "total": 0}),
+            jsonify(
+                {
+                    "status": "error",
+                    "message": str(e),
+                    "requests": [],
+                    "total": 0,
+                }
+            ),
             500,
         )
 
@@ -58,7 +67,9 @@ def get_request_status(request_id):
         scraper = ITSMScraper()
         status = scraper.get_request_status(request_id)
 
-        return jsonify({"status": "success", "request_id": request_id, "data": status})
+        return jsonify(
+            {"status": "success", "request_id": request_id, "data": status}
+        )
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

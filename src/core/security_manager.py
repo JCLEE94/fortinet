@@ -12,7 +12,7 @@ import os
 import secrets
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -26,7 +26,9 @@ class SecurityManager:
 
     def __init__(self, config_path: str = None):
         """Initialize security manager with secure defaults"""
-        self.config_path = config_path or os.getenv("SECURITY_CONFIG_PATH", "/etc/fortinet/security.json")
+        self.config_path = config_path or os.getenv(
+            "SECURITY_CONFIG_PATH", "/etc/fortinet/security.json"
+        )
         self.key_rotation_days = int(os.getenv("KEY_ROTATION_DAYS", "30"))
         self.key_length = int(os.getenv("KEY_LENGTH", "32"))
         self.master_key = None
@@ -96,20 +98,26 @@ class SecurityManager:
         try:
             # Hash current key for audit
             if current_key:
-                rotation_result["old_key_hash"] = hashlib.sha256(current_key.encode()).hexdigest()[:16]
+                rotation_result["old_key_hash"] = hashlib.sha256(
+                    current_key.encode()
+                ).hexdigest()[:16]
 
             # Generate new key
             new_key = self.generate_secret_key()
             rotation_result["new_key"] = new_key
 
             # Calculate next rotation
-            next_rotation = datetime.utcnow() + timedelta(days=self.key_rotation_days)
+            next_rotation = datetime.utcnow() + timedelta(
+                days=self.key_rotation_days
+            )
             rotation_result["next_rotation"] = next_rotation.isoformat()
 
             # Store rotation history
             self._store_rotation_history(rotation_result)
 
-            logger.info(f"Secret key rotated successfully. Next rotation: {next_rotation}")
+            logger.info(
+                f"Secret key rotated successfully. Next rotation: {next_rotation}"
+            )
 
         except Exception as e:
             rotation_result["status"] = "failed"
@@ -196,7 +204,9 @@ class SecurityManager:
         """Generate CSRF protection token"""
         return secrets.token_urlsafe(32)
 
-    def hash_password(self, password: str, salt: bytes = None) -> Dict[str, str]:
+    def hash_password(
+        self, password: str, salt: bytes = None
+    ) -> Dict[str, str]:
         """
         Hash password with PBKDF2
 
@@ -226,7 +236,9 @@ class SecurityManager:
             "iterations": 100000,
         }
 
-    def verify_password(self, password: str, stored_hash: Dict[str, str]) -> bool:
+    def verify_password(
+        self, password: str, stored_hash: Dict[str, str]
+    ) -> bool:
         """
         Verify password against stored hash
 
@@ -311,7 +323,9 @@ class SecurityConfig:
             "csrf_token": self.manager.generate_csrf_token(),
             "api_keys": {},
             "last_rotation": datetime.utcnow().isoformat(),
-            "next_rotation": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+            "next_rotation": (
+                datetime.utcnow() + timedelta(days=30)
+            ).isoformat(),
         }
 
     def _should_rotate_keys(self) -> bool:
@@ -327,7 +341,9 @@ class SecurityConfig:
         logger.info("Starting security key rotation...")
 
         # Rotate main secret key
-        rotation = self.manager.rotate_secret_key(self.config.get("secret_key"))
+        rotation = self.manager.rotate_secret_key(
+            self.config.get("secret_key")
+        )
         self.config["secret_key"] = rotation["new_key"]
         self.config["last_rotation"] = rotation["timestamp"]
         self.config["next_rotation"] = rotation["next_rotation"]
@@ -357,7 +373,9 @@ class SecurityConfig:
 
     def get_secret_key(self) -> str:
         """Get current secret key"""
-        return self.config.get("secret_key") or self.manager.generate_secret_key()
+        return (
+            self.config.get("secret_key") or self.manager.generate_secret_key()
+        )
 
     def get_jwt_config(self) -> Dict[str, str]:
         """Get JWT configuration"""
@@ -365,7 +383,9 @@ class SecurityConfig:
 
     def get_csrf_token(self) -> str:
         """Get CSRF token"""
-        return self.config.get("csrf_token") or self.manager.generate_csrf_token()
+        return (
+            self.config.get("csrf_token") or self.manager.generate_csrf_token()
+        )
 
 
 # Singleton instance

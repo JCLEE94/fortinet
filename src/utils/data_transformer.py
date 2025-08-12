@@ -22,7 +22,9 @@ class DataTransformer:
             "xml": self._transform_xml,
         }
 
-    def transform(self, data: Any, input_format: str = "json") -> Dict[str, Any]:
+    def transform(
+        self, data: Any, input_format: str = "json"
+    ) -> Dict[str, Any]:
         """
         데이터를 정규화된 형식으로 변환
 

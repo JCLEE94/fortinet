@@ -61,7 +61,9 @@ class RuleValidator:
         # subnet 형식이 '192.168.1.0 255.255.255.0'인 경우 CIDR 형식으로 변환
         if " " in subnet:
             ip_part, mask_part = subnet.split(" ")
-            mask_prefix = sum([bin(int(x)).count("1") for x in mask_part.split(".")])
+            mask_prefix = sum(
+                [bin(int(x)).count("1") for x in mask_part.split(".")]
+            )
             subnet = f"{ip_part}/{mask_prefix}"
 
         return ipaddress.ip_address(ip) in ipaddress.ip_network(subnet)
@@ -112,8 +114,12 @@ class RuleValidator:
                     return True
             else:
                 # 멤버가 주소 객체인 경우
-                address_obj = self._find_address_object(member_name, firewall_id)
-                if address_obj and self.is_ip_in_address_object(ip, address_obj, firewall_id):
+                address_obj = self._find_address_object(
+                    member_name, firewall_id
+                )
+                if address_obj and self.is_ip_in_address_object(
+                    ip, address_obj, firewall_id
+                ):
                     return True
 
         return False
@@ -137,7 +143,9 @@ class RuleValidator:
                 return addr
         return None
 
-    def is_port_in_service_object(self, port, protocol, service_obj, firewall_id="default"):
+    def is_port_in_service_object(
+        self, port, protocol, service_obj, firewall_id="default"
+    ):
         """
         포트가 서비스 객체에 포함되는지 확인
 
@@ -189,7 +197,9 @@ class RuleValidator:
         except ValueError:
             return False
 
-    def is_port_in_service_group(self, port, protocol, group_name, firewall_id="default"):
+    def is_port_in_service_group(
+        self, port, protocol, group_name, firewall_id="default"
+    ):
         """
         포트가 서비스 그룹에 포함되는지 확인
 
@@ -221,12 +231,18 @@ class RuleValidator:
 
             # 멤버가 다른 서비스 그룹인지 확인
             if self._is_service_group(member_name, service_groups):
-                if self.is_port_in_service_group(port, protocol, member_name, firewall_id):
+                if self.is_port_in_service_group(
+                    port, protocol, member_name, firewall_id
+                ):
                     return True
             else:
                 # 멤버가 서비스 객체인 경우
-                service_obj = self._find_service_object(member_name, firewall_id)
-                if service_obj and self.is_port_in_service_object(port, protocol, service_obj, firewall_id):
+                service_obj = self._find_service_object(
+                    member_name, firewall_id
+                )
+                if service_obj and self.is_port_in_service_object(
+                    port, protocol, service_obj, firewall_id
+                ):
                     return True
 
         return False

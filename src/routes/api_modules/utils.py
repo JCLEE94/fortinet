@@ -40,7 +40,9 @@ def get_system_uptime():
             return uptime_seconds
     except Exception:
         # Fallback for non-Linux systems
-        return random.uniform(3600, 86400)  # Random uptime between 1 hour and 1 day
+        return random.uniform(
+            3600, 86400
+        )  # Random uptime between 1 hour and 1 day
 
 
 def get_memory_usage():
@@ -55,12 +57,18 @@ def get_memory_usage():
 
             for line in lines:
                 if line.startswith("MemTotal:"):
-                    mem_total = int(line.split()[1]) * 1024  # Convert KB to bytes
+                    mem_total = (
+                        int(line.split()[1]) * 1024
+                    )  # Convert KB to bytes
                 elif line.startswith("MemAvailable:"):
-                    mem_available = int(line.split()[1]) * 1024  # Convert KB to bytes
+                    mem_available = (
+                        int(line.split()[1]) * 1024
+                    )  # Convert KB to bytes
 
             mem_used = mem_total - mem_available
-            mem_usage_percent = (mem_used / mem_total) * 100 if mem_total > 0 else 0
+            mem_usage_percent = (
+                (mem_used / mem_total) * 100 if mem_total > 0 else 0
+            )
 
             return {
                 "total": mem_total,
@@ -118,7 +126,13 @@ def generate_topology_data():
                 "x": 300,
                 "y": 100,
             },
-            {"id": "sw1", "name": "Switch-1", "type": "switch", "x": 200, "y": 200},
+            {
+                "id": "sw1",
+                "name": "Switch-1",
+                "type": "switch",
+                "x": 200,
+                "y": 200,
+            },
         ],
         "edges": [
             {"source": "fw1", "target": "sw1", "type": "ethernet"},

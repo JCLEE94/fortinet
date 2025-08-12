@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 class FilterRule:
     """개별 필터 규칙"""
 
-    def __init__(self, field: str, operator: str, value: Any, action: str = "allow"):
+    def __init__(
+        self, field: str, operator: str, value: Any, action: str = "allow"
+    ):
         """
         필터 규칙 초기화
 
@@ -115,7 +117,9 @@ class PacketFilter:
         }
         self.callbacks = []
 
-    def add_rule(self, field: str, operator: str, value: Any, action: str = "allow") -> FilterRule:
+    def add_rule(
+        self, field: str, operator: str, value: Any, action: str = "allow"
+    ) -> FilterRule:
         """
         필터 규칙 추가
 

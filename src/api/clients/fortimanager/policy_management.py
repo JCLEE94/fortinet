@@ -16,7 +16,10 @@ class PolicyManagementMixin:
     def get_firewall_policies(self, device_name, vdom="root", adom="root"):
         """Get firewall policies for a specific device"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}]}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+            }
 
             response = self._make_api_request(
                 "get",
@@ -63,12 +66,17 @@ class PolicyManagementMixin:
                     )
 
                 return {"status": "success", "data": formatted_policies}
-            return {"status": "error", "message": "No policies found in package"}
+            return {
+                "status": "error",
+                "message": "No policies found in package",
+            }
         except Exception as e:
             logger.error(f"Error getting package policies: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_policy_package_settings(self, package_name: str, cli_path: str, adom: str = "root") -> Dict[str, Any]:
+    def get_policy_package_settings(
+        self, package_name: str, cli_path: str, adom: str = "root"
+    ) -> Dict[str, Any]:
         """Get settings from a policy package"""
         try:
             data = {"adom": adom, "option": "object member"}
@@ -210,11 +218,18 @@ class PolicyManagementMixin:
             return {"status": "error", "message": str(e)}
 
     def delete_firewall_policy(
-        self, device_name: str, policy_id: int, vdom: str = "root", adom: str = "root"
+        self,
+        device_name: str,
+        policy_id: int,
+        vdom: str = "root",
+        adom: str = "root",
     ) -> Dict[str, Any]:
         """Delete a firewall policy"""
         try:
-            data = {"adom": adom, "scope": [{"name": device_name, "vdom": vdom}]}
+            data = {
+                "adom": adom,
+                "scope": [{"name": device_name, "vdom": vdom}],
+            }
 
             response = self._make_api_request(
                 "delete",
