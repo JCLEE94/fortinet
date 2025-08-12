@@ -11,11 +11,11 @@ from utils.unified_logger import get_logger
 
 from .base_api_client import BaseApiClient, RealtimeMonitoringMixin
 from .fortimanager import (
-    AdvancedFeaturesMixin, 
-    AuthConnectionMixin, 
-    DeviceManagementMixin, 
+    AdvancedFeaturesMixin,
+    AuthConnectionMixin,
+    DeviceManagementMixin,
     PolicyManagementMixin,
-    TaskManagementMixin
+    TaskManagementMixin,
 )
 
 

@@ -212,7 +212,7 @@ class PathTracer:
 
         # 간단한 루프 검출 - 같은 destination에 대한 순환 참조
         for i, route1 in enumerate(routing_table):
-            for j, route2 in enumerate(routing_table[i + 1:], i + 1):
+            for j, route2 in enumerate(routing_table[i + 1 :], i + 1):
                 if self._is_potential_loop(route1, route2):
                     loops.append(
                         {

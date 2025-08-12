@@ -732,7 +732,7 @@ class DeepInspector:
                 if offset + length + 1 > len(question_data):
                     break
 
-                part = question_data[offset + 1: offset + 1 + length].decode("utf-8", errors="ignore")
+                part = question_data[offset + 1 : offset + 1 + length].decode("utf-8", errors="ignore")
                 domain_parts.append(part)
                 offset += length + 1
 
@@ -740,7 +740,7 @@ class DeepInspector:
 
             # 질의 타입과 클래스
             if offset + 4 <= len(question_data):
-                qtype, qclass = struct.unpack(">HH", question_data[offset: offset + 4])
+                qtype, qclass = struct.unpack(">HH", question_data[offset : offset + 4])
                 query_types = {
                     1: "A",
                     2: "NS",

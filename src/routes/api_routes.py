@@ -9,7 +9,7 @@ from flask import Blueprint
 
 from utils.unified_logger import get_logger
 
-from .api_modules import system_bp, settings_bp
+from .api_modules import settings_bp, system_bp
 
 logger = get_logger(__name__)
 

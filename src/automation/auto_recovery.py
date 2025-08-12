@@ -15,6 +15,7 @@ from typing import Callable, Dict, Optional
 
 import psutil
 import requests
+
 from config.network import SPECIAL_IPS
 
 logger = logging.getLogger(__name__)
@@ -485,7 +486,7 @@ class AutoRecoveryEngine:
             # 로컬 서비스 테스트
             from config.services import APP_CONFIG
 
-            local_host = SPECIAL_IPS.get('localhost', '127.0.0.1')
+            local_host = SPECIAL_IPS.get("localhost", "127.0.0.1")
             response = requests.get(f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings', timeout=5)
             local_service_ok = response.status_code == 200
         except Exception:
@@ -498,7 +499,7 @@ class AutoRecoveryEngine:
         try:
             from config.services import APP_CONFIG
 
-            local_host = SPECIAL_IPS.get('localhost', '127.0.0.1')
+            local_host = SPECIAL_IPS.get("localhost", "127.0.0.1")
             response = requests.get(f'http://{local_host}:{APP_CONFIG["web_port"]}/api/settings', timeout=10)
 
             if response.status_code == 200:

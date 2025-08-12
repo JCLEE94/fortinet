@@ -285,7 +285,7 @@ class FAZClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestMixin):
 
         # Mock data for demonstration
         from config.environment import env_config
-        
+
         mock_devices = [
             {
                 "name": "FortiGate-VM64-1",

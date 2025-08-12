@@ -205,7 +205,7 @@ class PatternDetector:
 
                 if time_diff <= burst_window:
                     # 같은 출발지/목적지 확인
-                    window_packets = sorted_packets[i: i + min_packets]
+                    window_packets = sorted_packets[i : i + min_packets]
                     src_ips = set(p.get("src_ip", "") for p in window_packets)
                     dst_ips = set(p.get("dst_ip", "") for p in window_packets)
                     protocols = set(p.get("protocol", "") for p in window_packets)

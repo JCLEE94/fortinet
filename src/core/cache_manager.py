@@ -288,7 +288,7 @@ class RedisCacheBackend(BaseCacheBackend):
     def _unprefixed_key(self, key: str) -> str:
         """Remove prefix from key."""
         if key.startswith(self._prefix):
-            return key[len(self._prefix):]
+            return key[len(self._prefix) :]
         return key
 
     def get(self, key: str) -> Optional[Any]:
