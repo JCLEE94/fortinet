@@ -79,7 +79,9 @@ class PatternDetector:
             # 통계 업데이트
             self._update_statistics(patterns)
 
-            logger.info(f"패턴 탐지 완료: 총 {len(packets)}개 패킷에서 " f"{sum(len(p) for p in patterns.values())}개 패턴 탐지")
+            logger.info(
+                f"패턴 탐지 완료: 총 {len(packets)}개 패킷에서 " f"{sum(len(p) for p in patterns.values())}개 패턴 탐지"
+            )
 
             return {
                 "patterns": patterns,

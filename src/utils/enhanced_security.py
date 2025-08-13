@@ -412,7 +412,10 @@ def jwt_required(roles: list = None, permissions: list = None):
 
             # 역할 확인
             if roles and payload.get("role") not in roles:
-                logger.warning(f"권한 부족: 사용자 {payload.get('user_id')}, " f"필요 역할: {roles}, 현재 역할: {payload.get('role')}")
+                logger.warning(
+                    f"권한 부족: 사용자 {payload.get('user_id')}, "
+                    f"필요 역할: {roles}, 현재 역할: {payload.get('role')}"
+                )
                 return (
                     jsonify({"error": "충분한 권한이 없습니다", "code": "INSUFFICIENT_ROLE"}),
                     403,
@@ -423,7 +426,8 @@ def jwt_required(roles: list = None, permissions: list = None):
                 user_permissions = payload.get("permissions", [])
                 if not all(perm in user_permissions for perm in permissions):
                     logger.warning(
-                        f"권한 부족: 사용자 {payload.get('user_id')}, " f"필요 권한: {permissions}, 현재 권한: {user_permissions}"
+                        f"권한 부족: 사용자 {payload.get('user_id')}, "
+                        f"필요 권한: {permissions}, 현재 권한: {user_permissions}"
                     )
                     return (
                         jsonify(

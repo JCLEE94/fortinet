@@ -99,12 +99,18 @@ def health_check():
             immutable_tag = build_info.get("immutable_tag", "")
             git_sha = build_info.get("git_sha", "")
             git_branch = build_info.get("git_branch", "")
-            
+
             # GitOps 컴플라이언스 체크: 필수 필드 검증
-            if (immutable_tag and immutable_tag != "unknown" and
-                git_sha and git_sha != "unknown" and
-                git_branch and git_branch != "unknown" and
-                build_info.get("build_timestamp") and build_info.get("build_timestamp") != "unknown"):
+            if (
+                immutable_tag
+                and immutable_tag != "unknown"
+                and git_sha
+                and git_sha != "unknown"
+                and git_branch
+                and git_branch != "unknown"
+                and build_info.get("build_timestamp")
+                and build_info.get("build_timestamp") != "unknown"
+            ):
                 gitops_status = "compliant"
             else:
                 gitops_status = "non-compliant"

@@ -724,7 +724,9 @@ def with_servicenow_client(func):
         client = get_servicenow_client()
         if not client:
             raise ApplicationError(
-                "ServiceNow 클라이언트가 초기화되지 않았습니다", category=ErrorCategory.CONFIGURATION, severity=ErrorSeverity.ERROR
+                "ServiceNow 클라이언트가 초기화되지 않았습니다",
+                category=ErrorCategory.CONFIGURATION,
+                severity=ErrorSeverity.ERROR,
             )
         return func(client, *args, **kwargs)
 

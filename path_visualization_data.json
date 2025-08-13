@@ -1,0 +1,12 @@
+{
+  "graph": null,
+  "path_table": [],
+  "detailed_rules": [],
+  "allowed": true,
+  "blocked_by": null,
+  "summary": {
+    "total_hops": 2,
+    "source_ip": "192.168.1.10",
+    "destination_ip": "8.8.8.8"
+  }
+}
