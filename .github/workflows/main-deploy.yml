@@ -298,9 +298,10 @@ jobs:
       
       - name: Install ArgoCD CLI
         run: |
-          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-          chmod +x argocd
-          sudo mv argocd /usr/local/bin/argocd
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd-linux-amd64
+          sudo install argocd-linux-amd64 /usr/local/bin/argocd
       
       - name: Login to ArgoCD
         run: |
@@ -350,9 +351,10 @@ jobs:
     steps:
       - name: Install ArgoCD CLI
         run: |
-          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-          chmod +x argocd
-          sudo mv argocd /usr/local/bin/argocd
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd-linux-amd64
+          sudo install argocd-linux-amd64 /usr/local/bin/argocd
       
       - name: Login to ArgoCD
         run: |
