@@ -170,6 +170,14 @@ def create_app():
     except ImportError as e:
         logger.warning(f"Logs routes not available: {e}")
 
+    # Advanced FortiGate API 라우트 등록
+    try:
+        from routes.api_modules.advanced_fortigate_routes import advanced_fortigate_bp
+        app.register_blueprint(advanced_fortigate_bp, url_prefix='/api/advanced_fortigate')
+        logger.info("Advanced FortiGate API routes registered")
+    except ImportError as e:
+        logger.warning(f"Advanced FortiGate API routes not available: {e}")
+
     # Legacy routes for backward compatibility
     @rate_limit(max_requests=30, window=60)
     @csrf_protect
