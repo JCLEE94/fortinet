@@ -15,7 +15,7 @@ class TestSSHAnalyzer:
     def setup_method(self):
         """Setup SSH analyzer test"""
         try:
-            from security.packet_sniffer.analyzers.ssh_analyzer import SSHAnalyzer
+            from src.security.packet_sniffer.analyzers.ssh_analyzer import SSHAnalyzer
             self.analyzer = SSHAnalyzer()
         except ImportError:
             pytest.skip("SSH analyzer not available")
@@ -61,7 +61,7 @@ class TestWebAnalyzer:
     def setup_method(self):
         """Setup web analyzer test"""
         try:
-            from security.packet_sniffer.analyzers.web_analyzer import WebAnalyzer
+            from src.security.packet_sniffer.analyzers.web_analyzer import WebAnalyzer
             self.analyzer = WebAnalyzer()
         except ImportError:
             pytest.skip("Web analyzer not available")
@@ -69,8 +69,8 @@ class TestWebAnalyzer:
     def test_web_analyzer_initialization(self):
         """Test web analyzer initialization"""
         assert hasattr(self.analyzer, 'http_methods')
-        assert hasattr(self.analyzer, 'suspicious_patterns')
-        assert hasattr(self.analyzer, 'sessions')
+        assert hasattr(self.analyzer, 'user_agents')
+        assert hasattr(self.analyzer, 'domains')
     
     def test_analyze_http_get_request(self):
         """Test HTTP GET request analysis"""
@@ -106,7 +106,7 @@ class TestApplicationAnalyzer:
     def setup_method(self):
         """Setup application analyzer test"""
         try:
-            from security.packet_sniffer.analyzers.application_analyzer import ApplicationAnalyzer
+            from src.security.packet_sniffer.analyzers.application_analyzer import ApplicationAnalyzer
             self.analyzer = ApplicationAnalyzer()
         except ImportError:
             pytest.skip("Application analyzer not available")
@@ -119,7 +119,7 @@ class TestApplicationAnalyzer:
     
     def test_application_ports_mapping(self):
         """Test application port mappings"""
-        from security.packet_sniffer.analyzers.application_analyzer import ApplicationAnalyzer
+        from src.security.packet_sniffer.analyzers.application_analyzer import ApplicationAnalyzer
         
         ports = ApplicationAnalyzer.APPLICATION_PORTS
         assert ports[22] == "SSH"
