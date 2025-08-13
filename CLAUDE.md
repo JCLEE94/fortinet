@@ -14,9 +14,7 @@ FortiGate Nextrade is a comprehensive network monitoring and analysis platform t
 - Dual architecture: Monolithic (legacy) + MSA (microservices)
 - GitOps CI/CD with Helm charts, Harbor Registry, ChartMuseum, and ArgoCD
 
-## Architecture
-
-### Technology Stack
+## Technology Stack
 - **Backend**: Flask + Blueprint architecture (Python 3.11)
 - **Frontend**: Bootstrap 5 + Vanilla JS (no React/Vue)
 - **Database**: Redis (cache) + JSON file storage
@@ -25,46 +23,6 @@ FortiGate Nextrade is a comprehensive network monitoring and analysis platform t
 - **CI/CD**: GitHub Actions (self-hosted runners) → Harbor Registry → ChartMuseum → ArgoCD
 - **Ingress**: Traefik (not NGINX)
 - **MSA Infrastructure**: Kong Gateway, Consul, RabbitMQ
-
-### Critical Patterns
-
-#### 1. API Client Session Management
-**CRITICAL**: All API clients MUST initialize a requests session:
-```python
-class SomeAPIClient(BaseAPIClient):
-    def __init__(self):
-        super().__init__()  # REQUIRED - handles session initialization
-```
-
-#### 2. Blueprint URL Namespacing
-Templates MUST use blueprint namespaces:
-```html
-{{ url_for('main.dashboard') }}      <!-- Correct -->
-{{ url_for('dashboard') }}            <!-- Wrong -->
-```
-
-#### 3. Configuration Hierarchy
-1. `data/config.json` - Runtime configuration (highest priority)
-2. Environment variables
-3. `src/config/unified_settings.py` - Default values
-
-#### 4. Mock System Activation
-```python
-# Automatic when APP_MODE=test
-if os.getenv('APP_MODE', 'production').lower() == 'test':
-    # Uses mock_fortigate and Postman-based mock server
-```
-
-#### 5. Import Path Structure
-**CRITICAL**: All imports within src/ must use relative paths:
-```python
-# Correct - relative imports from src/
-from utils.unified_logger import get_logger
-from api.clients.fortigate_api_client import FortiGateAPIClient
-
-# Wrong - absolute imports cause ModuleNotFoundError
-from src.utils.unified_logger import get_logger
-```
 
 ## Development Commands
 
@@ -153,6 +111,95 @@ kubectl get pods -n fortinet
 kubectl logs -l app=fortinet -n fortinet -f
 ```
 
+## Critical Architecture Patterns
+
+### 1. API Client Session Management
+**CRITICAL**: All API clients MUST initialize a requests session:
+```python
+class SomeAPIClient(BaseAPIClient):
+    def __init__(self):
+        super().__init__()  # REQUIRED - handles session initialization
+```
+
+### 2. Blueprint URL Namespacing
+Templates MUST use blueprint namespaces:
+```html
+{{ url_for('main.dashboard') }}      <!-- Correct -->
+{{ url_for('dashboard') }}            <!-- Wrong -->
+```
+
+### 3. Configuration Hierarchy
+1. `data/config.json` - Runtime configuration (highest priority)
+2. Environment variables
+3. `src/config/unified_settings.py` - Default values
+
+### 4. Mock System Activation
+```python
+# Automatic when APP_MODE=test
+if os.getenv('APP_MODE', 'production').lower() == 'test':
+    # Uses mock_fortigate and Postman-based mock server
+```
+
+### 5. Import Path Structure
+**CRITICAL**: All imports within src/ must use relative paths:
+```python
+# Correct - relative imports from src/
+from utils.unified_logger import get_logger
+from api.clients.fortigate_api_client import FortiGateAPIClient
+
+# Wrong - absolute imports cause ModuleNotFoundError
+from src.utils.unified_logger import get_logger
+```
+
+## Key Components
+
+### Flask Application Factory Pattern
+The system uses a sophisticated Flask application factory with blueprint modularity:
+```python
+def create_app():
+    app = Flask(__name__)
+    # Security configurations
+    # Blueprint registration
+    # Cache manager initialization
+    return app
+```
+- 8 blueprints handle domain-specific routing
+- Unified security headers and CSRF protection
+- Dynamic SocketIO integration based on OFFLINE_MODE
+
+### FortiManager Advanced Hub
+Four specialized modules accessible via:
+```python
+hub = FortiManagerAdvancedHub(api_client)
+```
+
+1. **Policy Orchestrator**: `hub.policy_orchestrator` - AI-driven policy management
+2. **Compliance Framework**: `hub.compliance_framework` - Automated compliance checks
+3. **Security Fabric**: `hub.security_fabric` - Integrated security management
+4. **Analytics Engine**: `hub.analytics_engine` - Advanced analytics and reporting
+
+### Connection Pool Management
+Located in `src/core/connection_pool.py`:
+- **connection_pool_manager**: Global connection pool for API clients
+- **Session reuse**: Prevents connection exhaustion
+- **Thread-safe**: Supports concurrent requests
+- **Auto-cleanup**: Handles connection lifecycle
+
+### Packet Sniffer System
+Located in `src/security/packet_sniffer/`:
+- **Analyzers**: Protocol-specific analysis (DNS, HTTP, TLS, FortiManager)
+- **Filters**: BPF and advanced packet filtering
+- **Exporters**: Multiple format support (CSV, JSON, PCAP, Reports)
+- **Inspectors**: Deep packet inspection capabilities
+- **Session Management**: Stateful packet tracking
+
+### ITSM Integration
+Located in `src/itsm/`:
+- **Ticket Automation**: Automated ticket creation/updates
+- **Policy Requests**: Firewall policy request workflows
+- **Approval Workflows**: Multi-level approval processes
+- **ServiceNow Integration**: API client for ServiceNow
+
 ## Testing Framework
 
 ### Pytest Configuration
@@ -177,57 +224,44 @@ python src/utils/test_master_integration_suite.py
 # Features: Phase-based execution, parallel testing, comprehensive results
 ```
 
-## Key Components
+## Environment Variables
 
-### FortiManager Advanced Hub
-Four specialized modules accessible via:
-```python
-hub = FortiManagerAdvancedHub(api_client)
-```
+### Core Settings
+- `APP_MODE`: `production` | `test` | `development`
+- `OFFLINE_MODE`: `true` | `false`
+- `WEB_APP_PORT`: Default `7777`
+- `SECRET_KEY`: Required for production
 
-1. **Policy Orchestrator**: `hub.policy_orchestrator` - AI-driven policy management
-2. **Compliance Framework**: `hub.compliance_framework` - Automated compliance checks
-3. **Security Fabric**: `hub.security_fabric` - Integrated security management
-4. **Analytics Engine**: `hub.analytics_engine` - Advanced analytics and reporting
+### API Configuration
+- `FORTIMANAGER_HOST`, `FORTIMANAGER_API_KEY`
+- `FORTIGATE_HOST`, `FORTIGATE_API_KEY`
+- `ITSM_BASE_URL`, `ITSM_API_KEY`
 
-### Connection Pool Management
-Located in `src/core/connection_pool.py`:
-- **connection_pool_manager**: Global connection pool for API clients
-- **Session reuse**: Prevents connection exhaustion
-- **Thread-safe**: Supports concurrent requests
-- **Auto-cleanup**: Handles connection lifecycle
+### MSA Configuration
+- `CONSUL_URL`: Service discovery
+- `RABBITMQ_URL`: Message queue
+- `REDIS_URL`: Cache backend
+- `KONG_ADMIN_URL`: API Gateway admin
 
-### Development & Automation Tools
-Located in `scripts/` directory with 50+ automation scripts:
-- **GitOps**: Complete GitOps pipeline setup and management
-- **Deployment**: Multi-environment deployment automation
-- **Testing**: Integration test runners and validation
-- **Infrastructure**: K8s, ArgoCD, Helm automation
-- **Monitoring**: Health checks and status monitoring
+## MSA Service Architecture
 
-Key scripts:
-```bash
-./scripts/deploy.sh                    # Main deployment script
-./scripts/gitops-deploy.sh            # GitOps deployment
-./scripts/setup-kong-routes.sh        # MSA API Gateway setup
-./scripts/healthcheck.sh              # Application health validation
-./dev-tools/simple-mock-server.py     # Container debugging server
-```
+### Service Ports
+- **Kong Gateway**: 8000 (proxy), 8001 (admin), 8002 (GUI)
+- **Auth Service**: 8081
+- **FortiManager Service**: 8082
+- **ITSM Service**: 8083
+- **Monitoring Service**: 8084
+- **Security Service**: 8085
+- **Analysis Service**: 8086
+- **Configuration Service**: 8087
+- **Consul**: 8500
+- **RabbitMQ**: 5672 (AMQP), 15672 (Management)
 
-### Packet Sniffer System
-Located in `src/security/packet_sniffer/`:
-- **Analyzers**: Protocol-specific analysis (DNS, HTTP, TLS, FortiManager)
-- **Filters**: BPF and advanced packet filtering
-- **Exporters**: Multiple format support (CSV, JSON, PCAP, Reports)
-- **Inspectors**: Deep packet inspection capabilities
-- **Session Management**: Stateful packet tracking
-
-### ITSM Integration
-Located in `src/itsm/`:
-- **Ticket Automation**: Automated ticket creation/updates
-- **Policy Requests**: Firewall policy request workflows
-- **Approval Workflows**: Multi-level approval processes
-- **ServiceNow Integration**: API client for ServiceNow
+### Service Communication
+- All external requests go through Kong Gateway
+- Services discover each other via Consul
+- Async messaging via RabbitMQ
+- Shared cache via Redis
 
 ## CI/CD Pipeline
 
@@ -309,25 +343,6 @@ fortinet/
 - `GET /api/security/packets` - Packet analysis results
 - `GET /api/security/threats` - Threat detection
 
-## Environment Variables
-
-### Core Settings
-- `APP_MODE`: `production` | `test` | `development`
-- `OFFLINE_MODE`: `true` | `false`
-- `WEB_APP_PORT`: Default `7777`
-- `SECRET_KEY`: Required for production
-
-### API Configuration
-- `FORTIMANAGER_HOST`, `FORTIMANAGER_API_KEY`
-- `FORTIGATE_HOST`, `FORTIGATE_API_KEY`
-- `ITSM_BASE_URL`, `ITSM_API_KEY`
-
-### MSA Configuration
-- `CONSUL_URL`: Service discovery
-- `RABBITMQ_URL`: Message queue
-- `REDIS_URL`: Cache backend
-- `KONG_ADMIN_URL`: API Gateway admin
-
 ## Common Issues & Solutions
 
 ### Port 7777 in Use
@@ -395,58 +410,6 @@ argocd app sync fortinet --prune
 - Run the feature test to validate core functionality: `pytest tests/functional/test_features.py -v`
 - Use custom Rust-style test framework: `@test_framework.test("description")`
 
-## MSA Service Architecture
-
-### Service Ports
-- **Kong Gateway**: 8000 (proxy), 8001 (admin), 8002 (GUI)
-- **Auth Service**: 8081
-- **FortiManager Service**: 8082
-- **ITSM Service**: 8083
-- **Monitoring Service**: 8084
-- **Security Service**: 8085
-- **Analysis Service**: 8086
-- **Configuration Service**: 8087
-- **Consul**: 8500
-- **RabbitMQ**: 5672 (AMQP), 15672 (Management)
-
-### Service Communication
-- All external requests go through Kong Gateway
-- Services discover each other via Consul
-- Async messaging via RabbitMQ
-- Shared cache via Redis
-
-## Running Tests
-
-### Single Test Execution
-```bash
-# Run specific test file
-pytest tests/unit/test_specific.py -v
-
-# Run specific test function
-pytest tests/unit/test_specific.py::TestClass::test_function -v
-
-# Run tests with specific marker
-pytest -m "unit and not slow" -v
-
-# Run with debugging output
-pytest tests/unit/test_specific.py -xvs
-```
-
-### Performance Testing
-```bash
-# Run feature validation (10 core features)
-pytest tests/functional/test_features.py -v
-
-# Run integration test suite (comprehensive)
-python src/utils/test_master_integration_suite.py
-
-# Run MSA-specific tests
-pytest tests/msa/ -v
-
-# Run manual test suite (26 test files)
-pytest tests/manual/ -v
-```
-
 ## High-Level Architecture
 
 ### Request Flow (Monolithic Mode)
@@ -464,46 +427,6 @@ pytest tests/manual/ -v
 4. **Microservices**: 7 services (8081-8087) handle specific domains
 5. **Shared Cache**: Redis for cross-service data sharing
 
-### Critical Design Patterns
-
-#### Session Management Pattern
-All API clients must properly initialize sessions to avoid connection issues:
-```python
-class CustomAPIClient(BaseAPIClient):
-    def __init__(self):
-        super().__init__()  # CRITICAL - initializes self.session
-        self.session.headers.update({...})  # Then customize
-```
-
-#### Configuration Loading Pattern
-Configuration follows a strict hierarchy:
-1. Check `data/config.json` (runtime config)
-2. Check environment variables
-3. Use defaults from `src/config/unified_settings.py`
-
-#### Mock Mode Pattern
-When `APP_MODE=test`, the system automatically:
-- Uses mock FortiGate responses from `data/mock_responses/`
-- Activates Postman-based mock server on port 6666
-- Disables external API calls
-- Uses test database connections
-
-## Advanced Architecture Patterns
-
-### Flask Application Factory Pattern
-The system uses a sophisticated Flask application factory with blueprint modularity:
-```python
-def create_app():
-    app = Flask(__name__)
-    # Security configurations
-    # Blueprint registration
-    # Cache manager initialization
-    return app
-```
-- 8 blueprints handle domain-specific routing
-- Unified security headers and CSRF protection
-- Dynamic SocketIO integration based on OFFLINE_MODE
-
 ### Offline-First Architecture
 **CRITICAL**: System automatically detects and adapts to offline environments:
 ```python
@@ -517,11 +440,11 @@ OFFLINE_MODE = (
 - Activates mock servers on port 6666
 - Uses JSON file storage instead of external databases
 
-### Unified Logging & Cache Architecture
-Located in `src/utils/`:
-- **unified_logger.py**: Centralized logging with structured JSON output
-- **unified_cache_manager.py**: Redis + memory fallback caching
-- **common_imports.py**: Centralized import management to reduce duplication
+### Configuration Hierarchy Pattern
+Strict 3-tier configuration loading:
+1. **data/config.json** (runtime configuration - highest priority)
+2. **Environment variables** (deployment-specific)
+3. **src/config/unified_settings.py** (application defaults)
 
 ### Security-First Design
 Multiple security layers implemented:
@@ -530,70 +453,3 @@ Multiple security layers implemented:
 - **Security scanner**: `src/utils/security_scanner.py`
 - **Rate limiting**: Built into Flask routes
 - **CSRF protection**: Automatic token generation
-
-### Packet Analysis Engine Architecture
-Located in `src/security/packet_sniffer/`:
-```
-packet_sniffer/
-├── analyzers/           # Protocol-specific analyzers (8 modules)
-├── exporters/          # Multi-format data export (5 modules)  
-├── filters/            # BPF and advanced filtering (3 modules)
-├── inspectors/         # Deep packet inspection
-├── base_sniffer.py     # Core capture engine
-├── session_manager.py  # Stateful session tracking
-└── web_compatibility.py # Flask integration
-```
-
-### FortiManager Advanced Hub Integration
-Four-tier architecture accessible via hub pattern:
-```python
-from fortimanager.advanced_hub import FortiManagerAdvancedHub
-hub = FortiManagerAdvancedHub(api_client)
-
-# Access specialized modules
-hub.policy_orchestrator    # AI-driven policy management
-hub.compliance_framework   # Automated compliance checks  
-hub.security_fabric       # Integrated security management
-hub.analytics_engine      # Advanced analytics & reporting
-```
-
-### Configuration Hierarchy Pattern
-Strict 3-tier configuration loading:
-1. **data/config.json** (runtime configuration - highest priority)
-2. **Environment variables** (deployment-specific)
-3. **src/config/unified_settings.py** (application defaults)
-
-Each config module in `src/config/` handles specific aspects:
-- **services.py**: Service URLs and ports
-- **network.py**: Network configuration
-- **limits.py**: Resource limits and timeouts
-
-## Recent Updates & Current State
-
-### System Status
-- **ALL hardcoded values removed** - project uses environment variables
-- **Import paths fixed** - All files use relative imports within src/
-- **Feature test passing** - 10/10 core features verified (tests/functional/test_features.py)
-- **NodePort standardized** - Consistent use of 30777
-- **MSA architecture implemented** - 7 microservices with full infrastructure
-- **Critical import bug fixed** - `src/utils/security_fixes.py:210`
-- **Docker security enhanced** - Non-root user enabled, bytecode compilation fixed
-- **Offline-first design** - Comprehensive fallback mechanisms implemented
-
-### Code Quality Metrics
-- **Black formatting**: Applied to all Python files
-- **Import sorting**: Fixed with isort  
-- **Flake8 compliance**: 269 issues remaining (down from 338)
-- **Test coverage**: Growing (minimum 5% enforced in pytest.ini)
-- **File count**: 142 Python files in src/, 76 test files
-- **Custom test framework**: Rust-style testing in `src/utils/integration_test_framework.py`
-
-### Deployment Notes
-- Harbor Registry path: `registry.jclee.me/fortinet` (not jclee94/fortinet)
-- Helm chart version: 1.0.5 with Traefik ingress
-- TLS currently disabled due to certificate issues
-- Self-hosted GitHub Actions runners in `/home/jclee/app/github_runner/`
-- GitOps pipeline: Test → Build → Kustomize → ArgoCD sync
-- **ArgoCD Image Updater**: Automated image tag updates via Kustomize
-- **Package management**: Supports both requirements.txt and pyproject.toml (version 1.0.5)
-- **Production startup**: Uses start.sh script with Gunicorn for production deployment

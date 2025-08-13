@@ -420,7 +420,13 @@ class ITSMFortiGateBridge:
 
                     if not self.dry_run:
                         # 실제 롤백 수행
-                        pass
+                        rollback_result = self._execute_policy_rollback(fg_client, step)
+                        if not rollback_result['success']:
+                            # 롤백 실패 시 경고하고 계속 진행
+                            logger.warning(f"롤백 부분 실패: {rollback_result.get('error')}")
+                            step['rollback_status'] = 'partial_failure'
+                        else:
+                            step['rollback_status'] = 'success'
 
             self.policy_cache[request_id]["status"] = "rolled_back"
             logger.info(f"요청 {request_id} 롤백 완료")
@@ -430,6 +436,67 @@ class ITSMFortiGateBridge:
         except Exception as e:
             logger.error(f"롤백 중 오류: {str(e)}")
             return {"success": False, "error": str(e)}
+
+    def _execute_policy_rollback(self, fg_client, rollback_step: Dict) -> Dict[str, Any]:
+        """실제 정책 롤백 실행"""
+        try:
+            # 롤백 유형에 따른 처리
+            rollback_type = rollback_step.get('type', 'delete_policy')
+            
+            if rollback_type == 'delete_policy':
+                # 추가된 정책 삭제
+                policy_id = rollback_step.get('policy_id')
+                if policy_id:
+                    result = fg_client.delete_policy(policy_id)
+                    if result.get('status') == 'success':
+                        logger.info(f"정책 {policy_id} 삭제 완료")
+                        return {'success': True, 'action': 'deleted', 'policy_id': policy_id}
+                    
+            elif rollback_type == 'restore_policy':
+                # 이전 정책 복원
+                original_policy = rollback_step.get('original_policy')
+                if original_policy:
+                    result = fg_client.update_policy(
+                        original_policy['id'],
+                        original_policy['config']
+                    )
+                    if result.get('status') == 'success':
+                        logger.info(f"정책 {original_policy['id']} 복원 완료")
+                        return {'success': True, 'action': 'restored', 'policy_id': original_policy['id']}
+                    
+            elif rollback_type == 'disable_policy':
+                # 정책 비활성화
+                policy_id = rollback_step.get('policy_id')
+                if policy_id:
+                    result = fg_client.update_policy(
+                        policy_id,
+                        {'status': 'disable'}
+                    )
+                    if result.get('status') == 'success':
+                        logger.info(f"정책 {policy_id} 비활성화 완료")
+                        return {'success': True, 'action': 'disabled', 'policy_id': policy_id}
+            
+            # 백업에서 복원
+            if rollback_step.get('backup_id'):
+                backup_data = self._get_backup_data(rollback_step['backup_id'])
+                if backup_data:
+                    result = fg_client.restore_configuration(backup_data)
+                    if result.get('status') == 'success':
+                        logger.info(f"백업 {rollback_step['backup_id']}에서 복원 완료")
+                        return {'success': True, 'action': 'restored_from_backup'}
+            
+            return {'success': False, 'error': 'Rollback type not supported or missing data'}
+            
+        except Exception as e:
+            logger.error(f"롤백 실행 중 오류: {str(e)}")
+            return {'success': False, 'error': str(e)}
+    
+    def _get_backup_data(self, backup_id: str) -> Dict:
+        """백업 데이터 조회"""
+        # 캐시 또는 저장소에서 백업 데이터 조회
+        if hasattr(self, 'backup_storage'):
+            return self.backup_storage.get(backup_id)
+        return None
 
     def get_statistics(self) -> Dict[str, Any]:
         """처리 통계 조회"""

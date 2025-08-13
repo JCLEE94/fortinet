@@ -936,6 +936,108 @@ class PolicyOrchestrationEngine:
 
     def _matches_policy(self, traffic: Dict, policy: Dict) -> bool:
         """Check if traffic pattern matches policy"""
-
-        # Simplified matching - in production would be more comprehensive
-        return True  # Placeholder
+        
+        try:
+            # Extract traffic attributes
+            src_ip = traffic.get('source_ip', '')
+            dst_ip = traffic.get('destination_ip', '')
+            src_port = traffic.get('source_port', 0)
+            dst_port = traffic.get('destination_port', 0)
+            protocol = traffic.get('protocol', '').lower()
+            
+            # Extract policy attributes
+            policy_src = policy.get('source', [])
+            policy_dst = policy.get('destination', [])
+            policy_services = policy.get('services', [])
+            policy_action = policy.get('action', 'deny')
+            
+            # Check source IP match
+            src_match = False
+            if not policy_src or 'any' in policy_src:
+                src_match = True
+            else:
+                for src_range in policy_src:
+                    if self._ip_in_range(src_ip, src_range):
+                        src_match = True
+                        break
+            
+            if not src_match:
+                return False
+            
+            # Check destination IP match  
+            dst_match = False
+            if not policy_dst or 'any' in policy_dst:
+                dst_match = True
+            else:
+                for dst_range in policy_dst:
+                    if self._ip_in_range(dst_ip, dst_range):
+                        dst_match = True
+                        break
+            
+            if not dst_match:
+                return False
+            
+            # Check service/port match
+            service_match = False
+            if not policy_services or 'any' in policy_services:
+                service_match = True
+            else:
+                for service in policy_services:
+                    if self._service_matches(protocol, dst_port, service):
+                        service_match = True
+                        break
+            
+            return service_match
+            
+        except Exception as e:
+            logger.error(f"Error matching policy: {e}")
+            return False
+    
+    def _ip_in_range(self, ip: str, ip_range: str) -> bool:
+        """Check if IP is in specified range"""
+        try:
+            import ipaddress
+            
+            if '/' in ip_range:
+                # CIDR notation
+                network = ipaddress.ip_network(ip_range, strict=False)
+                return ipaddress.ip_address(ip) in network
+            elif '-' in ip_range:
+                # Range notation (e.g., 192.168.1.1-192.168.1.10)
+                start_ip, end_ip = ip_range.split('-')
+                return (ipaddress.ip_address(start_ip.strip()) <= 
+                       ipaddress.ip_address(ip) <= 
+                       ipaddress.ip_address(end_ip.strip()))
+            else:
+                # Single IP
+                return ip == ip_range
+                
+        except Exception:
+            return False
+    
+    def _service_matches(self, protocol: str, port: int, service: str) -> bool:
+        """Check if protocol/port matches service definition"""
+        # Common service definitions
+        service_map = {
+            'http': {'protocol': 'tcp', 'port': 80},
+            'https': {'protocol': 'tcp', 'port': 443},
+            'ssh': {'protocol': 'tcp', 'port': 22},
+            'telnet': {'protocol': 'tcp', 'port': 23},
+            'ftp': {'protocol': 'tcp', 'port': 21},
+            'smtp': {'protocol': 'tcp', 'port': 25},
+            'dns': {'protocol': 'udp', 'port': 53},
+            'ntp': {'protocol': 'udp', 'port': 123},
+            'rdp': {'protocol': 'tcp', 'port': 3389},
+            'snmp': {'protocol': 'udp', 'port': 161}
+        }
+        
+        if service.lower() in service_map:
+            svc_def = service_map[service.lower()]
+            return protocol == svc_def['protocol'] and port == svc_def['port']
+        
+        # Check custom port definition (e.g., "tcp/8080")
+        if '/' in service:
+            svc_proto, svc_port = service.split('/')
+            return protocol == svc_proto.lower() and port == int(svc_port)
+        
+        return False

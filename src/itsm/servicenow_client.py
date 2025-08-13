@@ -127,10 +127,76 @@ class ServiceNowAPIClient:
             raise ValueError("인증 정보가 제공되지 않았습니다 (username/password, api_token, 또는 oauth_config 필요)")
 
     def _setup_oauth(self, oauth_config: Dict):
-        """OAuth 인증 설정 (프로토타입)"""
-        # OAuth 구현은 향후 확장
-        logger.warning("OAuth 인증은 현재 프로토타입 단계입니다")
-        pass
+        """OAuth 2.0 인증 설정"""
+        import base64
+        from datetime import datetime, timedelta
+        
+        # OAuth 설정 검증
+        required_fields = ['client_id', 'client_secret', 'token_url']
+        missing_fields = [f for f in required_fields if f not in oauth_config]
+        if missing_fields:
+            raise ValueError(f"OAuth config missing required fields: {missing_fields}")
+        
+        self.oauth_config = oauth_config
+        self.access_token = None
+        self.refresh_token = oauth_config.get('refresh_token')
+        self.token_expiry = None
+        
+        # 토큰 획득
+        self._obtain_oauth_token()
+    
+    def _obtain_oauth_token(self):
+        """OAuth 액세스 토큰 획득"""
+        token_url = self.oauth_config['token_url']
+        
+        # Client credentials 인코딩
+        credentials = f"{self.oauth_config['client_id']}:{self.oauth_config['client_secret']}"
+        encoded_credentials = base64.b64encode(credentials.encode()).decode()
+        
+        headers = {
+            'Authorization': f'Basic {encoded_credentials}',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        # Grant type에 따른 요청 데이터
+        if self.refresh_token:
+            data = {
+                'grant_type': 'refresh_token',
+                'refresh_token': self.refresh_token
+            }
+        else:
+            data = {
+                'grant_type': 'client_credentials',
+                'scope': self.oauth_config.get('scope', 'useraccount')
+            }
+        
+        try:
+            response = self.session.post(token_url, headers=headers, data=data, timeout=30)
+            response.raise_for_status()
+            
+            token_data = response.json()
+            self.access_token = token_data['access_token']
+            self.refresh_token = token_data.get('refresh_token', self.refresh_token)
+            
+            # 토큰 만료 시간 설정
+            expires_in = token_data.get('expires_in', 3600)
+            self.token_expiry = datetime.utcnow() + timedelta(seconds=expires_in - 60)
+            
+            # 세션 헤더에 토큰 추가
+            self.session.headers['Authorization'] = f'Bearer {self.access_token}'
+            
+            logger.info("OAuth token obtained successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to obtain OAuth token: {e}")
+            raise RuntimeError(f"OAuth authentication failed: {str(e)}")
+    
+    def _refresh_oauth_token_if_needed(self):
+        """필요시 OAuth 토큰 갱신"""
+        if self.auth_type == 'oauth' and self.token_expiry:
+            if datetime.utcnow() >= self.token_expiry:
+                logger.info("OAuth token expired, refreshing...")
+                self._obtain_oauth_token()
 
     def _setup_session_config(self, max_retries: int):
         """세션 설정 및 재시도 로직"""
