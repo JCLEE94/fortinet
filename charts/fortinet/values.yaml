@@ -41,24 +41,38 @@ ingress:
       hosts:
         - fortinet.jclee.me
 
-# Enterprise 리소스 최적화 (Production Grade)
+# Enterprise 리소스 최적화 (Production Grade) - Performance Tuned
 resources:
   limits:
-    cpu: 1000m
-    memory: 1024Mi
-    ephemeral-storage: 2Gi
-  requests:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 800m      # CPU limit 최적화 (현재 사용률 6.1% 기준)
+    memory: 512Mi  # Memory limit 최적화 (현재 사용률 27% 기준)
     ephemeral-storage: 1Gi
+  requests:
+    cpu: 100m      # CPU request 최적화
+    memory: 128Mi  # Memory request 최적화
+    ephemeral-storage: 512Mi
 
-# HPA (Horizontal Pod Autoscaler)
+# HPA (Horizontal Pod Autoscaler) - Performance Optimized
 autoscaling:
   enabled: true
-  minReplicas: 1
-  maxReplicas: 5
-  targetCPUUtilizationPercentage: 80
-  targetMemoryUtilizationPercentage: 85
+  minReplicas: 2      # 최소 2개 Pod 보장 (고가용성)
+  maxReplicas: 8      # 최대 스케일링 확장
+  targetCPUUtilizationPercentage: 70    # CPU 임계값 최적화
+  targetMemoryUtilizationPercentage: 75  # Memory 임계값 최적화
+  # 스케일링 성능 향상
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
 
 # Fortinet 애플리케이션 환경 변수 (보안 강화)
 env:
@@ -95,22 +109,33 @@ env:
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
 
-# Health Check 설정 (Fortinet 애플리케이션 기준)
+# Health Check 설정 (Fortinet 애플리케이션 기준) - Performance Optimized
 probes:
   liveness:
     path: /api/health
     port: 7777
-    initialDelaySeconds: 60
-    periodSeconds: 30
-    timeoutSeconds: 10
+    initialDelaySeconds: 30    # 시작 시간 최적화 (60s → 30s)
+    periodSeconds: 20          # 체크 주기 최적화 (30s → 20s)
+    timeoutSeconds: 5          # 응답 시간 최적화 (10s → 5s)
     failureThreshold: 3
+    successThreshold: 1
   readiness:
+    path: /api/health
+    port: 7777
+    initialDelaySeconds: 5     # 빠른 준비 상태 감지 (10s → 5s)
+    periodSeconds: 5           # 빠른 체크 주기 (10s → 5s)
+    timeoutSeconds: 3          # 빠른 응답 시간 (5s → 3s)
+    failureThreshold: 3
+    successThreshold: 1
+  # 시작 프로브 추가 (성능 최적화)
+  startup:
     path: /api/health
     port: 7777
     initialDelaySeconds: 10
     periodSeconds: 10
     timeoutSeconds: 5
-    failureThreshold: 3
+    failureThreshold: 6        # 60초 내 시작 보장
+    successThreshold: 1
 
 # MSA 보안 설정 강화
 securityContext:

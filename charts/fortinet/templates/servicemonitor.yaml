@@ -1,13 +1,13 @@
-{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+{{- if .Values.monitoring.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}-servicemonitor
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Chart.Name }}
-    component: microservice
-    infrastructure: jclee.me
+    component: monitoring
+    release: prometheus
 spec:
   selector:
     matchLabels:
@@ -17,4 +17,16 @@ spec:
     path: {{ .Values.monitoring.serviceMonitor.path }}
     interval: 30s
     scrapeTimeout: 10s
+    honorLabels: true
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: '(fortinet_.*)'
+      targetLabel: __name__
+      replacement: '${1}'
+    - sourceLabels: [instance]
+      targetLabel: pod
+      replacement: '${1}'
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
 {{- end }}

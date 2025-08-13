@@ -150,15 +150,217 @@ class ApplicationError(Exception):
 
 
 class ErrorRecoveryStrategy:
-    """Base class for error recovery strategies"""
+    """Base class for error recovery strategies with intelligent error analysis"""
+
+    def __init__(self):
+        """Initialize recovery strategy with learning capabilities"""
+        self.success_history = {}  # 성공한 복구 패턴 저장
+        self.failure_patterns = {}  # 실패 패턴 학습
+        self.recovery_stats = {
+            "attempts": 0,
+            "successes": 0,
+            "failures": 0,
+            "last_updated": datetime.utcnow()
+        }
 
     def can_handle(self, error: ApplicationError) -> bool:
-        """Check if strategy can handle the error"""
-        raise NotImplementedError
+        """
+        Check if strategy can handle the error with intelligent analysis
+        
+        Args:
+            error: The application error to analyze
+            
+        Returns:
+            True if this strategy can handle the error
+        """
+        try:
+            # 기본 복구 가능성 체크
+            if not error.recoverable:
+                return False
+
+            # 에러 카테고리 기반 핸들링 체크
+            if not self._can_handle_category(error.category):
+                return False
+
+            # 심각도 기반 체크
+            if not self._can_handle_severity(error.severity):
+                return False
+
+            # 과거 성공 이력 확인
+            error_signature = self._generate_error_signature(error)
+            if error_signature in self.success_history:
+                success_rate = self.success_history[error_signature].get("success_rate", 0)
+                if success_rate > 0.3:  # 30% 이상 성공률이면 시도
+                    return True
+
+            # 실패 패턴 체크 - 반복적으로 실패하는 패턴은 건너뛰기
+            if error_signature in self.failure_patterns:
+                failure_count = self.failure_patterns[error_signature].get("count", 0)
+                if failure_count > 5:  # 5회 이상 실패한 패턴은 제외
+                    return False
+
+            # 컨텍스트 기반 추가 검증
+            return self._additional_handle_check(error)
+
+        except Exception as e:
+            logger.error(f"Error in can_handle check: {e}")
+            return False
 
     def recover(self, error: ApplicationError, context: Dict = None) -> Any:
-        """Execute recovery strategy"""
-        raise NotImplementedError
+        """
+        Execute recovery strategy with intelligent retry and learning
+        
+        Args:
+            error: The application error to recover from
+            context: Additional context for recovery
+            
+        Returns:
+            Recovery result or raises exception
+            
+        Raises:
+            Exception: If recovery fails
+        """
+        context = context or {}
+        error_signature = self._generate_error_signature(error)
+        
+        self.recovery_stats["attempts"] += 1
+        
+        try:
+            # 복구 전 사전 점검
+            self._pre_recovery_check(error, context)
+            
+            # 복구 실행 (하위 클래스에서 구현)
+            result = self._execute_recovery(error, context)
+            
+            # 복구 성공 처리
+            self._handle_recovery_success(error_signature, result)
+            
+            logger.info(f"Recovery successful for error {error.code} using {self.__class__.__name__}")
+            return result
+            
+        except Exception as recovery_error:
+            # 복구 실패 처리
+            self._handle_recovery_failure(error_signature, recovery_error)
+            logger.error(f"Recovery failed for error {error.code}: {recovery_error}")
+            raise recovery_error
+
+    def _can_handle_category(self, category: ErrorCategory) -> bool:
+        """
+        Check if strategy can handle specific error category
+        기본 구현 - 하위 클래스에서 오버라이드
+        """
+        return category in [
+            ErrorCategory.NETWORK,
+            ErrorCategory.DATABASE, 
+            ErrorCategory.EXTERNAL_SERVICE,
+            ErrorCategory.SYSTEM
+        ]
+
+    def _can_handle_severity(self, severity: ErrorSeverity) -> bool:
+        """
+        Check if strategy can handle specific error severity
+        """
+        # FATAL 에러는 기본적으로 복구 시도하지 않음
+        return severity != ErrorSeverity.FATAL
+
+    def _additional_handle_check(self, error: ApplicationError) -> bool:
+        """
+        Additional checks for handling capability
+        하위 클래스에서 오버라이드하여 특화 로직 구현
+        """
+        return True
+
+    def _generate_error_signature(self, error: ApplicationError) -> str:
+        """
+        Generate unique signature for error pattern learning
+        """
+        signature_parts = [
+            error.category.value,
+            error.severity.value,
+            str(hash(error.message[:50]))  # 메시지의 앞 50글자로 패턴 생성
+        ]
+        return "_".join(signature_parts)
+
+    def _pre_recovery_check(self, error: ApplicationError, context: Dict) -> None:
+        """
+        Pre-recovery validation and setup
+        """
+        # 필수 컨텍스트 검증
+        if not context.get("operation") and error.category in [
+            ErrorCategory.NETWORK, 
+            ErrorCategory.EXTERNAL_SERVICE
+        ]:
+            # 네트워크나 외부 서비스 에러의 경우 재시도할 operation이 필요
+            logger.warning("No operation provided for network/service error recovery")
+
+    def _execute_recovery(self, error: ApplicationError, context: Dict) -> Any:
+        """
+        Execute the actual recovery logic
+        하위 클래스에서 반드시 구현해야 함
+        """
+        raise NotImplementedError("Subclasses must implement _execute_recovery")
+
+    def _handle_recovery_success(self, error_signature: str, result: Any) -> None:
+        """
+        Handle successful recovery - update learning data
+        """
+        if error_signature not in self.success_history:
+            self.success_history[error_signature] = {
+                "success_count": 0,
+                "total_attempts": 0,
+                "success_rate": 0.0,
+                "last_success": None
+            }
+
+        history = self.success_history[error_signature]
+        history["success_count"] += 1
+        history["total_attempts"] += 1
+        history["success_rate"] = history["success_count"] / history["total_attempts"]
+        history["last_success"] = datetime.utcnow()
+
+        self.recovery_stats["successes"] += 1
+        self.recovery_stats["last_updated"] = datetime.utcnow()
+
+    def _handle_recovery_failure(self, error_signature: str, recovery_error: Exception) -> None:
+        """
+        Handle recovery failure - update failure patterns
+        """
+        if error_signature not in self.failure_patterns:
+            self.failure_patterns[error_signature] = {
+                "count": 0,
+                "last_failure": None,
+                "failure_reasons": []
+            }
+
+        pattern = self.failure_patterns[error_signature]
+        pattern["count"] += 1
+        pattern["last_failure"] = datetime.utcnow()
+        pattern["failure_reasons"].append(str(recovery_error)[:100])  # 최대 100글자만 저장
+
+        # 실패 이유 목록 크기 제한 (메모리 절약)
+        if len(pattern["failure_reasons"]) > 10:
+            pattern["failure_reasons"] = pattern["failure_reasons"][-10:]
+
+        self.recovery_stats["failures"] += 1
+        self.recovery_stats["last_updated"] = datetime.utcnow()
+
+    def get_recovery_statistics(self) -> Dict[str, Any]:
+        """
+        Get recovery strategy statistics
+        """
+        total_attempts = self.recovery_stats["attempts"]
+        success_rate = (self.recovery_stats["successes"] / total_attempts * 100) if total_attempts > 0 else 0
+
+        return {
+            "strategy_name": self.__class__.__name__,
+            "total_attempts": total_attempts,
+            "successes": self.recovery_stats["successes"],
+            "failures": self.recovery_stats["failures"],
+            "success_rate_percent": round(success_rate, 2),
+            "learned_patterns": len(self.success_history),
+            "failure_patterns": len(self.failure_patterns),
+            "last_updated": self.recovery_stats["last_updated"].isoformat()
+        }
 
 
 class RetryStrategy(ErrorRecoveryStrategy):
@@ -171,20 +373,21 @@ class RetryStrategy(ErrorRecoveryStrategy):
         max_delay: float = 60.0,
         exponential_base: float = 2.0,
     ):
+        super().__init__()  # Initialize parent class
         self.max_retries = max_retries
         self.initial_delay = initial_delay
         self.max_delay = max_delay
         self.exponential_base = exponential_base
 
-    def can_handle(self, error: ApplicationError) -> bool:
-        """Check if error is retryable"""
-        return error.recoverable and error.category in [
+    def _can_handle_category(self, category: ErrorCategory) -> bool:
+        """Check if retry strategy can handle specific error category"""
+        return category in [
             ErrorCategory.NETWORK,
             ErrorCategory.DATABASE,
             ErrorCategory.EXTERNAL_SERVICE,
         ]
 
-    def recover(self, error: ApplicationError, context: Dict = None) -> Any:
+    def _execute_recovery(self, error: ApplicationError, context: Dict) -> Any:
         """Execute retry with exponential backoff"""
         operation = context.get("operation")
         if not operation:
@@ -206,15 +409,17 @@ class RetryStrategy(ErrorRecoveryStrategy):
             )
 
             import time
-
             time.sleep(delay)
 
             try:
-                return operation()
+                result = operation()
+                logger.info(f"Retry attempt {attempt + 1} succeeded")
+                return result
             except Exception as e:
                 last_error = e
                 logger.warning(f"Retry attempt {attempt + 1} failed: {e}")
 
+        # All retries failed
         raise last_error
 
 
@@ -222,13 +427,14 @@ class FallbackStrategy(ErrorRecoveryStrategy):
     """Fallback to alternative implementation"""
 
     def __init__(self, fallback_operations: Dict[ErrorCategory, Callable]):
+        super().__init__()  # Initialize parent class
         self.fallback_operations = fallback_operations
 
-    def can_handle(self, error: ApplicationError) -> bool:
+    def _can_handle_category(self, category: ErrorCategory) -> bool:
         """Check if fallback exists for error category"""
-        return error.category in self.fallback_operations
+        return category in self.fallback_operations
 
-    def recover(self, error: ApplicationError, context: Dict = None) -> Any:
+    def _execute_recovery(self, error: ApplicationError, context: Dict) -> Any:
         """Execute fallback operation"""
         fallback = self.fallback_operations.get(error.category)
         if fallback:
@@ -246,6 +452,7 @@ class CircuitBreakerStrategy(ErrorRecoveryStrategy):
         recovery_timeout: int = 60,
         expected_exception: Type[Exception] = Exception,
     ):
+        super().__init__()  # Initialize parent class
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.expected_exception = expected_exception
@@ -253,11 +460,20 @@ class CircuitBreakerStrategy(ErrorRecoveryStrategy):
         self.last_failure_time = None
         self.state = "closed"  # closed, open, half-open
 
-    def can_handle(self, error: ApplicationError) -> bool:
-        """Check if circuit breaker should handle"""
+    def _can_handle_category(self, category: ErrorCategory) -> bool:
+        """Circuit breaker can handle most categories"""
+        return category in [
+            ErrorCategory.NETWORK,
+            ErrorCategory.DATABASE,
+            ErrorCategory.EXTERNAL_SERVICE,
+            ErrorCategory.SYSTEM
+        ]
+
+    def _additional_handle_check(self, error: ApplicationError) -> bool:
+        """Additional check for expected exception type"""
         return isinstance(error, self.expected_exception)
 
-    def recover(self, error: ApplicationError, context: Dict = None) -> Any:
+    def _execute_recovery(self, error: ApplicationError, context: Dict) -> Any:
         """Execute circuit breaker logic"""
         operation = context.get("operation")
         if not operation:
@@ -267,6 +483,7 @@ class CircuitBreakerStrategy(ErrorRecoveryStrategy):
         if self.state == "open":
             if self._should_attempt_reset():
                 self.state = "half-open"
+                logger.info("Circuit breaker transitioning to half-open state")
             else:
                 raise ApplicationError(
                     "Service temporarily unavailable",

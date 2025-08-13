@@ -583,14 +583,155 @@ class RealtimeMonitoringMixin:
 
     def _get_monitoring_data(self) -> Optional[Dict[str, Any]]:
         """
-        Get monitoring data (to be implemented by the class using this mixin)
+        Get monitoring data (implemented with comprehensive fallback strategy)
 
         Returns:
             dict: Monitoring data or None if error
         """
-        raise NotImplementedError(
-            "Classes using RealtimeMonitoringMixin must implement _get_monitoring_data"
-        )
+        try:
+            monitoring_data = {
+                "timestamp": time.time(),
+                "client_type": self.__class__.__name__,
+                "connection_status": getattr(self, 'is_connected', False),
+                "last_heartbeat": getattr(self, 'last_heartbeat', None),
+                "error_count": getattr(self, 'connection_error_count', 0),
+                "monitoring_active": getattr(self, 'monitoring_active', False),
+            }
+
+            # API 클라이언트별 특화 모니터링 데이터 수집
+            if hasattr(self, 'base_url'):
+                monitoring_data["endpoint"] = getattr(self, 'base_url', '')
+            
+            if hasattr(self, 'session'):
+                session = getattr(self, 'session', None)
+                if session:
+                    # 세션 상태 정보
+                    monitoring_data["session_active"] = True
+                    monitoring_data["session_cookies"] = len(session.cookies) if session.cookies else 0
+                else:
+                    monitoring_data["session_active"] = False
+
+            # 연결 테스트 (안전한 방식으로)
+            connection_health = self._check_connection_health()
+            monitoring_data.update(connection_health)
+
+            # 성능 메트릭 수집
+            performance_metrics = self._collect_performance_metrics()
+            monitoring_data["performance"] = performance_metrics
+
+            # API 호출 통계 (있다면)
+            if hasattr(self, 'api_call_stats'):
+                monitoring_data["api_stats"] = getattr(self, 'api_call_stats', {})
+
+            return monitoring_data
+
+        except Exception as e:
+            if hasattr(self, 'logger'):
+                self.logger.error(f"모니터링 데이터 수집 오류: {e}")
+            
+            # 최소한의 오류 정보라도 반환
+            return {
+                "timestamp": time.time(),
+                "client_type": self.__class__.__name__,
+                "error": str(e),
+                "status": "monitoring_error"
+            }
+
+    def _check_connection_health(self) -> Dict[str, Any]:
+        """
+        연결 상태 확인 (논블로킹 방식)
+        
+        Returns:
+            연결 상태 정보
+        """
+        health_info = {
+            "connection_healthy": False,
+            "response_time_ms": None,
+            "last_check": time.time()
+        }
+
+        try:
+            # 기본 연결 속성 확인
+            if hasattr(self, 'is_connected'):
+                health_info["connection_healthy"] = getattr(self, 'is_connected', False)
+
+            # 마지막 성공적인 응답 시간 확인
+            if hasattr(self, 'last_response_time'):
+                last_response = getattr(self, 'last_response_time', None)
+                if last_response:
+                    health_info["time_since_last_success"] = time.time() - last_response
+
+            # 빠른 핑 테스트 (타임아웃 1초)
+            if hasattr(self, 'session') and hasattr(self, 'base_url'):
+                start_time = time.time()
+                try:
+                    session = getattr(self, 'session')
+                    base_url = getattr(self, 'base_url')
+                    
+                    if session and base_url:
+                        # HEAD 요청으로 빠른 연결 확인
+                        response = session.head(base_url, timeout=1)
+                        response_time = (time.time() - start_time) * 1000
+                        
+                        health_info["connection_healthy"] = response.status_code < 500
+                        health_info["response_time_ms"] = round(response_time, 2)
+                        health_info["status_code"] = response.status_code
+                        
+                except Exception as ping_error:
+                    health_info["ping_error"] = str(ping_error)
+
+        except Exception as e:
+            health_info["health_check_error"] = str(e)
+
+        return health_info
+
+    def _collect_performance_metrics(self) -> Dict[str, Any]:
+        """
+        성능 메트릭 수집
+        
+        Returns:
+            성능 관련 메트릭
+        """
+        metrics = {
+            "memory_usage_mb": 0,
+            "cpu_usage_percent": 0,
+            "active_threads": 0,
+            "cache_stats": {}
+        }
+
+        try:
+            import psutil
+            import threading
+            
+            # 현재 프로세스 정보
+            process = psutil.Process()
+            
+            # 메모리 사용량 (MB)
+            memory_info = process.memory_info()
+            metrics["memory_usage_mb"] = round(memory_info.rss / 1024 / 1024, 2)
+            
+            # CPU 사용률 (짧은 간격으로 측정)
+            metrics["cpu_usage_percent"] = round(process.cpu_percent(interval=0.1), 2)
+            
+            # 활성 스레드 수
+            metrics["active_threads"] = threading.active_count()
+            
+        except ImportError:
+            # psutil이 없는 경우 기본값 유지
+            pass
+        except Exception as e:
+            metrics["collection_error"] = str(e)
+
+        # 캐시 통계 (UnifiedCacheManager 사용 중인 경우)
+        try:
+            from utils.unified_cache_manager import get_cache_manager
+            cache_manager = get_cache_manager()
+            metrics["cache_stats"] = cache_manager.get_stats()
+        except Exception:
+            # 캐시 매니저 접근 실패시 무시
+            pass
+
+        return metrics
 
 
 # API Error Classes

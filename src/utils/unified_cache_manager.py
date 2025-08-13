@@ -24,24 +24,63 @@ class CacheBackend:
     """캐시 백엔드 인터페이스"""
 
     def get(self, key: str) -> Optional[Any]:
-        """캐시에서 값 조회"""
-        raise NotImplementedError
+        """
+        캐시에서 값 조회
+        
+        Args:
+            key: 캐시 키
+            
+        Returns:
+            캐시된 값 또는 None
+        """
+        raise NotImplementedError("Subclasses must implement get method")
 
     def set(self, key: str, value: Any, ttl: int = 300) -> bool:
-        """캐시에 값 저장"""
-        raise NotImplementedError
+        """
+        캐시에 값 저장
+        
+        Args:
+            key: 캐시 키
+            value: 저장할 값
+            ttl: TTL(초), 0이면 무제한
+            
+        Returns:
+            성공 여부
+        """
+        raise NotImplementedError("Subclasses must implement set method")
 
     def delete(self, key: str) -> bool:
-        """캐시에서 값 삭제"""
-        raise NotImplementedError
+        """
+        캐시에서 값 삭제
+        
+        Args:
+            key: 삭제할 캐시 키
+            
+        Returns:
+            삭제 성공 여부
+        """
+        raise NotImplementedError("Subclasses must implement delete method")
 
     def clear(self) -> bool:
-        """캐시 전체 삭제"""
-        raise NotImplementedError
+        """
+        캐시 전체 삭제
+        
+        Returns:
+            삭제 성공 여부
+        """
+        raise NotImplementedError("Subclasses must implement clear method")
 
     def exists(self, key: str) -> bool:
-        """키 존재 여부 확인"""
-        raise NotImplementedError
+        """
+        키 존재 여부 확인
+        
+        Args:
+            key: 확인할 캐시 키
+            
+        Returns:
+            존재 여부
+        """
+        raise NotImplementedError("Subclasses must implement exists method")
 
 
 class MemoryCacheBackend(CacheBackend):
