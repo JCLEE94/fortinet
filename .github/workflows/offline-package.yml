@@ -35,9 +35,13 @@ env:
   PYTHON_VERSION: '3.11'
 
 jobs:
-  build-offline-package:
-    name: 🏗️ Build Offline Package
+  # Prepare base package structure
+  prepare-base:
+    name: 📦 Prepare Base Package
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.package_version }}
+      build_date: ${{ steps.version.outputs.build_date }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -102,8 +106,34 @@ jobs:
           cp README.md offline-package/docs/
           cp -r docs/* offline-package/docs/ 2>/dev/null || true
 
-      - name: Download Python dependencies
-        if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'deps-only'
+      - name: Upload base package
+        uses: actions/upload-artifact@v4
+        with:
+          name: base-package
+          path: offline-package/
+          retention-days: 1
+
+  # Build Python dependencies (parallel)
+  build-deps:
+    name: 🐍 Build Python Dependencies
+    runs-on: ubuntu-latest
+    if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'deps-only'
+    needs: prepare-base
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Download base package
+        uses: actions/download-artifact@v4
+        with:
+          name: base-package
+          path: offline-package/
+      
+      - name: Build Python dependencies
         run: |
           # Create wheels directory
           mkdir -p offline-package/deps/wheels
@@ -122,9 +152,30 @@ jobs:
           echo "Dependencies installed successfully!"
           EOF
           chmod +x offline-package/deps/install-deps.sh
+      
+      - name: Upload deps package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deps-package
+          path: offline-package/deps/
+          retention-days: 1
 
-      - name: Build Docker images
-        if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'docker-only'
+  # Build Docker images (parallel)
+  build-docker:
+    name: 🐳 Build Docker Images
+    runs-on: ubuntu-latest
+    if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'docker-only'
+    needs: prepare-base
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download base package
+        uses: actions/download-artifact@v4
+        with:
+          name: base-package
+          path: offline-package/
+      
+      - name: Build Docker image
         run: |
           # Build Docker image
           docker build -f Dockerfile.production -t ${{ env.PROJECT_NAME }}:offline .
@@ -141,9 +192,30 @@ jobs:
           docker images | grep fortinet
           EOF
           chmod +x offline-package/docker/load-images.sh
+      
+      - name: Upload docker package
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-package
+          path: offline-package/docker/
+          retention-days: 1
 
+  # Prepare K8s manifests (parallel)
+  prepare-k8s:
+    name: ☸️ Prepare K8s Manifests
+    runs-on: ubuntu-latest
+    if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'k8s-only'
+    needs: prepare-base
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download base package
+        uses: actions/download-artifact@v4
+        with:
+          name: base-package
+          path: offline-package/
+      
       - name: Prepare Kubernetes manifests
-        if: github.event.inputs.package_type == 'full' || github.event.inputs.package_type == 'k8s-only'
         run: |
           # Update image references for offline deployment
           find offline-package/k8s -name "*.yaml" -type f -exec sed -i 's|registry.jclee.me/fortinet:.*|fortinet:offline|g' {} \;
@@ -157,12 +229,56 @@ jobs:
           kubectl get pods -n fortinet
           EOF
           chmod +x offline-package/k8s/deploy-offline.sh
+      
+      - name: Upload k8s package
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-package
+          path: offline-package/k8s/
+          retention-days: 1
+
+  # Final package assembly
+  assemble-package:
+    name: 📦 Assemble Final Package
+    runs-on: ubuntu-latest
+    needs: [prepare-base, build-deps, build-docker, prepare-k8s]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+      
+      - name: Assemble package
+        run: |
+          # Create final package directory
+          mkdir -p final-package
+          
+          # Copy base package
+          cp -r artifacts/base-package/* final-package/ 2>/dev/null || true
+          
+          # Copy deps if built
+          if [ -d "artifacts/deps-package" ]; then
+            cp -r artifacts/deps-package/* final-package/deps/ 2>/dev/null || true
+          fi
+          
+          # Copy docker if built
+          if [ -d "artifacts/docker-package" ]; then
+            cp -r artifacts/docker-package/* final-package/docker/ 2>/dev/null || true
+          fi
+          
+          # Copy k8s if prepared
+          if [ -d "artifacts/k8s-package" ]; then
+            cp -r artifacts/k8s-package/* final-package/k8s/ 2>/dev/null || true
+          fi
 
       - name: Add sample data
         if: github.event.inputs.include_data == 'true'
         run: |
           # Create sample data
-          cat > offline-package/data/sample-config.json << 'EOF'
+          cat > final-package/data/sample-config.json << 'EOF'
           {
             "offline_mode": true,
             "mock_mode": true,
@@ -176,12 +292,12 @@ jobs:
           EOF
           
           # Add mock data files
-          mkdir -p offline-package/data/mock
-          cp data/mock/*.json offline-package/data/mock/ 2>/dev/null || true
+          mkdir -p final-package/data/mock
+          cp data/mock/*.json final-package/data/mock/ 2>/dev/null || true
 
       - name: Create installation script
         run: |
-          cat > offline-package/install.sh << 'EOF'
+          cat > final-package/install.sh << 'EOF'
           #!/bin/bash
           
           echo "========================================="
@@ -266,17 +382,17 @@ jobs:
           
           main
           EOF
-          chmod +x offline-package/install.sh
+          chmod +x final-package/install.sh
 
       - name: Create README
         run: |
-          cat > offline-package/README.md << 'EOF'
+          cat > final-package/README.md << 'EOF'
           # Fortinet Offline Package
           
           ## Package Information
-          - **Version**: ${{ steps.version.outputs.package_version }}
+          - **Version**: ${{ needs.prepare-base.outputs.version }}
           - **Type**: ${{ github.event.inputs.package_type }}
-          - **Build Date**: ${{ steps.version.outputs.build_date }}
+          - **Build Date**: ${{ needs.prepare-base.outputs.build_date }}
           - **Compression**: ${{ github.event.inputs.compression }}
           
           ## Contents
@@ -348,7 +464,7 @@ jobs:
 
       - name: Compress package
         run: |
-          cd offline-package
+          cd final-package
           
           # Set compression level
           case "${{ github.event.inputs.compression }}" in
@@ -364,7 +480,7 @@ jobs:
           esac
           
           # Create compressed archive
-          PACKAGE_FILE="${{ env.PACKAGE_NAME }}-${{ steps.version.outputs.package_version }}-${{ github.event.inputs.package_type }}.tar.gz"
+          PACKAGE_FILE="${{ env.PACKAGE_NAME }}-${{ needs.prepare-base.outputs.version }}-${{ github.event.inputs.package_type }}.tar.gz"
           tar -czf "../$PACKAGE_FILE" --level=$COMPRESS_LEVEL .
           
           # Create checksum
@@ -379,7 +495,7 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: offline-package-${{ github.event.inputs.package_type }}-${{ steps.version.outputs.build_date }}
+          name: offline-package-${{ github.event.inputs.package_type }}-${{ needs.prepare-base.outputs.build_date }}
           path: |
             fortinet-offline-*.tar.gz
             fortinet-offline-*.tar.gz.sha256
@@ -395,9 +511,9 @@ jobs:
           body: |
             ## Offline Package Release
             
-            **Version**: ${{ steps.version.outputs.package_version }}
+            **Version**: ${{ needs.prepare-base.outputs.version }}
             **Package Type**: ${{ github.event.inputs.package_type }}
-            **Build Date**: ${{ steps.version.outputs.build_date }}
+            **Build Date**: ${{ needs.prepare-base.outputs.build_date }}
             
             ### Installation
             1. Download the package
