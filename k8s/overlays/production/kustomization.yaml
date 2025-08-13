@@ -11,7 +11,7 @@ resources:
 # 동적 태그 형식: {version}-{date}-{git-sha}
 images:
 - name: registry.jclee.me/fortinet
-  newTag: 9e7485d3
+  newTag: master-9e7485d
 
 # 운영환경 설정 (리소스 제약으로 1개 인스턴스)
 replicas:
@@ -39,7 +39,7 @@ commonAnnotations:
   gitops.argocd.argoproj.io/managed: "true"
   gitops.environment: production
   gitops.stability: stable
-  gitops.immutable-tag: "v1.0.20250813-9e7485d3"
+  gitops.immutable-tag: "master-9e7485d"
   deployment.strategy: rolling-update
   deployment.maxUnavailable: "25%"
   deployment.maxSurge: "25%"
