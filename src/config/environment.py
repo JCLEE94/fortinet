@@ -21,10 +21,13 @@ class EnvironmentConfig:
         os.getenv("DNS_SERVER_2", "8.8.4.4"),
     ]
 
-    # Mock Data Configuration
-    MOCK_NETWORK_PREFIX = os.getenv("MOCK_NETWORK_PREFIX", "192.168")
-    MOCK_DEVICE_COUNT = int(os.getenv("MOCK_DEVICE_COUNT", "10"))
-    MOCK_LOG_INTERVAL = int(os.getenv("MOCK_LOG_INTERVAL", "5"))
+    # Application Mode Configuration
+    OFFLINE_MODE = (
+        os.getenv("OFFLINE_MODE", "false").lower() == "true"
+        or os.getenv("NO_INTERNET", "false").lower() == "true"
+        or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
+    )
+    APP_MODE = os.getenv("APP_MODE", "production").lower()
 
     # Monitoring Thresholds
     ALERT_THRESHOLD_CPU = float(os.getenv("ALERT_THRESHOLD_CPU", "80"))

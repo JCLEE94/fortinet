@@ -44,9 +44,9 @@ class APIIntegrationManager:
     def _connect_fortimanager(self):
         """FortiManager 연결"""
         try:
-            from config.unified_settings import get_settings
+            from config.unified_settings import unified_settings
 
-            settings = get_settings()
+            settings = unified_settings
 
             # 환경변수에서 우선 읽기
             fm_config = {
