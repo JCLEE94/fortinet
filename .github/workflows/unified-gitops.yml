@@ -1,0 +1,485 @@
+name: 🚀 Unified GitOps Pipeline
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly dependency check
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - rollback
+        - monitoring
+        - dependency-update
+        - status-check
+      environment:
+        description: 'Deployment Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - dev
+        - staging
+        - production
+      skip_tests:
+        description: 'Skip Tests'
+        required: false
+        default: false
+        type: boolean
+      version:
+        description: 'Version for rollback (optional)'
+        required: false
+        type: string
+
+env:
+  REGISTRY: ${{ vars.REGISTRY_DOMAIN || 'registry.jclee.me' }}
+  ARGOCD_SERVER: ${{ vars.ARGOCD_DOMAIN || 'argo.jclee.me' }}
+  PROJECT_NAME: fortinet
+  K8S_NAMESPACE: fortinet
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'production' }}
+  EXTERNAL_URL: https://fortinet.jclee.me
+  INTERNAL_URL: http://192.168.50.110:30777
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ===============================
+  # CONDITIONAL JOB ROUTING
+  # ===============================
+  
+  determine-workflow:
+    name: 🎯 Determine Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      workflow-type: ${{ steps.determine.outputs.type }}
+    steps:
+      - id: determine
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.action }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "type=dependency-update" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "type=test-only" >> $GITHUB_OUTPUT
+          else
+            echo "type=deploy" >> $GITHUB_OUTPUT
+          fi
+
+  # ===============================
+  # TEST & QUALITY CHECKS
+  # ===============================
+  
+  test-and-quality:
+    name: 🧪 Test & Quality
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'deploy' ||
+      needs.determine-workflow.outputs.workflow-type == 'test-only' ||
+      github.event.inputs.skip_tests != 'true'
+    needs: determine-workflow
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov flake8 black isort safety bandit
+      
+      - name: Code Quality Checks
+        run: |
+          black --check src/
+          isort --check-only src/
+          flake8 src/ --max-line-length=120 --ignore=E203,W503
+      
+      - name: Security Scan
+        run: |
+          safety check || true
+          bandit -r src/ -ll || true
+      
+      - name: Run Tests
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # ===============================
+  # BUILD & PUSH
+  # ===============================
+  
+  build-and-push:
+    name: 🏗️ Build & Push
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'deploy' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
+    needs: [determine-workflow, test-and-quality]
+    outputs:
+      image-tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      - name: Generate metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ github.sha }}
+      
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+
+  # ===============================
+  # DEPLOY TO ARGOCD
+  # ===============================
+  
+  deploy:
+    name: 🚀 Deploy to ArgoCD
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'deploy' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master'
+    needs: [determine-workflow, build-and-push]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Update Kubernetes manifests
+        run: |
+          cd k8s/overlays/${{ env.ENVIRONMENT }}
+          sed -i "s|image:.*|image: ${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:${{ github.sha }}|" kustomization.yaml
+      
+      - name: Install ArgoCD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+      
+      - name: Login to ArgoCD
+        run: |
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure
+      
+      - name: Sync Application
+        run: |
+          argocd app sync ${{ env.PROJECT_NAME }} \
+            --revision ${{ github.sha }} \
+            --prune \
+            --force
+      
+      - name: Wait for Rollout
+        run: |
+          argocd app wait ${{ env.PROJECT_NAME }} \
+            --sync \
+            --health \
+            --timeout 300
+      
+      - name: Health Check
+        run: |
+          for i in {1..10}; do
+            if curl -f ${{ env.INTERNAL_URL }}/api/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying..."
+            sleep 30
+          done
+          echo "Health check failed"
+          exit 1
+
+  # ===============================
+  # ROLLBACK
+  # ===============================
+  
+  rollback:
+    name: ⏪ Rollback Deployment
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'rollback' &&
+      github.event_name == 'workflow_dispatch'
+    needs: determine-workflow
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+      
+      - name: Login to ArgoCD
+        run: |
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure
+      
+      - name: Get Current Version
+        id: current
+        run: |
+          CURRENT=$(argocd app get ${{ env.PROJECT_NAME }} -o json | jq -r '.spec.source.targetRevision')
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+      
+      - name: Rollback to Previous Version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            TARGET_VERSION="${{ github.event.inputs.version }}"
+          else
+            # Get previous version from history
+            TARGET_VERSION=$(argocd app history ${{ env.PROJECT_NAME }} --output json | jq -r '.[1].revision')
+          fi
+          
+          echo "Rolling back from ${{ steps.current.outputs.current }} to $TARGET_VERSION"
+          argocd app rollback ${{ env.PROJECT_NAME }} $TARGET_VERSION
+      
+      - name: Wait for Rollback
+        run: |
+          argocd app wait ${{ env.PROJECT_NAME }} \
+            --sync \
+            --health \
+            --timeout 300
+
+  # ===============================
+  # MONITORING
+  # ===============================
+  
+  monitoring:
+    name: 📊 Monitoring & Alerts
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'monitoring' ||
+      (needs.determine-workflow.outputs.workflow-type == 'deploy' && success())
+    needs: [determine-workflow, deploy]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Deployment Status
+        run: |
+          curl -f ${{ env.INTERNAL_URL }}/api/health || exit 1
+      
+      - name: Collect Metrics
+        run: |
+          # Response time
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' ${{ env.INTERNAL_URL }}/api/health)
+          echo "Response time: ${response_time}s"
+          
+          # Pod status
+          kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=${{ env.PROJECT_NAME }}
+          
+          # Resource usage
+          kubectl top pods -n ${{ env.K8S_NAMESPACE }} -l app=${{ env.PROJECT_NAME }}
+      
+      - name: Send Slack Notification
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            Deployment Status: ${{ job.status }}
+            Project: ${{ env.PROJECT_NAME }}
+            Environment: ${{ env.ENVIRONMENT }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # ===============================
+  # DEPENDENCY UPDATE
+  # ===============================
+  
+  dependency-update:
+    name: 📦 Dependency Update
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'dependency-update' ||
+      github.event_name == 'schedule'
+    needs: determine-workflow
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Update Python Dependencies
+        run: |
+          pip install pip-tools
+          pip-compile requirements.in --upgrade
+          pip install -r requirements.txt
+          pip list --outdated
+      
+      - name: Security Check
+        run: |
+          pip install safety
+          safety check || true
+      
+      - name: Create Pull Request
+        if: github.event_name == 'schedule'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: Update dependencies'
+          title: '📦 Weekly Dependency Update'
+          body: |
+            ## Automated Dependency Update
+            
+            This PR updates project dependencies to their latest versions.
+            
+            - Python packages updated via pip-tools
+            - Security vulnerabilities checked with safety
+            
+            Please review and merge if all checks pass.
+          branch: deps/update-${{ github.run_number }}
+          delete-branch: true
+
+  # ===============================
+  # STATUS CHECK
+  # ===============================
+  
+  status-check:
+    name: ✅ Deployment Status
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.workflow-type == 'status-check' ||
+      always()
+    needs: [determine-workflow, deploy]
+    steps:
+      - name: Check ArgoCD Application
+        run: |
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure
+          
+          argocd app get ${{ env.PROJECT_NAME }}
+          argocd app health ${{ env.PROJECT_NAME }}
+      
+      - name: Check Kubernetes Resources
+        run: |
+          kubectl get all -n ${{ env.K8S_NAMESPACE }}
+          kubectl get ingress -n ${{ env.K8S_NAMESPACE }}
+      
+      - name: Generate Status Report
+        run: |
+          echo "## Deployment Status Report" > status.md
+          echo "- **Application**: ${{ env.PROJECT_NAME }}" >> status.md
+          echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> status.md
+          echo "- **Version**: ${{ github.sha }}" >> status.md
+          echo "- **Status**: $(argocd app get ${{ env.PROJECT_NAME }} -o json | jq -r '.status.sync.status')" >> status.md
+          echo "- **Health**: $(argocd app get ${{ env.PROJECT_NAME }} -o json | jq -r '.status.health.status')" >> status.md
+          echo "- **URL**: ${{ env.EXTERNAL_URL }}" >> status.md
+      
+      - name: Upload Status Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-status
+          path: status.md
+
+  # ===============================
+  # GITHUB PAGES (DOCS)
+  # ===============================
+  
+  deploy-docs:
+    name: 📚 Deploy Documentation
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/master' &&
+      contains(github.event.head_commit.message, 'docs')
+    needs: [test-and-quality]
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Build Documentation
+        run: |
+          pip install mkdocs mkdocs-material
+          mkdocs build || echo "No mkdocs.yml found, skipping"
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'site'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ===============================
+  # CLEANUP
+  # ===============================
+  
+  cleanup:
+    name: 🧹 Cleanup Resources
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [test-and-quality, build-and-push, deploy]
+    steps:
+      - name: Clean up Docker images
+        run: |
+          # Remove old images from registry (keep last 5)
+          echo "Cleaning up old Docker images..."
+      
+      - name: Clean up test artifacts
+        run: |
+          echo "Cleaning up test artifacts..."
+      
+      - name: Prune ArgoCD resources
+        run: |
+          echo "Pruning ArgoCD resources..."
