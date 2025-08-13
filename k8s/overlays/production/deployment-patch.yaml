@@ -6,7 +6,7 @@ metadata:
     deployment.kubernetes.io/revision: "1"
     environment: production
 spec:
-  replicas: 1  # 단일 인스턴스로 메모리 절약
+  replicas: 3  # 고가용성을 위한 3개 인스턴스
   template:
     spec:
       containers:

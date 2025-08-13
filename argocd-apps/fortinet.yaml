@@ -58,7 +58,6 @@ spec:
     - group: apps
       kind: Deployment
       jsonPointers:
-        - /spec/replicas  # HPA에 의한 replicas 변경 무시
         - /metadata/annotations/deployment.kubernetes.io~1revision
     - group: ""
       kind: Service
