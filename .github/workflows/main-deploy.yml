@@ -273,8 +273,13 @@ jobs:
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:buildcache,mode=max
           build-args: |
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
-            VCS_REF=${{ github.sha }}
+            BUILD_TIMESTAMP=${{ github.event.head_commit.timestamp }}
+            GIT_COMMIT=${{ github.sha }}
+            GIT_SHA=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
             VERSION=${{ steps.meta.outputs.version }}
+            IMMUTABLE_TAG=${{ github.sha }}
+            REGISTRY_URL=${{ env.REGISTRY }}
 
   # ===============================
   # DEPLOY TO ARGOCD
