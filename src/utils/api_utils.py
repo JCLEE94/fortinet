@@ -404,15 +404,8 @@ def format_api_response(
 
 
 def is_test_mode() -> bool:
-    """Check if application is running in test mode"""
-    import os
-
-    # Check for pytest environment or test mode environment variables
-    return (
-        "PYTEST_CURRENT_TEST" in os.environ
-        or os.environ.get("APP_MODE", "").lower() == "test"  # Running under pytest
-        or os.environ.get("TESTING", "").lower() == "true"
-    )
+    """DEPRECATED: Always return False - test mode removed"""
+    return False
 
 
 def get_dummy_generator():

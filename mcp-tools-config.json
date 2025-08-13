@@ -1,62 +1,124 @@
 {
-  "mcp_configuration": {
-    "version": "1.0.0",
-    "project_name": "fortinet",
-    "initialized_at": "2025-08-13T23:39:00Z",
-    "tools_verified": [
-      {
-        "name": "mcp__serena__activate_project",
-        "status": "active",
-        "description": "Semantic code analysis and refactoring"
-      },
-      {
-        "name": "mcp__memory__read_graph",
-        "status": "active", 
-        "description": "Knowledge graph memory system"
-      },
-      {
-        "name": "mcp__brave-search__brave_web_search",
-        "status": "active",
-        "description": "Web search integration"
-      },
-      {
-        "name": "mcp__eslint__lint-files",
-        "status": "active",
-        "description": "Code quality and linting"
-      },
-      {
-        "name": "mcp__sequential-thinking__sequentialthinking",
-        "status": "available",
-        "description": "Complex problem solving chains"
-      },
-      {
-        "name": "mcp__exa__web_search_exa",
-        "status": "available",
-        "description": "Deep web research and content extraction"
-      },
-      {
-        "name": "mcp__code-runner__run-code",
-        "status": "available",
-        "description": "Multi-language code execution"
-      },
-      {
-        "name": "mcp__playwright__browser_snapshot",
-        "status": "available",
-        "description": "Advanced browser control"
-      }
-    ],
-    "project_patterns": {
-      "architecture": "Flask + Blueprint (Python 3.11)",
-      "deployment": "GitOps with ArgoCD",
-      "testing": "pytest with 77 test files",
-      "code_quality": "Black + isort + flake8"
+  "version": "1.0.0",
+  "generated_at": "2025-08-14T03:42:13.927181",
+  "project": "fortinet",
+  "mcp_servers": {
+    "serena": {
+      "enabled": true,
+      "description": "Code analysis and manipulation",
+      "tools": [
+        "read_file",
+        "create_text_file",
+        "list_dir",
+        "find_symbol",
+        "replace_symbol_body",
+        "search_for_pattern",
+        "execute_shell_command",
+        "write_memory",
+        "read_memory"
+      ]
     },
-    "automation_capabilities": {
-      "code_analysis": true,
-      "dependency_management": true,
-      "testing": true,
-      "deployment": true,
-      "monitoring": true
+    "brave-search": {
+      "enabled": true,
+      "description": "Web search capabilities",
+      "tools": [
+        "brave_web_search",
+        "brave_local_search"
+      ]
+    },
+    "exa": {
+      "enabled": true,
+      "description": "Advanced web research",
+      "tools": [
+        "web_search_exa",
+        "company_research_exa",
+        "crawling_exa",
+        "deep_researcher_start"
+      ]
+    },
+    "sequential-thinking": {
+      "enabled": true,
+      "description": "Structured problem solving",
+      "tools": [
+        "sequentialthinking"
+      ]
+    },
+    "memory": {
+      "enabled": true,
+      "description": "Knowledge graph management",
+      "tools": [
+        "create_entities",
+        "create_relations",
+        "add_observations",
+        "search_nodes"
+      ]
+    },
+    "eslint": {
+      "enabled": true,
+      "description": "Code linting for JavaScript/TypeScript",
+      "tools": [
+        "lint-files"
+      ]
+    },
+    "code-runner": {
+      "enabled": true,
+      "description": "Code execution environment",
+      "tools": [
+        "run-code"
+      ]
+    },
+    "playwright": {
+      "enabled": true,
+      "description": "Browser automation and testing",
+      "tools": [
+        "browser_navigate",
+        "browser_click",
+        "browser_snapshot",
+        "browser_take_screenshot"
+      ]
+    }
+  },
+  "native_agents": {
+    "general-purpose": {
+      "enabled": true,
+      "description": "Multi-step task automation"
+    },
+    "cleaner-code-quality": {
+      "enabled": true,
+      "description": "Code cleanup and formatting"
+    },
+    "runner-test-automation": {
+      "enabled": true,
+      "description": "Test execution and coverage"
+    },
+    "specialist-deployment-infra": {
+      "enabled": true,
+      "description": "Docker and Kubernetes deployment"
+    },
+    "specialist-github-cicd": {
+      "enabled": true,
+      "description": "GitHub Actions CI/CD pipelines"
+    }
+  },
+  "integrations": {
+    "github": {
+      "repository": "JCLEE94/fortinet",
+      "branch": "master",
+      "workflows": [
+        "gitops-pipeline.yml"
+      ]
+    },
+    "docker": {
+      "registry": "registry.jclee.me",
+      "namespace": "fortinet"
+    },
+    "kubernetes": {
+      "cluster": "default",
+      "namespace": "fortinet"
+    },
+    "argocd": {
+      "server": "argo.jclee.me",
+      "application": "fortinet"
     }
   }
 }
