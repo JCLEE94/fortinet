@@ -125,7 +125,8 @@ venv_ppt/
 *_test_*.json
 *_2024*.json
 *_2025*.json
-test_results/
+test-results/
+temp-data/
 temp/
 tmp/
 
