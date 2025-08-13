@@ -17,7 +17,6 @@ resources:
 - deployment.yaml
 - service.yaml
 - ingress.yaml
-- hpa.yaml
 - servicemonitor.yaml
 
 # GitOps 4원칙 준수: 불변 인프라 (Immutable) 

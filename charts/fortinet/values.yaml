@@ -1,6 +1,6 @@
 # FortiGate Nextrade Enterprise 설정 (v1.2.0)
 # GitOps 파이프라인 최적화 버전
-replicaCount: 2
+replicaCount: 3
 strategy:
   type: RollingUpdate
   rollingUpdate:
@@ -52,9 +52,9 @@ resources:
     memory: 128Mi  # Memory request 최적화
     ephemeral-storage: 512Mi
 
-# HPA (Horizontal Pod Autoscaler) - Performance Optimized
+# HPA (Horizontal Pod Autoscaler) - DISABLED for fixed replica count
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2      # 최소 2개 Pod 보장 (고가용성)
   maxReplicas: 8      # 최대 스케일링 확장
   targetCPUUtilizationPercentage: 70    # CPU 임계값 최적화

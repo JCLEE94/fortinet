@@ -13,10 +13,10 @@ images:
 - name: registry.jclee.me/fortinet
   newTag: 4becf13e
 
-# 운영환경 설정 (리소스 제약으로 1개 인스턴스)
+# 운영환경 설정 (고가용성을 위한 3개 인스턴스)
 replicas:
 - name: fortinet
-  count: 1  # 리소스 절약을 위한 1개 replica
+  count: 3  # 고가용성을 위한 3개 replica
 
 # 운영환경 리소스 패치
 patchesStrategicMerge:

@@ -13,7 +13,7 @@ metadata:
     deployment.kubernetes.io/revision: "1"
     gitops.argocd.argoproj.io/managed: "true"
 spec:
-  replicas: 1
+  replicas: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
