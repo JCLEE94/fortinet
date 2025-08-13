@@ -39,7 +39,7 @@ commonAnnotations:
   gitops.argocd.argoproj.io/managed: "true"
   gitops.environment: production
   gitops.stability: stable
-  gitops.immutable-tag: "v1.0.20250812-aec63e7"
+  gitops.immutable-tag: "v1.0.20250813-9e7485d3"
   deployment.strategy: rolling-update
   deployment.maxUnavailable: "25%"
   deployment.maxSurge: "25%"
