@@ -54,15 +54,10 @@ class WebCompatibilityInterface:
             # FortiGate 장치 정보 확인
             device_name = "FortiGate"  # 기본값
 
-            if (
-                hasattr(self.packet_sniffer, "api_client")
-                and self.packet_sniffer.api_client
-            ):
+            if hasattr(self.packet_sniffer, "api_client") and self.packet_sniffer.api_client:
                 try:
                     # API 클라이언트를 통해 현재 연결된 장치 이름 가져오기
-                    device_info = (
-                        self.packet_sniffer.api_client.get_system_status()
-                    )
+                    device_info = self.packet_sniffer.api_client.get_system_status()
                     if device_info and "hostname" in device_info:
                         device_name = device_info["hostname"]
                 except Exception as e:
@@ -118,9 +113,7 @@ class WebCompatibilityInterface:
             if result["success"]:
                 logger.info(f"웹 캡처 중지 성공: {session_id}")
             else:
-                logger.warning(
-                    f"웹 캡처 중지 실패: {session_id} - {result.get('message', 'Unknown error')}"
-                )
+                logger.warning(f"웹 캡처 중지 실패: {session_id} - {result.get('message', 'Unknown error')}")
 
             return result["success"]
 
@@ -128,9 +121,7 @@ class WebCompatibilityInterface:
             logger.error(f"웹 캡처 중지 오류: {e}")
             return False
 
-    def get_captured_packets(
-        self, session_id: str, max_packets: int = 10
-    ) -> List[Dict[str, Any]]:
+    def get_captured_packets(self, session_id: str, max_packets: int = 10) -> List[Dict[str, Any]]:
         """
         웹 애플리케이션 호환 메서드: 캡처된 패킷 가져오기
 
@@ -151,29 +142,21 @@ class WebCompatibilityInterface:
                 return []
 
             # 실시간 캡처 세션인 경우
-            if (
-                hasattr(self.packet_sniffer, "packet_queues")
-                and session_id in self.packet_sniffer.packet_queues
-            ):
+            if hasattr(self.packet_sniffer, "packet_queues") and session_id in self.packet_sniffer.packet_queues:
                 packets = []
                 try:
                     # 큐에서 패킷 가져오기 (non-blocking)
                     for _ in range(max_packets):
                         try:
-                            packet = self.packet_sniffer.packet_queues[
-                                session_id
-                            ].get_nowait()
+                            packet = self.packet_sniffer.packet_queues[session_id].get_nowait()
                             packets.append(packet)
 
                             # 패킷 저장 (나중에 조회할 수 있도록)
                             if (
                                 hasattr(self.packet_sniffer, "stored_packets")
-                                and session_id
-                                in self.packet_sniffer.stored_packets
+                                and session_id in self.packet_sniffer.stored_packets
                             ):
-                                self.packet_sniffer.stored_packets[
-                                    session_id
-                                ].append(packet)
+                                self.packet_sniffer.stored_packets[session_id].append(packet)
                         except queue.Empty:
                             break
                 except Exception as e:
@@ -184,9 +167,7 @@ class WebCompatibilityInterface:
             # 비실시간 모드이거나 실시간 캡처가 완료된 경우
             # get_latest_packets 호출
             if hasattr(self.packet_sniffer, "get_latest_packets"):
-                result = self.packet_sniffer.get_latest_packets(
-                    session_id, count=max_packets
-                )
+                result = self.packet_sniffer.get_latest_packets(session_id, count=max_packets)
                 if result["success"]:
                     return result["packets"]
 
@@ -221,13 +202,8 @@ class WebCompatibilityInterface:
 
             # 저장된 패킷 수 계산
             stored_count = 0
-            if (
-                hasattr(self.packet_sniffer, "stored_packets")
-                and session_id in self.packet_sniffer.stored_packets
-            ):
-                stored_count = len(
-                    self.packet_sniffer.stored_packets[session_id]
-                )
+            if hasattr(self.packet_sniffer, "stored_packets") and session_id in self.packet_sniffer.stored_packets:
+                stored_count = len(self.packet_sniffer.stored_packets[session_id])
 
             return {
                 "state": session["status"],
@@ -257,10 +233,7 @@ class WebCompatibilityInterface:
             interfaces = []
 
             # API 클라이언트 확인
-            if (
-                not hasattr(self.packet_sniffer, "api_client")
-                or not self.packet_sniffer.api_client
-            ):
+            if not hasattr(self.packet_sniffer, "api_client") or not self.packet_sniffer.api_client:
                 logger.warning("API 클라이언트가 초기화되지 않았습니다.")
                 # 기본 인터페이스 목록 반환
                 return [
@@ -284,13 +257,9 @@ class WebCompatibilityInterface:
                     devices = self.packet_sniffer.get_available_devices()
 
                     # 첫 번째 장치의 인터페이스 목록 조회
-                    if devices and hasattr(
-                        self.packet_sniffer, "get_device_interfaces"
-                    ):
+                    if devices and hasattr(self.packet_sniffer, "get_device_interfaces"):
                         device_name = devices[0]["name"]
-                        interfaces = self.packet_sniffer.get_device_interfaces(
-                            device_name
-                        )
+                        interfaces = self.packet_sniffer.get_device_interfaces(device_name)
             except Exception as e:
                 logger.error(f"인터페이스 목록 조회 중 오류: {str(e)}")
                 # 오류 발생 시 기본 인터페이스 목록 반환
@@ -363,15 +332,11 @@ class WebCompatibilityInterface:
                 return 0.0
 
             if isinstance(start_time, str):
-                start_dt = datetime.fromisoformat(
-                    start_time.replace("Z", "+00:00")
-                )
+                start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
             else:
                 start_dt = start_time
 
-            return (
-                datetime.now() - start_dt.replace(tzinfo=None)
-            ).total_seconds()
+            return (datetime.now() - start_dt.replace(tzinfo=None)).total_seconds()
 
         except Exception as e:
             logger.error(f"경과 시간 계산 오류: {e}")

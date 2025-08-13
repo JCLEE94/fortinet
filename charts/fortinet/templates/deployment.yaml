@@ -77,6 +77,16 @@ spec:
               name: {{ .Chart.Name }}-secrets
               key: fortimanager-api-key
         {{- end }}
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secrets
+              key: secret-key
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Chart.Name }}-secrets
+              key: jwt-secret
         livenessProbe:
           httpGet:
             path: {{ .Values.probes.liveness.path }}

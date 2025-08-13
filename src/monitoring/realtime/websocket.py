@@ -22,9 +22,7 @@ class RealtimeMonitoringHandler:
     def __init__(self, socketio, redis_cache=None):
         self.socketio = socketio
         self.redis_cache = redis_cache
-        self.monitoring_clients = (
-            {}
-        )  # {room_id: {clients: set(), monitor_thread: thread}}
+        self.monitoring_clients = {}  # {room_id: {clients: set(), monitor_thread: thread}}
         self.device_monitors = {}  # {device_id: api_client}
 
     def register_handlers(self):
@@ -181,9 +179,7 @@ class RealtimeMonitoringHandler:
 
     def _monitoring_loop(self, room, device_id):
         """모니터링 루프"""
-        logger.info(
-            f"Starting monitoring loop for room {room}, device {device_id}"
-        )
+        logger.info(f"Starting monitoring loop for room {room}, device {device_id}")
 
         # 캐시 키
         cache_key = f"monitoring:{device_id}"
@@ -203,9 +199,7 @@ class RealtimeMonitoringHandler:
                             # 실시간 데이터 수집
                             monitoring_data = monitor.get_monitoring_data()
                             # 캐시에 저장 (5초 TTL)
-                            self.redis_cache.set(
-                                cache_key, json.dumps(monitoring_data), ttl=5
-                            )
+                            self.redis_cache.set(cache_key, json.dumps(monitoring_data), ttl=5)
                     else:
                         # Redis가 없으면 직접 수집
                         monitoring_data = monitor.get_monitoring_data()
@@ -285,17 +279,11 @@ class RealtimeMonitoringHandler:
             "threats": [
                 {
                     "id": random.randint(1000, 9999),
-                    "type": random.choice(
-                        ["malware", "intrusion", "botnet", "spam"]
-                    ),
-                    "severity": random.choice(
-                        ["low", "medium", "high", "critical"]
-                    ),
+                    "type": random.choice(["malware", "intrusion", "botnet", "spam"]),
+                    "severity": random.choice(["low", "medium", "high", "critical"]),
                     "timestamp": time.time() - random.randint(0, 3600),
                     "source_ip": f"192.168.{random.randint(1,254)}.{random.randint(1,254)}",
-                    "status": random.choice(
-                        ["blocked", "monitored", "quarantined"]
-                    ),
+                    "status": random.choice(["blocked", "monitored", "quarantined"]),
                 }
                 for _ in range(random.randint(0, 5))
             ],

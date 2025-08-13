@@ -58,24 +58,12 @@ class DataLoader:
 
     def _load_from_fortigate(self, firewall_id):
         """FortiGate에서 직접 데이터 로드"""
-        self._policies[
-            firewall_id
-        ] = self.fortigate_client.get_firewall_policies()
-        self._addresses[
-            firewall_id
-        ] = self.fortigate_client.get_firewall_addresses()
-        self._address_groups[
-            firewall_id
-        ] = self.fortigate_client.get_firewall_address_groups()
-        self._services[
-            firewall_id
-        ] = self.fortigate_client.get_firewall_services()
-        self._service_groups[
-            firewall_id
-        ] = self.fortigate_client.get_firewall_service_groups()
-        self._routing_tables[
-            firewall_id
-        ] = self.fortigate_client.get_routing_table()
+        self._policies[firewall_id] = self.fortigate_client.get_firewall_policies()
+        self._addresses[firewall_id] = self.fortigate_client.get_firewall_addresses()
+        self._address_groups[firewall_id] = self.fortigate_client.get_firewall_address_groups()
+        self._services[firewall_id] = self.fortigate_client.get_firewall_services()
+        self._service_groups[firewall_id] = self.fortigate_client.get_firewall_service_groups()
+        self._routing_tables[firewall_id] = self.fortigate_client.get_routing_table()
         return True
 
     def _load_from_fortimanager(self, firewall_id):
@@ -85,9 +73,7 @@ class DataLoader:
         adom = "root"
 
         # 장치 정보 로드
-        device_info = self.fortimanager_client.get_device_info(
-            firewall_id, adom
-        )
+        device_info = self.fortimanager_client.get_device_info(firewall_id, adom)
         if not device_info:
             self.logger.error(f"장치 정보를 로드할 수 없습니다: {firewall_id}")
             return False
@@ -101,37 +87,19 @@ class DataLoader:
             return False
 
         # 첫 번째 정책 패키지 사용 (단순화)
-        policy_package = (
-            policy_packages[0]["name"] if policy_packages else None
-        )
+        policy_package = policy_packages[0]["name"] if policy_packages else None
 
         if policy_package:
-            self._policies[
-                firewall_id
-            ] = self.fortimanager_client.get_firewall_policies(
-                policy_package, adom
-            )
+            self._policies[firewall_id] = self.fortimanager_client.get_firewall_policies(policy_package, adom)
 
         # 주소 객체 및 서비스 객체 로드
-        self._addresses[
-            firewall_id
-        ] = self.fortimanager_client.get_firewall_addresses(adom)
-        self._address_groups[
-            firewall_id
-        ] = self.fortimanager_client.get_firewall_address_groups(adom)
-        self._services[
-            firewall_id
-        ] = self.fortimanager_client.get_firewall_services(adom)
-        self._service_groups[
-            firewall_id
-        ] = self.fortimanager_client.get_firewall_service_groups(adom)
+        self._addresses[firewall_id] = self.fortimanager_client.get_firewall_addresses(adom)
+        self._address_groups[firewall_id] = self.fortimanager_client.get_firewall_address_groups(adom)
+        self._services[firewall_id] = self.fortimanager_client.get_firewall_services(adom)
+        self._service_groups[firewall_id] = self.fortimanager_client.get_firewall_service_groups(adom)
 
         # 라우팅 테이블 로드
-        self._routing_tables[
-            firewall_id
-        ] = self.fortimanager_client.get_device_routing_table(
-            firewall_id, adom
-        )
+        self._routing_tables[firewall_id] = self.fortimanager_client.get_device_routing_table(firewall_id, adom)
 
         return True
 

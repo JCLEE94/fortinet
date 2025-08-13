@@ -25,9 +25,7 @@ class PackageManagementMixin:
             List of policy packages
         """
         try:
-            response = self._make_api_request(
-                "get", f"/pm/pkg/adom/{adom}", data={"adom": adom}
-            )
+            response = self._make_api_request("get", f"/pm/pkg/adom/{adom}", data={"adom": adom})
 
             if response and "data" in response:
                 packages = response["data"]
@@ -40,9 +38,7 @@ class PackageManagementMixin:
                             "oid": pkg.get("oid"),
                             "type": pkg.get("type", "pkg"),
                             "scope": pkg.get("scope", []),
-                            "package_settings": pkg.get(
-                                "package settings", {}
-                            ),
+                            "package_settings": pkg.get("package settings", {}),
                             "modified_time": pkg.get("modified_time"),
                             "created_time": pkg.get("created_time"),
                         }
@@ -60,9 +56,7 @@ class PackageManagementMixin:
             logger.error(f"Error getting packages: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_package_details(
-        self, package_name: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def get_package_details(self, package_name: str, adom: str = "root") -> Dict[str, Any]:
         """
         Get detailed information about a specific package
 
@@ -136,9 +130,7 @@ class PackageManagementMixin:
             # Prepare scope (devices/groups)
             scope = []
             for device in devices:
-                scope.append(
-                    {"name": device, "vdom": "root"}
-                )  # Default to root VDOM
+                scope.append({"name": device, "vdom": "root"})  # Default to root VDOM
 
             data = {
                 "adom": adom,
@@ -156,9 +148,7 @@ class PackageManagementMixin:
                 },
             }
 
-            response = self._make_api_request(
-                "add", f"/pm/pkg/adom/{adom}", data=data
-            )
+            response = self._make_api_request("add", f"/pm/pkg/adom/{adom}", data=data)
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -176,9 +166,7 @@ class PackageManagementMixin:
             logger.error(f"Error creating package: {e}")
             return {"status": "error", "message": str(e)}
 
-    def update_package(
-        self, package_name: str, updates: Dict[str, Any], adom: str = "root"
-    ) -> Dict[str, Any]:
+    def update_package(self, package_name: str, updates: Dict[str, Any], adom: str = "root") -> Dict[str, Any]:
         """
         Update existing policy package
 
@@ -193,9 +181,7 @@ class PackageManagementMixin:
         try:
             data = {"adom": adom, "data": updates}
 
-            response = self._make_api_request(
-                "update", f"/pm/pkg/adom/{adom}/{package_name}", data=data
-            )
+            response = self._make_api_request("update", f"/pm/pkg/adom/{adom}/{package_name}", data=data)
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -212,9 +198,7 @@ class PackageManagementMixin:
             logger.error(f"Error updating package: {e}")
             return {"status": "error", "message": str(e)}
 
-    def delete_package(
-        self, package_name: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def delete_package(self, package_name: str, adom: str = "root") -> Dict[str, Any]:
         """
         Delete a policy package
 
@@ -279,10 +263,7 @@ class PackageManagementMixin:
 
             # Check if device already in scope
             for entry in current_scope:
-                if (
-                    entry.get("name") == device_name
-                    and entry.get("vdom") == vdom
-                ):
+                if entry.get("name") == device_name and entry.get("vdom") == vdom:
                     return {
                         "status": "info",
                         "message": f"Device '{device_name}' already assigned to package",
@@ -291,9 +272,7 @@ class PackageManagementMixin:
             current_scope.append(new_scope_entry)
 
             # Update package scope
-            return self.update_package(
-                package_name, {"scope": current_scope}, adom
-            )
+            return self.update_package(package_name, {"scope": current_scope}, adom)
 
         except Exception as e:
             logger.error(f"Error assigning package to device: {e}")
@@ -328,12 +307,7 @@ class PackageManagementMixin:
 
             # Remove device from scope
             new_scope = [
-                entry
-                for entry in current_scope
-                if not (
-                    entry.get("name") == device_name
-                    and entry.get("vdom") == vdom
-                )
+                entry for entry in current_scope if not (entry.get("name") == device_name and entry.get("vdom") == vdom)
             ]
 
             if len(new_scope) == len(current_scope):
@@ -343,17 +317,13 @@ class PackageManagementMixin:
                 }
 
             # Update package scope
-            return self.update_package(
-                package_name, {"scope": new_scope}, adom
-            )
+            return self.update_package(package_name, {"scope": new_scope}, adom)
 
         except Exception as e:
             logger.error(f"Error unassigning package from device: {e}")
             return {"status": "error", "message": str(e)}
 
-    def _get_package_policies(
-        self, package_name: str, adom: str = "root"
-    ) -> List[Dict]:
+    def _get_package_policies(self, package_name: str, adom: str = "root") -> List[Dict]:
         """
         Get firewall policies in a package
 
@@ -396,9 +366,7 @@ class PackageManagementMixin:
             logger.error(f"Error getting package policies: {e}")
             return []
 
-    def add_policy_to_package(
-        self, package_name: str, policy: Dict[str, Any], adom: str = "root"
-    ) -> Dict[str, Any]:
+    def add_policy_to_package(self, package_name: str, policy: Dict[str, Any], adom: str = "root") -> Dict[str, Any]:
         """
         Add a firewall policy to a package
 
@@ -413,9 +381,7 @@ class PackageManagementMixin:
         try:
             # Ensure required fields
             policy_data = {
-                "name": policy.get(
-                    "name", f"Policy_{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                ),
+                "name": policy.get("name", f"Policy_{datetime.now().strftime('%Y%m%d%H%M%S')}"),
                 "srcintf": policy.get("srcintf", ["any"]),
                 "dstintf": policy.get("dstintf", ["any"]),
                 "srcaddr": policy.get("srcaddr", ["all"]),
@@ -450,9 +416,7 @@ class PackageManagementMixin:
             logger.error(f"Error adding policy to package: {e}")
             return {"status": "error", "message": str(e)}
 
-    def clone_package(
-        self, source_package: str, new_name: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def clone_package(self, source_package: str, new_name: str, adom: str = "root") -> Dict[str, Any]:
         """
         Clone an existing policy package
 
@@ -497,9 +461,7 @@ class PackageManagementMixin:
             logger.error(f"Error cloning package: {e}")
             return {"status": "error", "message": str(e)}
 
-    def validate_package(
-        self, package_name: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def validate_package(self, package_name: str, adom: str = "root") -> Dict[str, Any]:
         """
         Validate a policy package for conflicts and issues
 
@@ -531,9 +493,7 @@ class PackageManagementMixin:
                     and policy.get("service") == ["ALL"]
                     and policy.get("action") == "accept"
                 ):
-                    warnings.append(
-                        f"Policy {i+1}: Overly permissive rule (any-any-allow)"
-                    )
+                    warnings.append(f"Policy {i+1}: Overly permissive rule (any-any-allow)")
 
                 # Check for disabled policies
                 if policy.get("status") == "disable":
@@ -541,9 +501,7 @@ class PackageManagementMixin:
 
                 # Check for missing logging
                 if policy.get("logtraffic") == "disable":
-                    warnings.append(
-                        f"Policy {i+1}: Traffic logging is disabled"
-                    )
+                    warnings.append(f"Policy {i+1}: Traffic logging is disabled")
 
             # Check scope
             if not pkg["package"].get("scope"):

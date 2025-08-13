@@ -12,6 +12,4 @@ from utils.unified_logger import get_logger
 logger = get_logger(__name__)
 
 # Create a new blueprint for FortiManager routes
-fortimanager_bp = Blueprint(
-    "fortimanager", __name__, url_prefix="/api/fortimanager"
-)
+fortimanager_bp = Blueprint("fortimanager", __name__, url_prefix="/api/fortimanager")

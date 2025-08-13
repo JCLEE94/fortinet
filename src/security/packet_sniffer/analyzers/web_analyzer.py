@@ -20,9 +20,7 @@ class WebAnalyzer:
         self.user_agents = []
         self.domains = []
 
-    def analyze_http(
-        self, payload: bytes, packet_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def analyze_http(self, payload: bytes, packet_info: Dict[str, Any]) -> Dict[str, Any]:
         """HTTP 패킷 분석"""
 
         try:
@@ -47,9 +45,7 @@ class WebAnalyzer:
             security_issues = self._check_web_security(payload_str, analysis)
             if security_issues:
                 analysis["security_issues"] = security_issues
-                analysis["risk_level"] = self._calculate_risk_level(
-                    security_issues
-                )
+                analysis["risk_level"] = self._calculate_risk_level(security_issues)
 
             # 콘텐츠 타입 분석
             content_analysis = self._analyze_content(payload_str)
@@ -79,13 +75,9 @@ class WebAnalyzer:
             "PATCH",
             "TRACE",
         ]
-        first_line = (
-            payload_str.split("\n")[0] if "\n" in payload_str else payload_str
-        )
+        first_line = payload_str.split("\n")[0] if "\n" in payload_str else payload_str
 
-        return any(
-            first_line.startswith(method + " ") for method in http_methods
-        )
+        return any(first_line.startswith(method + " ") for method in http_methods)
 
     def _is_http_response(self, payload_str: str) -> bool:
         """HTTP 응답인지 확인"""
@@ -129,9 +121,7 @@ class WebAnalyzer:
         # User-Agent 분석
         user_agent = request_info["headers"].get("user-agent", "")
         if user_agent:
-            request_info["user_agent_analysis"] = self._analyze_user_agent(
-                user_agent
-            )
+            request_info["user_agent_analysis"] = self._analyze_user_agent(user_agent)
 
         # 호스트 정보
         host = request_info["headers"].get("host", "")
@@ -172,9 +162,7 @@ class WebAnalyzer:
                 response_info["headers"][key.strip().lower()] = value.strip()
 
         # 보안 헤더 분석
-        response_info["security_headers"] = self._analyze_security_headers(
-            response_info["headers"]
-        )
+        response_info["security_headers"] = self._analyze_security_headers(response_info["headers"])
 
         return response_info
 
@@ -256,50 +244,36 @@ class WebAnalyzer:
             "curl",
             "wget",
         ]
-        ua_analysis["is_bot"] = any(
-            indicator in user_agent.lower() for indicator in bot_indicators
-        )
+        ua_analysis["is_bot"] = any(indicator in user_agent.lower() for indicator in bot_indicators)
 
         # 의심스러운 User-Agent 검사
-        ua_analysis["is_suspicious"] = self._is_suspicious_user_agent(
-            user_agent
-        )
+        ua_analysis["is_suspicious"] = self._is_suspicious_user_agent(user_agent)
 
         return ua_analysis
 
-    def _analyze_security_headers(
-        self, headers: Dict[str, str]
-    ) -> Dict[str, Any]:
+    def _analyze_security_headers(self, headers: Dict[str, str]) -> Dict[str, Any]:
         """보안 헤더 분석"""
 
         security_headers = {
             "x-frame-options": headers.get("x-frame-options"),
             "x-content-type-options": headers.get("x-content-type-options"),
             "x-xss-protection": headers.get("x-xss-protection"),
-            "strict-transport-security": headers.get(
-                "strict-transport-security"
-            ),
+            "strict-transport-security": headers.get("strict-transport-security"),
             "content-security-policy": headers.get("content-security-policy"),
             "referrer-policy": headers.get("referrer-policy"),
         }
 
         # 보안 헤더 점수 계산
-        present_headers = [
-            k for k, v in security_headers.items() if v is not None
-        ]
+        present_headers = [k for k, v in security_headers.items() if v is not None]
         security_score = len(present_headers) / len(security_headers) * 100
 
         return {
             "headers": security_headers,
             "security_score": round(security_score, 1),
-            "missing_headers": [
-                k for k, v in security_headers.items() if v is None
-            ],
+            "missing_headers": [k for k, v in security_headers.items() if v is None],
         }
 
-    def _check_web_security(
-        self, payload_str: str, analysis: Dict[str, Any]
-    ) -> List[str]:
+    def _check_web_security(self, payload_str: str, analysis: Dict[str, Any]) -> List[str]:
         """웹 보안 검사"""
 
         issues = []
@@ -341,9 +315,7 @@ class WebAnalyzer:
         ]
 
         payload_lower = payload_str.lower()
-        return any(
-            re.search(pattern, payload_lower) for pattern in sql_patterns
-        )
+        return any(re.search(pattern, payload_lower) for pattern in sql_patterns)
 
     def _detect_xss(self, payload_str: str) -> bool:
         """XSS 탐지"""
@@ -358,19 +330,14 @@ class WebAnalyzer:
         ]
 
         payload_lower = payload_str.lower()
-        return any(
-            re.search(pattern, payload_lower) for pattern in xss_patterns
-        )
+        return any(re.search(pattern, payload_lower) for pattern in xss_patterns)
 
     def _detect_directory_traversal(self, payload_str: str) -> bool:
         """디렉토리 트래버설 탐지"""
 
         traversal_patterns = [r"\.\./", r"\.\.\\", r"%2e%2e%2f", r"%2e%2e%5c"]
 
-        return any(
-            re.search(pattern, payload_str, re.IGNORECASE)
-            for pattern in traversal_patterns
-        )
+        return any(re.search(pattern, payload_str, re.IGNORECASE) for pattern in traversal_patterns)
 
     def _detect_sensitive_file_access(self, payload_str: str) -> bool:
         """민감한 파일 접근 탐지"""
@@ -434,9 +401,7 @@ class WebAnalyzer:
             content_analysis["title"] = self._extract_html_title(payload_str)
 
         # JSON 콘텐츠 검사
-        elif payload_str.strip().startswith(
-            "{"
-        ) and payload_str.strip().endswith("}"):
+        elif payload_str.strip().startswith("{") and payload_str.strip().endswith("}"):
             content_analysis["content_type"] = "json"
 
         # XML 콘텐츠 검사
@@ -448,9 +413,7 @@ class WebAnalyzer:
     def _extract_html_title(self, payload_str: str) -> Optional[str]:
         """HTML 제목 추출"""
 
-        title_match = re.search(
-            r"<title>(.*?)</title>", payload_str, re.IGNORECASE | re.DOTALL
-        )
+        title_match = re.search(r"<title>(.*?)</title>", payload_str, re.IGNORECASE | re.DOTALL)
         return title_match.group(1).strip() if title_match else None
 
     def _calculate_risk_level(self, security_issues: List[str]) -> str:
@@ -491,12 +454,8 @@ class WebAnalyzer:
         return {
             "total_requests": len(self.http_methods),
             "method_distribution": method_counts,
-            "top_user_agents": sorted(
-                ua_counts.items(), key=lambda x: x[1], reverse=True
-            )[:10],
-            "top_domains": sorted(
-                domain_counts.items(), key=lambda x: x[1], reverse=True
-            )[:10],
+            "top_user_agents": sorted(ua_counts.items(), key=lambda x: x[1], reverse=True)[:10],
+            "top_domains": sorted(domain_counts.items(), key=lambda x: x[1], reverse=True)[:10],
             "unique_user_agents": len(set(self.user_agents)),
             "unique_domains": len(set(self.domains)),
         }

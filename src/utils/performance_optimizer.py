@@ -84,9 +84,7 @@ class LRUCache:
         """캐시 통계 반환"""
         with self._lock:
             total_requests = self.hits + self.misses
-            hit_rate = (
-                (self.hits / total_requests * 100) if total_requests > 0 else 0
-            )
+            hit_rate = (self.hits / total_requests * 100) if total_requests > 0 else 0
 
             return {
                 "size": len(self.cache),
@@ -126,9 +124,7 @@ class PerformanceMonitor:
             execution_time = end_time - start_time
             memory_delta = end_memory - start_memory
 
-            self._record_metrics(
-                func.__name__, execution_time, memory_delta, success
-            )
+            self._record_metrics(func.__name__, execution_time, memory_delta, success)
 
             if not success:
                 raise result
@@ -165,9 +161,7 @@ class PerformanceMonitor:
             if metrics_list:
                 last_metric = metrics_list[-1]
                 call_count = last_metric.call_count + 1
-                avg_time = (
-                    last_metric.avg_time * last_metric.call_count + exec_time
-                ) / call_count
+                avg_time = (last_metric.avg_time * last_metric.call_count + exec_time) / call_count
                 max_time = max(last_metric.max_time, exec_time)
                 min_time = min(last_metric.min_time, exec_time)
             else:
@@ -207,18 +201,13 @@ class PerformanceMonitor:
                     "max_execution_time": latest.max_time,
                     "min_execution_time": latest.min_time,
                     "last_execution_time": latest.execution_time,
-                    "avg_memory_delta": sum(
-                        m.memory_usage for m in metrics_list
-                    )
-                    / len(metrics_list),
+                    "avg_memory_delta": sum(m.memory_usage for m in metrics_list) / len(metrics_list),
                     "last_updated": latest.timestamp.isoformat(),
                 }
 
             return report
 
-    def get_slow_functions(
-        self, threshold: float = 1.0
-    ) -> List[Dict[str, Any]]:
+    def get_slow_functions(self, threshold: float = 1.0) -> List[Dict[str, Any]]:
         """느린 함수들 식별"""
         slow_functions = []
 
@@ -238,9 +227,7 @@ class PerformanceMonitor:
                         }
                     )
 
-        return sorted(
-            slow_functions, key=lambda x: x["avg_time"], reverse=True
-        )
+        return sorted(slow_functions, key=lambda x: x["avg_time"], reverse=True)
 
 
 class AsyncBatchProcessor:
@@ -263,19 +250,13 @@ class AsyncBatchProcessor:
         processed_count = 0
 
         # 배치로 나누기
-        batches = [
-            items[i : i + self.batch_size]
-            for i in range(0, len(items), self.batch_size)
-        ]
+        batches = [items[i : i + self.batch_size] for i in range(0, len(items), self.batch_size)]
 
         for batch in batches:
             # 세마포어로 동시 실행 제한
             async with self.semaphore:
                 batch_results = await asyncio.gather(
-                    *[
-                        self._process_single_item(item, processor)
-                        for item in batch
-                    ],
+                    *[self._process_single_item(item, processor) for item in batch],
                     return_exceptions=True,
                 )
 
@@ -287,9 +268,7 @@ class AsyncBatchProcessor:
 
         return results
 
-    async def _process_single_item(
-        self, item: Any, processor: Callable
-    ) -> Any:
+    async def _process_single_item(self, item: Any, processor: Callable) -> Any:
         """단일 아이템 처리"""
         try:
             if asyncio.iscoroutinefunction(processor):
@@ -320,9 +299,7 @@ class MemoryOptimizer:
 
                     # 가비지 컬렉션 실행
                     collected = gc.collect()
-                    logger.debug(
-                        f"Garbage collection cleaned up {collected} objects"
-                    )
+                    logger.debug(f"Garbage collection cleaned up {collected} objects")
 
                 except Exception as e:
                     logger.error(f"Error during cache cleanup: {e}")
@@ -339,18 +316,12 @@ class MemoryOptimizer:
             if isinstance(value, list) and len(value) > 1000:
                 # 큰 리스트는 제너레이터로 변환 고려
                 optimized[key] = value[:100]  # 샘플만 유지
-                logger.debug(
-                    f"Truncated large list {key} from {len(value)} to 100 items"
-                )
+                logger.debug(f"Truncated large list {key} from {len(value)} to 100 items")
             elif isinstance(value, dict) and len(value) > 100:
                 # 큰 딕셔너리는 중요한 키만 유지
                 important_keys = list(value.keys())[:50]
-                optimized[key] = {
-                    k: value[k] for k in important_keys if k in value
-                }
-                logger.debug(
-                    f"Reduced large dict {key} from {len(value)} to {len(optimized[key])} items"
-                )
+                optimized[key] = {k: value[k] for k in important_keys if k in value}
+                logger.debug(f"Reduced large dict {key} from {len(value)} to {len(optimized[key])} items")
             else:
                 optimized[key] = value
 
@@ -422,9 +393,7 @@ def measure_time(func: Callable) -> Callable:
         end_time = time.time()
 
         execution_time = end_time - start_time
-        logger.debug(
-            f"{func.__name__} executed in {execution_time:.4f} seconds"
-        )
+        logger.debug(f"{func.__name__} executed in {execution_time:.4f} seconds")
 
         return result
 
@@ -453,15 +422,9 @@ def optimize_regex_compilation():
     # 자주 사용되는 패턴들을 미리 컴파일
     compiled_patterns = {
         "ip_address": re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"),
-        "email": re.compile(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-        ),
-        "url": re.compile(
-            r"https?://(?:[-\w.])+(?:\:[0-9]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?"
-        ),
-        "uuid": re.compile(
-            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
-        ),
+        "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
+        "url": re.compile(r"https?://(?:[-\w.])+(?:\:[0-9]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:\#(?:[\w.])*)?)?"),
+        "uuid": re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"),
     }
 
     return compiled_patterns

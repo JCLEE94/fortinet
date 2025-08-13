@@ -183,9 +183,7 @@ class LDAPProvider:
             user_info = json.loads(conn.entries[0].entry_to_json())
 
             # Try to bind with user credentials
-            user_conn = ldap3.Connection(
-                server, user=user_dn, password=password, auto_bind=True
-            )
+            user_conn = ldap3.Connection(server, user=user_dn, password=password, auto_bind=True)
 
             if user_conn.bind():
                 return {
@@ -240,16 +238,12 @@ class SSOManager:
                 # Load OAuth2 providers
                 for name, settings in config.get("oauth2", {}).items():
                     if settings.get("enabled"):
-                        self.oauth2_providers[name] = OAuth2Provider(
-                            name=name, **settings
-                        )
+                        self.oauth2_providers[name] = OAuth2Provider(name=name, **settings)
 
                 # Load SAML providers
                 for name, settings in config.get("saml", {}).items():
                     if settings.get("enabled"):
-                        self.saml_providers[name] = SAMLProvider(
-                            name=name, **settings
-                        )
+                        self.saml_providers[name] = SAMLProvider(name=name, **settings)
 
                 # Load LDAP providers
                 for name, settings in config.get("ldap", {}).items():
@@ -315,9 +309,7 @@ class SSOManager:
                 use_ssl=os.getenv("LDAP_USE_SSL", "true").lower() == "true",
             )
 
-    def create_sso_session(
-        self, user_data: Dict[str, Any], provider: str
-    ) -> str:
+    def create_sso_session(self, user_data: Dict[str, Any], provider: str) -> str:
         """Create SSO session"""
         session_id = secrets.token_urlsafe(32)
 
@@ -354,9 +346,7 @@ class SSOManager:
             del self.sessions[session_id]
             logger.info("SSO session destroyed")
 
-    def get_oauth2_login_url(
-        self, provider_name: str, redirect_uri: str
-    ) -> Optional[str]:
+    def get_oauth2_login_url(self, provider_name: str, redirect_uri: str) -> Optional[str]:
         """Get OAuth2 login URL"""
         provider = self.oauth2_providers.get(provider_name)
         if not provider:
@@ -367,9 +357,7 @@ class SSOManager:
 
         return provider.get_authorization_url(redirect_uri, state)
 
-    def handle_oauth2_callback(
-        self, provider_name: str, code: str, state: str, redirect_uri: str
-    ) -> Optional[Dict]:
+    def handle_oauth2_callback(self, provider_name: str, code: str, state: str, redirect_uri: str) -> Optional[Dict]:
         """Handle OAuth2 callback"""
         # Verify state
         if session.get("oauth_state") != state:
@@ -400,9 +388,7 @@ class SSOManager:
             logger.error(f"OAuth2 callback failed: {e}")
             return None
 
-    def authenticate_ldap(
-        self, username: str, password: str, provider_name: str = "ldap"
-    ) -> Optional[Dict]:
+    def authenticate_ldap(self, username: str, password: str, provider_name: str = "ldap") -> Optional[Dict]:
         """Authenticate via LDAP"""
         provider = self.ldap_providers.get(provider_name)
         if not provider:
@@ -429,9 +415,7 @@ def sso_required(f):
         from flask import abort, g
 
         # Check for SSO session
-        session_id = session.get("sso_session_id") or request.headers.get(
-            "X-SSO-Session"
-        )
+        session_id = session.get("sso_session_id") or request.headers.get("X-SSO-Session")
 
         if not session_id:
             abort(401, "SSO authentication required")
@@ -455,9 +439,7 @@ def sso_optional(f):
     def decorated_function(*args, **kwargs):
         from flask import g
 
-        session_id = session.get("sso_session_id") or request.headers.get(
-            "X-SSO-Session"
-        )
+        session_id = session.get("sso_session_id") or request.headers.get("X-SSO-Session")
 
         if session_id:
             session_data = sso_manager.validate_session(session_id)

@@ -56,9 +56,7 @@ except ImportError:
         logger = logging.getLogger(name)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             # 사용자 정의 레벨을 표준 레벨로 매핑
@@ -77,9 +75,7 @@ class PacketSnifferAPI:
     모듈화된 구조를 하나의 편리한 인터페이스로 통합
     """
 
-    def __init__(
-        self, fortigate_client=None, faz_client=None, fmg_client=None
-    ):
+    def __init__(self, fortigate_client=None, faz_client=None, fmg_client=None):
         """
         PacketSnifferAPI 초기화
 
@@ -108,9 +104,7 @@ class PacketSnifferAPI:
         self.device_manager = DeviceManager(config)
 
         # 분석기들 - 조건부 초기화
-        self.protocol_analyzer = (
-            ProtocolAnalyzer() if HAS_PROTOCOL_ANALYZER else None
-        )
+        self.protocol_analyzer = ProtocolAnalyzer() if HAS_PROTOCOL_ANALYZER else None
         self.http_analyzer = HTTPAnalyzer() if HAS_HTTP_ANALYZER else None
         self.tls_analyzer = TLSAnalyzer() if HAS_TLS_ANALYZER else None
 
@@ -158,9 +152,7 @@ class PacketSnifferAPI:
             self.logger.error(f"인터페이스 목록 조회 실패: {e}")
             return []
 
-    def start_capture_session(
-        self, params: Dict[str, Any], callback: Optional[Callable] = None
-    ) -> Dict[str, Any]:
+    def start_capture_session(self, params: Dict[str, Any], callback: Optional[Callable] = None) -> Dict[str, Any]:
         """
         캡처 세션 시작 (Legacy 호환성)
 
@@ -203,25 +195,19 @@ class PacketSnifferAPI:
 
             # 콜백 등록
             if callback:
-                self.session_manager.register_session_callback(
-                    session_id, callback
-                )
+                self.session_manager.register_session_callback(session_id, callback)
                 self.capture_callbacks[session_id] = callback
 
             # 캡처 시작
             interface = params.get("interface", "any")
-            if self.packet_capturer.start_capture_session(
-                session_id, capture_filter, interface
-            ):
+            if self.packet_capturer.start_capture_session(session_id, capture_filter, interface):
                 # Legacy 호환성을 위한 상태 업데이트
                 self.active_sessions[session_id] = True
                 self.packet_queues[session_id] = queue.Queue()
                 self.stop_flags[session_id] = threading.Event()
                 self.stored_packets[session_id] = []
 
-                session_info = self.session_manager.get_session_details(
-                    session_id
-                )
+                session_info = self.session_manager.get_session_details(session_id)
                 return {
                     "success": True,
                     "session_id": session_id,
@@ -272,9 +258,7 @@ class PacketSnifferAPI:
         """캡처 데이터 조회"""
         try:
             packets = self.packet_capturer.get_all_packets(session_id)
-            session_details = self.session_manager.get_session_details(
-                session_id
-            )
+            session_details = self.session_manager.get_session_details(session_id)
 
             return {
                 "success": True,
@@ -304,15 +288,11 @@ class PacketSnifferAPI:
             self.logger.error(f"세션 목록 조회 실패: {e}")
             return []
 
-    def register_packet_callback(
-        self, session_id: str, callback: Callable
-    ) -> bool:
+    def register_packet_callback(self, session_id: str, callback: Callable) -> bool:
         """패킷 콜백 등록"""
         try:
             self.capture_callbacks[session_id] = callback
-            return self.session_manager.register_session_callback(
-                session_id, callback
-            )
+            return self.session_manager.register_session_callback(session_id, callback)
         except Exception as e:
             self.logger.error(f"콜백 등록 실패: {e}")
             return False
@@ -374,24 +354,18 @@ class PacketSnifferAPI:
     ) -> Dict[str, Any]:
         """최신 패킷 목록 조회"""
         try:
-            packets = self.packet_capturer.get_latest_packets(
-                session_id, count
-            )
+            packets = self.packet_capturer.get_latest_packets(session_id, count)
 
             # 필터 적용
             if filter_criteria:
-                packets = self.packet_capturer.filter_packets(
-                    packets, filter_criteria
-                )
+                packets = self.packet_capturer.filter_packets(packets, filter_criteria)
 
             return {
                 "success": True,
                 "packets": packets,
                 "count": len(packets),
                 "total_available": (
-                    self.session_manager.get_session(
-                        session_id
-                    ).get_packet_count()
+                    self.session_manager.get_session(session_id).get_packet_count()
                     if self.session_manager.get_session(session_id)
                     else 0
                 ),
@@ -409,14 +383,10 @@ class PacketSnifferAPI:
             self.logger.error(f"모든 패킷 조회 실패: {e}")
             return []
 
-    def filter_packets(
-        self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def filter_packets(self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
         """패킷 필터링"""
         try:
-            return self.packet_capturer.filter_packets(
-                packets, filter_criteria
-            )
+            return self.packet_capturer.filter_packets(packets, filter_criteria)
         except Exception as e:
             self.logger.error(f"패킷 필터링 실패: {e}")
             return []
@@ -434,9 +404,7 @@ class PacketSnifferAPI:
 
             # 프로토콜 분석
             if self.protocol_analyzer:
-                analysis_result[
-                    "protocol_analysis"
-                ] = self.protocol_analyzer.analyze_packet(packet)
+                analysis_result["protocol_analysis"] = self.protocol_analyzer.analyze_packet(packet)
 
             # HTTP 분석
             if (
@@ -444,9 +412,7 @@ class PacketSnifferAPI:
                 and packet.get("protocol", "").upper() == "TCP"
                 and packet.get("dst_port") in [80, 8080]
             ):
-                analysis_result[
-                    "http_analysis"
-                ] = self.http_analyzer.analyze_packet(packet)
+                analysis_result["http_analysis"] = self.http_analyzer.analyze_packet(packet)
 
             # TLS 분석
             if (
@@ -454,9 +420,7 @@ class PacketSnifferAPI:
                 and packet.get("protocol", "").upper() == "TCP"
                 and packet.get("dst_port") in [443, 8443]
             ):
-                analysis_result[
-                    "tls_analysis"
-                ] = self.tls_analyzer.analyze_packet(packet)
+                analysis_result["tls_analysis"] = self.tls_analyzer.analyze_packet(packet)
 
             return analysis_result
 
@@ -512,11 +476,7 @@ class PacketSnifferAPI:
                             reverse=True,
                         )[:10]
                     ),
-                    "top_connections": dict(
-                        sorted(
-                            ip_pairs.items(), key=lambda x: x[1], reverse=True
-                        )[:10]
-                    ),
+                    "top_connections": dict(sorted(ip_pairs.items(), key=lambda x: x[1], reverse=True)[:10]),
                 },
             }
 
@@ -526,9 +486,7 @@ class PacketSnifferAPI:
 
     # ========== 내보내기 메서드들 ==========
 
-    def export_session_data(
-        self, session_id: str, export_format: str = "json"
-    ) -> Dict[str, Any]:
+    def export_session_data(self, session_id: str, export_format: str = "json") -> Dict[str, Any]:
         """세션 데이터 내보내기"""
         try:
             export_data = self.packet_capturer.export_capture_data(session_id)
@@ -583,9 +541,7 @@ class PacketSnifferAPI:
                 "status": {
                     "capturer_running": self.packet_capturer.is_running,
                     "active_sessions": len(self.active_sessions),
-                    "total_sessions": len(
-                        self.session_manager.get_all_sessions()
-                    ),
+                    "total_sessions": len(self.session_manager.get_all_sessions()),
                     "components_initialized": True,
                     "deep_inspection_enabled": self.deep_inspection_enabled,
                 },
@@ -637,9 +593,7 @@ class PacketSnifferAPI:
 
 
 # 편의 함수들
-def create_packet_sniffer_api(
-    fortigate_client=None, faz_client=None, fmg_client=None
-) -> PacketSnifferAPI:
+def create_packet_sniffer_api(fortigate_client=None, faz_client=None, fmg_client=None) -> PacketSnifferAPI:
     """패킷 스니퍼 API 생성 편의 함수"""
     return PacketSnifferAPI(fortigate_client, faz_client, fmg_client)
 

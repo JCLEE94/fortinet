@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 class AuthConnectionMixin:
     """Mixin for FortiManager authentication and connection operations"""
 
-    def build_json_rpc_request(
-        self, method: str, url: str, data: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+    def build_json_rpc_request(self, method: str, url: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Build a JSON-RPC request for FortiManager API"""
         if data is None:
             data = {}
@@ -24,9 +22,7 @@ class AuthConnectionMixin:
             "method": method,
             "params": [{"url": url, "data": data}],
             "id": 1,
-            "session": getattr(
-                self, "session_id", None
-            ),  # Include session if available
+            "session": getattr(self, "session_id", None),  # Include session if available
         }
 
         return request
@@ -63,23 +59,16 @@ class AuthConnectionMixin:
 
             if response.status_code == 200:
                 result = response.json()
-                if (
-                    result.get("result", [{}])[0].get("status", {}).get("code")
-                    == 0
-                ):
+                if result.get("result", [{}])[0].get("status", {}).get("code") == 0:
                     # Extract session ID
-                    session_info = result.get("result", [{}])[0].get(
-                        "data", {}
-                    )
+                    session_info = result.get("result", [{}])[0].get("data", {})
                     self.session_id = result.get("session")
 
                     # Store additional session info
                     self.logged_in = True
                     self.login_time = response.headers.get("Date")
 
-                    self.logger.info(
-                        f"Successfully logged into FortiManager: {self.host}"
-                    )
+                    self.logger.info(f"Successfully logged into FortiManager: {self.host}")
                     return {
                         "status": "success",
                         "message": "Successfully logged in",
@@ -87,11 +76,7 @@ class AuthConnectionMixin:
                         "user_info": session_info,
                     }
                 else:
-                    error_msg = (
-                        result.get("result", [{}])[0]
-                        .get("status", {})
-                        .get("message", "Login failed")
-                    )
+                    error_msg = result.get("result", [{}])[0].get("status", {}).get("message", "Login failed")
                     return {
                         "status": "error",
                         "message": f"Login failed: {error_msg}",
@@ -126,10 +111,7 @@ class AuthConnectionMixin:
 
             if response.status_code == 200:
                 result = response.json()
-                if (
-                    result.get("result", [{}])[0].get("status", {}).get("code")
-                    == 0
-                ):
+                if result.get("result", [{}])[0].get("status", {}).get("code") == 0:
                     system_info = result.get("result", [{}])[0].get("data", {})
                     return {
                         "status": "success",
@@ -137,17 +119,11 @@ class AuthConnectionMixin:
                         "system_info": {
                             "hostname": system_info.get("Hostname", "Unknown"),
                             "version": system_info.get("Version", "Unknown"),
-                            "serial": system_info.get(
-                                "Serial Number", "Unknown"
-                            ),
+                            "serial": system_info.get("Serial Number", "Unknown"),
                         },
                     }
                 else:
-                    error_msg = (
-                        result.get("result", [{}])[0]
-                        .get("status", {})
-                        .get("message", "Authentication failed")
-                    )
+                    error_msg = result.get("result", [{}])[0].get("status", {}).get("message", "Authentication failed")
                     return {
                         "status": "error",
                         "message": f"Token authentication failed: {error_msg}",

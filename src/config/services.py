@@ -151,15 +151,13 @@ def get_fortimanager_config() -> Optional[Dict[str, Any]]:
     """
     # 환경변수에서 FortiManager 설정 로드
     config = {
-        "enabled": os.getenv("FORTIMANAGER_ENABLED", "false").lower()
-        == "true",
+        "enabled": os.getenv("FORTIMANAGER_ENABLED", "false").lower() == "true",
         "host": os.getenv("FORTIMANAGER_HOST", ""),
         "port": int(os.getenv("FORTIMANAGER_PORT", "443")),
         "username": os.getenv("FORTIMANAGER_USERNAME", "admin"),
         "password": os.getenv("FORTIMANAGER_PASSWORD", ""),
         "api_token": os.getenv("FORTIMANAGER_API_TOKEN", ""),
-        "verify_ssl": os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower()
-        == "true",
+        "verify_ssl": os.getenv("FORTIMANAGER_VERIFY_SSL", "false").lower() == "true",
         "timeout": int(os.getenv("FORTIMANAGER_TIMEOUT", "30")),
     }
 

@@ -97,10 +97,7 @@ class ITSMScraper:
             # 로그인 수행 (더미 - 실제 구현 시 사이트 구조 분석 필요)
             login_response = self.session.post(login_url, data=login_data)
 
-            if (
-                "로그아웃" in login_response.text
-                or "logout" in login_response.text
-            ):
+            if "로그아웃" in login_response.text or "logout" in login_response.text:
                 logger.info("ITSM 로그인 성공")
                 return True
             else:
@@ -141,9 +138,7 @@ class ITSMScraper:
                     requests_list = self._parse_request_list(data)
                 except json.JSONDecodeError:
                     # HTML 응답인 경우 파싱
-                    requests_list = self._parse_html_request_list(
-                        response.text
-                    )
+                    requests_list = self._parse_html_request_list(response.text)
             else:
                 logger.warning(f"요청 목록 조회 실패: {response.status_code}")
                 requests_list = self._generate_dummy_requests()
@@ -186,9 +181,7 @@ class ITSMScraper:
                     return self._parse_request_detail(detail_data)
                 except json.JSONDecodeError:
                     # HTML 파싱
-                    return self._parse_html_request_detail(
-                        response.text, request_id
-                    )
+                    return self._parse_html_request_detail(response.text, request_id)
             else:
                 logger.warning(f"요청 상세 조회 실패: {response.status_code}")
                 return self._generate_dummy_detail(request_id)
@@ -249,10 +242,7 @@ class ITSMScraper:
             category = request.get("category", "").lower()
 
             # 방화벽 관련 키워드 검사
-            is_firewall_request = any(
-                keyword in title or keyword in category
-                for keyword in self.firewall_keywords
-            )
+            is_firewall_request = any(keyword in title or keyword in category for keyword in self.firewall_keywords)
 
             if is_firewall_request:
                 request["request_type"] = self._classify_request_type(request)
@@ -316,9 +306,7 @@ class ITSMScraper:
 
         return form_data
 
-    def _parse_html_request_detail(
-        self, html: str, request_id: str
-    ) -> Dict[str, Any]:
+    def _parse_html_request_detail(self, html: str, request_id: str) -> Dict[str, Any]:
         """HTML 형태의 요청 상세 파싱"""
         soup = BeautifulSoup(html, "html.parser")
 
@@ -460,10 +448,7 @@ class ITSMScraper:
                 new_requests = [
                     req
                     for req in current_requests
-                    if datetime.strptime(
-                        req.get("request_date", ""), "%Y-%m-%d %H:%M:%S"
-                    )
-                    > last_check_time
+                    if datetime.strptime(req.get("request_date", ""), "%Y-%m-%d %H:%M:%S") > last_check_time
                 ]
 
                 if new_requests:

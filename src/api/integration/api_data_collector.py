@@ -140,23 +140,17 @@ class APIDataCollector:
                 if status_response.success and status_response.data:
                     data = status_response.data
                     device_info["status"] = "online"
-                    device_info["hostname"] = data.get(
-                        "hostname", device_info["name"]
-                    )
+                    device_info["hostname"] = data.get("hostname", device_info["name"])
                     device_info["version"] = data.get("version", "Unknown")
                     device_info["serial"] = data.get("serial", "Unknown")
 
                 # 리소스 사용량
-                resource_response = (
-                    self.fortigate_client.get_system_resource_usage()
-                )
+                resource_response = self.fortigate_client.get_system_resource_usage()
                 if resource_response.success and resource_response.data:
                     data = resource_response.data.get("results", {})
                     device_info["cpu_usage"] = data.get("cpu", 0)
                     device_info["memory_usage"] = data.get("memory", 0)
-                    device_info["sessions"] = data.get("session", {}).get(
-                        "count", 0
-                    )
+                    device_info["sessions"] = data.get("session", {}).get("count", 0)
 
                 devices.append(device_info)
 
@@ -175,17 +169,11 @@ class APIDataCollector:
                             "name": device.get("name", "Unknown"),
                             "type": "FortiGate (Managed)",
                             "ip": device.get("ip", "N/A"),
-                            "status": (
-                                "online"
-                                if device.get("conn_status") == 1
-                                else "offline"
-                            ),
+                            "status": ("online" if device.get("conn_status") == 1 else "offline"),
                             "cpu_usage": 0,
                             "memory_usage": 0,
                             "sessions": 0,
-                            "hostname": device.get(
-                                "hostname", device.get("name")
-                            ),
+                            "hostname": device.get("hostname", device.get("name")),
                             "version": device.get("os_ver", "Unknown"),
                             "serial": device.get("sn", "Unknown"),
                         }
@@ -216,16 +204,10 @@ class APIDataCollector:
                         stats["outbound"] += iface.get("tx_bytes", 0)
 
                 # 세션 통계
-                session_response = (
-                    self.fortigate_client.get_firewall_sessions()
-                )
+                session_response = self.fortigate_client.get_firewall_sessions()
                 if session_response.success and session_response.data:
                     stats["total_sessions"] = len(session_response.data)
-                    stats["blocked_sessions"] = sum(
-                        1
-                        for s in session_response.data
-                        if s.get("action") == "deny"
-                    )
+                    stats["blocked_sessions"] = sum(1 for s in session_response.data if s.get("action") == "deny")
 
             except Exception as e:
                 logger.error(f"트래픽 통계 조회 실패: {str(e)}")
@@ -252,9 +234,7 @@ class APIDataCollector:
                         "type": "warning",
                         "message": "비정상적인 트래픽 패턴 감지",
                         "source": "172.16.0.50",
-                        "timestamp": (
-                            datetime.now() - timedelta(minutes=5)
-                        ).isoformat(),
+                        "timestamp": (datetime.now() - timedelta(minutes=5)).isoformat(),
                     },
                 ]
                 events.extend(sample_events[:limit])
@@ -289,9 +269,7 @@ class APIDataCollector:
             "traffic": self.get_traffic_stats(),
             "resources": self.get_system_resources(),
             "events": self.get_security_events(10),
-            "cache_stats": redis_cache.get_stats()
-            if redis_cache.enabled
-            else None,
+            "cache_stats": redis_cache.get_stats() if redis_cache.enabled else None,
             "timestamp": datetime.now().isoformat(),
         }
 

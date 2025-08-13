@@ -47,11 +47,7 @@ class AdvancedFeaturesMixin:
                 managed_devices_result = self.get_managed_devices()
                 if managed_devices_result.get("status") == "success":
                     all_devices = managed_devices_result.get("data", [])
-                    devices_to_analyze = [
-                        dev.get("name")
-                        for dev in all_devices
-                        if dev.get("name")
-                    ]
+                    devices_to_analyze = [dev.get("name") for dev in all_devices if dev.get("name")]
 
                 # If still no devices, return error
                 if not devices_to_analyze:
@@ -98,9 +94,7 @@ class AdvancedFeaturesMixin:
 
                     # Analyze policies for this traffic
                     for policy in policies:
-                        if self._policy_matches_traffic(
-                            policy, src_ip, dst_ip, port, protocol
-                        ):
+                        if self._policy_matches_traffic(policy, src_ip, dst_ip, port, protocol):
                             device_analysis["applied_policies"].append(
                                 {
                                     "policy_id": policy.get("policyid", 0),
@@ -116,32 +110,24 @@ class AdvancedFeaturesMixin:
 
                             # First matching policy determines action
                             if device_analysis["action"] == "unknown":
-                                device_analysis["action"] = policy.get(
-                                    "action", "deny"
-                                )
+                                device_analysis["action"] = policy.get("action", "deny")
 
                     path_analysis["devices_analyzed"].append(device_analysis)
                     path_analysis["packet_path"].append(
                         {
                             "device": device,
                             "action": device_analysis["action"],
-                            "policies_matched": len(
-                                device_analysis["applied_policies"]
-                            ),
+                            "policies_matched": len(device_analysis["applied_policies"]),
                         }
                     )
 
                 except Exception as device_error:
-                    logger.warning(
-                        f"Error analyzing device {device}: {device_error}"
-                    )
+                    logger.warning(f"Error analyzing device {device}: {device_error}")
                     continue
 
             # Determine final action (most restrictive)
             if path_analysis["packet_path"]:
-                actions = [
-                    step["action"] for step in path_analysis["packet_path"]
-                ]
+                actions = [step["action"] for step in path_analysis["packet_path"]]
                 if "deny" in actions:
                     path_analysis["final_action"] = "deny"
                 elif "accept" in actions:
@@ -178,12 +164,8 @@ class AdvancedFeaturesMixin:
                     "data": {
                         "hostname": system_data.get("Hostname", "Unknown"),
                         "version": system_data.get("Version", "Unknown"),
-                        "serial_number": system_data.get(
-                            "Serial Number", "Unknown"
-                        ),
-                        "operation_mode": system_data.get(
-                            "Operation Mode", "Unknown"
-                        ),
+                        "serial_number": system_data.get("Serial Number", "Unknown"),
+                        "operation_mode": system_data.get("Operation Mode", "Unknown"),
                         "uptime": system_data.get("Current Time", "Unknown"),
                     },
                 }
@@ -234,9 +216,7 @@ class AdvancedFeaturesMixin:
 
             data = {"adom": adom, "pkg": package_name, "scope": scope}
 
-            response = self._make_api_request(
-                "exec", "/securityconsole/install/package", data=data
-            )
+            response = self._make_api_request("exec", "/securityconsole/install/package", data=data)
 
             if response and response.get("status", {}).get("code") == 0:
                 task_id = response.get("data", {}).get("task")

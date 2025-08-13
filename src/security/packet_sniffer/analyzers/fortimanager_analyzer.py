@@ -49,9 +49,7 @@ class FortiManagerAnalyzer:
             "exec": "명령 실행",
         }
 
-    def filter_fortimanager_traffic(
-        self, packets: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def filter_fortimanager_traffic(self, packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         FortiManager 관련 트래픽만 필터링
 
@@ -83,9 +81,7 @@ class FortiManagerAnalyzer:
                     if "is_fortimanager" not in packet:
                         packet["is_fortimanager"] = True
                         packet["fortimanager_direction"] = (
-                            "outbound"
-                            if src_port in self.fortimanager_ports
-                            else "inbound"
+                            "outbound" if src_port in self.fortimanager_ports else "inbound"
                         )
 
                     # 심층 분석 수행 (기존에 수행되지 않은 경우)
@@ -94,9 +90,7 @@ class FortiManagerAnalyzer:
 
                     fortimanager_packets.append(packet)
 
-            logger.debug(
-                f"FortiManager 패킷 필터링 완료: {len(fortimanager_packets)}개 발견"
-            )
+            logger.debug(f"FortiManager 패킷 필터링 완료: {len(fortimanager_packets)}개 발견")
             return fortimanager_packets
 
         except Exception as e:
@@ -122,15 +116,11 @@ class FortiManagerAnalyzer:
                 packet["api_call_detected"] = True
 
                 # API 호출 메서드 추출 시도
-                method_match = re.search(
-                    r'"method"\s*:\s*"([^"]+)"', payload_str
-                )
+                method_match = re.search(r'"method"\s*:\s*"([^"]+)"', payload_str)
                 if method_match:
                     api_method = method_match.group(1)
                     packet["api_method"] = api_method
-                    packet["api_method_type"] = self._classify_api_method(
-                        api_method
-                    )
+                    packet["api_method_type"] = self._classify_api_method(api_method)
 
                 # ID 추출 시도 (요청/응답 페어링용)
                 id_match = re.search(r'"id"\s*:\s*(\d+)', payload_str)
@@ -138,9 +128,7 @@ class FortiManagerAnalyzer:
                     packet["api_id"] = int(id_match.group(1))
 
                 # 파라미터 분석
-                params_match = re.search(
-                    r'"params"\s*:\s*(\{.*?\}|\[.*?\])', payload_str
-                )
+                params_match = re.search(r'"params"\s*:\s*(\{.*?\}|\[.*?\])', payload_str)
                 if params_match:
                     try:
                         params_str = params_match.group(1)
@@ -155,23 +143,13 @@ class FortiManagerAnalyzer:
                 self._extract_error_info(packet, payload_str)
 
             # 인증 정보 감지 (보안 목적)
-            if any(
-                keyword in payload_str.lower()
-                for keyword in ["password", "passwd", "secret", "token"]
-            ):
+            if any(keyword in payload_str.lower() for keyword in ["password", "passwd", "secret", "token"]):
                 packet["contains_credentials"] = True
 
             # SSL/TLS 정보 (암호화된 트래픽)
-            if (
-                packet.get("protocol") == "TCP"
-                and not payload_str.isprintable()
-            ):
+            if packet.get("protocol") == "TCP" and not payload_str.isprintable():
                 packet["encrypted_content"] = True
-                packet["payload_size"] = (
-                    len(payload)
-                    if isinstance(payload, (bytes, bytearray))
-                    else len(payload_str)
-                )
+                packet["payload_size"] = len(payload) if isinstance(payload, (bytes, bytearray)) else len(payload_str)
 
             packet["deep_inspection"] = True
 
@@ -197,13 +175,9 @@ class FortiManagerAnalyzer:
         # 패턴 기반 분류
         if method_lower.startswith("get") or "query" in method_lower:
             return "조회"
-        elif method_lower.startswith("set") or method_lower.startswith(
-            "update"
-        ):
+        elif method_lower.startswith("set") or method_lower.startswith("update"):
             return "설정"
-        elif method_lower.startswith("add") or method_lower.startswith(
-            "create"
-        ):
+        elif method_lower.startswith("add") or method_lower.startswith("create"):
             return "생성"
         elif method_lower.startswith("del") or "remove" in method_lower:
             return "삭제"
@@ -227,26 +201,20 @@ class FortiManagerAnalyzer:
                 try:
                     error_json = json.loads(error_data.group(1))
                     packet["error_code"] = error_json.get("code", -1)
-                    packet["error_message"] = error_json.get(
-                        "message", "Unknown error"
-                    )
+                    packet["error_message"] = error_json.get("message", "Unknown error")
                 except json.JSONDecodeError:
                     # JSON 파싱 실패 시 단순 텍스트 추출
                     code_match = re.search(r'"code"\s*:\s*(-?\d+)', payload)
                     if code_match:
                         packet["error_code"] = int(code_match.group(1))
 
-                    msg_match = re.search(
-                        r'"message"\s*:\s*"([^"]+)"', payload
-                    )
+                    msg_match = re.search(r'"message"\s*:\s*"([^"]+)"', payload)
                     if msg_match:
                         packet["error_message"] = msg_match.group(1)
         except Exception as e:
             logger.warning(f"에러 정보 추출 중 예외: {e}")
 
-    def analyze_fortimanager_packets(
-        self, packets: List[Dict[str, Any]], session_id: str = None
-    ) -> Dict[str, Any]:
+    def analyze_fortimanager_packets(self, packets: List[Dict[str, Any]], session_id: str = None) -> Dict[str, Any]:
         """
         FortiManager 패킷 분석 수행
 
@@ -275,11 +243,7 @@ class FortiManagerAnalyzer:
                 }
 
             # 방향별 통계
-            inbound = sum(
-                1
-                for p in fortimanager_packets
-                if p.get("fortimanager_direction") == "inbound"
-            )
+            inbound = sum(1 for p in fortimanager_packets if p.get("fortimanager_direction") == "inbound")
             outbound = total - inbound
 
             # API 호출 메서드 분석
@@ -304,15 +268,11 @@ class FortiManagerAnalyzer:
             security_analysis = self._analyze_security(fortimanager_packets)
 
             # 성능 분석
-            performance_analysis = self._analyze_performance(
-                fortimanager_packets, response_times
-            )
+            performance_analysis = self._analyze_performance(fortimanager_packets, response_times)
 
             # 통계 업데이트
             self.statistics["total_analyzed"] += total
-            self.statistics["api_calls_detected"] += sum(
-                1 for p in fortimanager_packets if p.get("api_call_detected")
-            )
+            self.statistics["api_calls_detected"] += sum(1 for p in fortimanager_packets if p.get("api_call_detected"))
             self.statistics["errors_detected"] += len(errors)
             self.statistics["last_analysis"] = datetime.now().isoformat()
 
@@ -323,12 +283,8 @@ class FortiManagerAnalyzer:
                 "total_packets": total,
                 "inbound_packets": inbound,
                 "outbound_packets": outbound,
-                "api_methods": [
-                    {"name": m, "count": c} for m, c in api_methods.items()
-                ],
-                "api_types": [
-                    {"type": t, "count": c} for t, c in api_types.items()
-                ],
+                "api_methods": [{"name": m, "count": c} for m, c in api_methods.items()],
+                "api_types": [{"type": t, "count": c} for t, c in api_types.items()],
                 "response_times": response_times,
                 "errors": errors,
                 "security_analysis": security_analysis,
@@ -344,9 +300,7 @@ class FortiManagerAnalyzer:
                 "timestamp": time.time(),
             }
 
-    def _analyze_response_times(
-        self, packets: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _analyze_response_times(self, packets: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         요청/응답 시간 분석
 
@@ -369,9 +323,7 @@ class FortiManagerAnalyzer:
                 timestamp = packet.get("timestamp", 0)
                 if isinstance(timestamp, str):
                     try:
-                        timestamp = datetime.fromisoformat(
-                            timestamp.replace("Z", "+00:00")
-                        ).timestamp()
+                        timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00")).timestamp()
                     except Exception:
                         continue
 
@@ -401,13 +353,8 @@ class FortiManagerAnalyzer:
                 # 가장 느린 메서드
                 slowest_method = None
                 if method_times:
-                    method_averages = {
-                        m: sum(times) / len(times)
-                        for m, times in method_times.items()
-                    }
-                    slowest_method = max(
-                        method_averages.items(), key=lambda x: x[1]
-                    )
+                    method_averages = {m: sum(times) / len(times) for m, times in method_times.items()}
+                    slowest_method = max(method_averages.items(), key=lambda x: x[1])
 
                 return {
                     "total_pairs": len(response_times),
@@ -415,9 +362,7 @@ class FortiManagerAnalyzer:
                     "max_response_time": max_response,
                     "min_response_time": min_response,
                     "slowest_method": {
-                        "method": slowest_method[0]
-                        if slowest_method
-                        else None,
+                        "method": slowest_method[0] if slowest_method else None,
                         "avg_time": slowest_method[1] if slowest_method else 0,
                     },
                     "method_performance": [
@@ -439,9 +384,7 @@ class FortiManagerAnalyzer:
             logger.error(f"응답 시간 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_errors(
-        self, packets: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _analyze_errors(self, packets: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         에러 분석
 
@@ -458,9 +401,7 @@ class FortiManagerAnalyzer:
             for packet in packets:
                 if packet.get("has_error"):
                     error_code = packet.get("error_code", -1)
-                    error_message = packet.get(
-                        "error_message", "Unknown error"
-                    )
+                    error_message = packet.get("error_message", "Unknown error")
                     api_method = packet.get("api_method", "unknown")
 
                     error_info = {
@@ -474,10 +415,7 @@ class FortiManagerAnalyzer:
                     error_counts[error_code] += 1
 
             # 에러 요약
-            error_summary = [
-                {"code": code, "count": count}
-                for code, count in error_counts.items()
-            ]
+            error_summary = [{"code": code, "count": count} for code, count in error_counts.items()]
 
             return {
                 "total_errors": len(errors),
@@ -489,9 +427,7 @@ class FortiManagerAnalyzer:
             logger.error(f"에러 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_security(
-        self, packets: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _analyze_security(self, packets: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         보안 분석
 
@@ -505,9 +441,7 @@ class FortiManagerAnalyzer:
             security_issues = []
 
             # 인증 정보 포함 여부
-            credentials_detected = sum(
-                1 for p in packets if p.get("contains_credentials")
-            )
+            credentials_detected = sum(1 for p in packets if p.get("contains_credentials"))
             if credentials_detected > 0:
                 security_issues.append(
                     {
@@ -519,9 +453,7 @@ class FortiManagerAnalyzer:
                 )
 
             # 암호화되지 않은 트래픽
-            unencrypted = sum(
-                1 for p in packets if not p.get("encrypted_content", True)
-            )
+            unencrypted = sum(1 for p in packets if not p.get("encrypted_content", True))
             if unencrypted > len(packets) * 0.1:  # 10% 이상
                 security_issues.append(
                     {
@@ -533,9 +465,7 @@ class FortiManagerAnalyzer:
                 )
 
             # 비정상적인 API 호출 패턴
-            api_methods = [
-                p.get("api_method") for p in packets if p.get("api_method")
-            ]
+            api_methods = [p.get("api_method") for p in packets if p.get("api_method")]
             if "exec" in " ".join(api_methods).lower():
                 security_issues.append(
                     {
@@ -549,9 +479,7 @@ class FortiManagerAnalyzer:
             return {
                 "total_issues": len(security_issues),
                 "issues": security_issues,
-                "encrypted_packets": sum(
-                    1 for p in packets if p.get("encrypted_content")
-                ),
+                "encrypted_packets": sum(1 for p in packets if p.get("encrypted_content")),
                 "credentials_detected": credentials_detected,
                 "risk_level": self._calculate_risk_level(security_issues),
             }
@@ -560,9 +488,7 @@ class FortiManagerAnalyzer:
             logger.error(f"보안 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _analyze_performance(
-        self, packets: List[Dict[str, Any]], response_times: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _analyze_performance(self, packets: List[Dict[str, Any]], response_times: Dict[str, Any]) -> Dict[str, Any]:
         """
         성능 분석
 
@@ -581,9 +507,7 @@ class FortiManagerAnalyzer:
                 if timestamp:
                     if isinstance(timestamp, str):
                         try:
-                            timestamp = datetime.fromisoformat(
-                                timestamp.replace("Z", "+00:00")
-                            ).timestamp()
+                            timestamp = datetime.fromisoformat(timestamp.replace("Z", "+00:00")).timestamp()
                         except Exception:
                             continue
                     timestamps.append(timestamp)
@@ -609,27 +533,21 @@ class FortiManagerAnalyzer:
                     )
 
             # 성능 등급 계산
-            performance_grade = self._calculate_performance_grade(
-                response_times, requests_per_second
-            )
+            performance_grade = self._calculate_performance_grade(response_times, requests_per_second)
 
             return {
                 "requests_per_second": requests_per_second,
                 "large_payloads_count": len(large_payloads),
                 "large_payloads": large_payloads[:5],  # 최대 5개
                 "performance_grade": performance_grade,
-                "recommendations": self._generate_performance_recommendations(
-                    response_times, requests_per_second
-                ),
+                "recommendations": self._generate_performance_recommendations(response_times, requests_per_second),
             }
 
         except Exception as e:
             logger.error(f"성능 분석 오류: {e}")
             return {"error": str(e)}
 
-    def _calculate_risk_level(
-        self, security_issues: List[Dict[str, Any]]
-    ) -> str:
+    def _calculate_risk_level(self, security_issues: List[Dict[str, Any]]) -> str:
         """
         위험 수준 계산
 
@@ -643,10 +561,7 @@ class FortiManagerAnalyzer:
             return "low"
 
         severity_scores = {"low": 1, "medium": 3, "high": 5, "critical": 10}
-        total_score = sum(
-            severity_scores.get(issue.get("severity", "low"), 1)
-            for issue in security_issues
-        )
+        total_score = sum(severity_scores.get(issue.get("severity", "low"), 1) for issue in security_issues)
 
         if total_score >= 10:
             return "critical"
@@ -657,9 +572,7 @@ class FortiManagerAnalyzer:
         else:
             return "low"
 
-    def _calculate_performance_grade(
-        self, response_times: Dict[str, Any], requests_per_second: float
-    ) -> str:
+    def _calculate_performance_grade(self, response_times: Dict[str, Any], requests_per_second: float) -> str:
         """
         성능 등급 계산
 
@@ -726,21 +639,15 @@ class FortiManagerAnalyzer:
             avg_response = response_times.get("avg_response_time", 0)
 
             if avg_response > 2000:
-                recommendations.append(
-                    "평균 응답 시간이 2초를 초과합니다. FortiManager 하드웨어 성능 점검 권장"
-                )
+                recommendations.append("평균 응답 시간이 2초를 초과합니다. FortiManager 하드웨어 성능 점검 권장")
 
             if requests_per_second > 50:
-                recommendations.append(
-                    "높은 API 호출 빈도가 감지되었습니다. 배치 처리 또는 호출 최적화 검토"
-                )
+                recommendations.append("높은 API 호출 빈도가 감지되었습니다. 배치 처리 또는 호출 최적화 검토")
 
             slowest_method = response_times.get("slowest_method", {})
             if slowest_method.get("avg_time", 0) > 3000:
                 method_name = slowest_method.get("method", "unknown")
-                recommendations.append(
-                    f'"{method_name}" API 호출이 느립니다. 쿼리 최적화 검토'
-                )
+                recommendations.append(f'"{method_name}" API 호출이 느립니다. 쿼리 최적화 검토')
 
             if not recommendations:
                 recommendations.append("전반적인 성능이 양호합니다")

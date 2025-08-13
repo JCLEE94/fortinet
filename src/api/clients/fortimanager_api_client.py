@@ -97,9 +97,7 @@ class FortiManagerAPIClient(
         """
         try:
             # Build JSON-RPC request
-            json_rpc_request = self.build_json_rpc_request(
-                method, url, data or {}
-            )
+            json_rpc_request = self.build_json_rpc_request(method, url, data or {})
 
             # Add authentication if available
             if self.api_token:
@@ -118,15 +116,9 @@ class FortiManagerAPIClient(
             if response.status_code == 200:
                 result = response.json()
                 # Return the result part of the JSON-RPC response
-                return (
-                    result.get("result", [{}])[0]
-                    if result.get("result")
-                    else result
-                )
+                return result.get("result", [{}])[0] if result.get("result") else result
             else:
-                self.logger.error(
-                    f"HTTP error {response.status_code}: {response.text}"
-                )
+                self.logger.error(f"HTTP error {response.status_code}: {response.text}")
                 return None
 
         except Exception as e:
@@ -159,9 +151,7 @@ class FortiManagerAPIClient(
     def get_adom_list(self) -> List[Dict[str, Any]]:
         """Get list of ADOMs (Administrative Domains)"""
         try:
-            success, data = self._make_api_request(
-                method="get", url="/dvmdb/adom", timeout=10
-            )
+            success, data = self._make_api_request(method="get", url="/dvmdb/adom", timeout=10)
             if success and isinstance(data, list):
                 return data
             return []

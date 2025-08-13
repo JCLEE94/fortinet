@@ -83,9 +83,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
             return True
 
         # DNS over HTTPS (DoH) 포트
-        if (
-            packet.dst_port == 443 or packet.src_port == 443
-        ) and packet.protocol == "TCP":
+        if (packet.dst_port == 443 or packet.src_port == 443) and packet.protocol == "TCP":
             return True
 
         # 페이로드 시그니처 확인
@@ -137,12 +135,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
             transaction_id, flags, qdcount, ancount, nscount, arcount = header
 
             # 기본 검증
-            if (
-                qdcount > 100
-                or ancount > 100
-                or nscount > 100
-                or arcount > 100
-            ):
+            if qdcount > 100 or ancount > 100 or nscount > 100 or arcount > 100:
                 return False
 
             # QR 비트와 opcode 확인
@@ -196,17 +189,13 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 "additional": arcount,
                 "type": "response" if qr else "query",
                 "opcode_name": self._get_opcode_name(opcode),
-                "rcode_name": self.response_codes.get(
-                    rcode, f"Unknown({rcode})"
-                ),
+                "rcode_name": self.response_codes.get(rcode, f"Unknown({rcode})"),
             }
 
             # 질문 섹션 파싱
             offset = 12
             if qdcount > 0 and qdcount <= 10:  # 합리적인 수의 질문만 파싱
-                questions, offset = self._parse_questions(
-                    payload, offset, qdcount
-                )
+                questions, offset = self._parse_questions(payload, offset, qdcount)
                 dns_data["question_details"] = questions
 
             # 응답 섹션 파싱 (간단히)
@@ -226,9 +215,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
         opcodes = {0: "QUERY", 1: "IQUERY", 2: "STATUS"}
         return opcodes.get(opcode, f"Unknown({opcode})")
 
-    def _parse_questions(
-        self, payload: bytes, offset: int, count: int
-    ) -> Tuple[List[Dict], int]:
+    def _parse_questions(self, payload: bytes, offset: int, count: int) -> Tuple[List[Dict], int]:
         """DNS 질문 섹션 파싱"""
         questions = []
 
@@ -241,19 +228,13 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     break
 
                 # 쿼리 타입과 클래스
-                qtype, qclass = struct.unpack(
-                    "!HH", payload[new_offset : new_offset + 4]
-                )
+                qtype, qclass = struct.unpack("!HH", payload[new_offset : new_offset + 4])
 
                 questions.append(
                     {
                         "domain": domain,
-                        "type": self.record_types.get(
-                            qtype, f"Unknown({qtype})"
-                        ),
-                        "class": self.dns_classes.get(
-                            qclass, f"Unknown({qclass})"
-                        ),
+                        "type": self.record_types.get(qtype, f"Unknown({qtype})"),
+                        "class": self.dns_classes.get(qclass, f"Unknown({qclass})"),
                         "type_code": qtype,
                         "class_code": qclass,
                     }
@@ -267,9 +248,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
 
         return questions, offset
 
-    def _parse_answers(
-        self, payload: bytes, offset: int, count: int
-    ) -> List[Dict]:
+    def _parse_answers(self, payload: bytes, offset: int, count: int) -> List[Dict]:
         """DNS 응답 섹션 파싱 (간단히)"""
         answers = []
 
@@ -282,18 +261,12 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     break
 
                 # 리소스 레코드 헤더
-                rr_type, rr_class, ttl, rdlength = struct.unpack(
-                    "!HHIH", payload[new_offset : new_offset + 10]
-                )
+                rr_type, rr_class, ttl, rdlength = struct.unpack("!HHIH", payload[new_offset : new_offset + 10])
 
                 answer = {
                     "name": name,
-                    "type": self.record_types.get(
-                        rr_type, f"Unknown({rr_type})"
-                    ),
-                    "class": self.dns_classes.get(
-                        rr_class, f"Unknown({rr_class})"
-                    ),
+                    "type": self.record_types.get(rr_type, f"Unknown({rr_type})"),
+                    "class": self.dns_classes.get(rr_class, f"Unknown({rr_class})"),
                     "ttl": ttl,
                     "rdlength": rdlength,
                 }
@@ -302,9 +275,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 data_offset = new_offset + 10
                 if data_offset + rdlength <= len(payload):
                     rdata = payload[data_offset : data_offset + rdlength]
-                    answer["rdata"] = self._parse_rdata(
-                        rr_type, rdata, payload
-                    )
+                    answer["rdata"] = self._parse_rdata(rr_type, rdata, payload)
 
                 answers.append(answer)
                 offset = data_offset + rdlength
@@ -315,9 +286,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
 
         return answers
 
-    def _parse_domain_name(
-        self, payload: bytes, offset: int
-    ) -> Tuple[str, int]:
+    def _parse_domain_name(self, payload: bytes, offset: int) -> Tuple[str, int]:
         """도메인 이름 파싱"""
         labels = []
         original_offset = offset
@@ -339,18 +308,14 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 offset += 1
                 if offset + length > len(payload):
                     break
-                label = payload[offset : offset + length].decode(
-                    "utf-8", errors="ignore"
-                )
+                label = payload[offset : offset + length].decode("utf-8", errors="ignore")
                 labels.append(label)
                 offset += length
 
         domain = ".".join(labels) if labels else ""
         return domain, original_offset if jumped else offset
 
-    def _parse_rdata(
-        self, rr_type: int, rdata: bytes, full_payload: bytes
-    ) -> str:
+    def _parse_rdata(self, rr_type: int, rdata: bytes, full_payload: bytes) -> str:
         """리소스 데이터 파싱"""
         try:
             if rr_type == 1:  # A 레코드
@@ -358,10 +323,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     return ".".join(str(b) for b in rdata)
             elif rr_type == 28:  # AAAA 레코드
                 if len(rdata) == 16:
-                    return ":".join(
-                        f"{rdata[i]:02x}{rdata[i+1]:02x}"
-                        for i in range(0, 16, 2)
-                    )
+                    return ":".join(f"{rdata[i]:02x}{rdata[i+1]:02x}" for i in range(0, 16, 2))
             elif rr_type in [2, 5, 12]:  # NS, CNAME, PTR
                 domain, _ = self._parse_domain_name(full_payload, 0)  # 간소화
                 return domain
@@ -371,16 +333,12 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     return f"Priority: {priority}"
 
             # 기본적으로 헥스 덤프
-            return (
-                rdata.hex() if len(rdata) <= 32 else f"{rdata[:32].hex()}..."
-            )
+            return rdata.hex() if len(rdata) <= 32 else f"{rdata[:32].hex()}..."
 
         except Exception:
             return "Parse Error"
 
-    def _analyze_dns_security(
-        self, dns_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _analyze_dns_security(self, dns_data: Dict[str, Any]) -> Dict[str, Any]:
         """DNS 보안 분석"""
         security_flags = {}
 
@@ -397,9 +355,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
         rcode = flags.get("rcode", 0)
         if rcode != 0:
             security_flags["error_response"] = True
-            security_flags["error_type"] = self.response_codes.get(
-                rcode, "Unknown"
-            )
+            security_flags["error_type"] = self.response_codes.get(rcode, "Unknown")
 
         # 질문 분석
         questions = dns_data.get("question_details", [])
@@ -526,15 +482,10 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 return True
 
             # Base64 패턴 (터널링에서 흔히 사용)
-            if (
-                len(label) > 20
-                and label.replace("-", "").replace("_", "").isalnum()
-            ):
+            if len(label) > 20 and label.replace("-", "").replace("_", "").isalnum():
                 # Base64 문자 비율 확인
                 b64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-                b64_ratio = sum(1 for c in label if c in b64_chars) / len(
-                    label
-                )
+                b64_ratio = sum(1 for c in label if c in b64_chars) / len(label)
                 if b64_ratio > 0.8:
                     return True
 
@@ -558,9 +509,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
             "has_error": flags.get("rcode", 0) != 0,
         }
 
-    def _calculate_dns_confidence(
-        self, packet: PacketInfo, dns_data: Dict[str, Any]
-    ) -> float:
+    def _calculate_dns_confidence(self, packet: PacketInfo, dns_data: Dict[str, Any]) -> float:
         """DNS 신뢰도 계산"""
         confidence = 0.0
 
@@ -571,10 +520,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
             confidence = 0.5
 
         # 구조적 유효성
-        if (
-            dns_data.get("questions", 0) > 0
-            and dns_data.get("questions", 0) <= 10
-        ):
+        if dns_data.get("questions", 0) > 0 and dns_data.get("questions", 0) <= 10:
             confidence += 0.1
 
         # 유효한 도메인 존재

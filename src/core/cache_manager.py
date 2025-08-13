@@ -103,9 +103,7 @@ class MemoryCacheBackend(BaseCacheBackend):
         """
         self._cache: Dict[str, CacheItem] = {}
         self._max_size = max_size or CACHE_SETTINGS["MAX_SIZE"]
-        self._cleanup_interval = (
-            cleanup_interval or CACHE_SETTINGS["CLEANUP_INTERVAL"]
-        )
+        self._cleanup_interval = cleanup_interval or CACHE_SETTINGS["CLEANUP_INTERVAL"]
         self._last_cleanup = time.time()
 
         # Statistics
@@ -148,9 +146,7 @@ class MemoryCacheBackend(BaseCacheBackend):
         if ttl is not None:
             expires_at = datetime.now() + timedelta(seconds=ttl)
 
-        self._cache[key] = CacheItem(
-            key=key, value=value, expires_at=expires_at
-        )
+        self._cache[key] = CacheItem(key=key, value=value, expires_at=expires_at)
 
         self._stats["sets"] += 1
         self._stats["size"] = len(self._cache)
@@ -187,9 +183,7 @@ class MemoryCacheBackend(BaseCacheBackend):
         """Get all keys matching pattern."""
         import fnmatch
 
-        return [
-            key for key in self._cache.keys() if fnmatch.fnmatch(key, pattern)
-        ]
+        return [key for key in self._cache.keys() if fnmatch.fnmatch(key, pattern)]
 
     def stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
@@ -222,9 +216,7 @@ class MemoryCacheBackend(BaseCacheBackend):
         if not self._cache:
             return
 
-        lru_key = min(
-            self._cache.keys(), key=lambda k: self._cache[k].last_accessed
-        )
+        lru_key = min(self._cache.keys(), key=lambda k: self._cache[k].last_accessed)
         self.delete(lru_key)
         self._stats["evictions"] += 1
 
@@ -289,9 +281,7 @@ class RedisCacheBackend(BaseCacheBackend):
             self._redis.ping()
             self._connected = True
         except ImportError:
-            print(
-                "Redis library not installed. Please install: pip install redis"
-            )
+            print("Redis library not installed. Please install: pip install redis")
             self._connected = False
         except Exception as e:
             print(f"Redis connection failed: {e}")
@@ -321,9 +311,7 @@ class RedisCacheBackend(BaseCacheBackend):
                 self._stats["misses"] += 1
                 return None
 
-            value = json.loads(
-                data.decode() if isinstance(data, bytes) else data
-            )
+            value = json.loads(data.decode() if isinstance(data, bytes) else data)
             self._stats["hits"] += 1
             return value
 
@@ -436,14 +424,8 @@ class RedisCacheBackend(BaseCacheBackend):
                 info = self._redis.info()
                 stats.update(
                     {
-                        "redis_memory_used": info.get(
-                            "used_memory_human", "Unknown"
-                        ),
-                        "redis_keys": (
-                            info.get("db0", {}).get("keys", 0)
-                            if "db0" in info
-                            else 0
-                        ),
+                        "redis_memory_used": info.get("used_memory_human", "Unknown"),
+                        "redis_keys": (info.get("db0", {}).get("keys", 0) if "db0" in info else 0),
                     }
                 )
             except Exception:
@@ -487,9 +469,7 @@ class CacheManager:
                 config = redis_config or {}
                 self._backends[backend] = RedisCacheBackend(**config)
 
-    def get(
-        self, key: str, backend: CacheBackend = CacheBackend.AUTO
-    ) -> Optional[Any]:
+    def get(self, key: str, backend: CacheBackend = CacheBackend.AUTO) -> Optional[Any]:
         """
         Get value from cache.
 
@@ -547,9 +527,7 @@ class CacheManager:
 
         return success
 
-    def delete(
-        self, key: str, backends: Optional[List[CacheBackend]] = None
-    ) -> bool:
+    def delete(self, key: str, backends: Optional[List[CacheBackend]] = None) -> bool:
         """
         Delete value from cache.
 
@@ -572,9 +550,7 @@ class CacheManager:
 
         return success
 
-    def exists(
-        self, key: str, backend: CacheBackend = CacheBackend.AUTO
-    ) -> bool:
+    def exists(self, key: str, backend: CacheBackend = CacheBackend.AUTO) -> bool:
         """
         Check if key exists in cache.
 
@@ -619,9 +595,7 @@ class CacheManager:
 
         return success
 
-    def keys(
-        self, pattern: str = "*", backend: CacheBackend = CacheBackend.AUTO
-    ) -> List[str]:
+    def keys(self, pattern: str = "*", backend: CacheBackend = CacheBackend.AUTO) -> List[str]:
         """
         Get keys matching pattern.
 
@@ -710,9 +684,7 @@ class CacheManager:
 
         return decorator
 
-    def _populate_lower_caches(
-        self, key: str, value: Any, source_backend: CacheBackend
-    ):
+    def _populate_lower_caches(self, key: str, value: Any, source_backend: CacheBackend):
         """
         Populate lower-priority caches with value from higher-priority cache.
 
@@ -722,10 +694,7 @@ class CacheManager:
             source_backend: Backend where value was found
         """
         # Only populate memory cache from Redis
-        if (
-            source_backend == CacheBackend.REDIS
-            and CacheBackend.MEMORY in self._backends
-        ):
+        if source_backend == CacheBackend.REDIS and CacheBackend.MEMORY in self._backends:
             self._backends[CacheBackend.MEMORY].set(key, value)
 
 

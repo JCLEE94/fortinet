@@ -51,9 +51,7 @@ def start_packet_capture():
         if not fm_client:
             return jsonify({"error": "FortiManager client not available"}), 503
 
-        result = fm_client.start_packet_capture(
-            device_id, interface, filter_expr, duration
-        )
+        result = fm_client.start_packet_capture(device_id, interface, filter_expr, duration)
 
         if result:
             return jsonify(
@@ -130,9 +128,7 @@ def get_capture_results(capture_id):
     try:
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            capture_results = dummy_generator.generate_capture_results(
-                capture_id
-            )
+            capture_results = dummy_generator.generate_capture_results(capture_id)
             return jsonify(
                 {
                     "capture_id": capture_id,
@@ -181,9 +177,7 @@ async def analyze_trends():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            trends_data = dummy_generator.generate_trends_analysis(
-                devices, time_range, metrics
-            )
+            trends_data = dummy_generator.generate_trends_analysis(devices, time_range, metrics)
             return jsonify(
                 {
                     "trends": trends_data,
@@ -237,9 +231,7 @@ async def detect_anomalies():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            anomalies = dummy_generator.generate_anomaly_detection(
-                devices, detection_types
-            )
+            anomalies = dummy_generator.generate_anomaly_detection(devices, detection_types)
             return jsonify(
                 {
                     "anomalies": anomalies,
@@ -288,9 +280,7 @@ async def analyze_capacity():
 
         if not data:
             return (
-                jsonify(
-                    {"error": "Capacity analysis parameters are required"}
-                ),
+                jsonify({"error": "Capacity analysis parameters are required"}),
                 400,
             )
 
@@ -300,9 +290,7 @@ async def analyze_capacity():
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            capacity_data = dummy_generator.generate_capacity_analysis(
-                devices, forecast_period
-            )
+            capacity_data = dummy_generator.generate_capacity_analysis(devices, forecast_period)
             return jsonify(
                 {
                     "capacity_analysis": capacity_data,
@@ -356,16 +344,12 @@ async def detect_threats():
             )
 
         devices = data.get("devices", [])
-        threat_types = data.get(
-            "threat_types", ["malware", "intrusion", "botnet"]
-        )
+        threat_types = data.get("threat_types", ["malware", "intrusion", "botnet"])
         time_window = data.get("time_window", "1h")
 
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            threats = dummy_generator.generate_threat_detection(
-                devices, threat_types
-            )
+            threats = dummy_generator.generate_threat_detection(devices, threat_types)
             return jsonify(
                 {
                     "threats": threats,

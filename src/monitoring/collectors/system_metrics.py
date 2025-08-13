@@ -47,9 +47,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
         # 임계값 설정
         for name, threshold_config in config.system_metrics.thresholds.items():
-            self.set_threshold(
-                name, threshold_config.warning, threshold_config.critical
-            )
+            self.set_threshold(name, threshold_config.warning, threshold_config.critical)
 
     def _collect_data(self) -> Optional[Dict]:
         """시스템 메트릭 데이터 수집"""
@@ -90,9 +88,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     {
                         "type": "cpu_usage",
                         "value": cpu_usage,
-                        "severity": self.check_threshold(
-                            "cpu_usage", cpu_usage
-                        ),
+                        "severity": self.check_threshold("cpu_usage", cpu_usage),
                     }
                 )
 
@@ -101,9 +97,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     {
                         "type": "memory_usage",
                         "value": memory_usage,
-                        "severity": self.check_threshold(
-                            "memory_usage", memory_usage
-                        ),
+                        "severity": self.check_threshold("memory_usage", memory_usage),
                     }
                 )
 
@@ -112,9 +106,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     {
                         "type": "disk_usage",
                         "value": disk_usage,
-                        "severity": self.check_threshold(
-                            "disk_usage", disk_usage
-                        ),
+                        "severity": self.check_threshold("disk_usage", disk_usage),
                     }
                 )
 
@@ -123,9 +115,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     {
                         "type": "network_error_rate",
                         "value": network_error_rate,
-                        "severity": self.check_threshold(
-                            "network_error_rate", network_error_rate
-                        ),
+                        "severity": self.check_threshold("network_error_rate", network_error_rate),
                     }
                 )
 
@@ -133,9 +123,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             # 헬스 상태 업데이트
             if violations:
-                critical_violations = [
-                    v for v in violations if v["severity"] == "critical"
-                ]
+                critical_violations = [v for v in violations if v["severity"] == "critical"]
                 if critical_violations:
                     self._update_health(
                         "critical",
@@ -165,9 +153,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                 "architecture": os.uname().machine,
                 "boot_time": boot_time.isoformat(),
                 "uptime_seconds": int(uptime.total_seconds()),
-                "load_average": (
-                    os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]
-                ),
+                "load_average": (os.getloadavg() if hasattr(os, "getloadavg") else [0, 0, 0]),
             }
         except Exception as e:
             logger.error(f"시스템 정보 수집 실패: {e}")
@@ -192,9 +178,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                     "iowait": getattr(cpu_times, "iowait", 0),
                 },
                 "per_cpu": psutil.cpu_percent(percpu=True, interval=None),
-                "frequency": psutil.cpu_freq()._asdict()
-                if psutil.cpu_freq()
-                else {},
+                "frequency": psutil.cpu_freq()._asdict() if psutil.cpu_freq() else {},
             }
         except Exception as e:
             logger.error(f"CPU 메트릭 수집 실패: {e}")
@@ -257,9 +241,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             result = {
                 "partitions": disk_data,
-                "usage_percent": (
-                    total_usage / partition_count if partition_count > 0 else 0
-                ),
+                "usage_percent": (total_usage / partition_count if partition_count > 0 else 0),
             }
 
             if disk_io:
@@ -286,9 +268,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
 
             # 인터페이스별 통계
             interfaces = {}
-            for interface, stats in psutil.net_io_counters(
-                pernic=True
-            ).items():
+            for interface, stats in psutil.net_io_counters(pernic=True).items():
                 interfaces[interface] = {
                     "bytes_sent": stats.bytes_sent,
                     "bytes_recv": stats.bytes_recv,
@@ -318,11 +298,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             # 네트워크 오류율 계산
             total_packets = net_io.packets_sent + net_io.packets_recv
             total_errors = net_io.errin + net_io.errout
-            result["error_rate"] = (
-                (total_errors / total_packets * 100)
-                if total_packets > 0
-                else 0
-            )
+            result["error_rate"] = (total_errors / total_packets * 100) if total_packets > 0 else 0
 
             return result
 
@@ -337,9 +313,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
             total_processes = 0
             running_processes = 0
 
-            for proc in psutil.process_iter(
-                ["pid", "name", "cpu_percent", "memory_percent", "status"]
-            ):
+            for proc in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent", "status"]):
                 try:
                     pinfo = proc.info
                     total_processes += 1
@@ -390,21 +364,11 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
                             containers.append(
                                 {
                                     "name": container_stats.get("Name", ""),
-                                    "cpu_percent": container_stats.get(
-                                        "CPUPerc", "0%"
-                                    ).rstrip("%"),
-                                    "memory_usage": container_stats.get(
-                                        "MemUsage", ""
-                                    ),
-                                    "memory_percent": container_stats.get(
-                                        "MemPerc", "0%"
-                                    ).rstrip("%"),
-                                    "network_io": container_stats.get(
-                                        "NetIO", ""
-                                    ),
-                                    "block_io": container_stats.get(
-                                        "BlockIO", ""
-                                    ),
+                                    "cpu_percent": container_stats.get("CPUPerc", "0%").rstrip("%"),
+                                    "memory_usage": container_stats.get("MemUsage", ""),
+                                    "memory_percent": container_stats.get("MemPerc", "0%").rstrip("%"),
+                                    "network_io": container_stats.get("NetIO", ""),
+                                    "block_io": container_stats.get("BlockIO", ""),
                                 }
                             )
                         except json.JSONDecodeError:
@@ -428,9 +392,7 @@ class SystemMetricsCollector(MonitoringBase, ThresholdMixin, HealthCheckMixin):
         try:
             # FortiGate Nextrade 서비스 상태 확인
             services = {
-                "fortigate-nextrade": self._check_service_status(
-                    "fortigate-nextrade"
-                ),
+                "fortigate-nextrade": self._check_service_status("fortigate-nextrade"),
                 "nginx": self._check_service_status("nginx"),
                 "redis": self._check_service_status("redis"),
                 "postgresql": self._check_service_status("postgresql"),

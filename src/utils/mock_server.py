@@ -310,25 +310,10 @@ def get_topology():
                 "nodes": mock_data["topology"]["nodes"],
                 "links": mock_data["topology"]["links"],
                 "summary": {
-                    "total_devices": len(
-                        [
-                            n
-                            for n in mock_data["topology"]["nodes"]
-                            if n["type"] == "firewall"
-                        ]
-                    ),
-                    "online_devices": len(
-                        [
-                            n
-                            for n in mock_data["topology"]["nodes"]
-                            if n["status"] == "online"
-                        ]
-                    ),
+                    "total_devices": len([n for n in mock_data["topology"]["nodes"] if n["type"] == "firewall"]),
+                    "online_devices": len([n for n in mock_data["topology"]["nodes"] if n["status"] == "online"]),
                     "total_links": len(mock_data["topology"]["links"]),
-                    "avg_utilization": sum(
-                        link["utilization"]
-                        for link in mock_data["topology"]["links"]
-                    )
+                    "avg_utilization": sum(link["utilization"] for link in mock_data["topology"]["links"])
                     / len(mock_data["topology"]["links"]),
                 },
             },
@@ -408,39 +393,19 @@ def policy_analysis():
             "status": "success",
             "data": {
                 "total_policies": len(mock_data["policies"]),
-                "active_policies": len(
-                    [
-                        p
-                        for p in mock_data["policies"]
-                        if p["status"] == "enable"
-                    ]
-                ),
+                "active_policies": len([p for p in mock_data["policies"] if p["status"] == "enable"]),
                 "unused_policies": [p["policyid"] for p in unused_policies],
                 "duplicate_policies": duplicate_policies,
                 "policy_hits": {
-                    "high": len(
-                        [
-                            p
-                            for p in mock_data["policies"]
-                            if p["hits"] > TRAFFIC_THRESHOLDS["HIGH"]
-                        ]
-                    ),
+                    "high": len([p for p in mock_data["policies"] if p["hits"] > TRAFFIC_THRESHOLDS["HIGH"]]),
                     "medium": len(
                         [
                             p
                             for p in mock_data["policies"]
-                            if TRAFFIC_THRESHOLDS["MEDIUM"]
-                            < p["hits"]
-                            <= TRAFFIC_THRESHOLDS["HIGH"]
+                            if TRAFFIC_THRESHOLDS["MEDIUM"] < p["hits"] <= TRAFFIC_THRESHOLDS["HIGH"]
                         ]
                     ),
-                    "low": len(
-                        [
-                            p
-                            for p in mock_data["policies"]
-                            if 0 < p["hits"] <= TRAFFIC_THRESHOLDS["MEDIUM"]
-                        ]
-                    ),
+                    "low": len([p for p in mock_data["policies"] if 0 < p["hits"] <= TRAFFIC_THRESHOLDS["MEDIUM"]]),
                     "zero": len(unused_policies),
                 },
             },

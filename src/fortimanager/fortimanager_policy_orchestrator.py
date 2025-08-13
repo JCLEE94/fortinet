@@ -178,9 +178,7 @@ class PolicyOrchestrationEngine:
         template = self.templates[template_name]
 
         # Validate parameters
-        validation_result = self._validate_template_parameters(
-            template, parameters
-        )
+        validation_result = self._validate_template_parameters(template, parameters)
         if not validation_result["valid"]:
             return {"success": False, "error": validation_result["error"]}
 
@@ -232,9 +230,7 @@ class PolicyOrchestrationEngine:
         self.logger.info(f"Created custom template: {name}")
         return True
 
-    def analyze_policy_conflicts(
-        self, device: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def analyze_policy_conflicts(self, device: str, adom: str = "root") -> Dict[str, Any]:
         """Analyze policy conflicts and overlaps"""
 
         policies = self.api_client.get_firewall_policies("default", adom)
@@ -273,9 +269,7 @@ class PolicyOrchestrationEngine:
             ),
         }
 
-    def optimize_policy_order(
-        self, device: str, adom: str = "root"
-    ) -> List[Dict]:
+    def optimize_policy_order(self, device: str, adom: str = "root") -> List[Dict]:
         """Optimize policy order for performance"""
 
         policies = self.api_client.get_firewall_policies("default", adom)
@@ -289,11 +283,8 @@ class PolicyOrchestrationEngine:
         optimized_policies = sorted(
             policies,
             key=lambda p: (
-                -policy_stats.get(p["policyid"], {}).get(
-                    "hit_count", 0
-                ),  # Most hit first
-                -len(p.get("srcaddr", []))
-                * len(p.get("dstaddr", [])),  # Specific first
+                -policy_stats.get(p["policyid"], {}).get("hit_count", 0),  # Most hit first
+                -len(p.get("srcaddr", [])) * len(p.get("dstaddr", [])),  # Specific first
                 p.get("action") == "deny",  # Deny before allow
                 p.get("policyid", 0),  # Maintain relative order
             ),
@@ -302,31 +293,21 @@ class PolicyOrchestrationEngine:
         # Generate reorder plan
         reorder_plan = []
         for new_pos, policy in enumerate(optimized_policies):
-            old_pos = next(
-                i
-                for i, p in enumerate(policies)
-                if p["policyid"] == policy["policyid"]
-            )
+            old_pos = next(i for i, p in enumerate(policies) if p["policyid"] == policy["policyid"])
             if old_pos != new_pos:
                 reorder_plan.append(
                     {
                         "policy_id": policy["policyid"],
-                        "policy_name": policy.get(
-                            "name", f"Policy-{policy['policyid']}"
-                        ),
+                        "policy_name": policy.get("name", f"Policy-{policy['policyid']}"),
                         "old_position": old_pos,
                         "new_position": new_pos,
-                        "reason": self._get_reorder_reason(
-                            policy, policy_stats
-                        ),
+                        "reason": self._get_reorder_reason(policy, policy_stats),
                     }
                 )
 
         return reorder_plan
 
-    def bulk_policy_update(
-        self, updates: List[Dict], adom: str = "root"
-    ) -> Dict[str, Any]:
+    def bulk_policy_update(self, updates: List[Dict], adom: str = "root") -> Dict[str, Any]:
         """Perform bulk policy updates with validation"""
 
         results = {
@@ -369,9 +350,7 @@ class PolicyOrchestrationEngine:
 
         return results
 
-    def generate_policy_recommendations(
-        self, device: str, adom: str = "root"
-    ) -> List[Dict]:
+    def generate_policy_recommendations(self, device: str, adom: str = "root") -> List[Dict]:
         """Generate intelligent policy recommendations"""
 
         # Get current policies and traffic logs
@@ -389,13 +368,9 @@ class PolicyOrchestrationEngine:
                 recommendations.append(
                     {
                         "type": "new_policy",
-                        "priority": "high"
-                        if pattern["frequency"] > 50
-                        else "medium",
+                        "priority": "high" if pattern["frequency"] > 50 else "medium",
                         "description": f"Frequent denied traffic from {pattern['source']} to {pattern['destination']}",
-                        "suggested_policy": self._generate_policy_suggestion(
-                            pattern
-                        ),
+                        "suggested_policy": self._generate_policy_suggestion(pattern),
                     }
                 )
 
@@ -423,9 +398,7 @@ class PolicyOrchestrationEngine:
                         "priority": "high",
                         "policy_id": policy["policyid"],
                         "description": "Policy allows any-to-any traffic",
-                        "suggestions": self._get_tightening_suggestions(
-                            policy, traffic_patterns
-                        ),
+                        "suggestions": self._get_tightening_suggestions(policy, traffic_patterns),
                     }
                 )
 
@@ -442,9 +415,7 @@ class PolicyOrchestrationEngine:
     ) -> str:
         """Track policy changes for audit and rollback"""
 
-        change_id = hashlib.sha256(
-            f"{device}{policy_id}{datetime.now().isoformat()}".encode()
-        ).hexdigest()[:16]
+        change_id = hashlib.sha256(f"{device}{policy_id}{datetime.now().isoformat()}".encode()).hexdigest()[:16]
 
         change = PolicyChange(
             change_id=change_id,
@@ -465,14 +436,10 @@ class PolicyOrchestrationEngine:
 
         return change_id
 
-    def rollback_policy_change(
-        self, change_id: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def rollback_policy_change(self, change_id: str, adom: str = "root") -> Dict[str, Any]:
         """Rollback a specific policy change"""
 
-        change = next(
-            (c for c in self.change_history if c.change_id == change_id), None
-        )
+        change = next((c for c in self.change_history if c.change_id == change_id), None)
         if not change:
             return {"success": False, "error": "Change not found"}
 
@@ -503,16 +470,11 @@ class PolicyOrchestrationEngine:
             return {"success": False, "error": "Cannot rollback this change"}
 
     # Helper methods
-    def _validate_template_parameters(
-        self, template: PolicyTemplate, parameters: Dict
-    ) -> Dict[str, Any]:
+    def _validate_template_parameters(self, template: PolicyTemplate, parameters: Dict) -> Dict[str, Any]:
         """Validate template parameters"""
 
         for param_name, param_def in template.parameters.items():
-            if (
-                param_def.get("required", False)
-                and param_name not in parameters
-            ):
+            if param_def.get("required", False) and param_name not in parameters:
                 return {
                     "valid": False,
                     "error": f"Required parameter '{param_name}' missing",
@@ -527,9 +489,7 @@ class PolicyOrchestrationEngine:
                         "valid": False,
                         "error": f"Parameter '{param_name}' must be a list",
                     }
-                elif param_type == "bool" and not isinstance(
-                    param_value, bool
-                ):
+                elif param_type == "bool" and not isinstance(param_value, bool):
                     return {
                         "valid": False,
                         "error": f"Parameter '{param_name}' must be a boolean",
@@ -542,9 +502,7 @@ class PolicyOrchestrationEngine:
 
         return {"valid": True}
 
-    def _generate_policies_from_template(
-        self, template: PolicyTemplate, parameters: Dict
-    ) -> List[Dict]:
+    def _generate_policies_from_template(self, template: PolicyTemplate, parameters: Dict) -> List[Dict]:
         """Generate policies from template with parameter substitution"""
 
         policies = []
@@ -588,9 +546,7 @@ class PolicyOrchestrationEngine:
 
         return policies
 
-    async def _apply_policies_to_device(
-        self, device: str, policies: List[Dict], adom: str
-    ) -> Dict[str, Any]:
+    async def _apply_policies_to_device(self, device: str, policies: List[Dict], adom: str) -> Dict[str, Any]:
         """Apply policies to a specific device"""
 
         results = []
@@ -604,9 +560,7 @@ class PolicyOrchestrationEngine:
                     policy,
                     adom,
                 )
-                results.append(
-                    {"policy": policy.get("name", "unnamed"), "success": True}
-                )
+                results.append({"policy": policy.get("name", "unnamed"), "success": True})
             except Exception as e:
                 results.append(
                     {
@@ -621,22 +575,14 @@ class PolicyOrchestrationEngine:
             "results": results,
         }
 
-    def _check_policy_conflict(
-        self, policy1: Dict, policy2: Dict
-    ) -> Optional[Dict]:
+    def _check_policy_conflict(self, policy1: Dict, policy2: Dict) -> Optional[Dict]:
         """Check if two policies conflict"""
 
         # Check if policies have opposite actions for overlapping traffic
         if policy1.get("action") != policy2.get("action"):
-            src_overlap = self._check_address_overlap(
-                policy1.get("srcaddr", []), policy2.get("srcaddr", [])
-            )
-            dst_overlap = self._check_address_overlap(
-                policy1.get("dstaddr", []), policy2.get("dstaddr", [])
-            )
-            svc_overlap = self._check_service_overlap(
-                policy1.get("service", []), policy2.get("service", [])
-            )
+            src_overlap = self._check_address_overlap(policy1.get("srcaddr", []), policy2.get("srcaddr", []))
+            dst_overlap = self._check_address_overlap(policy1.get("dstaddr", []), policy2.get("dstaddr", []))
+            svc_overlap = self._check_service_overlap(policy1.get("service", []), policy2.get("service", []))
 
             if src_overlap and dst_overlap and svc_overlap:
                 return {
@@ -648,24 +594,16 @@ class PolicyOrchestrationEngine:
 
         return None
 
-    def _check_policy_shadow(
-        self, policy1: Dict, policy2: Dict
-    ) -> Optional[Dict]:
+    def _check_policy_shadow(self, policy1: Dict, policy2: Dict) -> Optional[Dict]:
         """Check if policy1 shadows policy2"""
 
         # Policy1 shadows policy2 if it matches all traffic that policy2 would match
         # and comes before it in the policy order
 
         if (
-            self._is_subset(
-                policy2.get("srcaddr", []), policy1.get("srcaddr", [])
-            )
-            and self._is_subset(
-                policy2.get("dstaddr", []), policy1.get("dstaddr", [])
-            )
-            and self._is_subset(
-                policy2.get("service", []), policy1.get("service", [])
-            )
+            self._is_subset(policy2.get("srcaddr", []), policy1.get("srcaddr", []))
+            and self._is_subset(policy2.get("dstaddr", []), policy1.get("dstaddr", []))
+            and self._is_subset(policy2.get("service", []), policy1.get("service", []))
         ):
             return {
                 "type": "shadow",
@@ -676,20 +614,15 @@ class PolicyOrchestrationEngine:
 
         return None
 
-    def _check_policy_redundancy(
-        self, policy1: Dict, policy2: Dict
-    ) -> Optional[Dict]:
+    def _check_policy_redundancy(self, policy1: Dict, policy2: Dict) -> Optional[Dict]:
         """Check if policies are redundant"""
 
         # Check if policies have same action and overlapping scope
         if policy1.get("action") == policy2.get("action"):
             if (
-                set(policy1.get("srcaddr", []))
-                == set(policy2.get("srcaddr", []))
-                and set(policy1.get("dstaddr", []))
-                == set(policy2.get("dstaddr", []))
-                and set(policy1.get("service", []))
-                == set(policy2.get("service", []))
+                set(policy1.get("srcaddr", [])) == set(policy2.get("srcaddr", []))
+                and set(policy1.get("dstaddr", [])) == set(policy2.get("dstaddr", []))
+                and set(policy1.get("service", [])) == set(policy2.get("service", []))
             ):
                 return {
                     "type": "redundancy",
@@ -700,27 +633,17 @@ class PolicyOrchestrationEngine:
 
         return None
 
-    def _check_address_overlap(
-        self, addr_list1: List, addr_list2: List
-    ) -> bool:
+    def _check_address_overlap(self, addr_list1: List, addr_list2: List) -> bool:
         """Check if address lists overlap"""
 
         # Simplified check - in production would resolve address objects
-        return (
-            bool(set(addr_list1) & set(addr_list2))
-            or "all" in addr_list1
-            or "all" in addr_list2
-        )
+        return bool(set(addr_list1) & set(addr_list2)) or "all" in addr_list1 or "all" in addr_list2
 
     def _check_service_overlap(self, svc_list1: List, svc_list2: List) -> bool:
         """Check if service lists overlap"""
 
         # Simplified check - in production would resolve service objects
-        return (
-            bool(set(svc_list1) & set(svc_list2))
-            or "ALL" in svc_list1
-            or "ALL" in svc_list2
-        )
+        return bool(set(svc_list1) & set(svc_list2)) or "ALL" in svc_list1 or "ALL" in svc_list2
 
     def _is_subset(self, list1: List, list2: List) -> bool:
         """Check if list1 is a subset of list2"""
@@ -729,9 +652,7 @@ class PolicyOrchestrationEngine:
             return True
         return set(list1).issubset(set(list2))
 
-    def _calculate_optimization_score(
-        self, total: int, conflicts: int, shadows: int, redundancies: int
-    ) -> float:
+    def _calculate_optimization_score(self, total: int, conflicts: int, shadows: int, redundancies: int) -> float:
         """Calculate policy optimization score"""
 
         if total == 0:
@@ -746,9 +667,7 @@ class PolicyOrchestrationEngine:
         stats = {}
 
         try:
-            policy_stats = self.api_client.get_policy_statistics(
-                "default", adom
-            )
+            policy_stats = self.api_client.get_policy_statistics("default", adom)
             if policy_stats:
                 for stat in policy_stats:
                     stats[stat["policyid"]] = {
@@ -773,10 +692,7 @@ class PolicyOrchestrationEngine:
         if policy.get("action") == "deny":
             reasons.append("Deny rule prioritized")
 
-        if (
-            len(policy.get("srcaddr", [])) > 1
-            or len(policy.get("dstaddr", [])) > 1
-        ):
+        if len(policy.get("srcaddr", [])) > 1 or len(policy.get("dstaddr", [])) > 1:
             reasons.append("Specific rule prioritized")
 
         return ", ".join(reasons) if reasons else "General optimization"
@@ -898,146 +814,138 @@ class PolicyOrchestrationEngine:
             and policy.get("action") == "accept"
         )
 
-    def _get_tightening_suggestions(
-        self, policy: Dict, traffic_patterns: List[Dict]
-    ) -> List[str]:
+    def _get_tightening_suggestions(self, policy: Dict, traffic_patterns: List[Dict]) -> List[str]:
         """Get suggestions for tightening overly permissive policies"""
 
         suggestions = []
 
         # Analyze actual traffic through this policy
-        policy_traffic = [
-            p for p in traffic_patterns if self._matches_policy(p, policy)
-        ]
+        policy_traffic = [p for p in traffic_patterns if self._matches_policy(p, policy)]
 
         if policy_traffic:
             # Suggest specific sources
             unique_sources = set(p["source"] for p in policy_traffic)
             if len(unique_sources) < 10:
-                suggestions.append(
-                    f"Limit sources to: {', '.join(unique_sources)}"
-                )
+                suggestions.append(f"Limit sources to: {', '.join(unique_sources)}")
 
             # Suggest specific destinations
             unique_dests = set(p["destination"] for p in policy_traffic)
             if len(unique_dests) < 10:
-                suggestions.append(
-                    f"Limit destinations to: {', '.join(unique_dests)}"
-                )
+                suggestions.append(f"Limit destinations to: {', '.join(unique_dests)}")
 
             # Suggest specific services
             unique_services = set(p["service"] for p in policy_traffic)
             if len(unique_services) < 5:
-                suggestions.append(
-                    f"Limit services to: {', '.join(unique_services)}"
-                )
+                suggestions.append(f"Limit services to: {', '.join(unique_services)}")
 
         return suggestions
 
     def _matches_policy(self, traffic: Dict, policy: Dict) -> bool:
         """Check if traffic pattern matches policy"""
-        
+
         try:
             # Extract traffic attributes
-            src_ip = traffic.get('source_ip', '')
-            dst_ip = traffic.get('destination_ip', '')
-            src_port = traffic.get('source_port', 0)
-            dst_port = traffic.get('destination_port', 0)
-            protocol = traffic.get('protocol', '').lower()
-            
+            src_ip = traffic.get("source_ip", "")
+            dst_ip = traffic.get("destination_ip", "")
+            # src_port = traffic.get("source_port", 0)  # Currently unused
+            dst_port = traffic.get("destination_port", 0)
+            protocol = traffic.get("protocol", "").lower()
+
             # Extract policy attributes
-            policy_src = policy.get('source', [])
-            policy_dst = policy.get('destination', [])
-            policy_services = policy.get('services', [])
-            policy_action = policy.get('action', 'deny')
-            
+            policy_src = policy.get("source", [])
+            policy_dst = policy.get("destination", [])
+            policy_services = policy.get("services", [])
+            # policy_action = policy.get("action", "deny")  # Currently unused
+
             # Check source IP match
             src_match = False
-            if not policy_src or 'any' in policy_src:
+            if not policy_src or "any" in policy_src:
                 src_match = True
             else:
                 for src_range in policy_src:
                     if self._ip_in_range(src_ip, src_range):
                         src_match = True
                         break
-            
+
             if not src_match:
                 return False
-            
-            # Check destination IP match  
+
+            # Check destination IP match
             dst_match = False
-            if not policy_dst or 'any' in policy_dst:
+            if not policy_dst or "any" in policy_dst:
                 dst_match = True
             else:
                 for dst_range in policy_dst:
                     if self._ip_in_range(dst_ip, dst_range):
                         dst_match = True
                         break
-            
+
             if not dst_match:
                 return False
-            
+
             # Check service/port match
             service_match = False
-            if not policy_services or 'any' in policy_services:
+            if not policy_services or "any" in policy_services:
                 service_match = True
             else:
                 for service in policy_services:
                     if self._service_matches(protocol, dst_port, service):
                         service_match = True
                         break
-            
+
             return service_match
-            
+
         except Exception as e:
             logger.error(f"Error matching policy: {e}")
             return False
-    
+
     def _ip_in_range(self, ip: str, ip_range: str) -> bool:
         """Check if IP is in specified range"""
         try:
             import ipaddress
-            
-            if '/' in ip_range:
+
+            if "/" in ip_range:
                 # CIDR notation
                 network = ipaddress.ip_network(ip_range, strict=False)
                 return ipaddress.ip_address(ip) in network
-            elif '-' in ip_range:
+            elif "-" in ip_range:
                 # Range notation (e.g., 192.168.1.1-192.168.1.10)
-                start_ip, end_ip = ip_range.split('-')
-                return (ipaddress.ip_address(start_ip.strip()) <= 
-                       ipaddress.ip_address(ip) <= 
-                       ipaddress.ip_address(end_ip.strip()))
+                start_ip, end_ip = ip_range.split("-")
+                return (
+                    ipaddress.ip_address(start_ip.strip())
+                    <= ipaddress.ip_address(ip)
+                    <= ipaddress.ip_address(end_ip.strip())
+                )
             else:
                 # Single IP
                 return ip == ip_range
-                
+
         except Exception:
             return False
-    
+
     def _service_matches(self, protocol: str, port: int, service: str) -> bool:
         """Check if protocol/port matches service definition"""
         # Common service definitions
         service_map = {
-            'http': {'protocol': 'tcp', 'port': 80},
-            'https': {'protocol': 'tcp', 'port': 443},
-            'ssh': {'protocol': 'tcp', 'port': 22},
-            'telnet': {'protocol': 'tcp', 'port': 23},
-            'ftp': {'protocol': 'tcp', 'port': 21},
-            'smtp': {'protocol': 'tcp', 'port': 25},
-            'dns': {'protocol': 'udp', 'port': 53},
-            'ntp': {'protocol': 'udp', 'port': 123},
-            'rdp': {'protocol': 'tcp', 'port': 3389},
-            'snmp': {'protocol': 'udp', 'port': 161}
+            "http": {"protocol": "tcp", "port": 80},
+            "https": {"protocol": "tcp", "port": 443},
+            "ssh": {"protocol": "tcp", "port": 22},
+            "telnet": {"protocol": "tcp", "port": 23},
+            "ftp": {"protocol": "tcp", "port": 21},
+            "smtp": {"protocol": "tcp", "port": 25},
+            "dns": {"protocol": "udp", "port": 53},
+            "ntp": {"protocol": "udp", "port": 123},
+            "rdp": {"protocol": "tcp", "port": 3389},
+            "snmp": {"protocol": "udp", "port": 161},
         }
-        
+
         if service.lower() in service_map:
             svc_def = service_map[service.lower()]
-            return protocol == svc_def['protocol'] and port == svc_def['port']
-        
+            return protocol == svc_def["protocol"] and port == svc_def["port"]
+
         # Check custom port definition (e.g., "tcp/8080")
-        if '/' in service:
-            svc_proto, svc_port = service.split('/')
+        if "/" in service:
+            svc_proto, svc_port = service.split("/")
             return protocol == svc_proto.lower() and port == int(svc_port)
-        
+
         return False

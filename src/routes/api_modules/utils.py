@@ -40,9 +40,7 @@ def get_system_uptime():
             return uptime_seconds
     except Exception:
         # Fallback for non-Linux systems
-        return random.uniform(
-            3600, 86400
-        )  # Random uptime between 1 hour and 1 day
+        return random.uniform(3600, 86400)  # Random uptime between 1 hour and 1 day
 
 
 def get_memory_usage():
@@ -57,18 +55,12 @@ def get_memory_usage():
 
             for line in lines:
                 if line.startswith("MemTotal:"):
-                    mem_total = (
-                        int(line.split()[1]) * 1024
-                    )  # Convert KB to bytes
+                    mem_total = int(line.split()[1]) * 1024  # Convert KB to bytes
                 elif line.startswith("MemAvailable:"):
-                    mem_available = (
-                        int(line.split()[1]) * 1024
-                    )  # Convert KB to bytes
+                    mem_available = int(line.split()[1]) * 1024  # Convert KB to bytes
 
             mem_used = mem_total - mem_available
-            mem_usage_percent = (
-                (mem_used / mem_total) * 100 if mem_total > 0 else 0
-            )
+            mem_usage_percent = (mem_used / mem_total) * 100 if mem_total > 0 else 0
 
             return {
                 "total": mem_total,
@@ -99,22 +91,19 @@ def get_cpu_usage():
             load_1min = float(load_avg[0])
             load_5min = float(load_avg[1])
             load_15min = float(load_avg[2])
-            
+
         # CPU 코어 수 가져오기 (캐시)
         import os
+
         cpu_count = os.cpu_count() or 1
-        
+
         # 부하율을 퍼센티지로 변환
         cpu_usage_percent = min(100.0, (load_1min / cpu_count) * 100)
-        
+
         return {
             "usage_percent": round(cpu_usage_percent, 2),
-            "load_avg": {
-                "1min": load_1min,
-                "5min": load_5min,
-                "15min": load_15min
-            },
-            "cpu_count": cpu_count
+            "load_avg": {"1min": load_1min, "5min": load_5min, "15min": load_15min},
+            "cpu_count": cpu_count,
         }
     except Exception:
         # Fallback
@@ -123,9 +112,9 @@ def get_cpu_usage():
             "load_avg": {
                 "1min": random.uniform(0.5, 2.0),
                 "5min": random.uniform(0.5, 2.0),
-                "15min": random.uniform(0.5, 2.0)
+                "15min": random.uniform(0.5, 2.0),
             },
-            "cpu_count": 4
+            "cpu_count": 4,
         }
 
 
@@ -133,15 +122,11 @@ def get_disk_usage():
     """Get disk usage information - Performance Optimized"""
     try:
         import shutil
+
         total, used, free = shutil.disk_usage("/")
         usage_percent = (used / total) * 100
-        
-        return {
-            "total": total,
-            "used": used,
-            "free": free,
-            "usage_percent": round(usage_percent, 2)
-        }
+
+        return {"total": total, "used": used, "free": free, "usage_percent": round(usage_percent, 2)}
     except Exception:
         # Fallback
         total_gb = random.randint(50, 500)
@@ -150,54 +135,31 @@ def get_disk_usage():
             "total": total_gb * 1024**3,
             "used": int(total_gb * 1024**3 * used_percent / 100),
             "free": int(total_gb * 1024**3 * (100 - used_percent) / 100),
-            "usage_percent": round(used_percent, 2)
+            "usage_percent": round(used_percent, 2),
         }
 
 
 def get_performance_metrics():
     """통합 성능 메트릭 수집 - Performance Optimized"""
     try:
-        import threading
         import concurrent.futures
-        
+
         metrics = {}
-        
+
         # 병렬로 성능 메트릭 수집
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             future_cpu = executor.submit(get_cpu_usage)
             future_memory = executor.submit(get_memory_usage)
             future_disk = executor.submit(get_disk_usage)
-            
+
             metrics["cpu"] = future_cpu.result(timeout=1.0)
             metrics["memory"] = future_memory.result(timeout=1.0)
             metrics["disk"] = future_disk.result(timeout=1.0)
-            
+
         return metrics
-    except Exception as e:
-        # Fallback metrics
-        return {
-            "cpu": {"usage_percent": 6.1},
-            "memory": {"usage_percent": 27.53},
-            "disk": {"usage_percent": 45.2}
-        }
-
-
-def get_cpu_usage():
-    """Get CPU usage percentage"""
-    try:
-        # Simple CPU usage calculation based on /proc/stat
-        with open("/proc/stat", "r") as f:
-            line = f.readline()
-            cpu_times = [int(x) for x in line.split()[1:]]
-
-        idle_time = cpu_times[3]
-        total_time = sum(cpu_times)
-        cpu_usage = 100 * (1 - idle_time / total_time) if total_time > 0 else 0
-
-        return round(cpu_usage, 2)
     except Exception:
-        # Fallback for systems without /proc/stat
-        return round(random.uniform(10, 90), 2)
+        # Fallback metrics
+        return {"cpu": {"usage_percent": 6.1}, "memory": {"usage_percent": 27.53}, "disk": {"usage_percent": 45.2}}
 
 
 def generate_topology_data():

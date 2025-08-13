@@ -66,9 +66,7 @@ class AuthManager:
         self._credentials_cache: Dict[str, AuthCredentials] = {}
         self._session_timeout = timedelta(hours=8)  # Default 8 hours
 
-    def register_credentials(
-        self, host: str, port: int, credentials: AuthCredentials
-    ) -> str:
+    def register_credentials(self, host: str, port: int, credentials: AuthCredentials) -> str:
         """
         Register authentication credentials for a host.
 
@@ -84,9 +82,7 @@ class AuthManager:
         self._credentials_cache[cred_id] = credentials
         return cred_id
 
-    def authenticate(
-        self, host: str, port: int, auth_type: AuthType, **kwargs
-    ) -> Tuple[bool, Optional[AuthSession]]:
+    def authenticate(self, host: str, port: int, auth_type: AuthType, **kwargs) -> Tuple[bool, Optional[AuthSession]]:
         """
         Perform authentication based on type.
 
@@ -297,16 +293,11 @@ class AuthManager:
             }
 
             # Security fix: Enable SSL verification (use verify=True or certificate path)
-            response = requests.post(
-                login_url, json=login_data, verify=True, timeout=30
-            )
+            response = requests.post(login_url, json=login_data, verify=True, timeout=30)
 
             if response.status_code == 200:
                 data = response.json()
-                if (
-                    data.get("result", [{}])[0].get("status", {}).get("code")
-                    == 0
-                ):
+                if data.get("result", [{}])[0].get("status", {}).get("code") == 0:
                     # Extract session info
                     session_token = data.get("session")
                     csrf_token = response.headers.get("X-CSRFTOKEN")
@@ -414,9 +405,7 @@ class AuthManager:
         """
         timestamp = str(int(time.time() * 1000))
         random_bytes = secrets.token_bytes(16)
-        return hashlib.sha256(
-            (timestamp + random_bytes.hex()).encode()
-        ).hexdigest()[:32]
+        return hashlib.sha256((timestamp + random_bytes.hex()).encode()).hexdigest()[:32]
 
     def _generate_credential_id(self, host: str, port: int) -> str:
         """

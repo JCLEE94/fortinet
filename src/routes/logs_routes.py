@@ -28,9 +28,7 @@ logger = get_logger(__name__)
 def docker_available():
     """Docker 명령어 사용 가능 여부 확인"""
     try:
-        result = subprocess.run(
-            ["docker", "--version"], capture_output=True, text=True, timeout=5
-        )
+        result = subprocess.run(["docker", "--version"], capture_output=True, text=True, timeout=5)
         return result.returncode == 0
     except (
         subprocess.TimeoutExpired,
@@ -89,9 +87,7 @@ def get_container_logs():
         cmd.append(container_name)
 
         # 로그 실행
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=30
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
         if result.returncode != 0:
             logger.error(f"Docker logs 실행 실패: {result.stderr}")
@@ -107,9 +103,7 @@ def get_container_logs():
             )
 
         # 로그 파싱
-        log_lines = (
-            result.stdout.strip().split("\n") if result.stdout.strip() else []
-        )
+        log_lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
         # 로그 구조화
         structured_logs = []
@@ -210,9 +204,7 @@ def get_application_logs():
             f"-{lines}",
             log_file_path,
         ]
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=30
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
         if result.returncode != 0:
             return (
@@ -227,9 +219,7 @@ def get_application_logs():
             )
 
         # 로그 파싱
-        log_lines = (
-            result.stdout.strip().split("\n") if result.stdout.strip() else []
-        )
+        log_lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
         structured_logs = []
         for line in log_lines:
@@ -285,9 +275,7 @@ def list_log_files():
             "-type",
             "f",
         ]
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=10
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
         if result.returncode != 0:
             return (
@@ -308,9 +296,7 @@ def list_log_files():
                     "%s",
                     file_path,
                 ]
-                size_result = subprocess.run(
-                    size_cmd, capture_output=True, text=True, timeout=5
-                )
+                size_result = subprocess.run(size_cmd, capture_output=True, text=True, timeout=5)
 
                 file_size = 0
                 if size_result.returncode == 0:
@@ -340,9 +326,7 @@ def list_log_files():
     except Exception as e:
         logger.error(f"로그 파일 목록 조회 실패: {str(e)}")
         return (
-            jsonify(
-                {"error": f"Failed to list log files: {str(e)}", "files": []}
-            ),
+            jsonify({"error": f"Failed to list log files: {str(e)}", "files": []}),
             500,
         )
 
@@ -366,24 +350,18 @@ def search_logs():
         if log_type == "container":
             # Docker logs에서 검색
             cmd = ["docker", "logs", "--tail", str(lines), "fortinet"]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             content = result.stdout
         else:
             # 애플리케이션 로그 파일에서 검색
             log_file = data.get("file", "/app/logs/main.log")
             cmd = ["docker", "exec", "fortinet", "tail", f"-{lines}", log_file]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
             content = result.stdout
 
         if result.returncode != 0:
             return (
-                jsonify(
-                    {"error": "Failed to read logs for search", "matches": []}
-                ),
+                jsonify({"error": "Failed to read logs for search", "matches": []}),
                 500,
             )
 
@@ -446,9 +424,7 @@ def get_log_stats():
                 "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}",
                 "fortinet",
             ]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=10
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
             if result.returncode == 0:
                 lines = result.stdout.strip().split("\n")
@@ -477,9 +453,7 @@ def get_log_stats():
             "{}",
             "+",
         ]
-        result = subprocess.run(
-            log_files_cmd, capture_output=True, text=True, timeout=15
-        )
+        result = subprocess.run(log_files_cmd, capture_output=True, text=True, timeout=15)
 
         log_stats = {}
         if result.returncode == 0:
@@ -503,9 +477,7 @@ def get_log_stats():
     except Exception as e:
         logger.error(f"로그 통계 조회 실패: {str(e)}")
         return (
-            jsonify(
-                {"error": f"Failed to get log stats: {str(e)}", "stats": {}}
-            ),
+            jsonify({"error": f"Failed to get log stats: {str(e)}", "stats": {}}),
             500,
         )
 
@@ -648,9 +620,7 @@ def stream_logs():
                     try:
                         # select를 사용한 논블로킹 읽기 (Unix/Linux만)
                         if hasattr(select, "select"):
-                            ready, _, _ = select.select(
-                                [process.stdout], [], [], 1.0
-                            )
+                            ready, _, _ = select.select([process.stdout], [], [], 1.0)
                             if ready:
                                 line = process.stdout.readline()
                                 if line:

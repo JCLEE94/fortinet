@@ -166,15 +166,9 @@ class FixedPathAnalyzer:
         # 정책을 순서대로 확인
         for policy_id, policy in self.firewall_policies.items():
             # 존 매칭
-            if (
-                policy["source_zone"] != "any"
-                and policy["source_zone"] != src_zone
-            ):
+            if policy["source_zone"] != "any" and policy["source_zone"] != src_zone:
                 continue
-            if (
-                policy["dest_zone"] != "any"
-                and policy["dest_zone"] != dst_zone
-            ):
+            if policy["dest_zone"] != "any" and policy["dest_zone"] != dst_zone:
                 continue
 
             # IP 매칭
@@ -183,15 +177,11 @@ class FixedPathAnalyzer:
                 dst_addr = ipaddress.ip_address(dst_ip)
 
                 if policy["source_net"] != "0.0.0.0/0":
-                    if src_addr not in ipaddress.ip_network(
-                        policy["source_net"]
-                    ):
+                    if src_addr not in ipaddress.ip_network(policy["source_net"]):
                         continue
 
                 if policy["dest_net"] != "0.0.0.0/0":
-                    if dst_addr not in ipaddress.ip_network(
-                        policy["dest_net"]
-                    ):
+                    if dst_addr not in ipaddress.ip_network(policy["dest_net"]):
                         continue
             except Exception:
                 continue
@@ -249,9 +239,7 @@ class FixedPathAnalyzer:
             dst_route = None
             for network, route in self.routing_table.items():
                 try:
-                    if ipaddress.ip_address(dst_ip) in ipaddress.ip_network(
-                        network
-                    ):
+                    if ipaddress.ip_address(dst_ip) in ipaddress.ip_network(network):
                         dst_route = route
                         break
                 except Exception:
@@ -290,9 +278,7 @@ class FixedPathAnalyzer:
                 "firewall_name": f"FW-{i+1:02d}",
                 "src_ip": route["from"],
                 "dst_ip": route["to"],
-                "policy_id": (
-                    policy_id if i == 0 else None
-                ),  # 첫 번째 홉에서만 정책 적용
+                "policy_id": (policy_id if i == 0 else None),  # 첫 번째 홉에서만 정책 적용
                 "policy": policy if i == 0 else None,
                 "action": policy["action"] if i == 0 else "forward",
                 "interface_in": route["interface"],
@@ -332,9 +318,7 @@ class FixedPathAnalyzer:
                 "policy_description": policy["description"],
                 "analysis_time": datetime.now().isoformat(),
             },
-            "recommendations": self.generate_recommendations(
-                src_ip, dst_ip, port, allowed, policy
-            ),
+            "recommendations": self.generate_recommendations(src_ip, dst_ip, port, allowed, policy),
         }
 
         return result
@@ -359,11 +343,7 @@ class FixedPathAnalyzer:
             src_zone = self.get_zone_for_ip(src_ip)
             dst_zone = self.get_zone_for_ip(dst_ip)
             for pol_id, pol in self.firewall_policies.items():
-                if (
-                    pol["source_zone"] == src_zone
-                    and pol["dest_zone"] == dst_zone
-                    and pol["action"] == "allow"
-                ):
+                if pol["source_zone"] == src_zone and pol["dest_zone"] == dst_zone and pol["action"] == "allow":
                     recommendations.append(
                         {
                             "type": "info",

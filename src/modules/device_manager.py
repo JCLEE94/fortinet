@@ -53,9 +53,7 @@ class DeviceManager:
                         devices.append(
                             {
                                 "name": device.get("name", ""),
-                                "hostname": device.get(
-                                    "hostname", device.get("name", "")
-                                ),
+                                "hostname": device.get("hostname", device.get("name", "")),
                                 "ip": device.get("ip", ""),
                                 "platform": device.get("platform", ""),
                                 "version": device.get("version", ""),
@@ -160,9 +158,7 @@ class DeviceManager:
                                 "mask": interface.get("netmask", ""),
                                 "vdom": interface.get("vdom", ""),
                                 "status": interface.get("status", ""),
-                                "description": interface.get(
-                                    "description", ""
-                                ),
+                                "description": interface.get("description", ""),
                                 "alias": interface.get("alias", ""),
                                 "zone": interface.get("zone", ""),
                                 "speed": interface.get("speed", ""),
@@ -262,9 +258,7 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 방화벽 정책 목록 조회
-                response = self.api_client.get(
-                    device_name=device_name, url="/api/v2/cmdb/firewall/policy"
-                )
+                response = self.api_client.get(device_name=device_name, url="/api/v2/cmdb/firewall/policy")
 
                 if response and "results" in response:
                     for policy in response["results"]:
@@ -370,9 +364,7 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 라우팅 테이블 조회
-                response = self.api_client.get(
-                    device_name=device_name, url="/api/v2/monitor/router/ipv4"
-                )
+                response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/router/ipv4")
 
                 if response and "results" in response:
                     for route in response["results"]:
@@ -468,13 +460,9 @@ class DeviceManager:
         try:
             if self.api_client:
                 # FortiGate API를 통해 ARP 테이블 및 DHCP 리스 정보 조회
-                arp_response = self.api_client.get(
-                    device_name=device_name, url="/api/v2/monitor/system/arp"
-                )
+                arp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/arp")
 
-                dhcp_response = self.api_client.get(
-                    device_name=device_name, url="/api/v2/monitor/system/dhcp"
-                )
+                dhcp_response = self.api_client.get(device_name=device_name, url="/api/v2/monitor/system/dhcp")
 
                 # ARP 테이블에서 연결된 장치 정보 추출
                 if arp_response and "results" in arp_response:
@@ -502,9 +490,7 @@ class DeviceManager:
                                 for device in connected_devices:
                                     if device["ip"] == ip:
                                         # 기존 장치 정보 업데이트
-                                        device["hostname"] = lease.get(
-                                            "hostname", ""
-                                        )
+                                        device["hostname"] = lease.get("hostname", "")
                                         device["type"] = "DHCP Client"
                                         device["source"] = "DHCP"
                                         found = True
@@ -515,9 +501,7 @@ class DeviceManager:
                                     device = {
                                         "ip": ip,
                                         "mac": lease.get("mac", ""),
-                                        "interface": server.get(
-                                            "interface", ""
-                                        ),
+                                        "interface": server.get("interface", ""),
                                         "type": "DHCP Client",
                                         "hostname": lease.get("hostname", ""),
                                         "vendor": "",
@@ -576,15 +560,11 @@ class DeviceManager:
                 if not device["type"] or device["type"] == "Unknown":
                     device["type"] = self._infer_device_type(device)
                 if not device["vendor"]:
-                    device["vendor"] = self._infer_vendor_from_mac(
-                        device["mac"]
-                    )
+                    device["vendor"] = self._infer_vendor_from_mac(device["mac"])
 
             # 캐시 업데이트
             if device_name in self._device_cache:
-                self._device_cache[device_name][
-                    "connected_devices"
-                ] = connected_devices
+                self._device_cache[device_name]["connected_devices"] = connected_devices
                 self._device_cache[device_name]["updated_at"] = time.time()
 
             return connected_devices
@@ -610,20 +590,11 @@ class DeviceManager:
             return "Server"
         elif any(pc in hostname for pc in ["pc", "desktop", "workstation"]):
             return "PC"
-        elif any(
-            mobile in hostname
-            for mobile in ["phone", "iphone", "android", "mobile"]
-        ):
+        elif any(mobile in hostname for mobile in ["phone", "iphone", "android", "mobile"]):
             return "Mobile"
-        elif any(
-            printer in hostname
-            for printer in ["print", "printer", "hp", "canon"]
-        ):
+        elif any(printer in hostname for printer in ["print", "printer", "hp", "canon"]):
             return "Printer"
-        elif any(
-            network in hostname
-            for network in ["switch", "router", "ap", "wifi"]
-        ):
+        elif any(network in hostname for network in ["switch", "router", "ap", "wifi"]):
             return "Network Device"
 
         # IP 주소 기반 추론 (예: 서버는 종종 특정 IP 범위에 할당)
@@ -688,9 +659,7 @@ class DeviceManager:
         try:
             # 기본 정보
             if device_name in self._device_cache:
-                details["basic_info"] = self._device_cache[device_name].get(
-                    "basic_info", {}
-                )
+                details["basic_info"] = self._device_cache[device_name].get("basic_info", {})
             else:
                 devices = self.get_fortigate_devices()
                 for device in devices:
@@ -708,9 +677,7 @@ class DeviceManager:
             details["routes"] = self.get_routing_table(device_name)
 
             # 연결된 장치 정보
-            details["connected_devices"] = self.get_connected_devices(
-                device_name
-            )
+            details["connected_devices"] = self.get_connected_devices(device_name)
 
             return details
 

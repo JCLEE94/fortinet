@@ -32,9 +32,7 @@ class FileIntegrityMixin:
             current_hashes = {}
 
             # 중요한 파일들 확인
-            critical_files = getattr(self, "security_baselines", {}).get(
-                "critical_files", []
-            )
+            critical_files = getattr(self, "security_baselines", {}).get("critical_files", [])
 
             for file_path in critical_files:
                 if os.path.exists(file_path):
@@ -48,16 +46,11 @@ class FileIntegrityMixin:
 
                         # 이전 해시와 비교
                         if file_path in previous_hashes:
-                            if (
-                                previous_hashes[file_path]["hash"]
-                                != current_hash
-                            ):
+                            if previous_hashes[file_path]["hash"] != current_hash:
                                 changed_files.append(
                                     {
                                         "file_path": file_path,
-                                        "previous_hash": previous_hashes[
-                                            file_path
-                                        ]["hash"],
+                                        "previous_hash": previous_hashes[file_path]["hash"],
                                         "current_hash": current_hash,
                                         "change_detected": datetime.now().isoformat(),
                                     }
@@ -74,9 +67,7 @@ class FileIntegrityMixin:
             # 현재 해시 저장
             self._save_file_hashes(hash_db_path, current_hashes)
 
-            risk_level = self._assess_file_integrity_risk(
-                changed_files, missing_files
-            )
+            risk_level = self._assess_file_integrity_risk(changed_files, missing_files)
 
             result = {
                 "scan_type": "file_integrity",
@@ -89,9 +80,7 @@ class FileIntegrityMixin:
                 "risk_level": risk_level,
             }
 
-            logger.info(
-                f"파일 무결성 검사 완료: {len(changed_files)}개 변경, {len(missing_files)}개 누락"
-            )
+            logger.info(f"파일 무결성 검사 완료: {len(changed_files)}개 변경, {len(missing_files)}개 누락")
             return result
 
         except Exception as e:
@@ -134,9 +123,7 @@ class FileIntegrityMixin:
         except Exception as e:
             logger.error(f"해시 데이터 저장 오류: {e}")
 
-    def _assess_file_integrity_risk(
-        self, changed_files: List, missing_files: List
-    ) -> str:
+    def _assess_file_integrity_risk(self, changed_files: List, missing_files: List) -> str:
         """파일 무결성 위험도 평가"""
         if missing_files:
             return "critical"

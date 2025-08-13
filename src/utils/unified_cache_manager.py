@@ -26,10 +26,10 @@ class CacheBackend:
     def get(self, key: str) -> Optional[Any]:
         """
         캐시에서 값 조회
-        
+
         Args:
             key: 캐시 키
-            
+
         Returns:
             캐시된 값 또는 None
         """
@@ -38,12 +38,12 @@ class CacheBackend:
     def set(self, key: str, value: Any, ttl: int = 300) -> bool:
         """
         캐시에 값 저장
-        
+
         Args:
             key: 캐시 키
             value: 저장할 값
             ttl: TTL(초), 0이면 무제한
-            
+
         Returns:
             성공 여부
         """
@@ -52,10 +52,10 @@ class CacheBackend:
     def delete(self, key: str) -> bool:
         """
         캐시에서 값 삭제
-        
+
         Args:
             key: 삭제할 캐시 키
-            
+
         Returns:
             삭제 성공 여부
         """
@@ -64,7 +64,7 @@ class CacheBackend:
     def clear(self) -> bool:
         """
         캐시 전체 삭제
-        
+
         Returns:
             삭제 성공 여부
         """
@@ -73,10 +73,10 @@ class CacheBackend:
     def exists(self, key: str) -> bool:
         """
         키 존재 여부 확인
-        
+
         Args:
             key: 확인할 캐시 키
-            
+
         Returns:
             존재 여부
         """
@@ -190,9 +190,7 @@ class RedisCacheBackend(CacheBackend):
             data = self.redis_client.get(key)
             if data is None:
                 return None
-            return json.loads(
-                data.decode() if isinstance(data, bytes) else data
-            )
+            return json.loads(data.decode() if isinstance(data, bytes) else data)
         except Exception as e:
             logger.error(f"Redis GET 오류: {e}")
             return None
@@ -268,8 +266,7 @@ class UnifiedCacheManager:
         # 환경 변수 기반 기본 설정
         config = {
             "redis": {
-                "enabled": os.getenv("REDIS_ENABLED", "true").lower()
-                == "true",
+                "enabled": os.getenv("REDIS_ENABLED", "true").lower() == "true",
                 "host": os.getenv("REDIS_HOST", "redis"),
                 "port": int(os.getenv("REDIS_PORT", "6379")),
                 "db": int(os.getenv("REDIS_DB", "0")),
@@ -310,9 +307,7 @@ class UnifiedCacheManager:
 
         # 메모리 백엔드 (항상 마지막에 추가 - fallback)
         if self.config["memory"]["enabled"]:
-            memory_backend = MemoryCacheBackend(
-                max_size=self.config["memory"]["max_size"]
-            )
+            memory_backend = MemoryCacheBackend(max_size=self.config["memory"]["max_size"])
             self.backends.append(memory_backend)
             self.memory_cache = memory_backend
 
@@ -330,9 +325,7 @@ class UnifiedCacheManager:
                     # 상위 레벨 캐시에 복사 (cache promotion)
                     for j in range(i):
                         try:
-                            self.backends[j].set(
-                                key, value, self.config["default_ttl"]
-                            )
+                            self.backends[j].set(key, value, self.config["default_ttl"])
                         except Exception as e:
                             logger.debug(f"캐시 프로모션 실패: {e}")
 
@@ -395,28 +388,20 @@ class UnifiedCacheManager:
                 if backend.exists(key):
                     return True
             except Exception as e:
-                logger.debug(
-                    f"캐시 존재 확인 오류 ({backend.__class__.__name__}): {e}"
-                )
+                logger.debug(f"캐시 존재 확인 오류 ({backend.__class__.__name__}): {e}")
 
         return False
 
     def get_stats(self) -> Dict:
         """캐시 통계 반환"""
         total_requests = self.stats["hits"] + self.stats["misses"]
-        hit_rate = (
-            (self.stats["hits"] / total_requests * 100)
-            if total_requests > 0
-            else 0
-        )
+        hit_rate = (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
 
         return {
             **self.stats,
             "hit_rate": round(hit_rate, 2),
             "backends": len(self.backends),
-            "backend_types": [
-                backend.__class__.__name__ for backend in self.backends
-            ],
+            "backend_types": [backend.__class__.__name__ for backend in self.backends],
         }
 
     def generate_cache_key(self, prefix: str, *args, **kwargs) -> str:
@@ -451,9 +436,7 @@ def cached(ttl: int = 300, key_prefix: str = "cache"):
             cache_manager = get_cache_manager()
 
             # 캐시 키 생성
-            cache_key = cache_manager.generate_cache_key(
-                f"{key_prefix}:{func.__name__}", *args, **kwargs
-            )
+            cache_key = cache_manager.generate_cache_key(f"{key_prefix}:{func.__name__}", *args, **kwargs)
 
             # 캐시에서 조회
             result = cache_manager.get(cache_key)

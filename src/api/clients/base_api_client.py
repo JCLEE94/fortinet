@@ -79,9 +79,7 @@ class BaseApiClient(ABC):
             self.logger = logging.getLogger(self.logger_name)
             if not self.logger.handlers:
                 handler = logging.StreamHandler()
-                formatter = logging.Formatter(
-                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-                )
+                formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
                 self.logger.setLevel(logging.INFO)
@@ -100,22 +98,13 @@ class BaseApiClient(ABC):
         # SSL verification (보안 강화: 기본값 True)
         if verify_ssl is None:
             # 개발 환경에서만 SSL 검증 비활성화 허용
-            if (
-                os.environ.get("APP_MODE", "production").lower()
-                == "development"
-            ):
-                self.verify_ssl = (
-                    os.environ.get("VERIFY_SSL", "false").lower() == "true"
-                )
+            if os.environ.get("APP_MODE", "production").lower() == "development":
+                self.verify_ssl = os.environ.get("VERIFY_SSL", "false").lower() == "true"
                 if not self.verify_ssl:
-                    self.logger.warning(
-                        "⚠️  개발 환경: SSL 검증이 비활성화되었습니다. 프로덕션에서는 사용하지 마세요"
-                    )
+                    self.logger.warning("⚠️  개발 환경: SSL 검증이 비활성화되었습니다. 프로덕션에서는 사용하지 마세요")
             else:
                 # 프로덕션/테스트 환경에서는 기본적으로 SSL 검증 활성화
-                self.verify_ssl = (
-                    os.environ.get("VERIFY_SSL", "true").lower() == "true"
-                )
+                self.verify_ssl = os.environ.get("VERIFY_SSL", "true").lower() == "true"
         else:
             self.verify_ssl = verify_ssl
 
@@ -159,9 +148,7 @@ class BaseApiClient(ABC):
     def _init_session(self):
         """Initialize requests session using connection pool manager"""
         # Use connection pool manager for better performance
-        session_id = (
-            f"{self.logger_name or self.__class__.__name__}_{self.host}"
-        )
+        session_id = f"{self.logger_name or self.__class__.__name__}_{self.host}"
         self.session = connection_pool_manager.get_session(
             identifier=session_id,
             pool_connections=20,
@@ -192,10 +179,7 @@ class BaseApiClient(ABC):
             "username": os.environ.get(f"{prefix}_USERNAME"),
             "password": os.environ.get(f"{prefix}_PASSWORD"),
             "port": os.environ.get(f"{prefix}_PORT"),
-            "verify_ssl": os.environ.get(
-                f"{prefix}_VERIFY_SSL", "false"
-            ).lower()
-            == "true",
+            "verify_ssl": os.environ.get(f"{prefix}_VERIFY_SSL", "false").lower() == "true",
         }
 
     def _setup_headers(self):
@@ -208,9 +192,7 @@ class BaseApiClient(ABC):
         else:
             self.headers = {"Content-Type": "application/json"}
 
-    def _make_request(
-        self, method, url, data=None, params=None, headers=None, timeout=None
-    ):
+    def _make_request(self, method, url, data=None, params=None, headers=None, timeout=None):
         """
         Make an HTTP request with error handling and logging
 
@@ -250,9 +232,7 @@ class BaseApiClient(ABC):
 
         # Log the request (sanitizing sensitive information)
         sanitized_data = self._sanitize_data(data) if data else None
-        sanitized_headers = (
-            self._sanitize_headers(headers) if headers else None
-        )
+        sanitized_headers = self._sanitize_headers(headers) if headers else None
         self.logger.debug(f"API Request: {method} {url}")
         if sanitized_data:
             self.logger.debug(f"Request Data: {sanitized_data}")
@@ -274,9 +254,7 @@ class BaseApiClient(ABC):
             if response.ok:
                 self.logger.debug(f"API Response: {response.status_code} OK")
             else:
-                self.logger.warning(
-                    f"API Response: {response.status_code} {response.reason}"
-                )
+                self.logger.warning(f"API Response: {response.status_code} {response.reason}")
 
             # Return success flag, response data, and status code
             if response.ok:
@@ -338,12 +316,7 @@ class BaseApiClient(ABC):
                 if isinstance(value, dict):
                     result[key] = _sanitize_dict(value)
                 elif isinstance(value, list):
-                    result[key] = [
-                        _sanitize_dict(item)
-                        if isinstance(item, dict)
-                        else item
-                        for item in value
-                    ]
+                    result[key] = [_sanitize_dict(item) if isinstance(item, dict) else item for item in value]
                 elif any(sk in key.lower() for sk in sensitive_keys):
                     result[key] = "********"
                 else:
@@ -395,24 +368,16 @@ class BaseApiClient(ABC):
 
         # Try token authentication first if available
         if self.auth_method == "token":
-            self.logger.info(
-                f"Testing {self.__class__.__name__} API connection with token"
-            )
+            self.logger.info(f"Testing {self.__class__.__name__} API connection with token")
 
             # Get the test endpoint for this client type
-            test_endpoint = getattr(
-                self, "test_endpoint", "/monitor/system/status"
-            )
+            test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request(
-                "GET", test_url, None, None, self.headers
-            )
+            success, result, status_code = self._make_request("GET", test_url, None, None, self.headers)
 
             if success:
-                self.logger.info(
-                    f"{self.__class__.__name__} API token authentication successful"
-                )
+                self.logger.info(f"{self.__class__.__name__} API token authentication successful")
                 return True, result
             else:
                 self.logger.warning(
@@ -443,38 +408,26 @@ class BaseApiClient(ABC):
             return self.login()
         else:
             # Fallback: try basic auth
-            self.logger.info(
-                f"Testing {self.__class__.__name__} API connection with credentials"
-            )
+            self.logger.info(f"Testing {self.__class__.__name__} API connection with credentials")
 
             # Set up basic auth headers
             import base64
 
-            credentials = base64.b64encode(
-                f"{self.username}:{self.password}".encode()
-            ).decode()
+            credentials = base64.b64encode(f"{self.username}:{self.password}".encode()).decode()
             headers = self.headers.copy()
             headers["Authorization"] = f"Basic {credentials}"
 
             # Get the test endpoint
-            test_endpoint = getattr(
-                self, "test_endpoint", "/monitor/system/status"
-            )
+            test_endpoint = getattr(self, "test_endpoint", "/monitor/system/status")
             test_url = f"{self.base_url}/{test_endpoint.lstrip('/')}"
 
-            success, result, status_code = self._make_request(
-                "GET", test_url, None, None, headers
-            )
+            success, result, status_code = self._make_request("GET", test_url, None, None, headers)
 
             if success:
-                self.logger.info(
-                    f"{self.__class__.__name__} credential authentication successful"
-                )
+                self.logger.info(f"{self.__class__.__name__} credential authentication successful")
                 return True, "Credential authentication successful"
             else:
-                self.logger.error(
-                    f"{self.__class__.__name__} credential authentication failed: {status_code}"
-                )
+                self.logger.error(f"{self.__class__.__name__} credential authentication failed: {status_code}")
                 return False, f"Credential authentication failed: {result}"
 
 
@@ -514,13 +467,9 @@ class RealtimeMonitoringMixin:
         self.connection_error_count = 0
 
         # Start monitoring thread
-        self.monitoring_thread = threading.Thread(
-            target=self._monitoring_loop, args=(interval,), daemon=True
-        )
+        self.monitoring_thread = threading.Thread(target=self._monitoring_loop, args=(interval,), daemon=True)
         self.monitoring_thread.start()
-        self.logger.info(
-            f"Real-time monitoring started with {interval}s interval"
-        )
+        self.logger.info(f"Real-time monitoring started with {interval}s interval")
 
     def stop_realtime_monitoring(self):
         """Stop real-time monitoring"""
@@ -559,20 +508,13 @@ class RealtimeMonitoringMixin:
                         try:
                             callback(data)
                         except Exception as e:
-                            self.logger.error(
-                                f"Error in monitoring callback: {e}"
-                            )
+                            self.logger.error(f"Error in monitoring callback: {e}")
                 else:
                     # Handle connection error
                     self.connection_error_count += 1
-                    if (
-                        self.connection_error_count
-                        >= self.max_connection_errors
-                    ):
+                    if self.connection_error_count >= self.max_connection_errors:
                         self.is_connected = False
-                        self.logger.error(
-                            "Max connection errors reached, marking as disconnected"
-                        )
+                        self.logger.error("Max connection errors reached, marking as disconnected")
 
             except Exception as e:
                 self.logger.error(f"Error in monitoring loop: {e}")
@@ -592,18 +534,18 @@ class RealtimeMonitoringMixin:
             monitoring_data = {
                 "timestamp": time.time(),
                 "client_type": self.__class__.__name__,
-                "connection_status": getattr(self, 'is_connected', False),
-                "last_heartbeat": getattr(self, 'last_heartbeat', None),
-                "error_count": getattr(self, 'connection_error_count', 0),
-                "monitoring_active": getattr(self, 'monitoring_active', False),
+                "connection_status": getattr(self, "is_connected", False),
+                "last_heartbeat": getattr(self, "last_heartbeat", None),
+                "error_count": getattr(self, "connection_error_count", 0),
+                "monitoring_active": getattr(self, "monitoring_active", False),
             }
 
             # API 클라이언트별 특화 모니터링 데이터 수집
-            if hasattr(self, 'base_url'):
-                monitoring_data["endpoint"] = getattr(self, 'base_url', '')
-            
-            if hasattr(self, 'session'):
-                session = getattr(self, 'session', None)
+            if hasattr(self, "base_url"):
+                monitoring_data["endpoint"] = getattr(self, "base_url", "")
+
+            if hasattr(self, "session"):
+                session = getattr(self, "session", None)
                 if session:
                     # 세션 상태 정보
                     monitoring_data["session_active"] = True
@@ -620,63 +562,59 @@ class RealtimeMonitoringMixin:
             monitoring_data["performance"] = performance_metrics
 
             # API 호출 통계 (있다면)
-            if hasattr(self, 'api_call_stats'):
-                monitoring_data["api_stats"] = getattr(self, 'api_call_stats', {})
+            if hasattr(self, "api_call_stats"):
+                monitoring_data["api_stats"] = getattr(self, "api_call_stats", {})
 
             return monitoring_data
 
         except Exception as e:
-            if hasattr(self, 'logger'):
+            if hasattr(self, "logger"):
                 self.logger.error(f"모니터링 데이터 수집 오류: {e}")
-            
+
             # 최소한의 오류 정보라도 반환
             return {
                 "timestamp": time.time(),
                 "client_type": self.__class__.__name__,
                 "error": str(e),
-                "status": "monitoring_error"
+                "status": "monitoring_error",
             }
 
     def _check_connection_health(self) -> Dict[str, Any]:
         """
         연결 상태 확인 (논블로킹 방식)
-        
+
         Returns:
             연결 상태 정보
         """
-        health_info = {
-            "connection_healthy": False,
-            "response_time_ms": None,
-            "last_check": time.time()
-        }
+        health_info = {"connection_healthy": False, "response_time_ms": None, "last_check": time.time()}
 
         try:
             # 기본 연결 속성 확인
-            if hasattr(self, 'is_connected'):
-                health_info["connection_healthy"] = getattr(self, 'is_connected', False)
+            if hasattr(self, "is_connected"):
+                health_info["connection_healthy"] = getattr(self, "is_connected", False)
 
             # 마지막 성공적인 응답 시간 확인
-            if hasattr(self, 'last_response_time'):
-                last_response = getattr(self, 'last_response_time', None)
+            if hasattr(self, "last_response_time"):
+                last_response = getattr(self, "last_response_time", None)
                 if last_response:
                     health_info["time_since_last_success"] = time.time() - last_response
 
             # 빠른 핑 테스트 (타임아웃 1초)
-            if hasattr(self, 'session') and hasattr(self, 'base_url'):
+            if hasattr(self, "session") and hasattr(self, "base_url"):
                 start_time = time.time()
                 try:
-                    session = getattr(self, 'session')
-                    base_url = getattr(self, 'base_url')
-                    
+                    session = getattr(self, "session")
+                    base_url = getattr(self, "base_url")
+
                     if session and base_url:
                         # HEAD 요청으로 빠른 연결 확인
                         response = session.head(base_url, timeout=1)
                         response_time = (time.time() - start_time) * 1000
-                        
+
                         health_info["connection_healthy"] = response.status_code < 500
                         health_info["response_time_ms"] = round(response_time, 2)
                         health_info["status_code"] = response.status_code
-                        
+
                 except Exception as ping_error:
                     health_info["ping_error"] = str(ping_error)
 
@@ -688,34 +626,30 @@ class RealtimeMonitoringMixin:
     def _collect_performance_metrics(self) -> Dict[str, Any]:
         """
         성능 메트릭 수집
-        
+
         Returns:
             성능 관련 메트릭
         """
-        metrics = {
-            "memory_usage_mb": 0,
-            "cpu_usage_percent": 0,
-            "active_threads": 0,
-            "cache_stats": {}
-        }
+        metrics = {"memory_usage_mb": 0, "cpu_usage_percent": 0, "active_threads": 0, "cache_stats": {}}
 
         try:
-            import psutil
             import threading
-            
+
+            import psutil
+
             # 현재 프로세스 정보
             process = psutil.Process()
-            
+
             # 메모리 사용량 (MB)
             memory_info = process.memory_info()
             metrics["memory_usage_mb"] = round(memory_info.rss / 1024 / 1024, 2)
-            
+
             # CPU 사용률 (짧은 간격으로 측정)
             metrics["cpu_usage_percent"] = round(process.cpu_percent(interval=0.1), 2)
-            
+
             # 활성 스레드 수
             metrics["active_threads"] = threading.active_count()
-            
+
         except ImportError:
             # psutil이 없는 경우 기본값 유지
             pass
@@ -725,6 +659,7 @@ class RealtimeMonitoringMixin:
         # 캐시 통계 (UnifiedCacheManager 사용 중인 경우)
         try:
             from utils.unified_cache_manager import get_cache_manager
+
             cache_manager = get_cache_manager()
             metrics["cache_stats"] = cache_manager.get_stats()
         except Exception:

@@ -122,9 +122,7 @@ class ConfigManager:
             logger.error(f"Failed to set configuration {key}: {e}")
             return False
 
-    def update(
-        self, config_dict: Dict[str, Any], auto_save: bool = False
-    ) -> bool:
+    def update(self, config_dict: Dict[str, Any], auto_save: bool = False) -> bool:
         """설정 딕셔너리로 일괄 업데이트"""
         try:
             self._deep_update(self._config_data, config_dict)
@@ -148,9 +146,7 @@ class ConfigManager:
 
             if current_modified != self._last_modified:
                 logger.info("Configuration file changed, reloading...")
-                return self.load_from_file(
-                    self._config_file, auto_create=False
-                )
+                return self.load_from_file(self._config_file, auto_create=False)
 
         except Exception as e:
             logger.error(f"Failed to check file modification time: {e}")
@@ -201,11 +197,7 @@ class ConfigManager:
     def _deep_update(self, target: Dict, source: Dict):
         """딕셔너리 깊은 병합"""
         for key, value in source.items():
-            if (
-                isinstance(value, dict)
-                and key in target
-                and isinstance(target[key], dict)
-            ):
+            if isinstance(value, dict) and key in target and isinstance(target[key], dict):
                 self._deep_update(target[key], value)
             else:
                 target[key] = value
@@ -245,9 +237,7 @@ def convert_env_value(value: str) -> Union[str, int, float, bool]:
     return value
 
 
-def validate_config_schema(
-    config: Dict[str, Any], schema: Dict[str, Any]
-) -> tuple[bool, list]:
+def validate_config_schema(config: Dict[str, Any], schema: Dict[str, Any]) -> tuple[bool, list]:
     """설정 스키마 검증"""
     errors = []
 
@@ -263,16 +253,12 @@ def validate_config_schema(
 
             if isinstance(expected_type, dict):
                 if not isinstance(value, dict):
-                    errors.append(
-                        f"Expected dict for {current_path}, got {type(value).__name__}"
-                    )
+                    errors.append(f"Expected dict for {current_path}, got {type(value).__name__}")
                 else:
                     validate_recursive(value, expected_type, current_path)
             elif isinstance(expected_type, type):
                 if not isinstance(value, expected_type):
-                    errors.append(
-                        f"Expected {expected_type.__name__} for {current_path}, got {type(value).__name__}"
-                    )
+                    errors.append(f"Expected {expected_type.__name__} for {current_path}, got {type(value).__name__}")
 
     validate_recursive(config, schema)
     return len(errors) == 0, errors

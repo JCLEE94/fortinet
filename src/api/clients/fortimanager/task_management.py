@@ -14,9 +14,7 @@ logger = logging.getLogger(__name__)
 class TaskManagementMixin:
     """Mixin for FortiManager task management operations"""
 
-    def create_task(
-        self, task_type: str, task_data: Dict[str, Any], adom: str = "root"
-    ) -> Dict[str, Any]:
+    def create_task(self, task_type: str, task_data: Dict[str, Any], adom: str = "root") -> Dict[str, Any]:
         """
         Create a new task in FortiManager
 
@@ -57,9 +55,7 @@ class TaskManagementMixin:
             logger.error(f"Error creating task: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_task_status(
-        self, task_id: int, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def get_task_status(self, task_id: int, adom: str = "root") -> Dict[str, Any]:
         """
         Get the status of a specific task
 
@@ -71,9 +67,7 @@ class TaskManagementMixin:
             Task status information
         """
         try:
-            response = self._make_api_request(
-                "get", f"/task/task/{task_id}", data={"adom": adom}
-            )
+            response = self._make_api_request("get", f"/task/task/{task_id}", data={"adom": adom})
 
             if response and "data" in response:
                 task_info = response["data"]
@@ -96,9 +90,7 @@ class TaskManagementMixin:
             logger.error(f"Error getting task status: {e}")
             return {"status": "error", "message": str(e)}
 
-    def list_tasks(
-        self, adom: str = "root", limit: int = 100
-    ) -> Dict[str, Any]:
+    def list_tasks(self, adom: str = "root", limit: int = 100) -> Dict[str, Any]:
         """
         List all tasks in FortiManager
 
@@ -164,9 +156,7 @@ class TaskManagementMixin:
         try:
             data = {"adom": adom, "task_id": task_id}
 
-            response = self._make_api_request(
-                "exec", f"/task/task/{task_id}/cancel", data=data
-            )
+            response = self._make_api_request("exec", f"/task/task/{task_id}/cancel", data=data)
 
             if response and response.get("status", {}).get("code") == 0:
                 return {
@@ -217,9 +207,7 @@ class TaskManagementMixin:
                 return status
 
             # Task still running
-            logger.info(
-                f"Task {task_id} progress: {status.get('task_status', 0)}%"
-            )
+            logger.info(f"Task {task_id} progress: {status.get('task_status', 0)}%")
             time.sleep(poll_interval)
 
         # Timeout reached
@@ -229,9 +217,7 @@ class TaskManagementMixin:
             "last_status": status,
         }
 
-    def execute_script(
-        self, script_name: str, target_devices: List[str], adom: str = "root"
-    ) -> Dict[str, Any]:
+    def execute_script(self, script_name: str, target_devices: List[str], adom: str = "root") -> Dict[str, Any]:
         """
         Execute a script on target devices
 
@@ -246,10 +232,7 @@ class TaskManagementMixin:
         try:
             task_data = {
                 "script": script_name,
-                "scope": [
-                    {"name": device, "vdom": "root"}
-                    for device in target_devices
-                ],
+                "scope": [{"name": device, "vdom": "root"} for device in target_devices],
                 "adom": adom,
             }
 
@@ -274,9 +257,7 @@ class TaskManagementMixin:
             logger.error(f"Error executing script: {e}")
             return {"status": "error", "message": str(e)}
 
-    def backup_device_config(
-        self, device_name: str, adom: str = "root"
-    ) -> Dict[str, Any]:
+    def backup_device_config(self, device_name: str, adom: str = "root") -> Dict[str, Any]:
         """
         Create a backup task for device configuration
 
@@ -300,9 +281,7 @@ class TaskManagementMixin:
                 task_id = result.get("task_id")
 
                 # Wait for backup to complete
-                final_status = self.wait_for_task(
-                    task_id, timeout=60, adom=adom
-                )
+                final_status = self.wait_for_task(task_id, timeout=60, adom=adom)
 
                 if final_status.get("state") == "done":
                     return {
@@ -340,17 +319,12 @@ class TaskManagementMixin:
         try:
             task_data = {
                 "pkg": package_name,
-                "scope": [
-                    {"name": device, "vdom": "root"}
-                    for device in target_devices
-                ],
+                "scope": [{"name": device, "vdom": "root"} for device in target_devices],
                 "flags": ["none"],
             }
 
             # Create installation task
-            response = self._make_api_request(
-                "exec", "/securityconsole/install/package", data=task_data
-            )
+            response = self._make_api_request("exec", "/securityconsole/install/package", data=task_data)
 
             if response and response.get("status", {}).get("code") == 0:
                 task_id = response.get("data", {}).get("task")
@@ -371,9 +345,7 @@ class TaskManagementMixin:
             logger.error(f"Error installing policy package: {e}")
             return {"status": "error", "message": str(e)}
 
-    def get_task_lines(
-        self, task_id: int, start_line: int = 0, limit: int = 100
-    ) -> Dict[str, Any]:
+    def get_task_lines(self, task_id: int, start_line: int = 0, limit: int = 100) -> Dict[str, Any]:
         """
         Get detailed log lines from a task
 
@@ -388,9 +360,7 @@ class TaskManagementMixin:
         try:
             data = {"start": start_line, "limit": limit}
 
-            response = self._make_api_request(
-                "get", f"/task/task/{task_id}/line", data=data
-            )
+            response = self._make_api_request("get", f"/task/task/{task_id}/line", data=data)
 
             if response and "data" in response:
                 return {

@@ -22,9 +22,7 @@ def get_monitoring_data():
         fortigate_client = api_manager.get_fortigate_client()
 
         if not fortigate_client:
-            return jsonify(
-                {"success": False, "message": "FortiGate not configured"}
-            )
+            return jsonify({"success": False, "message": "FortiGate not configured"})
 
         monitoring_data = {
             "system_status": fortigate_client.get_system_status() or {},
@@ -48,15 +46,11 @@ def get_dashboard_data():
         fortigate_client = api_manager.get_fortigate_client()
 
         if not fortigate_client:
-            return jsonify(
-                {"success": False, "message": "FortiGate not configured"}
-            )
+            return jsonify({"success": False, "message": "FortiGate not configured"})
 
         dashboard_data = {
             "system_info": fortigate_client.get_system_info() or {},
-            "policy_count": len(
-                fortigate_client.get_firewall_policies() or []
-            ),
+            "policy_count": len(fortigate_client.get_firewall_policies() or []),
             "device_status": "connected",
         }
 

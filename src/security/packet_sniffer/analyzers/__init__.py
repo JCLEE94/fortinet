@@ -8,12 +8,12 @@ from .dns_analyzer import DnsAnalyzer
 from .http_analyzer import HttpAnalyzer
 from .network_analyzer import NetworkAnalyzer
 from .protocol_analyzer import ProtocolAnalyzer
-from .tls_analyzer import TlsAnalyzer
+from .tls_analyzer import TLSAnalyzer
 
 __all__ = [
     "ProtocolAnalyzer",
     "HttpAnalyzer",
-    "TlsAnalyzer",
+    "TLSAnalyzer",
     "DnsAnalyzer",
     "NetworkAnalyzer",
     "ApplicationAnalyzer",

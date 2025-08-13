@@ -24,9 +24,7 @@ except ImportError:
         logger = logging.getLogger(name)
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             # 사용자 정의 레벨을 표준 레벨로 매핑
@@ -94,9 +92,7 @@ class PacketBuffer:
 
             self.total_packets += 1
 
-    def get_packets(
-        self, limit: Optional[int] = None, since: Optional[datetime] = None
-    ) -> List[PacketInfo]:
+    def get_packets(self, limit: Optional[int] = None, since: Optional[datetime] = None) -> List[PacketInfo]:
         """패킷 조회"""
         with self.lock:
             packets = self.packets.copy()
@@ -104,9 +100,7 @@ class PacketBuffer:
             # 시간 필터링
             if since:
                 since_timestamp = since.timestamp()
-                packets = [
-                    p for p in packets if p.timestamp >= since_timestamp
-                ]
+                packets = [p for p in packets if p.timestamp >= since_timestamp]
 
             # 최신 패킷 우선으로 정렬
             packets.sort(key=lambda p: p.timestamp, reverse=True)
@@ -380,10 +374,7 @@ class PacketCapturer(BaseSniffer):
 
         self.logger.info(f"Mock 캡처 루프 시작: {session_id}")
 
-        while (
-            self.active_sessions.get(session_id, False)
-            and packet_count < max_packets
-        ):
+        while self.active_sessions.get(session_id, False) and packet_count < max_packets:
             try:
                 # 가짜 패킷 생성
                 packet = MockDataGenerator.generate_packet_info()
@@ -392,9 +383,7 @@ class PacketCapturer(BaseSniffer):
                 if self._should_capture_packet(session_id, packet):
                     self._process_captured_packet(session_id, packet)
                     packet_count += 1
-                    self.logger.debug(
-                        f"Mock 패킷 생성됨: {packet_count}/{max_packets}"
-                    )
+                    self.logger.debug(f"Mock 패킷 생성됨: {packet_count}/{max_packets}")
                 else:
                     self.capture_stats["filtered_out"] += 1
 
@@ -404,9 +393,7 @@ class PacketCapturer(BaseSniffer):
                 self.logger.error(f"가짜 패킷 생성 오류: {e}")
                 time.sleep(1)
 
-        self.logger.info(
-            f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성"
-        )
+        self.logger.info(f"Mock 캡처 루프 완료: {session_id}, 총 {packet_count}개 패킷 생성")
 
     def _fortigate_capture_loop(self, session_id: str, interface: str) -> None:
         """FortiGate를 통한 실제 패킷 캡처 루프"""
@@ -422,9 +409,7 @@ class PacketCapturer(BaseSniffer):
                 "duration": 3600,
             }  # 1시간
 
-            success = self._fortigate_client.start_packet_capture(
-                **capture_config
-            )
+            success = self._fortigate_client.start_packet_capture(**capture_config)
             if not success:
                 self.logger.error("FortiGate 패킷 캡처 시작 실패")
                 return
@@ -438,12 +423,8 @@ class PacketCapturer(BaseSniffer):
                     if packets:
                         for packet_data in packets:
                             packet = self._parse_fortigate_packet(packet_data)
-                            if packet and self._should_capture_packet(
-                                session_id, packet
-                            ):
-                                self._process_captured_packet(
-                                    session_id, packet
-                                )
+                            if packet and self._should_capture_packet(session_id, packet):
+                                self._process_captured_packet(session_id, packet)
 
                     time.sleep(1)  # 1초마다 폴링
 
@@ -461,9 +442,7 @@ class PacketCapturer(BaseSniffer):
             except Exception as e:
                 self.logger.error(f"FortiGate 캡처 정리 오류: {e}")
 
-    def _parse_fortigate_packet(
-        self, packet_data: Dict[str, Any]
-    ) -> Optional[PacketInfo]:
+    def _parse_fortigate_packet(self, packet_data: Dict[str, Any]) -> Optional[PacketInfo]:
         """FortiGate 패킷 데이터 파싱"""
         try:
             packet = PacketInfo(
@@ -483,9 +462,7 @@ class PacketCapturer(BaseSniffer):
             self.logger.error(f"FortiGate 패킷 파싱 오류: {e}")
             return None
 
-    def _should_capture_packet(
-        self, session_id: str, packet: PacketInfo
-    ) -> bool:
+    def _should_capture_packet(self, session_id: str, packet: PacketInfo) -> bool:
         """패킷 캡처 여부 결정"""
         # 필터 확인
         if session_id in self.capture_filters:
@@ -495,9 +472,7 @@ class PacketCapturer(BaseSniffer):
 
         return True
 
-    def _process_captured_packet(
-        self, session_id: str, packet: PacketInfo
-    ) -> None:
+    def _process_captured_packet(self, session_id: str, packet: PacketInfo) -> None:
         """캡처된 패킷 처리"""
         try:
             # 통계 업데이트
@@ -517,9 +492,7 @@ class PacketCapturer(BaseSniffer):
             self.logger.error(f"패킷 처리 오류: {e}")
             self.capture_stats["errors"] += 1
 
-    def get_real_time_packet(
-        self, session_id: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    def get_real_time_packet(self, session_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """실시간 패킷 조회"""
         if session_id:
             # 특정 세션의 최신 패킷
@@ -532,9 +505,7 @@ class PacketCapturer(BaseSniffer):
             packet = self.packet_buffer.get_latest_packet()
             return packet.to_dict() if packet else None
 
-    def get_latest_packets(
-        self, session_id: Optional[str] = None, limit: int = 10
-    ) -> List[Dict[str, Any]]:
+    def get_latest_packets(self, session_id: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
         """최신 패킷 목록 조회"""
         if session_id:
             # 특정 세션의 패킷들
@@ -557,9 +528,7 @@ class PacketCapturer(BaseSniffer):
             return [p.to_dict() for p in packets]
         return []
 
-    def filter_packets(
-        self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def filter_packets(self, packets: List[Dict[str, Any]], filter_criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
         """패킷 필터링"""
         filtered_packets = []
 
@@ -577,9 +546,7 @@ class PacketCapturer(BaseSniffer):
 
         return filtered_packets
 
-    def get_capture_status(
-        self, session_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_capture_status(self, session_id: Optional[str] = None) -> Dict[str, Any]:
         """캡처 상태 조회"""
         if session_id:
             # 특정 세션 상태
@@ -602,9 +569,7 @@ class PacketCapturer(BaseSniffer):
                 "errors": self.capture_stats["errors"],
                 "buffer_stats": self.packet_buffer.get_stats(),
                 "start_time": (
-                    self.capture_stats["start_time"].isoformat()
-                    if self.capture_stats["start_time"]
-                    else None
+                    self.capture_stats["start_time"].isoformat() if self.capture_stats["start_time"] else None
                 ),
             }
 
@@ -618,9 +583,7 @@ class PacketCapturer(BaseSniffer):
         """캡처 필터 생성"""
         return CaptureFilter(**kwargs)
 
-    def export_capture_data(
-        self, session_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def export_capture_data(self, session_id: Optional[str] = None) -> Dict[str, Any]:
         """캡처 데이터 내보내기"""
         export_data = {
             "timestamp": datetime.now().isoformat(),
@@ -635,12 +598,8 @@ class PacketCapturer(BaseSniffer):
                 export_data["session_data"] = session_data
         else:
             # 모든 세션 데이터
-            export_data[
-                "all_sessions"
-            ] = self.session_manager.get_all_sessions()
-            export_data["global_packets"] = [
-                p.to_dict() for p in self.packet_buffer.get_packets()
-            ]
+            export_data["all_sessions"] = self.session_manager.get_all_sessions()
+            export_data["global_packets"] = [p.to_dict() for p in self.packet_buffer.get_packets()]
 
         return export_data
 
@@ -654,9 +613,7 @@ class PacketCapturer(BaseSniffer):
             "buffer_usage_percent": buffer_stats["buffer_usage"],
             "active_sessions": len(self.active_sessions),
             "memory_usage": len(self.packet_buffer.packets) * 1024,  # 추정치
-            "error_rate": self.capture_stats["errors"]
-            / max(self.capture_stats["total_captured"], 1)
-            * 100,
+            "error_rate": self.capture_stats["errors"] / max(self.capture_stats["total_captured"], 1) * 100,
         }
 
         return metrics

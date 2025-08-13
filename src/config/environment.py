@@ -13,9 +13,7 @@ class EnvironmentConfig:
 
     # Network Configuration
     INTERNAL_NETWORK_PREFIX = os.getenv("INTERNAL_NETWORK_PREFIX", "10.0.0")
-    MANAGEMENT_NETWORK_PREFIX = os.getenv(
-        "MANAGEMENT_NETWORK_PREFIX", "172.16.0"
-    )
+    MANAGEMENT_NETWORK_PREFIX = os.getenv("MANAGEMENT_NETWORK_PREFIX", "172.16.0")
     DMZ_NETWORK_PREFIX = os.getenv("DMZ_NETWORK_PREFIX", "192.168.1")
     DEFAULT_GATEWAY = os.getenv("DEFAULT_GATEWAY", "10.0.0.1")
     DNS_SERVERS = [
@@ -45,21 +43,11 @@ class EnvironmentConfig:
     ENABLE_MOCK_MODE = os.getenv("ENABLE_MOCK_MODE", "false").lower() == "true"
     ENABLE_WEBSOCKET = os.getenv("ENABLE_WEBSOCKET", "true").lower() == "true"
     ENABLE_ANALYTICS = os.getenv("ENABLE_ANALYTICS", "true").lower() == "true"
-    ENABLE_COMPLIANCE = (
-        os.getenv("ENABLE_COMPLIANCE", "true").lower() == "true"
-    )
-    ENABLE_THREAT_INTEL = (
-        os.getenv("ENABLE_THREAT_INTEL", "true").lower() == "true"
-    )
-    ENABLE_AUTO_REMEDIATION = (
-        os.getenv("ENABLE_AUTO_REMEDIATION", "false").lower() == "true"
-    )
-    ENABLE_CAPACITY_PLANNING = (
-        os.getenv("ENABLE_CAPACITY_PLANNING", "true").lower() == "true"
-    )
-    ENABLE_POLICY_OPTIMIZATION = (
-        os.getenv("ENABLE_POLICY_OPTIMIZATION", "true").lower() == "true"
-    )
+    ENABLE_COMPLIANCE = os.getenv("ENABLE_COMPLIANCE", "true").lower() == "true"
+    ENABLE_THREAT_INTEL = os.getenv("ENABLE_THREAT_INTEL", "true").lower() == "true"
+    ENABLE_AUTO_REMEDIATION = os.getenv("ENABLE_AUTO_REMEDIATION", "false").lower() == "true"
+    ENABLE_CAPACITY_PLANNING = os.getenv("ENABLE_CAPACITY_PLANNING", "true").lower() == "true"
+    ENABLE_POLICY_OPTIMIZATION = os.getenv("ENABLE_POLICY_OPTIMIZATION", "true").lower() == "true"
 
     @classmethod
     def get_mock_ip(cls, index: int = None) -> str:

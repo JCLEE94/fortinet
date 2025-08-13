@@ -32,9 +32,7 @@ class PortScannerMixin:
                 if conn.status == psutil.CONN_LISTEN and conn.laddr:
                     port_info = {
                         "port": conn.laddr.port,
-                        "protocol": "TCP"
-                        if conn.type == socket.SOCK_STREAM
-                        else "UDP",
+                        "protocol": "TCP" if conn.type == socket.SOCK_STREAM else "UDP",
                         "address": conn.laddr.ip,
                         "pid": conn.pid,
                         "process": self._get_process_name(conn.pid),
@@ -43,9 +41,7 @@ class PortScannerMixin:
                     open_ports.append(port_info)
 
                     # 허용된 포트 목록과 비교
-                    if hasattr(
-                        self, "security_baselines"
-                    ) and conn.laddr.port not in self.security_baselines.get(
+                    if hasattr(self, "security_baselines") and conn.laddr.port not in self.security_baselines.get(
                         "open_ports", []
                     ):
                         suspicious_ports.append(port_info)
@@ -57,9 +53,7 @@ class PortScannerMixin:
                 "open_ports": open_ports,
                 "total_open_ports": len(open_ports),
                 "suspicious_ports": suspicious_ports,
-                "risk_level": self._assess_port_risk(
-                    open_ports, suspicious_ports
-                ),
+                "risk_level": self._assess_port_risk(open_ports, suspicious_ports),
             }
 
             logger.info(f"포트 스캔 완료: {len(open_ports)}개 포트 발견")
@@ -85,9 +79,7 @@ class PortScannerMixin:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return "unknown"
 
-    def _assess_port_risk(
-        self, open_ports: List, suspicious_ports: List
-    ) -> str:
+    def _assess_port_risk(self, open_ports: List, suspicious_ports: List) -> str:
         """포트 위험도 평가"""
         if not open_ports:
             return "low"
@@ -127,9 +119,7 @@ class PortScannerMixin:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def scan_port_range(
-        self, start_port: int, end_port: int, host: str = "localhost"
-    ) -> Dict:
+    def scan_port_range(self, start_port: int, end_port: int, host: str = "localhost") -> Dict:
         """포트 범위 스캔"""
         logger.info(f"포트 범위 스캔 시작: {start_port}-{end_port} @ {host}")
 

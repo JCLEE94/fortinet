@@ -57,12 +57,8 @@ PAGINATION = {
 
 # File Size Limits (in bytes)
 FILE_LIMITS = {
-    "LOG_MAX_SIZE": int(
-        os.getenv("LOG_MAX_SIZE", str(10 * 1024 * 1024))
-    ),  # 10MB
-    "ERROR_LOG_MAX_SIZE": int(
-        os.getenv("ERROR_LOG_MAX_SIZE", str(5 * 1024 * 1024))
-    ),  # 5MB
+    "LOG_MAX_SIZE": int(os.getenv("LOG_MAX_SIZE", str(10 * 1024 * 1024))),  # 10MB
+    "ERROR_LOG_MAX_SIZE": int(os.getenv("ERROR_LOG_MAX_SIZE", str(5 * 1024 * 1024))),  # 5MB
     "LOG_BACKUP_COUNT": int(os.getenv("LOG_BACKUP_COUNT", "3")),
 }
 
@@ -88,9 +84,7 @@ SECURITY_HEADERS = {
 
 # File Paths
 DEFAULT_PATHS = {
-    "CONFIG": os.getenv(
-        "CONFIG_PATH", os.path.join(os.getcwd(), "data", "config.json")
-    ),
+    "CONFIG": os.getenv("CONFIG_PATH", os.path.join(os.getcwd(), "data", "config.json")),
     "DEFAULT_CONFIG": os.getenv(
         "DEFAULT_CONFIG_PATH",
         os.path.join(os.getcwd(), "data", "default_config.json"),
@@ -103,23 +97,17 @@ DEFAULT_PATHS = {
 # Service URLs
 BASE_URL = os.getenv("BASE_URL", "http://localhost")
 SERVICE_URLS = {
-    "HEALTH_CHECK": os.getenv(
-        "HEALTH_CHECK_URL", f"{BASE_URL}:{{port}}/health"
-    ),
+    "HEALTH_CHECK": os.getenv("HEALTH_CHECK_URL", f"{BASE_URL}:{{port}}/health"),
     "MOCK_SERVER": os.getenv(
         "MOCK_SERVER_URL",
         f"{BASE_URL}:{{port}}{{api_version}}/monitor/system/status",
     ),
-    "REDIS": os.getenv(
-        "REDIS_URL", f'redis://redis:{DEFAULT_PORTS["REDIS"]}/0'
-    ),
+    "REDIS": os.getenv("REDIS_URL", f'redis://redis:{DEFAULT_PORTS["REDIS"]}/0'),
 }
 
 # Default Values
 DEFAULTS = {
-    "SECRET_KEY": os.getenv(
-        "SECRET_KEY", "change_this_in_production_seriously"
-    ),
+    "SECRET_KEY": os.getenv("SECRET_KEY", "change_this_in_production_seriously"),
     "FLASK_ENV": os.getenv("FLASK_ENV", "production"),
     "DEBUG": os.getenv("DEBUG", "false").lower() == "true",
     "APP_MODE": os.getenv("APP_MODE", "production"),
@@ -146,9 +134,7 @@ COMMON_PORTS = [
 # Example IP Ranges (for documentation and examples)
 # These use RFC 5737 and RFC 1918 addresses which are reserved for documentation
 EXAMPLE_IPS = {
-    "INTERNAL": os.getenv(
-        "INTERNAL_NETWORKS", "192.168.0.0/16,10.0.0.0/8"
-    ).split(","),
+    "INTERNAL": os.getenv("INTERNAL_NETWORKS", "192.168.0.0/16,10.0.0.0/8").split(","),
     "DMZ": [os.getenv("DMZ_NETWORK", "172.16.0.0/24")],
     "PUBLIC": os.getenv("PUBLIC_DNS_SERVERS", "8.8.8.8,1.1.1.1").split(","),
 }

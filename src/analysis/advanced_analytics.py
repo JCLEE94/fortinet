@@ -78,16 +78,12 @@ class AdvancedAnalytics:
             anomalies = []
 
             # 메트릭 히스토리에 추가
-            self.metrics_history.append(
-                {"timestamp": datetime.now(), "metrics": current_metrics}
-            )
+            self.metrics_history.append({"timestamp": datetime.now(), "metrics": current_metrics})
 
             # 각 메트릭별 이상 징후 검사
             for metric_name, current_value in current_metrics.items():
                 if isinstance(current_value, (int, float)):
-                    anomaly = self._check_metric_anomaly(
-                        metric_name, current_value
-                    )
+                    anomaly = self._check_metric_anomaly(metric_name, current_value)
                     if anomaly:
                         anomalies.append(anomaly)
 
@@ -196,9 +192,7 @@ class AdvancedAnalytics:
                 "status": "success",
                 "bottlenecks": bottlenecks,
                 "overall_health": self._calculate_system_health(bottlenecks),
-                "recommendations": self._generate_optimization_recommendations(
-                    bottlenecks
-                ),
+                "recommendations": self._generate_optimization_recommendations(bottlenecks),
             }
 
         except Exception as e:
@@ -235,10 +229,7 @@ class AdvancedAnalytics:
 
         # 백분율 계산
         if total > 0:
-            return {
-                proto: (count / total) * 100
-                for proto, count in protocol_counts.items()
-            }
+            return {proto: (count / total) * 100 for proto, count in protocol_counts.items()}
         return {}
 
     def _analyze_traffic_trend(self, metrics: List[Dict]) -> str:
@@ -275,15 +266,9 @@ class AdvancedAnalytics:
         avg_traffic = statistics.mean(hourly_traffic.values())
         peak_threshold = avg_traffic * 1.5
 
-        return [
-            hour
-            for hour, traffic in hourly_traffic.items()
-            if traffic > peak_threshold
-        ]
+        return [hour for hour, traffic in hourly_traffic.items() if traffic > peak_threshold]
 
-    def _check_metric_anomaly(
-        self, metric_name: str, current_value: float
-    ) -> Optional[Dict]:
+    def _check_metric_anomaly(self, metric_name: str, current_value: float) -> Optional[Dict]:
         """개별 메트릭 이상 징후 검사"""
         historical_values = []
 
@@ -302,11 +287,7 @@ class AdvancedAnalytics:
                 "metric": metric_name,
                 "current_value": current_value,
                 "expected_range": (mean - stdev, mean + stdev),
-                "severity": (
-                    "high"
-                    if abs(current_value - mean) > 3 * stdev
-                    else "medium"
-                ),
+                "severity": ("high" if abs(current_value - mean) > 3 * stdev else "medium"),
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -322,12 +303,8 @@ class AdvancedAnalytics:
             previous = self.metrics_history[-2]["metrics"]
 
             for metric in recent:
-                if metric in previous and isinstance(
-                    recent[metric], (int, float)
-                ):
-                    change_rate = abs(recent[metric] - previous[metric]) / (
-                        previous[metric] + 1
-                    )
+                if metric in previous and isinstance(recent[metric], (int, float)):
+                    change_rate = abs(recent[metric] - previous[metric]) / (previous[metric] + 1)
                     if change_rate > 0.5:  # 50% 이상 변화
                         anomalies.append(
                             {
@@ -340,9 +317,7 @@ class AdvancedAnalytics:
 
         return anomalies
 
-    def _moving_average_prediction(
-        self, values: List[float], window: int = 5
-    ) -> List[float]:
+    def _moving_average_prediction(self, values: List[float], window: int = 5) -> List[float]:
         """이동평균 기반 예측"""
         if len(values) < window:
             return []
@@ -362,11 +337,7 @@ class AdvancedAnalytics:
             return "unknown"
 
         recent = values[-10:]
-        older = (
-            values[-20:-10]
-            if len(values) >= 20
-            else values[: len(values) // 2]
-        )
+        older = values[-20:-10] if len(values) >= 20 else values[: len(values) // 2]
 
         recent_avg = statistics.mean(recent)
         older_avg = statistics.mean(older) if older else recent_avg
@@ -399,12 +370,8 @@ class AdvancedAnalytics:
 
         return {
             "hourly_pattern": hourly_avgs,
-            "peak_hour": max(hourly_avgs, key=hourly_avgs.get)
-            if hourly_avgs
-            else None,
-            "low_hour": min(hourly_avgs, key=hourly_avgs.get)
-            if hourly_avgs
-            else None,
+            "peak_hour": max(hourly_avgs, key=hourly_avgs.get) if hourly_avgs else None,
+            "low_hour": min(hourly_avgs, key=hourly_avgs.get) if hourly_avgs else None,
         }
 
     def _calculate_confidence(self, values: List[float]) -> float:
@@ -454,9 +421,7 @@ class AdvancedAnalytics:
         health = max(0, 100 - total_penalty)
         return health
 
-    def _generate_optimization_recommendations(
-        self, bottlenecks: List[Dict]
-    ) -> List[str]:
+    def _generate_optimization_recommendations(self, bottlenecks: List[Dict]) -> List[str]:
         """최적화 권장사항 생성"""
         recommendations = []
 
@@ -474,9 +439,7 @@ class AdvancedAnalytics:
 
         return recommendations
 
-    def _calculate_linear_slope(
-        self, x_values: List[float], y_values: List[float]
-    ) -> float:
+    def _calculate_linear_slope(self, x_values: List[float], y_values: List[float]) -> float:
         """Calculate linear regression slope manually when numpy is not available"""
         if len(x_values) != len(y_values) or len(x_values) < 2:
             return 0.0
@@ -488,9 +451,7 @@ class AdvancedAnalytics:
         y_mean = sum(y_values) / n
 
         # Calculate slope using least squares method
-        numerator = sum(
-            (x_values[i] - x_mean) * (y_values[i] - y_mean) for i in range(n)
-        )
+        numerator = sum((x_values[i] - x_mean) * (y_values[i] - y_mean) for i in range(n))
         denominator = sum((x_values[i] - x_mean) ** 2 for i in range(n))
 
         if denominator == 0:

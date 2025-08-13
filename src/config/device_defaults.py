@@ -160,13 +160,9 @@ TABLE_COLUMNS = {
 # 모달 설정
 MODAL_CONFIG = {
     "title": os.getenv("MODAL_DEVICE_DETAILS_TITLE", "장치 상세 정보"),
-    "loading_message": os.getenv(
-        "MODAL_LOADING_MESSAGE", "장치 정보를 불러오는 중입니다..."
-    ),
+    "loading_message": os.getenv("MODAL_LOADING_MESSAGE", "장치 정보를 불러오는 중입니다..."),
     "error_message": os.getenv("MODAL_ERROR_MESSAGE", "장치 정보를 가져오는데 실패했습니다"),
-    "no_interfaces_message": os.getenv(
-        "MODAL_NO_INTERFACES", "인터페이스 정보가 없습니다."
-    ),
+    "no_interfaces_message": os.getenv("MODAL_NO_INTERFACES", "인터페이스 정보가 없습니다."),
     "no_policies_message": os.getenv("MODAL_NO_POLICIES", "정책 정보가 없습니다."),
     "test_data_suffix": os.getenv("MODAL_TEST_DATA_SUFFIX", " (테스트 데이터)"),
 }
@@ -183,9 +179,7 @@ BUTTON_TEXTS = {
 
 # 검색 및 필터 설정
 SEARCH_CONFIG = {
-    "placeholder": os.getenv(
-        "SEARCH_PLACEHOLDER_TEXT", "장치 검색 (이름, IP, MAC 등)"
-    ),
+    "placeholder": os.getenv("SEARCH_PLACEHOLDER_TEXT", "장치 검색 (이름, IP, MAC 등)"),
     "debounce_delay": int(os.getenv("SEARCH_DEBOUNCE_DELAY", "300")),  # 밀리초
     "min_search_length": int(os.getenv("SEARCH_MIN_LENGTH", "1")),
 }
@@ -210,13 +204,8 @@ API_ENDPOINTS = {
 # 성능 설정
 PERFORMANCE_CONFIG = {
     "datatable_page_length": int(os.getenv("DATATABLE_PAGE_LENGTH", "25")),
-    "auto_refresh_interval": int(
-        os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")
-    ),  # 밀리초
-    "auto_refresh_enabled": os.getenv(
-        "DEVICE_AUTO_REFRESH_ENABLED", "false"
-    ).lower()
-    == "true",
+    "auto_refresh_interval": int(os.getenv("DEVICE_AUTO_REFRESH_INTERVAL", "60000")),  # 밀리초
+    "auto_refresh_enabled": os.getenv("DEVICE_AUTO_REFRESH_ENABLED", "false").lower() == "true",
 }
 
 

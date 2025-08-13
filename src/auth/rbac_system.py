@@ -265,9 +265,7 @@ class RBACManager:
                 # Load custom roles
                 for role_data in config.get("custom_roles", []):
                     permissions = {
-                        Permission(p)
-                        for p in role_data["permissions"]
-                        if p in [perm.value for perm in Permission]
+                        Permission(p) for p in role_data["permissions"] if p in [perm.value for perm in Permission]
                     }
                     self.roles[role_data["name"]] = Role(
                         role_data["name"],
@@ -283,9 +281,7 @@ class RBACManager:
                 # Load resource policies
                 self.resource_policies = config.get("resource_policies", {})
 
-                logger.info(
-                    f"RBAC configuration loaded: {len(self.roles)} roles"
-                )
+                logger.info(f"RBAC configuration loaded: {len(self.roles)} roles")
 
             except Exception as e:
                 logger.error(f"Failed to load RBAC configuration: {e}")
@@ -333,11 +329,7 @@ class RBACManager:
         if name in self.roles:
             raise ValueError(f"Role {name} already exists")
 
-        permission_set = {
-            Permission(p)
-            for p in permissions
-            if p in [perm.value for perm in Permission]
-        }
+        permission_set = {Permission(p) for p in permissions if p in [perm.value for perm in Permission]}
 
         # Inherit permissions from parent roles
         if inherits_from:
@@ -389,10 +381,7 @@ class RBACManager:
 
     def revoke_role(self, user_id: str, role_name: str):
         """Revoke a role from a user"""
-        if (
-            user_id in self.user_roles
-            and role_name in self.user_roles[user_id]
-        ):
+        if user_id in self.user_roles and role_name in self.user_roles[user_id]:
             self.user_roles[user_id].remove(role_name)
 
             if not self.user_roles[user_id]:
@@ -433,9 +422,7 @@ class RBACManager:
         user_permissions = self.get_user_permissions(user_id)
         return permission in user_permissions
 
-    def check_resource_access(
-        self, user_id: str, resource: str, action: str
-    ) -> bool:
+    def check_resource_access(self, user_id: str, resource: str, action: str) -> bool:
         """Check if user can perform action on resource"""
         # Check resource-specific policies
         if resource in self.resource_policies:
@@ -499,9 +486,7 @@ class RBACManager:
 
     def list_roles(self) -> List[Role]:
         """List all available roles"""
-        return sorted(
-            self.roles.values(), key=lambda r: r.priority, reverse=True
-        )
+        return sorted(self.roles.values(), key=lambda r: r.priority, reverse=True)
 
 
 # Decorator for permission checking

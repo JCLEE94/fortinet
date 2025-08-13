@@ -153,24 +153,15 @@ class DashboardDataCollector:
 
                         # 장치 상태 확인
                         device_status = fm_client.get_device_status(device_id)
-                        if (
-                            device_status
-                            and device_status.get("status") == "online"
-                        ):
+                        if device_status and device_status.get("status") == "online":
                             online_count += 1
 
                             # 시스템 성능 정보
-                            performance = fm_client.get_device_performance(
-                                device_id
-                            )
+                            performance = fm_client.get_device_performance(device_id)
                             if performance:
                                 total_cpu += performance.get("cpu_usage", 0)
-                                total_memory += performance.get(
-                                    "memory_usage", 0
-                                )
-                                total_sessions += performance.get(
-                                    "session_count", 0
-                                )
+                                total_memory += performance.get("memory_usage", 0)
+                                total_sessions += performance.get("session_count", 0)
 
                         # 정책 수 가져오기
                         policies = fm_client.get_policies(device_id)
@@ -198,19 +189,10 @@ class DashboardDataCollector:
                     # 최근 24시간 이벤트 필터링
                     recent_time = datetime.now() - timedelta(hours=24)
                     recent_events = [
-                        event
-                        for event in events
-                        if datetime.fromisoformat(event.get("timestamp", ""))
-                        > recent_time
+                        event for event in events if datetime.fromisoformat(event.get("timestamp", "")) > recent_time
                     ]
 
-                    stats.threat_count = len(
-                        [
-                            e
-                            for e in recent_events
-                            if e.get("severity") in ["critical", "high"]
-                        ]
-                    )
+                    stats.threat_count = len([e for e in recent_events if e.get("severity") in ["critical", "high"]])
                     stats.alert_count = len(recent_events)
             except Exception as e:
                 logger.warning(f"보안 이벤트 수집 실패: {e}")
@@ -269,16 +251,8 @@ class DashboardDataCollector:
                     if interfaces:
                         for interface in interfaces:
                             stats_data = interface.get("stats", {})
-                            total_bandwidth_in += stats_data.get(
-                                "rx_bytes", 0
-                            ) / (
-                                1024 * 1024
-                            )  # MB
-                            total_bandwidth_out += stats_data.get(
-                                "tx_bytes", 0
-                            ) / (
-                                1024 * 1024
-                            )  # MB
+                            total_bandwidth_in += stats_data.get("rx_bytes", 0) / (1024 * 1024)  # MB
+                            total_bandwidth_out += stats_data.get("tx_bytes", 0) / (1024 * 1024)  # MB
 
                 except Exception as e:
                     logger.warning(f"FortiGate {device_id} 데이터 수집 실패: {e}")

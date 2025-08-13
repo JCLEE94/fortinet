@@ -71,22 +71,12 @@ class EventAggregator:
         cutoff = datetime.now() - timedelta(hours=hours)
 
         with self._lock:
-            filtered_events = [
-                event
-                for event in self.events
-                if datetime.fromisoformat(event["timestamp"]) > cutoff
-            ]
+            filtered_events = [event for event in self.events if datetime.fromisoformat(event["timestamp"]) > cutoff]
 
             if event_type:
-                filtered_events = [
-                    event
-                    for event in filtered_events
-                    if event.get("type") == event_type
-                ]
+                filtered_events = [event for event in filtered_events if event.get("type") == event_type]
 
-            result = sorted(
-                filtered_events, key=lambda x: x["timestamp"], reverse=True
-            )
+            result = sorted(filtered_events, key=lambda x: x["timestamp"], reverse=True)
 
             # 결과를 캐시에 저장 (30초 TTL)
             self._event_cache.set(cache_key, result)
@@ -112,8 +102,7 @@ class EventAggregator:
         similar_events = [
             e
             for e in recent_events[-10:]  # 최근 10개 이벤트
-            if e.get("source") == event.get("source")
-            and e.get("type") == event.get("type")
+            if e.get("source") == event.get("source") and e.get("type") == event.get("type")
         ]
 
         if len(similar_events) >= 3:
@@ -152,17 +141,13 @@ class DataIntegrator:
                 }
 
                 # 상관관계 분석
-                integrated["correlations"] = self._analyze_data_correlations(
-                    monitor_data
-                )
+                integrated["correlations"] = self._analyze_data_correlations(monitor_data)
 
                 # 인사이트 생성
                 integrated["insights"] = self._generate_insights(monitor_data)
 
                 # 통합 알림 생성
-                integrated["alerts"] = self._generate_integrated_alerts(
-                    monitor_data
-                )
+                integrated["alerts"] = self._generate_integrated_alerts(monitor_data)
 
                 # 통합 데이터 저장
                 self.integrated_data.append(integrated)
@@ -184,9 +169,7 @@ class DataIntegrator:
                 data["api_performance"].get("data", {})
 
                 cpu_usage = system_data.get("cpu", {}).get("usage_percent", 0)
-                memory_usage = system_data.get("memory", {}).get(
-                    "usage_percent", 0
-                )
+                memory_usage = system_data.get("memory", {}).get("usage_percent", 0)
 
                 # API 응답시간과 시스템 리소스 상관관계
                 if cpu_usage > 80 or memory_usage > 80:
@@ -194,11 +177,7 @@ class DataIntegrator:
                         "description": "높은 시스템 리소스 사용률이 API 성능에 영향을 줄 수 있습니다",
                         "cpu_usage": cpu_usage,
                         "memory_usage": memory_usage,
-                        "severity": (
-                            "warning"
-                            if max(cpu_usage, memory_usage) < 90
-                            else "critical"
-                        ),
+                        "severity": ("warning" if max(cpu_usage, memory_usage) < 90 else "critical"),
                     }
 
             # 보안 스캔과 시스템 상태 상관관계
@@ -207,11 +186,7 @@ class DataIntegrator:
                 vulnerabilities = security_data.get("vulnerabilities", [])
 
                 if vulnerabilities:
-                    high_severity = [
-                        v
-                        for v in vulnerabilities
-                        if v.get("severity") in ["high", "critical"]
-                    ]
+                    high_severity = [v for v in vulnerabilities if v.get("severity") in ["high", "critical"]]
                     if high_severity:
                         correlations["security_risk"] = {
                             "description": "높은 심각도의 보안 취약점이 발견되었습니다",
@@ -250,9 +225,7 @@ class DataIntegrator:
                 system_data = data["system_metrics"].get("data", {})
 
                 cpu_usage = system_data.get("cpu", {}).get("usage_percent", 0)
-                memory_usage = system_data.get("memory", {}).get(
-                    "usage_percent", 0
-                )
+                memory_usage = system_data.get("memory", {}).get("usage_percent", 0)
 
                 if cpu_usage > 70 and memory_usage > 70:
                     insights.append(
@@ -270,9 +243,7 @@ class DataIntegrator:
                 security_data = data["security_scanner"].get("data", {})
                 scan_result = security_data.get("latest_scan", {})
 
-                critical_vulns = scan_result.get("severity_summary", {}).get(
-                    "critical", 0
-                )
+                critical_vulns = scan_result.get("severity_summary", {}).get("critical", 0)
                 if critical_vulns > 0:
                     insights.append(
                         {
@@ -423,10 +394,7 @@ class UnifiedMonitoringManager:
                 self.is_running = False
                 self._stop_event.set()
 
-                if (
-                    self.management_thread
-                    and self.management_thread.is_alive()
-                ):
+                if self.management_thread and self.management_thread.is_alive():
                     self.management_thread.join(timeout=timeout / 2)
 
                 # 모든 모니터 중지
@@ -516,9 +484,7 @@ class UnifiedMonitoringManager:
                 "monitors": monitor_status,
                 "config": {
                     "file": self.config_manager.config_file,
-                    "last_updated": getattr(
-                        self.config_manager.config, "_metadata", {}
-                    ).get("last_updated", "unknown"),
+                    "last_updated": getattr(self.config_manager.config, "_metadata", {}).get("last_updated", "unknown"),
                 },
             }
 
@@ -582,24 +548,16 @@ class UnifiedMonitoringManager:
                         "source": "unified_manager",
                         "data": {
                             "sources": integrated_data.get("sources", []),
-                            "insights_count": len(
-                                integrated_data.get("insights", [])
-                            ),
-                            "alerts_count": len(
-                                integrated_data.get("alerts", [])
-                            ),
-                            "correlations_count": len(
-                                integrated_data.get("correlations", {})
-                            ),
+                            "insights_count": len(integrated_data.get("insights", [])),
+                            "alerts_count": len(integrated_data.get("alerts", [])),
+                            "correlations_count": len(integrated_data.get("correlations", {})),
                         },
                     }
 
                     self.event_aggregator.add_event(integration_event)
 
                     # 글로벌 리스너들에게 알림
-                    self._notify_global_listeners(
-                        "data_integrated", integrated_data
-                    )
+                    self._notify_global_listeners("data_integrated", integrated_data)
 
                 # 헬스체크 수행
                 self._perform_health_check()
@@ -729,9 +687,7 @@ class UnifiedMonitoringManager:
                     export_data["monitor_data"][name] = {
                         "status": monitor.get_status(),
                         "statistics": monitor.get_statistics(),
-                        "recent_data": monitor.get_recent_data(
-                            minutes=1440
-                        ),  # 24시간
+                        "recent_data": monitor.get_recent_data(minutes=1440),  # 24시간
                     }
                 except Exception as e:
                     logger.error(f"모니터 '{name}' 데이터 내보내기 실패: {e}")

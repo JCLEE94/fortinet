@@ -56,8 +56,7 @@ class DummyDataGenerator:
                 "location": random.choice(self.locations),
                 "uptime": f"{random.randint(1, 365)} days",
                 "version": f"{random.randint(6, 7)}.{random.randint(0, 4)}.{random.randint(0, 9)}",
-                "last_seen": datetime.now()
-                - timedelta(minutes=random.randint(0, 60)),
+                "last_seen": datetime.now() - timedelta(minutes=random.randint(0, 60)),
                 "cpu_usage": round(random.uniform(5.0, 95.0), 1),
                 "memory_usage": round(random.uniform(20.0, 90.0), 1),
                 "interfaces": random.randint(8, 48),
@@ -66,9 +65,7 @@ class DummyDataGenerator:
             devices.append(device)
         return devices
 
-    def generate_security_events(
-        self, count: int = 20
-    ) -> List[Dict[str, Any]]:
+    def generate_security_events(self, count: int = 20) -> List[Dict[str, Any]]:
         """Generate mock security events"""
         event_types = [
             "Intrusion Attempt",
@@ -91,8 +88,7 @@ class DummyDataGenerator:
                     f"{random.randint(1, 255)}.{random.randint(1, 255)}"
                 ),
                 "destination_ip": env_config.get_mock_ip(),
-                "timestamp": datetime.now()
-                - timedelta(minutes=random.randint(0, 1440)),
+                "timestamp": datetime.now() - timedelta(minutes=random.randint(0, 1440)),
                 "device": f"FW-{random.choice(self.locations)}-{random.randint(1, 20):02d}",
                 "description": f"Security event detected on {random.choice(self.device_types)}",
                 "action": random.choice(["Blocked", "Allowed", "Monitored"]),
@@ -131,9 +127,7 @@ class DummyDataGenerator:
 
         return {"nodes": nodes, "links": links}
 
-    def generate_policy_analysis_result(
-        self, src_ip: str, dst_ip: str, port: int
-    ) -> Dict[str, Any]:
+    def generate_policy_analysis_result(self, src_ip: str, dst_ip: str, port: int) -> Dict[str, Any]:
         """Generate mock policy analysis result"""
         policies = [
             {"id": 1, "name": "ALLOW_HTTP", "action": "allow"},
@@ -200,9 +194,7 @@ if __name__ == "__main__":
     print("\n✅ Security Events:")
     events = generator.generate_security_events(3)
     for event in events:
-        print(
-            f"   {event['type']} - {event['severity']} - {event['source_ip']}"
-        )
+        print(f"   {event['type']} - {event['severity']} - {event['source_ip']}")
 
     print("\n✅ Policy Analysis:")
     analysis = generator.generate_policy_analysis_result(
@@ -210,8 +202,6 @@ if __name__ == "__main__":
         os.getenv("TEST_DST_IP", env_config.get_mock_ip(50)),
         80,
     )
-    print(
-        f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}"
-    )
+    print(f"   {analysis['src_ip']} -> {analysis['dst_ip']}:{analysis['port']} = {analysis['action']}")
 
     print("\n✅ All mock data generators working correctly!")

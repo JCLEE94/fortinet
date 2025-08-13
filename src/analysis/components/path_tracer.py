@@ -82,9 +82,7 @@ class PathTracer:
                 # 직접 연결된 네트워크인지 확인
                 if route.get("type") == "connected":
                     try:
-                        network = ipaddress.ip_network(
-                            destination, strict=False
-                        )
+                        network = ipaddress.ip_network(destination, strict=False)
                         if target_ip in network:
                             return {
                                 "name": interface,
@@ -253,11 +251,9 @@ class PathTracer:
         # 서로를 gateway로 참조하는 경우
         if gateway1 and gateway2:
             try:
-                if ipaddress.ip_address(gateway1) in ipaddress.ip_network(
-                    dest2, strict=False
-                ) and ipaddress.ip_address(gateway2) in ipaddress.ip_network(
-                    dest1, strict=False
-                ):
+                if ipaddress.ip_address(gateway1) in ipaddress.ip_network(dest2, strict=False) and ipaddress.ip_address(
+                    gateway2
+                ) in ipaddress.ip_network(dest1, strict=False):
                     return True
             except ValueError:
                 pass

@@ -84,9 +84,7 @@ def get_devices():
         if is_test_mode():
             dummy_generator = get_dummy_generator()
             devices = dummy_generator.generate_dummy_devices(5)
-            return jsonify(
-                {"devices": devices, "total": len(devices), "mode": "test"}
-            )
+            return jsonify({"devices": devices, "total": len(devices), "mode": "test"})
 
         api_manager = get_api_manager()
         fm_client = api_manager.get_fortimanager_client()
@@ -178,9 +176,7 @@ def get_device_monitoring(device_id):
     try:
         if is_test_mode():
             dummy_generator = get_dummy_generator()
-            monitoring_data = dummy_generator.generate_monitoring_data(
-                device_id
-            )
+            monitoring_data = dummy_generator.generate_monitoring_data(device_id)
             return jsonify(
                 {
                     "device_id": device_id,
@@ -226,9 +222,7 @@ def get_dashboard_data():
             return jsonify({"error": "FortiManager client not available"}), 503
 
         dashboard_data = fm_client.get_dashboard_data()
-        return jsonify(
-            {"dashboard": dashboard_data or {}, "mode": "production"}
-        )
+        return jsonify({"dashboard": dashboard_data or {}, "mode": "production"})
 
     except Exception as e:
         logger.error(f"대시보드 데이터 조회 중 오류: {str(e)}")

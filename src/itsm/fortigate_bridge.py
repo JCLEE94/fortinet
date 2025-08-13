@@ -55,9 +55,7 @@ class ITSMFortiGateBridge:
 
         # 컴포넌트 초기화
         self.itsm_scraper = ITSMScraper(
-            base_url=config.get("itsm", {}).get(
-                "base_url", "https://itsm2.nxtd.co.kr"
-            ),
+            base_url=config.get("itsm", {}).get("base_url", "https://itsm2.nxtd.co.kr"),
             username=config.get("itsm", {}).get("username"),
             password=config.get("itsm", {}).get("password"),
         )
@@ -91,12 +89,8 @@ class ITSMFortiGateBridge:
         self.policy_cache = {}
 
         # 설정
-        self.monitoring_interval = config.get("monitoring", {}).get(
-            "interval", 300
-        )
-        self.auto_approve = config.get("monitoring", {}).get(
-            "auto_approve", False
-        )
+        self.monitoring_interval = config.get("monitoring", {}).get("interval", 300)
+        self.auto_approve = config.get("monitoring", {}).get("auto_approve", False)
         self.dry_run = config.get("monitoring", {}).get("dry_run", True)
 
         logger.info("ITSM-FortiGate 브리지 서비스 초기화 완료")
@@ -129,11 +123,7 @@ class ITSMFortiGateBridge:
             firewall_requests = self.itsm_scraper.get_firewall_requests()
 
             # 2. 미처리 요청 필터링
-            new_requests = [
-                req
-                for req in firewall_requests
-                if req["id"] not in self.processed_requests
-            ]
+            new_requests = [req for req in firewall_requests if req["id"] not in self.processed_requests]
 
             if not new_requests:
                 logger.debug("새로운 방화벽 요청이 없습니다")
@@ -162,14 +152,10 @@ class ITSMFortiGateBridge:
             request_detail = self.itsm_scraper.get_request_detail(request_id)
 
             # 2. 정책 매핑
-            mapping_result = self.policy_mapper.map_itsm_to_fortigate_policy(
-                request_detail
-            )
+            mapping_result = self.policy_mapper.map_itsm_to_fortigate_policy(request_detail)
 
             if mapping_result["mapping_status"] != "success":
-                logger.error(
-                    f"요청 {request_id} 매핑 실패: {mapping_result.get('error_message')}"
-                )
+                logger.error(f"요청 {request_id} 매핑 실패: {mapping_result.get('error_message')}")
                 return
 
             # 3. 캐시에 저장
@@ -195,9 +181,7 @@ class ITSMFortiGateBridge:
             logger.error(f"요청 {request_id} 처리 중 오류: {str(e)}")
             raise
 
-    async def _implement_policies(
-        self, request_id: str, mapping_result: Dict[str, Any]
-    ):
+    async def _implement_policies(self, request_id: str, mapping_result: Dict[str, Any]):
         """FortiGate 정책 구현"""
         try:
             if self.dry_run:
@@ -219,19 +203,13 @@ class ITSMFortiGateBridge:
                         continue
 
                     # 정책 구현
-                    result = await self._implement_single_policy(
-                        fg_client, policy
-                    )
+                    result = await self._implement_single_policy(fg_client, policy)
                     implementation_results.append(result)
 
                     if result["success"]:
-                        logger.info(
-                            f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}"
-                        )
+                        logger.info(f"FortiGate {fw_id}에 정책 구현 성공: {policy['policy_name']}")
                     else:
-                        logger.error(
-                            f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}"
-                        )
+                        logger.error(f"FortiGate {fw_id}에 정책 구현 실패: {result['error']}")
 
                 except Exception as e:
                     logger.error(f"FortiGate {fw_id} 정책 구현 중 오류: {str(e)}")
@@ -245,9 +223,7 @@ class ITSMFortiGateBridge:
 
             # 구현 결과 캐시 업데이트
             if request_id in self.policy_cache:
-                self.policy_cache[request_id][
-                    "implementation_results"
-                ] = implementation_results
+                self.policy_cache[request_id]["implementation_results"] = implementation_results
                 self.policy_cache[request_id]["status"] = "implemented"
 
             logger.info(f"요청 {request_id}의 정책 구현 완료")
@@ -256,19 +232,12 @@ class ITSMFortiGateBridge:
             logger.error(f"정책 구현 중 오류: {str(e)}")
             raise
 
-    async def _implement_single_policy(
-        self, fg_client: FortiGateAPIClient, policy: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _implement_single_policy(self, fg_client: FortiGateAPIClient, policy: Dict[str, Any]) -> Dict[str, Any]:
         """단일 FortiGate 정책 구현"""
         try:
             # 1. 주소 객체 생성
-            for addr in (
-                policy["configuration"]["source_addresses"]
-                + policy["configuration"]["destination_addresses"]
-            ):
-                addr_result = fg_client.create_address_object(
-                    name=addr["name"], subnet=addr["subnet"]
-                )
+            for addr in policy["configuration"]["source_addresses"] + policy["configuration"]["destination_addresses"]:
+                addr_result = fg_client.create_address_object(name=addr["name"], subnet=addr["subnet"])
                 if not addr_result.get("success", False):
                     logger.warning(f"주소 객체 생성 실패: {addr['name']}")
 
@@ -287,19 +256,9 @@ class ITSMFortiGateBridge:
                 "name": policy["policy_name"],
                 "srcintf": [policy["configuration"]["source_zone"]],
                 "dstintf": [policy["configuration"]["destination_zone"]],
-                "srcaddr": [
-                    addr["name"]
-                    for addr in policy["configuration"]["source_addresses"]
-                ],
-                "dstaddr": [
-                    addr["name"]
-                    for addr in policy["configuration"][
-                        "destination_addresses"
-                    ]
-                ],
-                "service": [
-                    svc["name"] for svc in policy["configuration"]["services"]
-                ],
+                "srcaddr": [addr["name"] for addr in policy["configuration"]["source_addresses"]],
+                "dstaddr": [addr["name"] for addr in policy["configuration"]["destination_addresses"]],
+                "service": [svc["name"] for svc in policy["configuration"]["services"]],
                 "action": policy["configuration"]["action"],
                 "logtraffic": "all",
                 "nat": policy["configuration"]["nat"],
@@ -333,9 +292,7 @@ class ITSMFortiGateBridge:
         logger.info("=== DRY RUN: FortiGate 정책 구현 시뮬레이션 ===")
 
         for policy in mapping_result.get("fortigate_policies", []):
-            logger.info(
-                f"FortiGate: {policy['firewall_name']} ({policy['firewall_id']})"
-            )
+            logger.info(f"FortiGate: {policy['firewall_name']} ({policy['firewall_id']})")
             logger.info(f"정책명: {policy['policy_name']}")
             logger.info(
                 f"구성: {policy['configuration']['source_zone']} -> {policy['configuration']['destination_zone']}"
@@ -371,20 +328,14 @@ class ITSMFortiGateBridge:
             # 비동기 작업을 동기적으로 실행
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(
-                self._implement_policies(
-                    request_id, cached_request["mapping_result"]
-                )
-            )
+            loop.run_until_complete(self._implement_policies(request_id, cached_request["mapping_result"]))
             loop.close()
 
             return {"success": True, "message": "정책 구현 완료"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def reject_request(
-        self, request_id: str, reason: str = ""
-    ) -> Dict[str, Any]:
+    def reject_request(self, request_id: str, reason: str = "") -> Dict[str, Any]:
         """요청 거부"""
         if request_id not in self.policy_cache:
             return {"success": False, "error": "요청을 찾을 수 없음"}
@@ -414,19 +365,17 @@ class ITSMFortiGateBridge:
 
                 if fg_client:
                     # 정책 삭제 (실제 구현 시 FortiGate API 호출)
-                    logger.info(
-                        f"FortiGate {fw_id}에서 정책 롤백: {step['description']}"
-                    )
+                    logger.info(f"FortiGate {fw_id}에서 정책 롤백: {step['description']}")
 
                     if not self.dry_run:
                         # 실제 롤백 수행
                         rollback_result = self._execute_policy_rollback(fg_client, step)
-                        if not rollback_result['success']:
+                        if not rollback_result["success"]:
                             # 롤백 실패 시 경고하고 계속 진행
                             logger.warning(f"롤백 부분 실패: {rollback_result.get('error')}")
-                            step['rollback_status'] = 'partial_failure'
+                            step["rollback_status"] = "partial_failure"
                         else:
-                            step['rollback_status'] = 'success'
+                            step["rollback_status"] = "success"
 
             self.policy_cache[request_id]["status"] = "rolled_back"
             logger.info(f"요청 {request_id} 롤백 완료")
@@ -441,60 +390,54 @@ class ITSMFortiGateBridge:
         """실제 정책 롤백 실행"""
         try:
             # 롤백 유형에 따른 처리
-            rollback_type = rollback_step.get('type', 'delete_policy')
-            
-            if rollback_type == 'delete_policy':
+            rollback_type = rollback_step.get("type", "delete_policy")
+
+            if rollback_type == "delete_policy":
                 # 추가된 정책 삭제
-                policy_id = rollback_step.get('policy_id')
+                policy_id = rollback_step.get("policy_id")
                 if policy_id:
                     result = fg_client.delete_policy(policy_id)
-                    if result.get('status') == 'success':
+                    if result.get("status") == "success":
                         logger.info(f"정책 {policy_id} 삭제 완료")
-                        return {'success': True, 'action': 'deleted', 'policy_id': policy_id}
-                    
-            elif rollback_type == 'restore_policy':
+                        return {"success": True, "action": "deleted", "policy_id": policy_id}
+
+            elif rollback_type == "restore_policy":
                 # 이전 정책 복원
-                original_policy = rollback_step.get('original_policy')
+                original_policy = rollback_step.get("original_policy")
                 if original_policy:
-                    result = fg_client.update_policy(
-                        original_policy['id'],
-                        original_policy['config']
-                    )
-                    if result.get('status') == 'success':
+                    result = fg_client.update_policy(original_policy["id"], original_policy["config"])
+                    if result.get("status") == "success":
                         logger.info(f"정책 {original_policy['id']} 복원 완료")
-                        return {'success': True, 'action': 'restored', 'policy_id': original_policy['id']}
-                    
-            elif rollback_type == 'disable_policy':
+                        return {"success": True, "action": "restored", "policy_id": original_policy["id"]}
+
+            elif rollback_type == "disable_policy":
                 # 정책 비활성화
-                policy_id = rollback_step.get('policy_id')
+                policy_id = rollback_step.get("policy_id")
                 if policy_id:
-                    result = fg_client.update_policy(
-                        policy_id,
-                        {'status': 'disable'}
-                    )
-                    if result.get('status') == 'success':
+                    result = fg_client.update_policy(policy_id, {"status": "disable"})
+                    if result.get("status") == "success":
                         logger.info(f"정책 {policy_id} 비활성화 완료")
-                        return {'success': True, 'action': 'disabled', 'policy_id': policy_id}
-            
+                        return {"success": True, "action": "disabled", "policy_id": policy_id}
+
             # 백업에서 복원
-            if rollback_step.get('backup_id'):
-                backup_data = self._get_backup_data(rollback_step['backup_id'])
+            if rollback_step.get("backup_id"):
+                backup_data = self._get_backup_data(rollback_step["backup_id"])
                 if backup_data:
                     result = fg_client.restore_configuration(backup_data)
-                    if result.get('status') == 'success':
+                    if result.get("status") == "success":
                         logger.info(f"백업 {rollback_step['backup_id']}에서 복원 완료")
-                        return {'success': True, 'action': 'restored_from_backup'}
-            
-            return {'success': False, 'error': 'Rollback type not supported or missing data'}
-            
+                        return {"success": True, "action": "restored_from_backup"}
+
+            return {"success": False, "error": "Rollback type not supported or missing data"}
+
         except Exception as e:
             logger.error(f"롤백 실행 중 오류: {str(e)}")
-            return {'success': False, 'error': str(e)}
-    
+            return {"success": False, "error": str(e)}
+
     def _get_backup_data(self, backup_id: str) -> Dict:
         """백업 데이터 조회"""
         # 캐시 또는 저장소에서 백업 데이터 조회
-        if hasattr(self, 'backup_storage'):
+        if hasattr(self, "backup_storage"):
             return self.backup_storage.get(backup_id)
         return None
 

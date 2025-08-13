@@ -171,24 +171,12 @@ class BPFFilter:
                 ip = condition[5:].strip()
                 return {"type": "host", "ip": ip}
 
-            if condition.startswith("src ") or condition.startswith(
-                "src host "
-            ):
-                ip = (
-                    condition.replace("src host ", "")
-                    .replace("src ", "")
-                    .strip()
-                )
+            if condition.startswith("src ") or condition.startswith("src host "):
+                ip = condition.replace("src host ", "").replace("src ", "").strip()
                 return {"type": "src_host", "ip": ip}
 
-            if condition.startswith("dst ") or condition.startswith(
-                "dst host "
-            ):
-                ip = (
-                    condition.replace("dst host ", "")
-                    .replace("dst ", "")
-                    .strip()
-                )
+            if condition.startswith("dst ") or condition.startswith("dst host "):
+                ip = condition.replace("dst host ", "").replace("dst ", "").strip()
                 return {"type": "dst_host", "ip": ip}
 
             # 네트워크 조건
@@ -240,9 +228,7 @@ class BPFFilter:
             logger.error(f"조건 파싱 오류 ({condition}): {e}")
             return {"type": "always_false"}
 
-    def _evaluate_filter(
-        self, filter_expr: Dict[str, Any], packet_info: Dict[str, Any]
-    ) -> bool:
+    def _evaluate_filter(self, filter_expr: Dict[str, Any], packet_info: Dict[str, Any]) -> bool:
         """컴파일된 필터를 패킷 정보에 대해 평가"""
         try:
             expr_type = filter_expr.get("type")
@@ -254,12 +240,8 @@ class BPFFilter:
 
             elif expr_type == "binary_op":
                 operator = filter_expr["operator"]
-                left_result = self._evaluate_filter(
-                    filter_expr["left"], packet_info
-                )
-                right_result = self._evaluate_filter(
-                    filter_expr["right"], packet_info
-                )
+                left_result = self._evaluate_filter(filter_expr["left"], packet_info)
+                right_result = self._evaluate_filter(filter_expr["right"], packet_info)
 
                 if operator == "and":
                     return left_result and right_result
@@ -268,9 +250,7 @@ class BPFFilter:
 
             elif expr_type == "unary_op":
                 operator = filter_expr["operator"]
-                operand_result = self._evaluate_filter(
-                    filter_expr["operand"], packet_info
-                )
+                operand_result = self._evaluate_filter(filter_expr["operand"], packet_info)
 
                 if operator == "not":
                     return not operand_result
@@ -293,9 +273,9 @@ class BPFFilter:
 
             elif expr_type == "net":
                 network = filter_expr["network"]
-                return self._ip_in_network(
-                    packet_info.get("src_ip"), network
-                ) or self._ip_in_network(packet_info.get("dst_ip"), network)
+                return self._ip_in_network(packet_info.get("src_ip"), network) or self._ip_in_network(
+                    packet_info.get("dst_ip"), network
+                )
 
             elif expr_type == "src_net":
                 network = filter_expr["network"]
@@ -326,9 +306,7 @@ class BPFFilter:
                 end_port = filter_expr["end"]
                 src_port = packet_info.get("src_port", 0)
                 dst_port = packet_info.get("dst_port", 0)
-                return (start_port <= src_port <= end_port) or (
-                    start_port <= dst_port <= end_port
-                )
+                return (start_port <= src_port <= end_port) or (start_port <= dst_port <= end_port)
 
             elif expr_type == "protocol":
                 protocol = filter_expr["protocol"]
@@ -410,9 +388,7 @@ class BPFFilter:
         stats = self.statistics.copy()
 
         if stats["total_packets"] > 0:
-            stats["match_rate"] = (
-                stats["matched_packets"] / stats["total_packets"]
-            )
+            stats["match_rate"] = stats["matched_packets"] / stats["total_packets"]
         else:
             stats["match_rate"] = 0.0
 

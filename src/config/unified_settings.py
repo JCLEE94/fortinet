@@ -85,9 +85,7 @@ class UnifiedSettings:
         config.port = int(os.getenv("WEB_APP_PORT", "7777"))
         config.debug = False
         config.host = os.getenv("WEB_APP_HOST", "0.0.0.0")
-        config.secret_key = os.getenv(
-            "SECRET_KEY", "change_this_in_production"
-        )
+        config.secret_key = os.getenv("SECRET_KEY", "change_this_in_production")
 
         return config
 
@@ -101,9 +99,7 @@ class UnifiedSettings:
         config.password = os.getenv(f"{prefix}_PASSWORD", "")
         config.api_token = os.getenv(f"{prefix}_API_TOKEN", "")
         config.port = int(os.getenv(f"{prefix}_PORT", "443"))
-        config.verify_ssl = (
-            os.getenv(f"{prefix}_VERIFY_SSL", "false").lower() == "true"
-        )
+        config.verify_ssl = os.getenv(f"{prefix}_VERIFY_SSL", "false").lower() == "true"
         config.timeout = int(os.getenv("API_TIMEOUT", "30"))
 
         # 서비스 활성화 여부 (호스트가 있으면 활성화)
@@ -125,13 +121,9 @@ class UnifiedSettings:
                 self.app_mode = data.get("app_mode", self.app_mode)
 
             # API 설정 업데이트
-            self._update_api_from_json(
-                "fortimanager", data.get("fortimanager", {})
-            )
+            self._update_api_from_json("fortimanager", data.get("fortimanager", {}))
             self._update_api_from_json("fortigate", data.get("fortigate", {}))
-            self._update_api_from_json(
-                "fortianalyzer", data.get("fortianalyzer", {})
-            )
+            self._update_api_from_json("fortianalyzer", data.get("fortianalyzer", {}))
 
         except Exception as e:
             print(f"JSON 설정 파일 로드 오류: {e}")
@@ -148,19 +140,13 @@ class UnifiedSettings:
             api_config.host = json_config.get("host", api_config.host)
 
         if not os.getenv(f"{service.upper()}_USERNAME"):
-            api_config.username = json_config.get(
-                "username", api_config.username
-            )
+            api_config.username = json_config.get("username", api_config.username)
 
         if not os.getenv(f"{service.upper()}_PASSWORD"):
-            api_config.password = json_config.get(
-                "password", api_config.password
-            )
+            api_config.password = json_config.get("password", api_config.password)
 
         # API 토큰 필드명 통일 (api_key → api_token)
-        token_field = json_config.get("api_token") or json_config.get(
-            "api_key", ""
-        )
+        token_field = json_config.get("api_token") or json_config.get("api_key", "")
         if not os.getenv(f"{service.upper()}_API_TOKEN") and token_field:
             api_config.api_token = token_field
 
@@ -190,13 +176,9 @@ class UnifiedSettings:
             service = getattr(self, service_name)
             if service.enabled:
                 if not service.host:
-                    errors.append(
-                        f"{service_name}: host is required when enabled"
-                    )
+                    errors.append(f"{service_name}: host is required when enabled")
                 if not (1 <= service.port <= 65535):
-                    errors.append(
-                        f"{service_name}: invalid port {service.port}"
-                    )
+                    errors.append(f"{service_name}: invalid port {service.port}")
 
         if errors:
             print("⚠️  설정 유효성 검사 오류:")
@@ -306,9 +288,7 @@ class UnifiedSettings:
         for service in ["fortimanager", "fortigate", "fortianalyzer"]:
             config = getattr(self, service)
             status = "🟢 활성화" if config.enabled else "🔴 비활성화"
-            host_info = (
-                f"({config.host}:{config.port})" if config.host else "(미설정)"
-            )
+            host_info = f"({config.host}:{config.port})" if config.host else "(미설정)"
             print(f"   {service.title()}: {status} {host_info}")
 
         print("=" * 60)

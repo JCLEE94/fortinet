@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 class RedisSentinelManager:
     """Manages Redis Sentinel connections with automatic failover"""
 
-    def __init__(
-        self, sentinels: List[tuple] = None, service_name: str = None
-    ):
+    def __init__(self, sentinels: List[tuple] = None, service_name: str = None):
         """
         Initialize Redis Sentinel manager
 
@@ -29,9 +27,7 @@ class RedisSentinelManager:
             service_name: Name of the Redis service
         """
         self.sentinels = sentinels or self._get_sentinels_from_env()
-        self.service_name = service_name or os.getenv(
-            "REDIS_SERVICE_NAME", "fortinet-master"
-        )
+        self.service_name = service_name or os.getenv("REDIS_SERVICE_NAME", "fortinet-master")
         self.sentinel = None
         self.master = None
         self.slaves = []
@@ -40,9 +36,7 @@ class RedisSentinelManager:
 
     def _get_sentinels_from_env(self) -> List[tuple]:
         """Get sentinel configuration from environment"""
-        sentinel_hosts = os.getenv("REDIS_SENTINELS", "localhost:26379").split(
-            ","
-        )
+        sentinel_hosts = os.getenv("REDIS_SENTINELS", "localhost:26379").split(",")
         sentinels = []
 
         for host_port in sentinel_hosts:
@@ -84,9 +78,7 @@ class RedisSentinelManager:
                 db=int(os.getenv("REDIS_DB", "0")),
             )
 
-            logger.info(
-                f"Redis Sentinel initialized for service: {self.service_name}"
-            )
+            logger.info(f"Redis Sentinel initialized for service: {self.service_name}")
 
         except Exception as e:
             logger.error(f"Failed to initialize Redis Sentinel: {e}")
@@ -148,14 +140,9 @@ class RedisSentinelManager:
             if self.sentinel:
                 slaves = self.sentinel.discover_slaves(self.service_name)
 
-                health["sentinels"] = [
-                    {"host": host, "port": port, "status": "up"}
-                    for host, port in self.sentinels
-                ]
+                health["sentinels"] = [{"host": host, "port": port, "status": "up"} for host, port in self.sentinels]
 
-                health["slaves"] = [
-                    {"host": host, "port": port} for host, port in slaves
-                ]
+                health["slaves"] = [{"host": host, "port": port} for host, port in slaves]
 
             health["status"] = "healthy" if health["master"] else "unhealthy"
 
@@ -166,9 +153,7 @@ class RedisSentinelManager:
 
         return health
 
-    def execute_with_retry(
-        self, operation, *args, max_retries: int = 3, **kwargs
-    ):
+    def execute_with_retry(self, operation, *args, max_retries: int = 3, **kwargs):
         """
         Execute Redis operation with automatic retry and failover
 
@@ -185,9 +170,7 @@ class RedisSentinelManager:
             try:
                 client = self.get_master()
                 if not client:
-                    raise redis.ConnectionError(
-                        "No Redis connection available"
-                    )
+                    raise redis.ConnectionError("No Redis connection available")
 
                 # Execute operation
                 result = getattr(client, operation)(*args, **kwargs)
@@ -195,9 +178,7 @@ class RedisSentinelManager:
 
             except redis.ConnectionError as e:
                 last_error = e
-                logger.warning(
-                    f"Redis connection error (attempt {attempt + 1}): {e}"
-                )
+                logger.warning(f"Redis connection error (attempt {attempt + 1}): {e}")
 
                 # Try to reconnect
                 self._initialize_sentinel()
@@ -220,9 +201,7 @@ class RedisClusterManager:
         Args:
             startup_nodes: List of cluster node configurations
         """
-        self.startup_nodes = (
-            startup_nodes or self._get_cluster_nodes_from_env()
-        )
+        self.startup_nodes = startup_nodes or self._get_cluster_nodes_from_env()
         self.cluster = None
         self._initialize_cluster()
 
@@ -260,9 +239,7 @@ class RedisClusterManager:
             logger.info("Redis Cluster initialized successfully")
 
         except ImportError:
-            logger.warning(
-                "redis-py-cluster not installed, falling back to standard Redis"
-            )
+            logger.warning("redis-py-cluster not installed, falling back to standard Redis")
             self._fallback_to_standard_redis()
 
         except Exception as e:
@@ -297,9 +274,7 @@ class RedisClusterManager:
 
             return {
                 "cluster_state": cluster_info.get("cluster_state"),
-                "cluster_slots_assigned": cluster_info.get(
-                    "cluster_slots_assigned"
-                ),
+                "cluster_slots_assigned": cluster_info.get("cluster_slots_assigned"),
                 "cluster_slots_ok": cluster_info.get("cluster_slots_ok"),
                 "cluster_known_nodes": cluster_info.get("cluster_known_nodes"),
                 "nodes": nodes,
@@ -383,9 +358,7 @@ class RedisHighAvailability:
                 if self.mode == "sentinel":
                     health.update(self.sentinel_manager.health_check())
                 elif self.mode == "cluster":
-                    health[
-                        "cluster_info"
-                    ] = self.cluster_manager.get_node_info()
+                    health["cluster_info"] = self.cluster_manager.get_node_info()
                 else:
                     info = client.info()
                     health["redis_info"] = {

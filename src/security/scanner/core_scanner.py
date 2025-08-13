@@ -69,9 +69,7 @@ class CoreSecurityScanner(
             return
 
         self.is_scanning = True
-        self.scan_thread = threading.Thread(
-            target=self._continuous_scan_loop, args=(interval_hours,)
-        )
+        self.scan_thread = threading.Thread(target=self._continuous_scan_loop, args=(interval_hours,))
         self.scan_thread.daemon = True
         self.scan_thread.start()
         logger.info(f"지속적인 보안 스캔 시작 ({interval_hours}시간 간격)")
@@ -101,36 +99,24 @@ class CoreSecurityScanner(
             scan_results["results"]["port_scan"] = self.scan_open_ports()
 
         if self.scan_config.get("vulnerability_scan"):
-            scan_results["results"][
-                "vulnerability_scan"
-            ] = self.scan_vulnerabilities()
+            scan_results["results"]["vulnerability_scan"] = self.scan_vulnerabilities()
 
         if self.scan_config.get("file_integrity_check"):
-            scan_results["results"][
-                "file_integrity"
-            ] = self.check_file_integrity()
+            scan_results["results"]["file_integrity"] = self.check_file_integrity()
 
         if self.scan_config.get("network_scan"):
-            scan_results["results"][
-                "network_scan"
-            ] = self.scan_network_security()
+            scan_results["results"]["network_scan"] = self.scan_network_security()
 
         if self.scan_config.get("log_analysis"):
-            scan_results["results"][
-                "log_analysis"
-            ] = self.analyze_security_logs()
+            scan_results["results"]["log_analysis"] = self.analyze_security_logs()
 
         # 스캔 완료 시간 기록
         scan_end_time = datetime.now()
         scan_results["end_time"] = scan_end_time.isoformat()
-        scan_results["duration_seconds"] = (
-            scan_end_time - scan_start_time
-        ).total_seconds()
+        scan_results["duration_seconds"] = (scan_end_time - scan_start_time).total_seconds()
 
         # 요약 정보 생성
-        scan_results["summary"] = self._generate_scan_summary(
-            scan_results["results"]
-        )
+        scan_results["summary"] = self._generate_scan_summary(scan_results["results"])
 
         # 결과 저장
         self.scan_results.append(scan_results)
@@ -138,9 +124,7 @@ class CoreSecurityScanner(
         # 리스너들에게 알림
         self._notify_listeners(scan_results)
 
-        logger.info(
-            f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)"
-        )
+        logger.info(f"전체 보안 스캔 완료 (\uc18c요시간: {scan_results['duration_seconds']:.2f}초)")
         return scan_results
 
     def get_security_dashboard(self) -> Dict:
@@ -199,9 +183,7 @@ class CoreSecurityScanner(
                 if "vulnerabilities" in result:
                     summary["total_issues"] += len(result["vulnerabilities"])
                 elif "total_open_ports" in result:
-                    summary["total_issues"] += result.get(
-                        "suspicious_ports", 0
-                    )
+                    summary["total_issues"] += result.get("suspicious_ports", 0)
 
         return summary
 
@@ -221,9 +203,7 @@ class CoreSecurityScanner(
         # 트렌드 계산
         trend = "stable"
         if len(self.scan_results) >= 2:
-            prev_issues = (
-                self.scan_results[-2].get("summary", {}).get("total_issues", 0)
-            )
+            prev_issues = self.scan_results[-2].get("summary", {}).get("total_issues", 0)
             if total_issues > prev_issues:
                 trend = "worsening"
             elif total_issues < prev_issues:

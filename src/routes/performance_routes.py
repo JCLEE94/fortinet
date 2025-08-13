@@ -3,14 +3,14 @@
 성능 최적화 관련 API Routes
 """
 
-from datetime import datetime, timedelta
-import time
 import threading
-from typing import Dict, Any, List, Callable
-import psutil
+import time
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Callable, Dict, List
 
-from flask import Blueprint, request, g
+import psutil
+from flask import Blueprint, g, request
 
 from utils.api_utils import get_data_source
 from utils.route_helpers import standard_api_response
@@ -22,109 +22,105 @@ from utils.unified_logger import get_logger
 # Performance optimization decorator
 def optimized_response(cache_ttl=60, compress=True):
     """API 응답 최적화 데코레이터"""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Track response time
             g.start_time = time.time()
-            
+
             # Check cache first
             cache_key = f"{func.__name__}_{str(args)}_{str(kwargs)}"
             cache = get_cache_manager()
             cached = cache.get(cache_key)
-            
+
             if cached:
                 g.cache_hit = True
                 return cached
-            
+
             # Execute function
             result = func(*args, **kwargs)
-            
+
             # Cache result
             cache.set(cache_key, result, ttl=cache_ttl)
-            
+
             # Add performance metadata
             if isinstance(result, dict):
-                result['_performance'] = {
-                    'response_time': time.time() - g.start_time,
-                    'cache_hit': getattr(g, 'cache_hit', False),
-                    'compressed': compress
+                result["_performance"] = {
+                    "response_time": time.time() - g.start_time,
+                    "cache_hit": getattr(g, "cache_hit", False),
+                    "compressed": compress,
                 }
-            
+
             return result
+
         return wrapper
+
     return decorator
 
 
 class APIOptimizer:
     """API 성능 최적화 관리자"""
-    
+
     def __init__(self):
         self.metrics = {
-            'total_requests': 0,
-            'cache_hits': 0,
-            'cache_misses': 0,
-            'avg_response_time': 0,
-            'error_count': 0,
-            'slow_requests': 0,
-            'endpoints': {}
+            "total_requests": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "avg_response_time": 0,
+            "error_count": 0,
+            "slow_requests": 0,
+            "endpoints": {},
         }
         self.lock = threading.Lock()
-    
+
     def record_request(self, endpoint: str, response_time: float, cache_hit: bool = False):
         """요청 메트릭 기록"""
         with self.lock:
-            self.metrics['total_requests'] += 1
-            
+            self.metrics["total_requests"] += 1
+
             if cache_hit:
-                self.metrics['cache_hits'] += 1
+                self.metrics["cache_hits"] += 1
             else:
-                self.metrics['cache_misses'] += 1
-            
+                self.metrics["cache_misses"] += 1
+
             if response_time > 1.0:  # Slow request threshold
-                self.metrics['slow_requests'] += 1
-            
+                self.metrics["slow_requests"] += 1
+
             # Update average response time
-            prev_avg = self.metrics['avg_response_time']
-            self.metrics['avg_response_time'] = (
-                (prev_avg * (self.metrics['total_requests'] - 1) + response_time) 
-                / self.metrics['total_requests']
-            )
-            
+            prev_avg = self.metrics["avg_response_time"]
+            self.metrics["avg_response_time"] = (
+                prev_avg * (self.metrics["total_requests"] - 1) + response_time
+            ) / self.metrics["total_requests"]
+
             # Update endpoint specific metrics
-            if endpoint not in self.metrics['endpoints']:
-                self.metrics['endpoints'][endpoint] = {
-                    'count': 0,
-                    'avg_time': 0,
-                    'max_time': 0
-                }
-            
-            ep_metrics = self.metrics['endpoints'][endpoint]
-            ep_metrics['count'] += 1
-            ep_metrics['avg_time'] = (
-                (ep_metrics['avg_time'] * (ep_metrics['count'] - 1) + response_time)
-                / ep_metrics['count']
-            )
-            ep_metrics['max_time'] = max(ep_metrics['max_time'], response_time)
-    
+            if endpoint not in self.metrics["endpoints"]:
+                self.metrics["endpoints"][endpoint] = {"count": 0, "avg_time": 0, "max_time": 0}
+
+            ep_metrics = self.metrics["endpoints"][endpoint]
+            ep_metrics["count"] += 1
+            ep_metrics["avg_time"] = (ep_metrics["avg_time"] * (ep_metrics["count"] - 1) + response_time) / ep_metrics[
+                "count"
+            ]
+            ep_metrics["max_time"] = max(ep_metrics["max_time"], response_time)
+
     def get_performance_metrics(self) -> Dict[str, Any]:
         """성능 메트릭 반환"""
         with self.lock:
             return {
-                'total_requests': self.metrics['total_requests'],
-                'cache_hit_rate': (self.metrics['cache_hits'] / max(1, self.metrics['total_requests'])) * 100,
-                'avg_response_time_ms': self.metrics['avg_response_time'] * 1000,
-                'slow_request_rate': (self.metrics['slow_requests'] / max(1, self.metrics['total_requests'])) * 100,
-                'top_endpoints': sorted(
-                    self.metrics['endpoints'].items(),
-                    key=lambda x: x[1]['count'],
-                    reverse=True
-                )[:10]
+                "total_requests": self.metrics["total_requests"],
+                "cache_hit_rate": (self.metrics["cache_hits"] / max(1, self.metrics["total_requests"])) * 100,
+                "avg_response_time_ms": self.metrics["avg_response_time"] * 1000,
+                "slow_request_rate": (self.metrics["slow_requests"] / max(1, self.metrics["total_requests"])) * 100,
+                "top_endpoints": sorted(self.metrics["endpoints"].items(), key=lambda x: x[1]["count"], reverse=True)[
+                    :10
+                ],
             }
 
 
 # Global optimizer instance
 _api_optimizer = APIOptimizer()
+
 
 def get_api_optimizer():
     """API 최적화 관리자 반환"""
@@ -138,48 +134,40 @@ def get_performance_cache():
 
 class CacheWarmer:
     """캐시 예열 관리자"""
-    
+
     def __init__(self, cache):
         self.cache = cache
         self.tasks = []
-        self.results = {'success': [], 'failed': []}
-    
+        self.results = {"success": [], "failed": []}
+
     def add_warming_task(self, namespace: str, key: str, data_func: Callable, ttl: int = 300):
         """캐시 예열 작업 추가"""
-        self.tasks.append({
-            'namespace': namespace,
-            'key': key,
-            'data_func': data_func,
-            'ttl': ttl
-        })
-    
+        self.tasks.append({"namespace": namespace, "key": key, "data_func": data_func, "ttl": ttl})
+
     def warm_cache(self) -> Dict[str, List]:
         """캐시 예열 실행"""
         for task in self.tasks:
             try:
                 # Execute data function
-                data = task['data_func']()
-                
+                data = task["data_func"]()
+
                 # Store in cache
                 cache_key = f"{task['namespace']}:{task['key']}"
-                self.cache.set(cache_key, data, ttl=task['ttl'])
-                
-                self.results['success'].append(cache_key)
+                self.cache.set(cache_key, data, ttl=task["ttl"])
+
+                self.results["success"].append(cache_key)
                 logger.info(f"Cache warmed: {cache_key}")
-                
+
             except Exception as e:
-                self.results['failed'].append({
-                    'key': f"{task['namespace']}:{task['key']}",
-                    'error': str(e)
-                })
+                self.results["failed"].append({"key": f"{task['namespace']}:{task['key']}", "error": str(e)})
                 logger.error(f"Cache warming failed for {task['namespace']}:{task['key']}: {e}")
-        
+
         return self.results
 
 
 class RealTimeMonitor:
     """실시간 모니터링 시스템"""
-    
+
     def __init__(self):
         self.is_running = False
         self.collection_interval = 5  # seconds
@@ -187,56 +175,53 @@ class RealTimeMonitor:
         self.max_history_size = 1000
         self.monitor_thread = None
         self.lock = threading.Lock()
-    
+
     def collect_metrics(self):
         """시스템 메트릭 수집"""
         try:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             network = psutil.net_io_counters()
-            
+
             return {
-                'timestamp': datetime.now().isoformat(),
-                'cpu': {
-                    'percent': cpu_percent,
-                    'count': psutil.cpu_count()
+                "timestamp": datetime.now().isoformat(),
+                "cpu": {"percent": cpu_percent, "count": psutil.cpu_count()},
+                "memory": {
+                    "percent": memory.percent,
+                    "used_gb": memory.used / (1024**3),
+                    "available_gb": memory.available / (1024**3),
                 },
-                'memory': {
-                    'percent': memory.percent,
-                    'used_gb': memory.used / (1024**3),
-                    'available_gb': memory.available / (1024**3)
+                "disk": {
+                    "percent": disk.percent,
+                    "used_gb": disk.used / (1024**3),
+                    "free_gb": disk.free / (1024**3),
                 },
-                'disk': {
-                    'percent': disk.percent,
-                    'used_gb': disk.used / (1024**3),
-                    'free_gb': disk.free / (1024**3)
+                "network": {
+                    "bytes_sent": network.bytes_sent,
+                    "bytes_recv": network.bytes_recv,
+                    "packets_sent": network.packets_sent,
+                    "packets_recv": network.packets_recv,
                 },
-                'network': {
-                    'bytes_sent': network.bytes_sent,
-                    'bytes_recv': network.bytes_recv,
-                    'packets_sent': network.packets_sent,
-                    'packets_recv': network.packets_recv
-                }
             }
         except Exception as e:
             logger.error(f"Failed to collect metrics: {e}")
             return {}
-    
+
     def _monitor_loop(self):
         """모니터링 루프"""
         while self.is_running:
             metrics = self.collect_metrics()
-            
+
             with self.lock:
                 self.metrics_history.append(metrics)
-                
+
                 # Maintain history size
                 if len(self.metrics_history) > self.max_history_size:
-                    self.metrics_history = self.metrics_history[-self.max_history_size:]
-            
+                    self.metrics_history = self.metrics_history[-self.max_history_size :]
+
             time.sleep(self.collection_interval)
-    
+
     def start_monitoring(self):
         """모니터링 시작"""
         if not self.is_running:
@@ -244,7 +229,7 @@ class RealTimeMonitor:
             self.monitor_thread = threading.Thread(target=self._monitor_loop, daemon=True)
             self.monitor_thread.start()
             logger.info("Real-time monitoring started")
-    
+
     def stop_monitoring(self):
         """모니터링 중지"""
         if self.is_running:
@@ -252,61 +237,58 @@ class RealTimeMonitor:
             if self.monitor_thread:
                 self.monitor_thread.join(timeout=10)
             logger.info("Real-time monitoring stopped")
-    
+
     def get_current_metrics(self) -> Dict[str, Any]:
         """현재 메트릭 반환"""
         if self.metrics_history:
             with self.lock:
                 return self.metrics_history[-1]
         return self.collect_metrics()
-    
+
     def get_metric_history(self, metric_name: str, duration_minutes: int) -> List[Dict]:
         """메트릭 히스토리 반환"""
         cutoff_time = datetime.now() - timedelta(minutes=duration_minutes)
-        
+
         with self.lock:
             filtered_history = []
-            
+
             for metrics in self.metrics_history:
                 try:
-                    metric_time = datetime.fromisoformat(metrics['timestamp'])
+                    metric_time = datetime.fromisoformat(metrics["timestamp"])
                     if metric_time > cutoff_time:
                         # Extract specific metric
-                        if '.' in metric_name:
-                            parts = metric_name.split('.')
+                        if "." in metric_name:
+                            parts = metric_name.split(".")
                             value = metrics
                             for part in parts:
                                 value = value.get(part, {})
-                            
-                            filtered_history.append({
-                                'timestamp': metrics['timestamp'],
-                                'value': value
-                            })
+
+                            filtered_history.append({"timestamp": metrics["timestamp"], "value": value})
                         else:
-                            filtered_history.append({
-                                'timestamp': metrics['timestamp'],
-                                'value': metrics.get(metric_name)
-                            })
+                            filtered_history.append(
+                                {"timestamp": metrics["timestamp"], "value": metrics.get(metric_name)}
+                            )
                 except Exception:
                     continue
-            
+
             return filtered_history
-    
+
     def get_metrics(self):
         """메트릭 반환 (호환성)"""
         return self.get_current_metrics()
-    
+
     def get_monitoring_status(self):
         """모니터링 상태 반환"""
         return {
-            'is_running': self.is_running,
-            'collection_interval': self.collection_interval,
-            'history_size': len(self.metrics_history)
+            "is_running": self.is_running,
+            "collection_interval": self.collection_interval,
+            "history_size": len(self.metrics_history),
         }
 
 
 # Global monitor instance
 _real_time_monitor = RealTimeMonitor()
+
 
 def get_real_time_monitor():
     """실시간 모니터 반환"""
@@ -315,9 +297,7 @@ def get_real_time_monitor():
 
 logger = get_logger(__name__)
 
-performance_bp = Blueprint(
-    "performance", __name__, url_prefix="/api/performance"
-)
+performance_bp = Blueprint("performance", __name__, url_prefix="/api/performance")
 
 
 @performance_bp.route("/metrics", methods=["GET"])
@@ -437,12 +417,8 @@ def warmup_performance_cache():
 
         # 예열 작업 추가
         warmer.add_warming_task("devices", "list", warm_devices, ttl=300)
-        warmer.add_warming_task(
-            "dashboard", "stats", warm_dashboard_stats, ttl=180
-        )
-        warmer.add_warming_task(
-            "monitoring", "data", warm_monitoring_data, ttl=120
-        )
+        warmer.add_warming_task("dashboard", "stats", warm_dashboard_stats, ttl=180)
+        warmer.add_warming_task("monitoring", "data", warm_monitoring_data, ttl=120)
 
         # 예열 실행
         results = warmer.warm_cache()
@@ -522,14 +498,12 @@ def test_compression():
         "description": "This is a compression test with repeated data " * 100,
         "repeated_array": ["same_value"] * 1000,
         "numbers": list(range(1000)),
-        "text_data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-        * 200,
+        "text_data": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 200,
         "nested_structures": [
             {
                 "id": i,
                 "name": f"Item {i}",
-                "description": "A very long description that repeats many times "
-                * 10,
+                "description": "A very long description that repeats many times " * 10,
                 "tags": ["tag1", "tag2", "tag3"] * 5,
             }
             for i in range(100)
