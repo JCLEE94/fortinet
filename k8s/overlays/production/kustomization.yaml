@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # GitOps 4원칙 준수: 환경별 네임스페이스 분리
-namespace: fortinet-prod
+namespace: fortinet
 
 resources:
 - ../../base

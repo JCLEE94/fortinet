@@ -346,7 +346,7 @@ cat > argocd-fortinet-application.yaml << EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fortinet-production
+  name: fortinet
   namespace: argocd
   labels:
     app: fortinet

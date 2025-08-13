@@ -20,7 +20,7 @@ on:
 env:
   REGISTRY: registry.jclee.me
   IMAGE_NAME: fortinet
-  K8S_NAMESPACE: fortinet-prod
+  K8S_NAMESPACE: fortinet
   DEPLOYMENT_HOST: 192.168.50.110
   DEPLOYMENT_PORT: 30777
 

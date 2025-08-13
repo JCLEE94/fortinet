@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: fortinet-hpa
-  namespace: fortinet-prod
+  namespace: fortinet
   labels:
     app: fortinet
     component: autoscaler

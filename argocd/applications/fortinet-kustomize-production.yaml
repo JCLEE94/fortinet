@@ -33,7 +33,7 @@ spec:
   # GitOps 4원칙 준수: Pull 기반 배포 (Pull-based Deployment)
   destination:
     server: https://kubernetes.default.svc
-    namespace: fortinet-prod
+    namespace: fortinet
   
   # GitOps 4원칙 준수: 완전 자동화된 Pull 기반 동기화
   syncPolicy:

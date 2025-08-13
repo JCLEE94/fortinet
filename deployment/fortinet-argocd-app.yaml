@@ -23,7 +23,7 @@ spec:
   # 대상: Kubernetes 클러스터
   destination:
     server: https://kubernetes.default.svc
-    namespace: fortinet-prod
+    namespace: fortinet
 
   # GitOps 4원칙 동기화 정책
   syncPolicy:

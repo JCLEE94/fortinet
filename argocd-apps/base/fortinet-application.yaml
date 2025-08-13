@@ -19,7 +19,7 @@ spec:
     targetRevision: master
   destination:
     server: https://kubernetes.default.svc
-    namespace: fortinet-prod
+    namespace: fortinet
   syncPolicy:
     automated:
       prune: true

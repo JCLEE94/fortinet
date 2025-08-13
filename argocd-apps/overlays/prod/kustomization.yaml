@@ -15,7 +15,7 @@ patches:
     patch: |-
       - op: replace
         path: /metadata/name
-        value: fortinet-prod
+        value: fortinet
       - op: add
         path: /metadata/labels/environment
         value: production

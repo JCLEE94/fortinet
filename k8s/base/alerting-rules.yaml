@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: fortinet-alerts
-  namespace: fortinet-prod
+  namespace: fortinet
   labels:
     app: fortinet
     prometheus: kube-prometheus

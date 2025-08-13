@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: fortinet-metrics
-  namespace: fortinet-prod
+  namespace: fortinet
   labels:
     app: fortinet
     monitoring: prometheus
@@ -23,13 +23,13 @@ spec:
       action: keep
   namespaceSelector:
     matchNames:
-    - fortinet-prod
+    - fortinet
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: fortinet-metrics
-  namespace: fortinet-prod
+  namespace: fortinet
   labels:
     app: fortinet
     component: metrics

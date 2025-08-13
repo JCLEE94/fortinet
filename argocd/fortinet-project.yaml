@@ -31,7 +31,7 @@ spec:
   - namespace: fortinet-staging
     server: https://kubernetes.default.svc
     name: staging
-  - namespace: fortinet-prod
+  - namespace: fortinet
     server: https://kubernetes.default.svc
     name: production
   
@@ -83,7 +83,7 @@ spec:
     schedule: '0 9-17 * * 1-5'  # 평일 9-17시만 운영 배포 허용
     duration: 8h
     applications:
-    - fortinet-production
+    - fortinet
     manualSync: false
   - kind: allow
     schedule: '* * * * *'       # 개발환경은 항상 배포 허용
