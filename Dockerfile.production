@@ -105,11 +105,10 @@ WORKDIR /app
 # Install Python dependencies with optimization
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    # Additional production packages
+    # Additional production packages (psutil already in requirements.txt)
     pip install --no-cache-dir \
     gunicorn \
     gevent \
-    psutil \
     prometheus-client
 
 # =============================================================================
