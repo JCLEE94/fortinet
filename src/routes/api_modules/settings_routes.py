@@ -16,8 +16,19 @@ settings_bp = Blueprint("api_settings", __name__)
 def get_settings():
     """설정 조회"""
     try:
+        from utils.api_utils import is_test_mode
+
         settings_data = unified_settings.get_all_settings()
-        return jsonify({"success": True, "data": settings_data})
+
+        # Add test mode information for compatibility with tests
+        response_data = {
+            "success": True,
+            "data": settings_data,
+            "app_mode": "test" if is_test_mode() else "production",
+            "is_test_mode": is_test_mode()
+        }
+
+        return jsonify(response_data)
     except Exception as e:
         logger.error(f"Failed to get settings: {e}")
         return jsonify({"success": False, "message": str(e)})

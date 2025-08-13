@@ -404,8 +404,14 @@ def format_api_response(
 
 
 def is_test_mode() -> bool:
-    """Test mode is always False - production only"""
-    return False
+    """Check if application is running in test mode"""
+    import os
+    # Check for pytest environment or test mode environment variables
+    return (
+        'PYTEST_CURRENT_TEST' in os.environ or  # Running under pytest
+        os.environ.get('APP_MODE', '').lower() == 'test' or
+        os.environ.get('TESTING', '').lower() == 'true'
+    )
 
 
 def get_dummy_generator():

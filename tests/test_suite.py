@@ -231,9 +231,10 @@ class TestOptimization(unittest.TestCase):
 
     def test_cache_manager_functionality(self):
         """Test cache manager functionality"""
-        from src.core.cache_manager import CacheManager
+        from src.core.cache_manager import CacheManager, CacheBackend
 
-        cache = CacheManager(use_redis=False)
+        # Initialize with memory backend only for testing
+        cache = CacheManager(backends=[CacheBackend.MEMORY])
 
         # Test set and get
         cache.set("test_key", {"data": "test_value"}, ttl=60)
