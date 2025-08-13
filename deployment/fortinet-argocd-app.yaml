@@ -18,9 +18,7 @@ spec:
     repoURL: https://github.com/JCLEE94/fortinet.git
     targetRevision: master
     path: k8s/overlays/production
-    kustomize:
-      images:
-      - registry.jclee.me/fortinet:v1.0.20250812-aec63e7
+    kustomize: {}
 
   # 대상: Kubernetes 클러스터
   destination:
