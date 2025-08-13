@@ -11,7 +11,7 @@ resources:
 # 동적 태그 형식: {version}-{date}-{git-sha}
 images:
 - name: registry.jclee.me/fortinet
-  newTag: 94ea613d
+  newTag: 36e1dd577187273962384d1b5e5bf19b26524ffd
 
 # 운영환경 설정 (고가용성을 위한 3개 인스턴스)
 replicas:
