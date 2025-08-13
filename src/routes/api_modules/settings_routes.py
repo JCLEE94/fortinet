@@ -25,7 +25,7 @@ def get_settings():
             "success": True,
             "data": settings_data,
             "app_mode": "test" if is_test_mode() else "production",
-            "is_test_mode": is_test_mode()
+            "is_test_mode": is_test_mode(),
         }
 
         return jsonify(response_data)

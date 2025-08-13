@@ -406,11 +406,12 @@ def format_api_response(
 def is_test_mode() -> bool:
     """Check if application is running in test mode"""
     import os
+
     # Check for pytest environment or test mode environment variables
     return (
-        'PYTEST_CURRENT_TEST' in os.environ or  # Running under pytest
-        os.environ.get('APP_MODE', '').lower() == 'test' or
-        os.environ.get('TESTING', '').lower() == 'true'
+        "PYTEST_CURRENT_TEST" in os.environ
+        or os.environ.get("APP_MODE", "").lower() == "test"  # Running under pytest
+        or os.environ.get("TESTING", "").lower() == "true"
     )
 
 
