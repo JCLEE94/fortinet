@@ -15,34 +15,34 @@ images:
 
 # 운영환경 설정 (고가용성을 위한 3개 인스턴스)
 replicas:
-- name: fortinet
-  count: 3
+- count: 3
+  name: fortinet
 
 # 운영환경 리소스 패치
-patchesStrategicMerge:
-- deployment-patch.yaml
 
 # 환경별 명확한 라벨링
 labels:
 - includeSelectors: true
   pairs:
-    environment: production
-    tier: backend
-    stability: stable
     deployment.type: blue-green
-    gitops.strategy: pull-based
+    environment: production
     gitops.environment: production
+    gitops.strategy: pull-based
     monitoring.enabled: "true"
+    stability: stable
+    tier: backend
 
 # GitOps 운영환경 메타데이터
 commonAnnotations:
+  deployment.maxSurge: 25%
+  deployment.maxUnavailable: 25%
+  deployment.strategy: rolling-update
   gitops.argocd.argoproj.io/managed: "true"
   gitops.environment: production
+  gitops.immutable-tag: master-955c1e8
   gitops.stability: stable
-  gitops.immutable-tag: "master-955c1e8"
-  deployment.strategy: rolling-update
-  deployment.maxUnavailable: "25%"
-  deployment.maxSurge: "25%"
-  monitoring.prometheus.io/scrape: "true"
   monitoring.prometheus.io/port: "7777"
+  monitoring.prometheus.io/scrape: "true"
   security.policy: strict
+patches:
+- path: deployment-patch.yaml
