@@ -313,21 +313,24 @@ jobs:
           argocd login ${{ env.ARGOCD_SERVER }} \
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }} \
-            --insecure
+            --insecure \
+            --grpc-web
       
       - name: Sync Application
         run: |
           argocd app sync ${{ env.PROJECT_NAME }} \
             --revision ${{ github.sha }} \
             --prune \
-            --force
+            --force \
+            --grpc-web
       
       - name: Wait for Rollout
         run: |
           argocd app wait ${{ env.PROJECT_NAME }} \
             --sync \
             --health \
-            --timeout 300
+            --timeout 600 \
+            --grpc-web
       
       - name: Health Check
         run: |
@@ -366,7 +369,8 @@ jobs:
           argocd login ${{ env.ARGOCD_SERVER }} \
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }} \
-            --insecure
+            --insecure \
+            --grpc-web
       
       - name: Get Current Version
         id: current
@@ -511,15 +515,23 @@ jobs:
       always()
     needs: [determine-workflow]
     steps:
+      - name: Install ArgoCD CLI
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd-linux-amd64
+          sudo install argocd-linux-amd64 /usr/local/bin/argocd
+      
       - name: Check ArgoCD Application
         run: |
           argocd login ${{ env.ARGOCD_SERVER }} \
             --username admin \
             --password ${{ secrets.ARGOCD_PASSWORD }} \
-            --insecure
+            --insecure \
+            --grpc-web
           
-          argocd app get ${{ env.PROJECT_NAME }}
-          argocd app health ${{ env.PROJECT_NAME }}
+          argocd app get ${{ env.PROJECT_NAME }} --grpc-web
+          argocd app health ${{ env.PROJECT_NAME }} --grpc-web
       
       - name: Check Kubernetes Resources
         run: |
@@ -532,8 +544,8 @@ jobs:
           echo "- **Application**: ${{ env.PROJECT_NAME }}" >> status.md
           echo "- **Environment**: ${{ env.ENVIRONMENT }}" >> status.md
           echo "- **Version**: ${{ github.sha }}" >> status.md
-          echo "- **Status**: $(argocd app get ${{ env.PROJECT_NAME }} -o json | jq -r '.status.sync.status')" >> status.md
-          echo "- **Health**: $(argocd app get ${{ env.PROJECT_NAME }} -o json | jq -r '.status.health.status')" >> status.md
+          echo "- **Status**: $(argocd app get ${{ env.PROJECT_NAME }} -o json --grpc-web | jq -r '.status.sync.status')" >> status.md
+          echo "- **Health**: $(argocd app get ${{ env.PROJECT_NAME }} -o json --grpc-web | jq -r '.status.health.status')" >> status.md
           echo "- **URL**: ${{ env.EXTERNAL_URL }}" >> status.md
       
       - name: Upload Status Report
