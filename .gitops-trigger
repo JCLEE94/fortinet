@@ -1,0 +1,12 @@
+GitOps Deployment Trigger
+Timestamp: 2025-08-14T04:26:00Z
+Commit: 485c7cc - DB/Import fixes
+Purpose: Force ArgoCD synchronization
+
+Changes deployed:
+- Fixed FortiManager API connection errors
+- Resolved configuration import conflicts  
+- Removed all mock data and test modes
+- Enhanced production environment compatibility
+
+Status: Triggering fresh deployment
