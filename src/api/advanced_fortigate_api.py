@@ -459,8 +459,8 @@ class AdvancedFortiGateAPI(BaseApiClient):
         params = {"vdom": vdom}
 
         try:
-            response = await self._make_request("GET", endpoint, params=params)
-            # policy_data = response.get("results", [{}])[0]  # Currently unused
+            # Get existing policy data (not currently used but validates policy exists)
+            await self._make_request("GET", endpoint, params=params)
 
             # 보안 프로필 설정 업데이트
             profile_mappings = {
