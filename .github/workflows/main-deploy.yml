@@ -531,7 +531,10 @@ jobs:
             --grpc-web
           
           argocd app get ${{ env.PROJECT_NAME }} --grpc-web
-          argocd app health ${{ env.PROJECT_NAME }} --grpc-web
+          echo "Health Status:"
+          argocd app get ${{ env.PROJECT_NAME }} --grpc-web -o json | jq -r '.status.health.status'
+          echo "Sync Status:"
+          argocd app get ${{ env.PROJECT_NAME }} --grpc-web -o json | jq -r '.status.sync.status'
       
       - name: Check Kubernetes Resources
         run: |
