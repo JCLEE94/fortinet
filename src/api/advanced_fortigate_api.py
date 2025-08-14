@@ -213,7 +213,7 @@ class AdvancedFortiGateAPI(BaseApiClient):
         Returns:
             방화벽 정책 목록
         """
-        endpoint = f"cmdb/firewall/policy"
+        endpoint = "cmdb/firewall/policy"
         params = {"vdom": vdom}
 
         if filters:
@@ -241,7 +241,7 @@ class AdvancedFortiGateAPI(BaseApiClient):
         Returns:
             생성된 정책 정보
         """
-        endpoint = f"cmdb/firewall/policy"
+        endpoint = "cmdb/firewall/policy"
         params = {"vdom": vdom}
 
         # 필수 필드 검증
@@ -460,7 +460,7 @@ class AdvancedFortiGateAPI(BaseApiClient):
 
         try:
             response = await self._make_request("GET", endpoint, params=params)
-            policy_data = response.get("results", [{}])[0]
+            # policy_data = response.get("results", [{}])[0]  # Currently unused
 
             # 보안 프로필 설정 업데이트
             profile_mappings = {
@@ -593,7 +593,7 @@ class AdvancedFortiGateAPI(BaseApiClient):
     ) -> Union[List[Dict], Dict[str, Any]]:
         """네트워크 인터페이스 통계 조회"""
         if interface_name:
-            endpoint = f"monitor/system/interface/select"
+            endpoint = "monitor/system/interface/select"
             params = {"vdom": vdom, "interface_name": interface_name}
         else:
             endpoint = "monitor/system/available-interfaces/select"
@@ -627,7 +627,7 @@ class AdvancedFortiGateAPI(BaseApiClient):
         end_time = int(time.time())
         start_time = end_time - time_range
 
-        filters = {"timestamp": f">={start_time}", "timestamp": f"<={end_time}"}
+        filters = {"start_time": f">={start_time}", "end_time": f"<={end_time}"}
 
         try:
             logs = await self.get_realtime_logs("traffic", filters, 1000)

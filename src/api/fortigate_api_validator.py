@@ -128,7 +128,9 @@ class FortiGateAPIValidator:
         summary = self._generate_summary(total_time)
 
         logger.info(
-            f"Validation completed in {total_time:.2f}s - {summary['total_tests']} tests, {summary['passed']} passed, {summary['failed']} failed"
+            f"Validation completed in {total_time:.2f}s - "
+            f"{summary['total_tests']} tests, {summary['passed']} passed, "
+            f"{summary['failed']} failed"
         )
 
         return {

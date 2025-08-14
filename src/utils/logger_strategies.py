@@ -319,7 +319,7 @@ def log_performance(operation_name: str = None):
                 result = func(*args, **kwargs)
                 status = "success"
                 return result
-            except Exception as e:
+            except Exception:
                 status = "error"
                 raise
             finally:

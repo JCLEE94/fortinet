@@ -150,7 +150,7 @@ class ThreatIntelligence:
         # Check against known malicious IPs
         if packet.src_ip in self.malicious_ips or packet.dst_ip in self.malicious_ips:
             threats_detected.append(
-                {"type": "malicious_ip", "severity": 8, "details": f"Communication with known malicious IP"}
+                {"type": "malicious_ip", "severity": 8, "details": "Communication with known malicious IP"}
             )
 
         # Check for port scanning
@@ -416,7 +416,7 @@ class AdvancedPacketAnalyzer:
             else:
                 # Mock data for demo
                 return {"country": "Unknown", "city": "Unknown"}
-        except:
+        except Exception:
             return {"country": "Invalid", "city": "N/A"}
 
     def _identify_service(self, port: int) -> str:
