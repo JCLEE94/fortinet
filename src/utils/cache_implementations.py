@@ -4,14 +4,12 @@
 UnifiedCacheManager의 구체적 구현 클래스들
 """
 
-import json
-import logging
 import os
 import pickle
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .unified_cache_manager import BaseCacheAdapter
 from .unified_logger import get_logger

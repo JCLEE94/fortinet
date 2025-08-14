@@ -14,21 +14,18 @@
 """
 
 import asyncio
-import json
-import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from flask import current_app, request
+from flask import request
 
 from api.advanced_fortigate_api import (
     AdvancedFortiGateAPI,
     batch_policy_operations,
-    create_fortigate_api_client,
     get_fortigate_api_client,
     initialize_global_api_client,
 )
-from api.fortigate_api_validator import FortiGateAPIValidator, create_test_report, validate_fortigate_api
+from api.fortigate_api_validator import create_test_report, validate_fortigate_api
 from config.unified_settings import unified_settings
 from utils.common_imports import Blueprint, jsonify
 from utils.unified_cache_manager import cached

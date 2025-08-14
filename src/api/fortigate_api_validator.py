@@ -16,9 +16,9 @@ import asyncio
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from api.advanced_fortigate_api import AdvancedFortiGateAPI
 from utils.unified_logger import get_logger

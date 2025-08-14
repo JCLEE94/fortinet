@@ -5,11 +5,9 @@ ErrorRecoveryStrategy의 구체적 구현 클래스들
 """
 
 import asyncio
-import logging
 import time
 from typing import Any, Dict, List
 
-import redis
 
 from ..utils.unified_logger import get_logger
 from .error_handler_advanced import ApplicationError, ErrorCategory, ErrorRecoveryStrategy, ErrorSeverity

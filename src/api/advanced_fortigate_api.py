@@ -15,11 +15,8 @@ FortiGate REST API를 사용하여 다음 기능들을 구현:
 
 import asyncio
 import json
-import logging
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.parse import urlencode
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 from requests.adapters import HTTPAdapter
