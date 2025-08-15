@@ -11,11 +11,7 @@ import time
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
-
-from utils.unified_cache_manager import cached
+from typing import Any, Dict, List
 from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
