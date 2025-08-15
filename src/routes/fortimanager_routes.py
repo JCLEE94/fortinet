@@ -88,6 +88,136 @@ def analyze_packet_path():
         return jsonify({"success": False, "message": f"Analysis error: {str(e)}"}), 500
 
 
+# AI-powered advanced operations routes
+@fortimanager_bp.route("/ai/optimize-policies", methods=["POST"])
+async def optimize_policies_with_ai():
+    """Optimize policies using AI engine"""
+    try:
+        from flask import request
+        from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
+        
+        data = request.get_json()
+        device_id = data.get("device_id")
+        
+        if not device_id:
+            return jsonify({"success": False, "message": "device_id required"}), 400
+        
+        hub = FortiManagerAdvancedHub()
+        result = await hub.policy_optimizer.optimize_policy_set(device_id)
+        
+        return jsonify({
+            "success": True,
+            "optimization": result,
+            "mode": "ai_enhanced"
+        })
+        
+    except Exception as e:
+        logger.error(f"AI policy optimization failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@fortimanager_bp.route("/ai/threat-analysis", methods=["POST"])
+async def analyze_threats_with_ai():
+    """Analyze security threats using AI"""
+    try:
+        from flask import request
+        from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
+        
+        data = request.get_json()
+        fabric_id = data.get("fabric_id", "default")
+        
+        hub = FortiManagerAdvancedHub()
+        result = await hub.security_fabric.analyze_security_posture(fabric_id)
+        
+        return jsonify({
+            "success": True,
+            "analysis": result,
+            "mode": "ai_enhanced"
+        })
+        
+    except Exception as e:
+        logger.error(f"AI threat analysis failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@fortimanager_bp.route("/ai/compliance-check", methods=["POST"])
+async def check_compliance_with_ai():
+    """Check compliance using AI-enhanced framework"""
+    try:
+        from flask import request
+        from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
+        
+        data = request.get_json()
+        device_id = data.get("device_id")
+        standard = data.get("standard", "pci_dss")
+        
+        if not device_id:
+            return jsonify({"success": False, "message": "device_id required"}), 400
+        
+        hub = FortiManagerAdvancedHub()
+        result = await hub.compliance_framework.check_compliance(device_id, standard)
+        
+        # Auto-remediate if enabled and violations found
+        if result.get("violations") and data.get("auto_remediate", False):
+            remediation = await hub.compliance_framework.auto_remediate_violations(device_id, result)
+            result["remediation"] = remediation
+        
+        return jsonify({
+            "success": True,
+            "compliance": result,
+            "mode": "ai_enhanced"
+        })
+        
+    except Exception as e:
+        logger.error(f"AI compliance check failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@fortimanager_bp.route("/ai/analytics-report", methods=["POST"])
+async def generate_analytics_with_ai():
+    """Generate advanced analytics report with AI predictions"""
+    try:
+        from flask import request
+        from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
+        
+        data = request.get_json()
+        scope = data.get("scope", "global")
+        period_days = data.get("period_days", 30)
+        
+        hub = FortiManagerAdvancedHub()
+        result = await hub.analytics_engine.generate_analytics_report(scope, period_days)
+        
+        return jsonify({
+            "success": True,
+            "report": result,
+            "mode": "ai_enhanced"
+        })
+        
+    except Exception as e:
+        logger.error(f"AI analytics generation failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+@fortimanager_bp.route("/ai/hub-status", methods=["GET"])
+def get_ai_hub_status():
+    """Get status of AI-enhanced FortiManager hub"""
+    try:
+        from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
+        
+        hub = FortiManagerAdvancedHub()
+        status = hub.get_hub_status()
+        
+        return jsonify({
+            "success": True,
+            "status": status,
+            "mode": "ai_enhanced"
+        })
+        
+    except Exception as e:
+        logger.error(f"Hub status check failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
 # Register sub-blueprints for modular organization
 try:
     from .fortimanager.analytics_routes import analytics_bp
