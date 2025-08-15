@@ -319,7 +319,6 @@ jobs:
       - name: Sync Application
         run: |
           argocd app sync ${{ env.PROJECT_NAME }} \
-            --revision ${{ github.sha }} \
             --prune \
             --force \
             --grpc-web
