@@ -145,27 +145,124 @@ def settings():
     return render_template("settings.html")
 
 
+@main_bp.route("/performance")
+def performance():
+    """성능 메트릭 페이지"""
+    return render_template("performance.html")
+
+
+@main_bp.route("/fortimanager")
+def fortimanager():
+    """FortiManager 대시보드"""
+    return render_template("fortimanager.html")
+
+
+@main_bp.route("/fortimanager/devices")
+def fortimanager_devices():
+    """FortiManager 장치 관리"""
+    return render_template("fortimanager_devices.html")
+
+
+@main_bp.route("/fortimanager/policies")
+def fortimanager_policies():
+    """FortiManager 정책 관리"""
+    return render_template("fortimanager_policies.html")
+
+
+@main_bp.route("/fortimanager/compliance")
+def fortimanager_compliance():
+    """FortiManager 컴플라이언스"""
+    return render_template("fortimanager_compliance.html")
+
+
+@main_bp.route("/fortimanager/analytics")
+def fortimanager_analytics():
+    """FortiManager 분석"""
+    return render_template("fortimanager_analytics.html")
+
+
+@main_bp.route("/itsm/tickets")
+def itsm_tickets():
+    """ITSM 티켓 관리"""
+    return render_template("itsm_tickets.html")
+
+
+@main_bp.route("/itsm/automation")
+def itsm_automation():
+    """ITSM 자동화"""
+    return render_template("itsm_automation.html")
+
+
+@main_bp.route("/itsm/policy-requests")
+def itsm_policy_requests():
+    """ITSM 정책 요청"""
+    return render_template("itsm_policy_requests.html")
+
+
 @main_bp.route("/monitoring")
 def monitoring():
     """모니터링 페이지"""
-    from mock.data_generator import DummyDataGenerator
-
+    from api.integration.api_integration import APIIntegrationManager
     from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.unified_settings import unified_settings
 
-    # 모니터링용 더미 데이터 생성
-    dummy_generator = DummyDataGenerator()
+    # 대시보드 설정 로드
     dashboard_config = get_dashboard_config()
-
-    data = {
-        "stats": dummy_generator.generate_dashboard_stats(),
-        "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
-        "events": dummy_generator.generate_security_events(dashboard_config["security_events"]["max_events_display"]),
-        "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
-        "monitoring": dummy_generator.generate_monitoring_data(),
-    }
-
-    # 대시보드 설정도 템플릿에 전달 (중요!)
-    data["config"] = dashboard_config
+    
+    # 실제 API 데이터 사용
+    try:
+        api_manager = APIIntegrationManager(unified_settings.get_api_config())
+        api_manager.initialize_connections()
+        
+        # 실제 모니터링 데이터 가져오기
+        data = {
+            "stats": {
+                "total_devices": 0,
+                "uptime_percentage": dashboard_config["stats"]["uptime_percentage"],
+                "network_traffic": dashboard_config["stats"]["network_traffic"],
+                "active_alerts": dashboard_config["stats"]["active_alerts"],
+            },
+            "devices": [],
+            "events": [],
+            "alerts": [],
+            "monitoring": {
+                "cpu_history": [],
+                "memory_history": [],
+                "traffic_in": [],
+                "traffic_out": [],
+                "sessions": [],
+                "threats_blocked": [],
+                "timestamps": []
+            },
+            "config": dashboard_config
+        }
+        
+        # Try to get real data from FortiManager
+        fm_client = api_manager.get_fortimanager_client()
+        if fm_client:
+            try:
+                devices = api_manager.get_all_devices()
+                data["devices"] = devices if devices else []
+                data["stats"]["total_devices"] = len(devices) if devices else 0
+            except:
+                pass
+                
+    except Exception as e:
+        logger.error(f"Monitoring data fetch error: {e}")
+        # Return minimal valid data structure
+        data = {
+            "stats": {
+                "total_devices": 0,
+                "uptime_percentage": 0,
+                "network_traffic": "0 GB",
+                "active_alerts": 0,
+            },
+            "devices": [],
+            "events": [],
+            "alerts": [],
+            "monitoring": {},
+            "config": dashboard_config
+        }
 
     return render_template("dashboard.html", data=data)
 
@@ -188,11 +285,12 @@ def dashboard_modern():
 @main_bp.route("/dashboard")
 def dashboard():
     """대시보드 페이지"""
-    from mock.data_generator import DummyDataGenerator
-
     from api.integration.api_integration import APIIntegrationManager
-    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.dashboard_defaults import get_dashboard_config
     from config.unified_settings import unified_settings
+    from utils.unified_logger import get_logger
+    
+    logger = get_logger(__name__)
 
     # 대시보드 설정 로드
     dashboard_config = get_dashboard_config()
@@ -206,39 +304,46 @@ def dashboard():
         if fm_client and fm_client.login():
             devices = api_manager.get_all_devices()
             data = {
-                "devices": devices,
+                "devices": devices if devices else [],
                 "connection_status": api_manager.get_connection_status(),
                 "stats": {
-                    "total_devices": len(devices),
+                    "total_devices": len(devices) if devices else 0,
                     "uptime_percentage": dashboard_config["stats"]["uptime_percentage"],
                     "network_traffic": dashboard_config["stats"]["network_traffic"],
                     "active_alerts": dashboard_config["stats"]["active_alerts"],
                 },
-                "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
+                "alerts": [],
+                "events": []
             }
         else:
-            # 연결 실패 시 더미 데이터 사용
-            dummy_generator = DummyDataGenerator()
+            # 연결 실패 시 빈 데이터 반환
             data = {
-                "stats": dummy_generator.generate_dashboard_stats(),
-                "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
-                "events": dummy_generator.generate_security_events(
-                    dashboard_config["security_events"]["max_events_display"]
-                ),
-                "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
+                "stats": {
+                    "total_devices": 0,
+                    "uptime_percentage": 0,
+                    "network_traffic": "0 GB",
+                    "active_alerts": 0,
+                },
+                "devices": [],
+                "events": [],
+                "alerts": [],
+                "connection_status": {"fortimanager": "disconnected"}
             }
 
     except Exception as e:
-        print(f"Dashboard error: {e}")
-        # 오류 발생 시 더미 데이터 사용
-        dummy_generator = DummyDataGenerator()
+        logger.error(f"Dashboard error: {e}")
+        # 오류 발생 시 빈 데이터 반환
         data = {
-            "stats": dummy_generator.generate_dashboard_stats(),
-            "devices": dummy_generator.generate_devices(dashboard_config["device_list"]["top_devices_limit"] * 2),
-            "events": dummy_generator.generate_security_events(
-                dashboard_config["security_events"]["max_events_display"]
-            ),
-            "alerts": generate_mock_alerts(dashboard_config["stats"]["active_alerts"]),
+            "stats": {
+                "total_devices": 0,
+                "uptime_percentage": 0,
+                "network_traffic": "0 GB",
+                "active_alerts": 0,
+            },
+            "devices": [],
+            "events": [],
+            "alerts": [],
+            "error": str(e)
         }
 
     # 대시보드 설정도 템플릿에 전달

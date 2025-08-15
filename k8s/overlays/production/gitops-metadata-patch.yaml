@@ -1,0 +1,43 @@
+# GitOps 4원칙 준수를 위한 메타데이터 패치
+# 불변 빌드 정보 주입
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fortinet
+  labels:
+    gitops.principle.declarative: "true"
+    gitops.principle.git-source: "true"
+    gitops.principle.pull-based: "true"
+    gitops.principle.immutable: "true"
+spec:
+  template:
+    metadata:
+      annotations:
+        gitops.build.timestamp: "${BUILD_TIMESTAMP}"
+        gitops.git.sha: "${GIT_SHA}"
+        gitops.git.branch: "${GIT_BRANCH}"
+        gitops.image.tag: "${IMMUTABLE_TAG}"
+    spec:
+      containers:
+      - name: fortinet
+        env:
+        # GitOps 메타데이터 환경변수
+        - name: BUILD_TIMESTAMP
+          value: "${BUILD_TIMESTAMP}"
+        - name: GIT_SHA
+          value: "${GIT_SHA}"
+        - name: GIT_BRANCH
+          value: "${GIT_BRANCH}"
+        - name: IMMUTABLE_TAG
+          value: "${IMMUTABLE_TAG}"
+        - name: GITOPS_MANAGED
+          value: "true"
+        # GitOps 원칙 플래그
+        - name: GITOPS_DECLARATIVE
+          value: "true"
+        - name: GITOPS_GIT_SOURCE
+          value: "true"
+        - name: GITOPS_PULL_BASED
+          value: "true"
+        - name: GITOPS_IMMUTABLE
+          value: "true"

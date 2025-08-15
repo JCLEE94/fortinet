@@ -46,3 +46,4 @@ commonAnnotations:
   security.policy: strict
 patches:
 - path: deployment-patch.yaml
+- path: gitops-metadata-patch.yaml
