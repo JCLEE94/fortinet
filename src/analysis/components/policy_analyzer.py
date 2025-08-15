@@ -240,7 +240,7 @@ class PolicyAnalyzer:
         sorted_policies = sorted(policies, key=lambda p: p.get("policyid", 0))
 
         for i, policy1 in enumerate(sorted_policies):
-            for policy2 in sorted_policies[i + 1:]:
+            for policy2 in sorted_policies[i + 1 :]:
                 if self._policies_overlap(policy1, policy2, firewall_id):
                     conflicts.append(
                         {

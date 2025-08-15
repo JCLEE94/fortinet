@@ -325,7 +325,7 @@ class AdvancedAnalytics:
         predictions = []
         for i in range(min(self.prediction_window, 10)):
             # 간단한 이동평균
-            recent_values = values[-(window + i):]
+            recent_values = values[-(window + i) :]
             pred = statistics.mean(recent_values[-window:])
             predictions.append(pred)
 

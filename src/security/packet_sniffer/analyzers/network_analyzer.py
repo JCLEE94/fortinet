@@ -310,7 +310,7 @@ class NetworkAnalyzer:
                 if opt_length < 2 or offset + opt_length > len(options_data):
                     break
 
-                opt_data = options_data[offset + 2: offset + opt_length]
+                opt_data = options_data[offset + 2 : offset + opt_length]
 
                 option = {
                     "type": opt_type,
@@ -426,7 +426,7 @@ class NetworkAnalyzer:
                 if opt_length < 2 or offset + opt_length > len(options_data):
                     break
 
-                opt_data = options_data[offset + 2: offset + opt_length]
+                opt_data = options_data[offset + 2 : offset + opt_length]
 
                 option = {
                     "type": opt_type,

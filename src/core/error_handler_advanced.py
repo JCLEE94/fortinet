@@ -628,7 +628,7 @@ class ErrorHandler:
 
         # Maintain max history size
         if len(self.error_history) > self.max_history:
-            self.error_history = self.error_history[-self.max_history:]
+            self.error_history = self.error_history[-self.max_history :]
 
     def _database_fallback(self, error: ApplicationError, context: Dict) -> Any:
         """Fallback for database errors"""

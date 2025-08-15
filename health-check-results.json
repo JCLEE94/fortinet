@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-08-15T22:32:34.193179",
+  "overall_status": "degraded",
+  "checks": {
+    "application": {
+      "status": "healthy",
+      "response_time": 0.002571,
+      "data": {
+        "build_info": {
+          "build_timestamp": "unknown",
+          "git_branch": "unknown",
+          "git_sha": "unknown",
+          "gitops_managed": false,
+          "gitops_principles": [
+            "declarative",
+            "git-source",
+            "pull-based",
+            "immutable"
+          ],
+          "immutable_tag": "unknown",
+          "registry_url": "registry.jclee.me"
+        },
+        "environment": "production",
+        "gitops_status": "unknown",
+        "metrics": {
+          "cpu_usage_percent": 100.0,
+          "disk_usage_percent": 62.89,
+          "memory_usage_percent": 54.64
+        },
+        "status": "healthy",
+        "timestamp": 1755264754.1947834,
+        "uptime": "2 days 2 hours",
+        "version": "1.0.0"
+      }
+    },
+    "redis": {
+      "status": "degraded",
+      "error": "Authentication required."
+    },
+    "python_env": {
+      "status": "healthy",
+      "virtual_env": true,
+      "python_version": "3.10.12",
+      "packages_count": 105
+    },
+    "file_permissions": {
+      "status": "healthy",
+      "permissions": {
+        "src/": {
+          "readable": true,
+          "writable": true,
+          "mode": "775"
+        },
+        "data/": {
+          "readable": true,
+          "writable": true,
+          "mode": "775"
+        },
+        "logs/": {
+          "readable": true,
+          "writable": true,
+          "mode": "775"
+        },
+        "config.json": {
+          "readable": true,
+          "writable": true,
+          "mode": "664"
+        },
+        ".env.local": {
+          "readable": true,
+          "writable": true,
+          "mode": "664"
+        }
+      }
+    },
+    "gitops": {
+      "status": "healthy",
+      "latest_run": {
+        "status": "in_progress",
+        "workflow": "fix: remove revision conflict in ArgoCD sync for automated deployment"
+      }
+    }
+  }
+}

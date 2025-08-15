@@ -94,6 +94,7 @@ async def optimize_policies_with_ai():
     """Optimize policies using AI engine"""
     try:
         from flask import request
+
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
         data = request.get_json()
@@ -105,11 +106,7 @@ async def optimize_policies_with_ai():
         hub = FortiManagerAdvancedHub()
         result = await hub.policy_optimizer.optimize_policy_set(device_id)
 
-        return jsonify({
-            "success": True,
-            "optimization": result,
-            "mode": "ai_enhanced"
-        })
+        return jsonify({"success": True, "optimization": result, "mode": "ai_enhanced"})
 
     except Exception as e:
         logger.error(f"AI policy optimization failed: {e}")
@@ -121,6 +118,7 @@ async def analyze_threats_with_ai():
     """Analyze security threats using AI"""
     try:
         from flask import request
+
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
         data = request.get_json()
@@ -129,11 +127,7 @@ async def analyze_threats_with_ai():
         hub = FortiManagerAdvancedHub()
         result = await hub.security_fabric.analyze_security_posture(fabric_id)
 
-        return jsonify({
-            "success": True,
-            "analysis": result,
-            "mode": "ai_enhanced"
-        })
+        return jsonify({"success": True, "analysis": result, "mode": "ai_enhanced"})
 
     except Exception as e:
         logger.error(f"AI threat analysis failed: {e}")
@@ -145,6 +139,7 @@ async def check_compliance_with_ai():
     """Check compliance using AI-enhanced framework"""
     try:
         from flask import request
+
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
         data = request.get_json()
@@ -162,11 +157,7 @@ async def check_compliance_with_ai():
             remediation = await hub.compliance_framework.auto_remediate_violations(device_id, result)
             result["remediation"] = remediation
 
-        return jsonify({
-            "success": True,
-            "compliance": result,
-            "mode": "ai_enhanced"
-        })
+        return jsonify({"success": True, "compliance": result, "mode": "ai_enhanced"})
 
     except Exception as e:
         logger.error(f"AI compliance check failed: {e}")
@@ -178,6 +169,7 @@ async def generate_analytics_with_ai():
     """Generate advanced analytics report with AI predictions"""
     try:
         from flask import request
+
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
         data = request.get_json()
@@ -187,11 +179,7 @@ async def generate_analytics_with_ai():
         hub = FortiManagerAdvancedHub()
         result = await hub.analytics_engine.generate_analytics_report(scope, period_days)
 
-        return jsonify({
-            "success": True,
-            "report": result,
-            "mode": "ai_enhanced"
-        })
+        return jsonify({"success": True, "report": result, "mode": "ai_enhanced"})
 
     except Exception as e:
         logger.error(f"AI analytics generation failed: {e}")
@@ -207,11 +195,7 @@ def get_ai_hub_status():
         hub = FortiManagerAdvancedHub()
         status = hub.get_hub_status()
 
-        return jsonify({
-            "success": True,
-            "status": status,
-            "mode": "ai_enhanced"
-        })
+        return jsonify({"success": True, "status": status, "mode": "ai_enhanced"})
 
     except Exception as e:
         logger.error(f"Hub status check failed: {e}")

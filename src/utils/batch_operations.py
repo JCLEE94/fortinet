@@ -150,7 +150,7 @@ class BatchProcessor:
             future_to_item = {}
 
             for i in range(0, len(items), self.batch_size):
-                batch = items[i: i + self.batch_size]
+                batch = items[i : i + self.batch_size]
                 for item in batch:
                     future = executor.submit(self._execute_item, item)
                     future_to_item[future] = item
@@ -226,7 +226,7 @@ class BatchProcessor:
 
         # 배치 단위로 처리
         for i in range(0, len(items), self.batch_size):
-            batch = items[i: i + self.batch_size]
+            batch = items[i : i + self.batch_size]
 
             # 비동기 작업 생성
             tasks = []

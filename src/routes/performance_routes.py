@@ -218,7 +218,7 @@ class RealTimeMonitor:
 
                 # Maintain history size
                 if len(self.metrics_history) > self.max_history_size:
-                    self.metrics_history = self.metrics_history[-self.max_history_size:]
+                    self.metrics_history = self.metrics_history[-self.max_history_size :]
 
             time.sleep(self.collection_interval)
 

@@ -228,7 +228,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     break
 
                 # 쿼리 타입과 클래스
-                qtype, qclass = struct.unpack("!HH", payload[new_offset: new_offset + 4])
+                qtype, qclass = struct.unpack("!HH", payload[new_offset : new_offset + 4])
 
                 questions.append(
                     {
@@ -261,7 +261,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                     break
 
                 # 리소스 레코드 헤더
-                rr_type, rr_class, ttl, rdlength = struct.unpack("!HHIH", payload[new_offset: new_offset + 10])
+                rr_type, rr_class, ttl, rdlength = struct.unpack("!HHIH", payload[new_offset : new_offset + 10])
 
                 answer = {
                     "name": name,
@@ -274,7 +274,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 # 데이터 파싱 (타입별로 간단히)
                 data_offset = new_offset + 10
                 if data_offset + rdlength <= len(payload):
-                    rdata = payload[data_offset: data_offset + rdlength]
+                    rdata = payload[data_offset : data_offset + rdlength]
                     answer["rdata"] = self._parse_rdata(rr_type, rdata, payload)
 
                 answers.append(answer)
@@ -308,7 +308,7 @@ class DnsAnalyzer(BaseProtocolAnalyzer):
                 offset += 1
                 if offset + length > len(payload):
                     break
-                label = payload[offset: offset + length].decode("utf-8", errors="ignore")
+                label = payload[offset : offset + length].decode("utf-8", errors="ignore")
                 labels.append(label)
                 offset += length
 

@@ -5,8 +5,8 @@ Provides communication with FortiGate devices using REST API
 """
 
 import time
-from typing import Any, Dict, List, Optional
 from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
 from utils.api_utils import ConnectionTestMixin
 
@@ -90,6 +90,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         # AI integration flags (check after imports)
         try:
             from config.environment import env_config
+
             self.ai_enabled = env_config.is_feature_enabled('threat_intel')
             self.auto_remediation = env_config.is_feature_enabled('auto_remediation')
         except ImportError:
@@ -546,7 +547,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
 
         remediation_actions = {
             'get_firewall_policies': self._remediate_policy_fetch,
-            'get_system_status': self._remediate_system_status
+            'get_system_status': self._remediate_system_status,
         }
 
         action = remediation_actions.get(context)
@@ -570,13 +571,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
     def _remediate_system_status(self):
         """Remediate system status fetch issues"""
         # Try alternative endpoint
-        success, result, _ = self._make_request(
-            "GET",
-            f"{self.base_url}/cmdb/system/status",
-            None,
-            None,
-            self.headers
-        )
+        success, result, _ = self._make_request("GET", f"{self.base_url}/cmdb/system/status", None, None, self.headers)
         if success:
             self.logger.info("Successfully fetched status from alternative endpoint")
 
@@ -622,7 +617,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 'protocol': session.get('proto', 'TCP'),
                 'size': session.get('bytes', 0),
                 'flags': self._extract_flags(session),
-                'timestamp': time.time()
+                'timestamp': time.time(),
             }
             packets.append(packet)
 
@@ -653,13 +648,12 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             'successful_requests': self._request_stats['successful_requests'],
             'cache_hits': self._request_stats['cache_hits'],
             'cache_misses': self._request_stats['cache_misses'],
-            'cache_hit_rate': self._request_stats['cache_hits'] / max(
-                self._request_stats['cache_hits'] + self._request_stats['cache_misses'], 1
-            ),
+            'cache_hit_rate': self._request_stats['cache_hits']
+            / max(self._request_stats['cache_hits'] + self._request_stats['cache_misses'], 1),
             'success_rate': self._request_stats['successful_requests'] / total_requests,
             'error_stats': dict(self._error_stats),
             'ai_enabled': self.ai_enabled,
-            'auto_remediation': self.auto_remediation
+            'auto_remediation': self.auto_remediation,
         }
 
     # Packet capture methods
