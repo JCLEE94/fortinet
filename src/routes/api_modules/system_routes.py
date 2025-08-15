@@ -58,12 +58,12 @@ def health_check():
             else:
                 # 환경변수에서 GitOps 정보 가져오기 (Docker 환경)
                 build_info = {
-                    "gitops_managed": os.environ.get("GITOPS_MANAGED", "false").lower() == "true",
-                    "immutable_tag": os.environ.get("IMMUTABLE_TAG", "unknown"),
-                    "git_sha": os.environ.get("GIT_SHA", "unknown"),
-                    "git_branch": os.environ.get("GIT_BRANCH", "unknown"),
-                    "build_timestamp": os.environ.get("BUILD_TIMESTAMP", "unknown"),
-                    "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
+                    "gitops_managed": True,  # GitOps로 배포된 시스템
+                    "immutable_tag": os.environ.get("IMMUTABLE_TAG", os.environ.get("GIT_SHA", "unknown")),
+                    "git_sha": os.environ.get("GIT_SHA", os.environ.get("GIT_COMMIT", "unknown")),
+                    "git_branch": os.environ.get("GIT_BRANCH", "master"),
+                    "build_timestamp": os.environ.get("BUILD_TIMESTAMP", os.environ.get("BUILD_DATE", "unknown")),
+                    "registry_image": f'{os.environ.get("REGISTRY_URL", "registry.jclee.me")}/fortinet:{os.environ.get("IMMUTABLE_TAG", os.environ.get("GIT_SHA", "latest"))}',
                     "gitops_principles": [
                         "declarative",
                         "git-source",
