@@ -653,7 +653,9 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             'successful_requests': self._request_stats['successful_requests'],
             'cache_hits': self._request_stats['cache_hits'],
             'cache_misses': self._request_stats['cache_misses'],
-            'cache_hit_rate': self._request_stats['cache_hits'] / max(self._request_stats['cache_hits'] + self._request_stats['cache_misses'], 1),
+            'cache_hit_rate': self._request_stats['cache_hits'] / max(
+                self._request_stats['cache_hits'] + self._request_stats['cache_misses'], 1
+            ),
             'success_rate': self._request_stats['successful_requests'] / total_requests,
             'error_stats': dict(self._error_stats),
             'ai_enabled': self.ai_enabled,

@@ -303,9 +303,9 @@ class ComplianceFramework:
 
         for policy in policies:
             # Check for any-any rules
-            if (policy.get("srcaddr") == ["all"] and
-                policy.get("dstaddr") == ["all"] and
-                    policy.get("action") == "accept"):
+            if (policy.get("srcaddr") == ["all"]
+                    and policy.get("dstaddr") == ["all"]
+                    and policy.get("action") == "accept"):
                 weak_policies.append(policy.get("policyid", "unknown"))
 
             # Check for no authentication

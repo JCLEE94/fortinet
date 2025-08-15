@@ -1,0 +1,96 @@
+{
+  "app": {
+    "name": "FortiGate Nextrade",
+    "version": "2.1.0",
+    "description": "AI-Enhanced Network Security Management Platform",
+    "mode": "development",
+    "debug": false
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 7777,
+    "workers": 4,
+    "threads": 2,
+    "timeout": 120
+  },
+  "cache": {
+    "enabled": true,
+    "type": "memory",
+    "ttl": 300,
+    "max_size": 1000
+  },
+  "security": {
+    "cors": {
+      "enabled": true,
+      "origins": ["*"],
+      "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      "headers": ["Content-Type", "Authorization"]
+    },
+    "csrf": {
+      "enabled": true,
+      "secret": "dev-secret-key"
+    },
+    "session": {
+      "secure": false,
+      "httponly": true,
+      "samesite": "Lax"
+    }
+  },
+  "features": {
+    "ai_policy_orchestrator": true,
+    "ai_threat_detector": true,
+    "advanced_analytics": true,
+    "compliance_framework": true,
+    "security_fabric": true,
+    "packet_sniffer": false,
+    "real_time_monitoring": true,
+    "itsm_integration": true
+  },
+  "integrations": {
+    "fortigate": {
+      "enabled": false,
+      "mock_mode": true,
+      "timeout": 30,
+      "retry_count": 3
+    },
+    "fortimanager": {
+      "enabled": false,
+      "mock_mode": true,
+      "timeout": 30,
+      "retry_count": 3
+    },
+    "itsm": {
+      "enabled": false,
+      "mock_mode": true,
+      "timeout": 30,
+      "retry_count": 3
+    }
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "json",
+    "to_file": true,
+    "file_path": "logs/app.log",
+    "max_size": "10M",
+    "backup_count": 5
+  },
+  "monitoring": {
+    "prometheus": {
+      "enabled": false,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "health_check": {
+      "enabled": true,
+      "path": "/api/health",
+      "interval": 30
+    }
+  },
+  "deployment": {
+    "environment": "development",
+    "namespace": "fortinet",
+    "registry": "registry.jclee.me",
+    "chart_repo": "https://charts.jclee.me",
+    "argocd_url": "https://argo.jclee.me"
+  }
+}
