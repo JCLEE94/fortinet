@@ -5,11 +5,8 @@ Implements machine learning for packet analysis and threat detection
 """
 
 import asyncio
-import hashlib
-import json
-import time
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 from utils.unified_logger import get_logger

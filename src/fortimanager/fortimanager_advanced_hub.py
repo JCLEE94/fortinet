@@ -4,16 +4,13 @@ FortiManager Advanced Hub with AI Integration
 Central management hub for FortiManager advanced features with AI capabilities
 """
 
-import asyncio
-import json
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import numpy as np
 from collections import defaultdict
 
 from utils.unified_logger import get_logger
-from utils.unified_cache_manager import cached
 from config.environment import env_config
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
 from .ai_policy_orchestrator import AIPolicyOrchestrator
@@ -24,39 +21,39 @@ logger = get_logger(__name__)
 
 class PolicyOptimizer:
     """Advanced policy optimization with AI capabilities"""
-    
+
     def __init__(self, api_client: FortiManagerAPIClient):
         self.api_client = api_client
         self.ai_orchestrator = AIPolicyOrchestrator(api_client)
         self.optimization_history = []
         self.performance_metrics = defaultdict(float)
-        
+
     async def optimize_policy_set(self, device_id: str) -> Dict[str, Any]:
         """Optimize policies for a specific device using AI"""
         logger.info(f"Starting AI-driven policy optimization for device {device_id}")
-        
+
         try:
             # Get current policies
             policies = self.api_client.get_device_policies(device_id)
             if not policies:
                 return {"error": "No policies found for device"}
-            
+
             # Analyze with AI
             analysis = self.ai_orchestrator.analyze_policy_set(policies)
-            
+
             # Generate optimization recommendations
             recommendations = self._generate_optimizations(analysis)
-            
+
             # Apply optimizations if auto-remediation is enabled
             if env_config.ENABLE_AUTO_REMEDIATION:
                 optimized_policies = self.ai_orchestrator.optimize_policies(policies)
                 result = await self._apply_optimizations(device_id, optimized_policies)
             else:
                 result = {"status": "recommendations_only", "changes": recommendations}
-            
+
             # Track metrics
             self._update_metrics(device_id, analysis, result)
-            
+
             return {
                 "device_id": device_id,
                 "analysis": analysis,
@@ -64,19 +61,19 @@ class PolicyOptimizer:
                 "result": result,
                 "timestamp": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Policy optimization failed: {e}")
             return {"error": str(e)}
-    
+
     def _generate_optimizations(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate optimization recommendations from AI analysis"""
         recommendations = []
-        
+
         # Extract patterns and metrics
         patterns = analysis.get("patterns", [])
         metrics = analysis.get("metrics", {})
-        
+
         # High risk policies
         if metrics.get("max_risk_score", 0) > 0.7:
             recommendations.append({
@@ -85,7 +82,7 @@ class PolicyOptimizer:
                 "priority": "critical",
                 "description": "High-risk policies detected requiring immediate attention"
             })
-        
+
         # Duplicate policies
         duplicate_count = sum(1 for p in patterns if p.get("type") == "duplicate_policy")
         if duplicate_count > 0:
@@ -96,7 +93,7 @@ class PolicyOptimizer:
                 "count": duplicate_count,
                 "description": f"Found {duplicate_count} duplicate policies that can be consolidated"
             })
-        
+
         # Overly permissive policies
         permissive_count = sum(1 for p in patterns if p.get("type") == "overly_permissive")
         if permissive_count > 0:
@@ -107,7 +104,7 @@ class PolicyOptimizer:
                 "count": permissive_count,
                 "description": f"Found {permissive_count} overly permissive policies"
             })
-        
+
         # Performance optimization
         if metrics.get("avg_effectiveness", 1) < 0.6:
             recommendations.append({
@@ -116,19 +113,19 @@ class PolicyOptimizer:
                 "priority": "medium",
                 "description": "Policy effectiveness below threshold, optimization recommended"
             })
-        
+
         return recommendations
-    
+
     async def _apply_optimizations(self, device_id: str, optimized_policies: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Apply optimized policies to device"""
         try:
             # Create backup first
             backup_id = await self._create_policy_backup(device_id)
-            
+
             # Apply changes
             success_count = 0
             failed_count = 0
-            
+
             for policy in optimized_policies:
                 if policy.get("ai_metadata", {}).get("optimized"):
                     result = self.api_client.update_policy(device_id, policy)
@@ -136,24 +133,24 @@ class PolicyOptimizer:
                         success_count += 1
                     else:
                         failed_count += 1
-            
+
             return {
                 "status": "applied",
                 "backup_id": backup_id,
                 "success_count": success_count,
                 "failed_count": failed_count
             }
-            
+
         except Exception as e:
             logger.error(f"Failed to apply optimizations: {e}")
             return {"status": "failed", "error": str(e)}
-    
+
     async def _create_policy_backup(self, device_id: str) -> str:
         """Create backup of current policies"""
         backup_id = f"backup_{device_id}_{int(time.time())}"
         # Implementation would save to database or file
         return backup_id
-    
+
     def _update_metrics(self, device_id: str, analysis: Dict[str, Any], result: Dict[str, Any]):
         """Update performance metrics"""
         metrics = analysis.get("metrics", {})
@@ -166,12 +163,12 @@ class PolicyOptimizer:
 
 class ComplianceFramework:
     """Advanced compliance checking and enforcement"""
-    
+
     def __init__(self, api_client: FortiManagerAPIClient):
         self.api_client = api_client
         self.compliance_rules = self._load_compliance_rules()
         self.audit_trail = []
-        
+
     def _load_compliance_rules(self) -> Dict[str, Any]:
         """Load compliance rules from configuration"""
         return {
@@ -194,23 +191,23 @@ class ComplianceFramework:
                 "data_retention": 90
             }
         }
-    
+
     async def check_compliance(self, device_id: str, standard: str = "pci_dss") -> Dict[str, Any]:
         """Check device compliance against specified standard"""
         logger.info(f"Checking {standard} compliance for device {device_id}")
-        
+
         if standard not in self.compliance_rules:
             return {"error": f"Unknown compliance standard: {standard}"}
-        
+
         rules = self.compliance_rules[standard]
         violations = []
         compliance_score = 100
-        
+
         try:
             # Get device configuration
             config = self.api_client.get_device_config(device_id)
             policies = self.api_client.get_device_policies(device_id)
-            
+
             # Check firewall policies
             if rules.get("firewall_required"):
                 if not policies or len(policies) < 1:
@@ -220,7 +217,7 @@ class ComplianceFramework:
                         "description": "No firewall policies configured"
                     })
                     compliance_score -= 30
-            
+
             # Check encryption
             if rules.get("encryption_required"):
                 if not self._check_encryption_enabled(config):
@@ -230,7 +227,7 @@ class ComplianceFramework:
                         "description": "Encryption not properly configured"
                     })
                     compliance_score -= 20
-            
+
             # Check logging
             if rules.get("logging_required") or rules.get("audit_logging"):
                 if not self._check_logging_enabled(config, policies):
@@ -240,7 +237,7 @@ class ComplianceFramework:
                         "description": "Logging not enabled for all policies"
                     })
                     compliance_score -= 15
-            
+
             # Check access control
             if rules.get("access_control") == "strict":
                 weak_policies = self._check_access_control(policies)
@@ -252,7 +249,7 @@ class ComplianceFramework:
                         "description": f"Found {len(weak_policies)} policies with weak access control"
                     })
                     compliance_score -= 5 * len(weak_policies)
-            
+
             # Generate report
             report = {
                 "device_id": device_id,
@@ -263,65 +260,65 @@ class ComplianceFramework:
                 "checked_at": datetime.now().isoformat(),
                 "recommendations": self._generate_remediation_steps(violations)
             }
-            
+
             # Save to audit trail
             self.audit_trail.append(report)
-            
+
             return report
-            
+
         except Exception as e:
             logger.error(f"Compliance check failed: {e}")
             return {"error": str(e)}
-    
+
     def _check_encryption_enabled(self, config: Dict[str, Any]) -> bool:
         """Check if encryption is properly configured"""
         # Check VPN settings
         vpn_config = config.get("vpn", {})
         if vpn_config.get("ipsec", {}).get("encryption", "none") == "none":
             return False
-        
+
         # Check SSL/TLS settings
         ssl_config = config.get("ssl", {})
         if not ssl_config.get("enabled", False):
             return False
-        
+
         return True
-    
+
     def _check_logging_enabled(self, config: Dict[str, Any], policies: List[Dict[str, Any]]) -> bool:
         """Check if logging is enabled for all policies"""
         # Check global logging
         if not config.get("logging", {}).get("enabled", False):
             return False
-        
+
         # Check per-policy logging
         for policy in policies:
             if not policy.get("logtraffic"):
                 return False
-        
+
         return True
-    
+
     def _check_access_control(self, policies: List[Dict[str, Any]]) -> List[str]:
         """Check for weak access control policies"""
         weak_policies = []
-        
+
         for policy in policies:
             # Check for any-any rules
-            if (policy.get("srcaddr") == ["all"] and 
+            if (policy.get("srcaddr") == ["all"] and
                 policy.get("dstaddr") == ["all"] and
-                policy.get("action") == "accept"):
+                    policy.get("action") == "accept"):
                 weak_policies.append(policy.get("policyid", "unknown"))
-            
+
             # Check for no authentication
             if not policy.get("auth", {}).get("required", False):
                 if policy.get("service") in ["SSH", "RDP", "TELNET"]:
                     weak_policies.append(policy.get("policyid", "unknown"))
-        
+
         return weak_policies
-    
+
     def _generate_remediation_steps(self, violations: List[Dict[str, Any]]) -> List[Dict[str, str]]:
         """Generate remediation steps for violations"""
         steps = []
-        
+
         for violation in violations:
             if violation["rule"] == "firewall_required":
                 steps.append({
@@ -347,28 +344,28 @@ class ComplianceFramework:
                     "priority": "high",
                     "description": "Review and restrict overly permissive policies"
                 })
-        
+
         return steps
-    
+
     async def auto_remediate_violations(self, device_id: str, report: Dict[str, Any]) -> Dict[str, Any]:
         """Automatically remediate compliance violations"""
         if not env_config.ENABLE_AUTO_REMEDIATION:
             return {"status": "disabled", "message": "Auto-remediation is disabled"}
-        
+
         logger.info(f"Auto-remediating violations for device {device_id}")
-        
+
         remediation_results = []
-        
+
         for violation in report.get("violations", []):
             result = await self._remediate_violation(device_id, violation)
             remediation_results.append(result)
-        
+
         return {
             "device_id": device_id,
             "remediation_results": remediation_results,
             "timestamp": datetime.now().isoformat()
         }
-    
+
     async def _remediate_violation(self, device_id: str, violation: Dict[str, Any]) -> Dict[str, Any]:
         """Remediate a specific violation"""
         try:
@@ -379,7 +376,7 @@ class ComplianceFramework:
                     policy["logtraffic"] = "all"
                     self.api_client.update_policy(device_id, policy)
                 return {"rule": violation["rule"], "status": "remediated"}
-            
+
             elif violation["rule"] == "access_control":
                 # Restrict overly permissive policies
                 ai_orchestrator = AIPolicyOrchestrator(self.api_client)
@@ -389,10 +386,10 @@ class ComplianceFramework:
                         # Apply the remediation
                         self.api_client.apply_remediation(device_id, result)
                 return {"rule": violation["rule"], "status": "partially_remediated"}
-            
+
             else:
                 return {"rule": violation["rule"], "status": "manual_intervention_required"}
-                
+
         except Exception as e:
             logger.error(f"Remediation failed for {violation['rule']}: {e}")
             return {"rule": violation["rule"], "status": "failed", "error": str(e)}
@@ -400,46 +397,46 @@ class ComplianceFramework:
 
 class SecurityFabric:
     """Integrated security fabric management with threat intelligence"""
-    
+
     def __init__(self, api_client: FortiManagerAPIClient):
         self.api_client = api_client
         self.threat_detector = AIThreatDetector()
         self.threat_intelligence = {}
         self.fabric_topology = {}
-        
+
     async def analyze_security_posture(self, fabric_id: str) -> Dict[str, Any]:
         """Analyze overall security posture of the fabric"""
         logger.info(f"Analyzing security posture for fabric {fabric_id}")
-        
+
         try:
             # Get fabric devices
             devices = self.api_client.get_fabric_devices(fabric_id)
-            
+
             # Analyze each device
             device_scores = {}
             total_threats = []
-            
+
             for device in devices:
                 # Get device metrics
                 metrics = await self._analyze_device_security(device["id"])
                 device_scores[device["id"]] = metrics
-                
+
                 # Collect threats
                 if metrics.get("threats"):
                     total_threats.extend(metrics["threats"])
-            
+
             # Calculate overall score
             avg_score = np.mean([s.get("score", 0) for s in device_scores.values()])
-            
+
             # Identify weak points
             weak_points = [
                 device_id for device_id, metrics in device_scores.items()
                 if metrics.get("score", 0) < 60
             ]
-            
+
             # Generate recommendations
             recommendations = self._generate_fabric_recommendations(device_scores, total_threats)
-            
+
             return {
                 "fabric_id": fabric_id,
                 "overall_score": avg_score,
@@ -450,49 +447,49 @@ class SecurityFabric:
                 "recommendations": recommendations,
                 "analyzed_at": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Security posture analysis failed: {e}")
             return {"error": str(e)}
-    
+
     async def _analyze_device_security(self, device_id: str) -> Dict[str, Any]:
         """Analyze security metrics for a single device"""
         score = 80  # Base score
         issues = []
         threats = []
-        
+
         try:
             # Get device data
             config = self.api_client.get_device_config(device_id)
             policies = self.api_client.get_device_policies(device_id)
             logs = self.api_client.get_recent_logs(device_id, limit=1000)
-            
+
             # Check for security issues
             if not config.get("antivirus", {}).get("enabled"):
                 score -= 10
                 issues.append("Antivirus disabled")
-            
+
             if not config.get("ips", {}).get("enabled"):
                 score -= 10
                 issues.append("IPS disabled")
-            
+
             if not config.get("webfilter", {}).get("enabled"):
                 score -= 5
                 issues.append("Web filtering disabled")
-            
+
             # Analyze logs for threats
             if logs:
                 threat_analysis = await self._analyze_logs_for_threats(logs)
                 threats = threat_analysis.get("threats", [])
                 if len(threats) > 10:
                     score -= min(20, len(threats))
-            
+
             # Check policy effectiveness
             ai_orchestrator = AIPolicyOrchestrator(self.api_client)
             policy_analysis = ai_orchestrator.analyze_policy_set(policies)
             policy_effectiveness = policy_analysis.get("metrics", {}).get("avg_effectiveness", 0.5)
             score = score * policy_effectiveness
-            
+
             return {
                 "device_id": device_id,
                 "score": max(0, min(100, score)),
@@ -500,11 +497,11 @@ class SecurityFabric:
                 "threats": threats,
                 "policy_effectiveness": policy_effectiveness
             }
-            
+
         except Exception as e:
             logger.error(f"Device security analysis failed: {e}")
             return {"device_id": device_id, "score": 0, "error": str(e)}
-    
+
     async def _analyze_logs_for_threats(self, logs: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze logs for security threats"""
         # Convert logs to packet format for AI analysis
@@ -521,7 +518,7 @@ class SecurityFabric:
                     "action": log.get("action")
                 }
                 packets.append(packet)
-        
+
         if packets:
             # Run AI threat detection
             analysis = await self.threat_detector.analyze_traffic(packets)
@@ -529,28 +526,28 @@ class SecurityFabric:
                 "threats": analysis.get("threat_patterns", []),
                 "risk_level": analysis.get("risk_assessment", {}).get("level", "low")
             }
-        
+
         return {"threats": [], "risk_level": "low"}
-    
+
     def _summarize_threats(self, threats: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Summarize detected threats"""
         threat_types = defaultdict(int)
         severity_counts = defaultdict(int)
-        
+
         for threat in threats:
             threat_types[threat.get("type", "unknown")] += 1
             severity_counts[threat.get("threat_level", "low")] += 1
-        
+
         return {
             "types": dict(threat_types),
             "severities": dict(severity_counts),
             "top_threat": max(threat_types, key=threat_types.get) if threat_types else None
         }
-    
+
     def _generate_fabric_recommendations(self, device_scores: Dict[str, Dict], threats: List[Dict]) -> List[Dict]:
         """Generate security fabric recommendations"""
         recommendations = []
-        
+
         # Check for weak devices
         weak_devices = [d for d, s in device_scores.items() if s.get("score", 0) < 60]
         if weak_devices:
@@ -560,7 +557,7 @@ class SecurityFabric:
                 "devices": weak_devices,
                 "description": f"Strengthen security on {len(weak_devices)} weak devices"
             })
-        
+
         # Check for common threats
         if len(threats) > 50:
             recommendations.append({
@@ -568,12 +565,12 @@ class SecurityFabric:
                 "priority": "critical",
                 "description": "High threat activity detected, immediate action required"
             })
-        
+
         # Check for missing security features
         missing_features = set()
         for device_metrics in device_scores.values():
             missing_features.update(device_metrics.get("issues", []))
-        
+
         if missing_features:
             recommendations.append({
                 "type": "enable_security_features",
@@ -581,33 +578,33 @@ class SecurityFabric:
                 "features": list(missing_features),
                 "description": "Enable missing security features across the fabric"
             })
-        
+
         return recommendations
-    
+
     async def deploy_threat_response(self, fabric_id: str, threat_id: str) -> Dict[str, Any]:
         """Deploy automated threat response across the fabric"""
         if not env_config.ENABLE_AUTO_REMEDIATION:
             return {"status": "disabled", "message": "Auto-remediation is disabled"}
-        
+
         logger.info(f"Deploying threat response for threat {threat_id} in fabric {fabric_id}")
-        
+
         try:
             # Get threat details
             threat = self.threat_intelligence.get(threat_id)
             if not threat:
                 return {"error": "Threat not found"}
-            
+
             # Generate response strategy
             response_strategy = self._generate_response_strategy(threat)
-            
+
             # Deploy to all devices
             devices = self.api_client.get_fabric_devices(fabric_id)
             deployment_results = []
-            
+
             for device in devices:
                 result = await self._deploy_to_device(device["id"], response_strategy)
                 deployment_results.append(result)
-            
+
             return {
                 "fabric_id": fabric_id,
                 "threat_id": threat_id,
@@ -615,11 +612,11 @@ class SecurityFabric:
                 "deployment_results": deployment_results,
                 "timestamp": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Threat response deployment failed: {e}")
             return {"error": str(e)}
-    
+
     def _generate_response_strategy(self, threat: Dict[str, Any]) -> Dict[str, Any]:
         """Generate response strategy for a threat"""
         strategy = {
@@ -628,9 +625,9 @@ class SecurityFabric:
             "update_signatures": [],
             "policy_changes": []
         }
-        
+
         threat_type = threat.get("type")
-        
+
         if threat_type == "ddos_attack":
             strategy["block_ips"] = threat.get("source_ips", [])
             strategy["policy_changes"].append({
@@ -643,69 +640,69 @@ class SecurityFabric:
         elif threat_type == "intrusion":
             strategy["block_ips"] = threat.get("attacker_ips", [])
             strategy["update_signatures"].append("ips")
-            
+
         return strategy
-    
+
     async def _deploy_to_device(self, device_id: str, strategy: Dict[str, Any]) -> Dict[str, Any]:
         """Deploy response strategy to a device"""
         try:
             # Block IPs
             for ip in strategy.get("block_ips", []):
                 self.api_client.block_ip(device_id, ip)
-            
+
             # Block domains
             for domain in strategy.get("block_domains", []):
                 self.api_client.block_domain(device_id, domain)
-            
+
             # Update signatures
             for signature_type in strategy.get("update_signatures", []):
                 self.api_client.update_signatures(device_id, signature_type)
-            
+
             # Apply policy changes
             for change in strategy.get("policy_changes", []):
                 self.api_client.apply_policy_change(device_id, change)
-            
+
             return {"device_id": device_id, "status": "deployed"}
-            
+
         except Exception as e:
             return {"device_id": device_id, "status": "failed", "error": str(e)}
 
 
 class AnalyticsEngine:
     """Advanced analytics and reporting with predictive capabilities"""
-    
+
     def __init__(self, api_client: FortiManagerAPIClient):
         self.api_client = api_client
         self.historical_data = defaultdict(list)
         self.predictions = {}
-        
+
     async def generate_analytics_report(self, scope: str = "global", period_days: int = 30) -> Dict[str, Any]:
         """Generate comprehensive analytics report"""
         logger.info(f"Generating analytics report for scope: {scope}, period: {period_days} days")
-        
+
         try:
             # Collect data
             end_time = datetime.now()
             start_time = end_time - timedelta(days=period_days)
-            
+
             # Get devices in scope
             if scope == "global":
                 devices = self.api_client.get_all_devices()
             else:
                 devices = self.api_client.get_devices_by_scope(scope)
-            
+
             # Collect metrics
             metrics = await self._collect_metrics(devices, start_time, end_time)
-            
+
             # Perform analysis
             analysis = self._analyze_metrics(metrics)
-            
+
             # Generate predictions
             predictions = self._generate_predictions(metrics, analysis)
-            
+
             # Create visualizations data
             visualizations = self._prepare_visualizations(metrics, analysis)
-            
+
             return {
                 "scope": scope,
                 "period": {
@@ -720,11 +717,11 @@ class AnalyticsEngine:
                 "visualizations": visualizations,
                 "generated_at": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.error(f"Analytics report generation failed: {e}")
             return {"error": str(e)}
-    
+
     async def _collect_metrics(self, devices: List[Dict], start_time: datetime, end_time: datetime) -> Dict[str, Any]:
         """Collect metrics from devices"""
         metrics = {
@@ -733,44 +730,44 @@ class AnalyticsEngine:
             "performance": {"avg_cpu": [], "avg_memory": []},
             "policies": {"total": 0, "changes": 0}
         }
-        
+
         for device in devices:
             device_id = device["id"]
-            
+
             # Get traffic stats
             traffic_stats = self.api_client.get_traffic_stats(device_id, start_time, end_time)
             metrics["traffic"]["total_bytes"] += traffic_stats.get("bytes", 0)
             metrics["traffic"]["total_sessions"] += traffic_stats.get("sessions", 0)
-            
+
             # Get threat stats
             threat_stats = self.api_client.get_threat_stats(device_id, start_time, end_time)
             metrics["threats"]["total_blocked"] += threat_stats.get("blocked", 0)
             for threat_type, count in threat_stats.get("by_type", {}).items():
                 metrics["threats"]["by_type"][threat_type] += count
-            
+
             # Get performance stats
             perf_stats = self.api_client.get_performance_stats(device_id)
             if perf_stats:
                 metrics["performance"]["avg_cpu"].append(perf_stats.get("cpu", 0))
                 metrics["performance"]["avg_memory"].append(perf_stats.get("memory", 0))
-            
+
             # Get policy stats
             policies = self.api_client.get_device_policies(device_id)
             metrics["policies"]["total"] += len(policies)
-        
+
         # Calculate averages
         if metrics["performance"]["avg_cpu"]:
             metrics["performance"]["avg_cpu"] = np.mean(metrics["performance"]["avg_cpu"])
         else:
             metrics["performance"]["avg_cpu"] = 0
-            
+
         if metrics["performance"]["avg_memory"]:
             metrics["performance"]["avg_memory"] = np.mean(metrics["performance"]["avg_memory"])
         else:
             metrics["performance"]["avg_memory"] = 0
-        
+
         return metrics
-    
+
     def _analyze_metrics(self, metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze collected metrics"""
         analysis = {
@@ -779,14 +776,14 @@ class AnalyticsEngine:
             "performance_status": "healthy",
             "policy_efficiency": "good"
         }
-        
+
         # Analyze traffic trend
         total_traffic = metrics["traffic"]["total_bytes"]
         if total_traffic > 1_000_000_000_000:  # 1TB
             analysis["traffic_trend"] = "high"
         elif total_traffic < 1_000_000_000:  # 1GB
             analysis["traffic_trend"] = "low"
-        
+
         # Analyze threat level
         threats_blocked = metrics["threats"]["total_blocked"]
         if threats_blocked > 1000:
@@ -795,7 +792,7 @@ class AnalyticsEngine:
             analysis["threat_level"] = "high"
         elif threats_blocked > 10:
             analysis["threat_level"] = "medium"
-        
+
         # Analyze performance
         avg_cpu = metrics["performance"]["avg_cpu"]
         avg_memory = metrics["performance"]["avg_memory"]
@@ -803,16 +800,16 @@ class AnalyticsEngine:
             analysis["performance_status"] = "critical"
         elif avg_cpu > 60 or avg_memory > 70:
             analysis["performance_status"] = "warning"
-        
+
         # Analyze policy efficiency
         policy_count = metrics["policies"]["total"]
         if policy_count > 1000:
             analysis["policy_efficiency"] = "review_needed"
         elif policy_count < 10:
             analysis["policy_efficiency"] = "minimal"
-        
+
         return analysis
-    
+
     def _generate_predictions(self, metrics: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate predictions based on metrics and analysis"""
         predictions = {
@@ -820,7 +817,7 @@ class AnalyticsEngine:
             "threat_forecast": {},
             "capacity_planning": {}
         }
-        
+
         # Traffic forecast
         current_traffic = metrics["traffic"]["total_bytes"]
         if analysis["traffic_trend"] == "high":
@@ -835,7 +832,7 @@ class AnalyticsEngine:
                 "next_90_days": current_traffic * 1.1,
                 "recommendation": "Current capacity sufficient"
             }
-        
+
         # Threat forecast
         threat_level = analysis["threat_level"]
         if threat_level in ["high", "critical"]:
@@ -850,7 +847,7 @@ class AnalyticsEngine:
                 "expected_incidents": metrics["threats"]["total_blocked"],
                 "recommendation": "Maintain current security posture"
             }
-        
+
         # Capacity planning
         if analysis["performance_status"] in ["warning", "critical"]:
             predictions["capacity_planning"] = {
@@ -864,9 +861,9 @@ class AnalyticsEngine:
                 "timeline": "review in 90 days",
                 "recommended_action": "Monitor performance trends"
             }
-        
+
         return predictions
-    
+
     def _prepare_visualizations(self, metrics: Dict[str, Any], analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Prepare data for visualizations"""
         return {
@@ -906,18 +903,18 @@ class AnalyticsEngine:
 
 class FortiManagerAdvancedHub:
     """Central hub for FortiManager advanced features"""
-    
+
     def __init__(self, api_client: Optional[FortiManagerAPIClient] = None):
         self.api_client = api_client or FortiManagerAPIClient()
-        
+
         # Initialize all modules
         self.policy_optimizer = PolicyOptimizer(self.api_client)
         self.compliance_framework = ComplianceFramework(self.api_client)
         self.security_fabric = SecurityFabric(self.api_client)
         self.analytics_engine = AnalyticsEngine(self.api_client)
-        
+
         logger.info("FortiManager Advanced Hub initialized with AI capabilities")
-    
+
     async def execute_advanced_operation(self, operation: str, params: Dict[str, Any]) -> Dict[str, Any]:
         """Execute advanced operations through the hub"""
         operations = {
@@ -926,17 +923,17 @@ class FortiManagerAdvancedHub:
             "analyze_security": self.security_fabric.analyze_security_posture,
             "generate_analytics": self.analytics_engine.generate_analytics_report
         }
-        
+
         if operation not in operations:
             return {"error": f"Unknown operation: {operation}"}
-        
+
         try:
             result = await operations[operation](**params)
             return result
         except Exception as e:
             logger.error(f"Advanced operation failed: {e}")
             return {"error": str(e)}
-    
+
     def get_hub_status(self) -> Dict[str, Any]:
         """Get status of all hub components"""
         return {

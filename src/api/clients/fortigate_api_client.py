@@ -82,11 +82,11 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
 
         # Monitoring data
         self._monitoring_data = {}
-        
+
         # Initialize performance metrics first
         self._request_stats = defaultdict(int)
         self._error_stats = defaultdict(int)
-        
+
         # AI integration flags (check after imports)
         try:
             from config.environment import env_config
@@ -95,7 +95,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         except ImportError:
             self.ai_enabled = False
             self.auto_remediation = False
-        
+
         # Initialize AI components if enabled
         if self.ai_enabled:
             self._init_ai_components()
@@ -485,31 +485,31 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         except Exception as e:
             self.handle_api_error(e, "_get_monitoring_data")
             return None
-    
+
     def _init_ai_components(self):
         """Initialize AI components for advanced analysis"""
         try:
             # Import AI modules conditionally
             from fortimanager.ai_policy_orchestrator import AIPolicyOrchestrator
             from security.ai_threat_detector import AIThreatDetector
-            
+
             self.ai_policy_analyzer = AIPolicyOrchestrator(self)
             self.ai_threat_detector = AIThreatDetector()
-            
+
             self.logger.info("AI components initialized successfully")
         except ImportError as e:
             self.logger.warning(f"AI components not available: {e}")
             self.ai_enabled = False
-    
+
     def _enhance_policies_with_ai(self, policies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Enhance policies with AI analysis"""
         if not policies or not hasattr(self, 'ai_policy_analyzer'):
             return policies
-        
+
         try:
             # Analyze policy set with AI
             analysis = self.ai_policy_analyzer.analyze_policy_set(policies)
-            
+
             # Add AI insights to each policy
             risk_scores = analysis.get('risk_scores', [])
             for i, policy in enumerate(policies):
@@ -518,17 +518,17 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                     policy['ai_recommendations'] = self._get_policy_recommendations(
                         policy, analysis.get('patterns', [])
                     )
-            
+
             return policies
         except Exception as e:
             self.logger.error(f"AI policy enhancement failed: {e}")
             return policies
-    
+
     def _get_policy_recommendations(self, policy: Dict[str, Any], patterns: List[Dict]) -> List[str]:
         """Generate recommendations for a specific policy"""
         recommendations = []
         policy_id = policy.get('policyid')
-        
+
         for pattern in patterns:
             if pattern.get('details', {}).get('policy_id') == policy_id:
                 if pattern['type'] == 'overly_permissive':
@@ -537,18 +537,18 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                     recommendations.append("Consider removing duplicate policy")
                 elif pattern['type'] == 'potentially_unused':
                     recommendations.append("Review for potential removal")
-        
+
         return recommendations
-    
+
     def _attempt_auto_remediation(self, context: str, error: Exception):
         """Attempt automatic remediation for known issues"""
         self.logger.info(f"Attempting auto-remediation for {context}")
-        
+
         remediation_actions = {
             'get_firewall_policies': self._remediate_policy_fetch,
             'get_system_status': self._remediate_system_status
         }
-        
+
         action = remediation_actions.get(context)
         if action:
             try:
@@ -556,7 +556,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 self.logger.info(f"Auto-remediation successful for {context}")
             except Exception as e:
                 self.logger.error(f"Auto-remediation failed: {e}")
-    
+
     def _remediate_policy_fetch(self):
         """Remediate policy fetch issues"""
         # Clear cache and reset connection
@@ -566,7 +566,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         if hasattr(self, 'session'):
             self.session.close()
             self._init_session()
-    
+
     def _remediate_system_status(self):
         """Remediate system status fetch issues"""
         # Try alternative endpoint
@@ -579,39 +579,39 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         )
         if success:
             self.logger.info("Successfully fetched status from alternative endpoint")
-    
+
     async def analyze_traffic_patterns(self, duration_minutes: int = 5) -> Dict[str, Any]:
         """Analyze traffic patterns using AI"""
         if not self.ai_enabled or not hasattr(self, 'ai_threat_detector'):
             return {"error": "AI features not enabled"}
-        
+
         try:
             # Get recent sessions
             sessions = self.get_sessions()
             if not sessions:
                 return {"error": "No sessions available for analysis"}
-            
+
             # Convert sessions to packet format for AI analysis
             packets = self._sessions_to_packets(sessions[:1000])  # Limit to 1000 sessions
-            
+
             # Run AI analysis
             analysis = await self.ai_threat_detector.analyze_traffic(packets)
-            
+
             # Add FortiGate-specific context
             analysis['device'] = self.host
             analysis['analysis_duration'] = duration_minutes
             analysis['session_count'] = len(sessions)
-            
+
             return analysis
-            
+
         except Exception as e:
             self.logger.error(f"Traffic analysis failed: {e}")
             return {"error": str(e)}
-    
+
     def _sessions_to_packets(self, sessions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Convert FortiGate sessions to packet format for AI analysis"""
         packets = []
-        
+
         for session in sessions:
             packet = {
                 'id': session.get('session_id', 'unknown'),
@@ -625,14 +625,14 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
                 'timestamp': time.time()
             }
             packets.append(packet)
-        
+
         return packets
-    
+
     def _extract_flags(self, session: Dict[str, Any]) -> Dict[str, bool]:
         """Extract TCP flags from session data"""
         flags = {}
         state = session.get('state', '')
-        
+
         if 'SYN' in state:
             flags['SYN'] = True
         if 'ACK' in state:
@@ -641,13 +641,13 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             flags['FIN'] = True
         if 'RST' in state:
             flags['RST'] = True
-        
+
         return flags
-    
+
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get client performance statistics"""
         total_requests = self._request_stats['total_requests'] or 1
-        
+
         return {
             'total_requests': total_requests,
             'successful_requests': self._request_stats['successful_requests'],

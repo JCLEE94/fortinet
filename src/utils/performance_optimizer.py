@@ -250,7 +250,7 @@ class AsyncBatchProcessor:
         processed_count = 0
 
         # 배치로 나누기
-        batches = [items[i : i + self.batch_size] for i in range(0, len(items), self.batch_size)]
+        batches = [items[i: i + self.batch_size] for i in range(0, len(items), self.batch_size)]
 
         for batch in batches:
             # 세마포어로 동시 실행 제한

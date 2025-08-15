@@ -243,7 +243,7 @@ class PolicyOrchestrationEngine:
 
         # Check each policy pair
         for i, policy1 in enumerate(policies):
-            for j, policy2 in enumerate(policies[i + 1 :], i + 1):
+            for j, policy2 in enumerate(policies[i + 1:], i + 1):
                 # Check for conflicts
                 conflict = self._check_policy_conflict(policy1, policy2)
                 if conflict:
