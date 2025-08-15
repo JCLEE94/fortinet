@@ -47,6 +47,9 @@ lxml==4.9.3
 # JSON 및 데이터 처리
 orjson==3.10.7
 
+# AI 및 머신러닝
+numpy==1.24.3
+
 # FortiManager API (removed - custom library not available in PyPI)
 
 # 성능 모니터링
