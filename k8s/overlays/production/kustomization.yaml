@@ -11,7 +11,7 @@ resources:
 # 동적 태그 형식: {version}-{date}-{git-sha}
 images:
 - name: registry.jclee.me/fortinet
-  newTag: 955c1e8e971a9eb683c43246c50085d7ab73abe1
+  newTag: ai-features-v1
 
 # 운영환경 설정 (고가용성을 위한 3개 인스턴스)
 replicas:
@@ -39,7 +39,7 @@ commonAnnotations:
   deployment.strategy: rolling-update
   gitops.argocd.argoproj.io/managed: "true"
   gitops.environment: production
-  gitops.immutable-tag: master-955c1e8
+  gitops.immutable-tag: ai-features-v1
   gitops.stability: stable
   monitoring.prometheus.io/port: "7777"
   monitoring.prometheus.io/scrape: "true"
