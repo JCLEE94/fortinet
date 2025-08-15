@@ -125,10 +125,27 @@ venv_ppt/
 *_test_*.json
 *_2024*.json
 *_2025*.json
+ui_test_results_*.json
+fortimanager_new_api_test_*.json
+packet_path_analysis_results.json
+health-check-results.json
 test-results/
 temp-data/
 temp/
 tmp/
+
+# Build and development artifacts
+build/
+exports/
+reports/
+helm-packages/
+htmlcov/
+
+# Temporary Python scripts
+init-*.py
+start-dev.py
+validate-setup.py
+fortinet-cli.py
 
 # Documentation restrictions (only README.md and CLAUDE.md allowed)
 *.md
