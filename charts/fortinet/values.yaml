@@ -11,7 +11,7 @@ image:
   repository: registry.jclee.me/fortinet
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "128ed7b2"
+  tag: "ai-features-v1"
 
 imagePullSecrets:
   - name: harbor-registry
