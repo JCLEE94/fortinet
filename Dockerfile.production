@@ -66,8 +66,9 @@ LABEL maintainer="FortiGate Nextrade Team" \
 # =============================================================================
 FROM base as system-deps
 
-# Install system dependencies in single layer
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies with robust error handling for CI environments
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends --fix-missing \
     build-essential \
     gcc \
     g++ \
@@ -78,10 +79,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     htop \
     ca-certificates \
-    && apt-get clean \
+    && apt-get autoremove -y \
+    && apt-get autoclean \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /tmp/* \
-    && rm -rf /var/tmp/*
+    && rm -rf /var/tmp/* \
+    && rm -rf /var/cache/apt/archives/*
 
 # =============================================================================
 # Python Dependencies Stage
@@ -168,6 +171,47 @@ COPY --chown=fortinet:fortinet start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 # =============================================================================
+# GitOps 4원칙 준수: 불변 빌드 정보 기록 (as root before switching user)
+# =============================================================================
+RUN echo "=== GitOps Immutable Build Information ===" > /app/build-info.txt && \
+    echo "Build Date: ${BUILD_DATE:-unknown}" >> /app/build-info.txt && \
+    echo "Build Timestamp: ${BUILD_TIMESTAMP:-unknown}" >> /app/build-info.txt && \
+    echo "Git Commit: ${GIT_COMMIT:-unknown}" >> /app/build-info.txt && \
+    echo "Git SHA (Short): ${GIT_SHA:-unknown}" >> /app/build-info.txt && \
+    echo "Git Branch: ${GIT_BRANCH:-unknown}" >> /app/build-info.txt && \
+    echo "Version: ${VERSION:-unknown}" >> /app/build-info.txt && \
+    echo "Immutable Tag: ${IMMUTABLE_TAG:-unknown}" >> /app/build-info.txt && \
+    echo "Registry: ${REGISTRY_URL:-registry.jclee.me}/fortinet:${IMMUTABLE_TAG:-unknown}" >> /app/build-info.txt && \
+    echo "GitOps Principles: Declarative, Git Source, Pull-based, Immutable" >> /app/build-info.txt && \
+    echo "Security: Non-root user (fortinet:fortinet)" >> /app/build-info.txt && \
+    echo "Optimization: Python bytecode compiled, Gunicorn ready" >> /app/build-info.txt && \
+    # JSON 형태로도 저장하여 API에서 활용 가능
+    printf '{\n' > /app/build-info.json && \
+    printf '  "gitops": {\n' >> /app/build-info.json && \
+    printf '    "principles": ["declarative", "git-source", "pull-based", "immutable"],\n' >> /app/build-info.json && \
+    printf '    "managed_by": "argocd",\n' >> /app/build-info.json && \
+    printf '    "immutable": true\n' >> /app/build-info.json && \
+    printf '  },\n' >> /app/build-info.json && \
+    printf '  "build": {\n' >> /app/build-info.json && \
+    printf '    "date": "%s",\n' "${BUILD_DATE:-unknown}" >> /app/build-info.json && \
+    printf '    "timestamp": "%s",\n' "${BUILD_TIMESTAMP:-unknown}" >> /app/build-info.json && \
+    printf '    "version": "%s",\n' "${VERSION:-unknown}" >> /app/build-info.json && \
+    printf '    "immutable_tag": "%s"\n' "${IMMUTABLE_TAG:-unknown}" >> /app/build-info.json && \
+    printf '  },\n' >> /app/build-info.json && \
+    printf '  "git": {\n' >> /app/build-info.json && \
+    printf '    "commit": "%s",\n' "${GIT_COMMIT:-unknown}" >> /app/build-info.json && \
+    printf '    "sha": "%s",\n' "${GIT_SHA:-unknown}" >> /app/build-info.json && \
+    printf '    "branch": "%s",\n' "${GIT_BRANCH:-unknown}" >> /app/build-info.json && \
+    printf '    "repository": "https://github.com/JCLEE94/fortinet"\n' >> /app/build-info.json && \
+    printf '  },\n' >> /app/build-info.json && \
+    printf '  "registry": {\n' >> /app/build-info.json && \
+    printf '    "url": "%s",\n' "${REGISTRY_URL:-registry.jclee.me}" >> /app/build-info.json && \
+    printf '    "namespace": "fortinet",\n' >> /app/build-info.json && \
+    printf '    "full_image": "%s/fortinet:%s"\n' "${REGISTRY_URL:-registry.jclee.me}" "${IMMUTABLE_TAG:-unknown}" >> /app/build-info.json && \
+    printf '  }\n' >> /app/build-info.json && \
+    printf '}\n' >> /app/build-info.json
+
+# =============================================================================
 # Runtime Configuration
 # =============================================================================
 
@@ -185,44 +229,3 @@ VOLUME ["/app/data", "/app/logs"]
 
 # Default command
 CMD ["/app/start.sh"]
-
-# =============================================================================
-# GitOps 4원칙 준수: 불변 빌드 정보 기록
-# =============================================================================
-RUN echo "=== GitOps Immutable Build Information ===" > /app/build-info.txt && \
-    echo "Build Date: ${BUILD_DATE}" >> /app/build-info.txt && \
-    echo "Build Timestamp: ${BUILD_TIMESTAMP}" >> /app/build-info.txt && \
-    echo "Git Commit: ${GIT_COMMIT}" >> /app/build-info.txt && \
-    echo "Git SHA (Short): ${GIT_SHA}" >> /app/build-info.txt && \
-    echo "Git Branch: ${GIT_BRANCH}" >> /app/build-info.txt && \
-    echo "Version: ${VERSION}" >> /app/build-info.txt && \
-    echo "Immutable Tag: ${IMMUTABLE_TAG}" >> /app/build-info.txt && \
-    echo "Registry: ${REGISTRY_URL}/fortinet:${IMMUTABLE_TAG}" >> /app/build-info.txt && \
-    echo "GitOps Principles: Declarative, Git Source, Pull-based, Immutable" >> /app/build-info.txt && \
-    echo "Security: Non-root user (fortinet:fortinet)" >> /app/build-info.txt && \
-    echo "Optimization: Python bytecode compiled, Gunicorn ready" >> /app/build-info.txt && \
-    # JSON 형태로도 저장하여 API에서 활용 가능
-    echo "{" > /app/build-info.json && \
-    echo "  \"gitops\": {" >> /app/build-info.json && \
-    echo "    \"principles\": [\"declarative\", \"git-source\", \"pull-based\", \"immutable\"]," >> /app/build-info.json && \
-    echo "    \"managed_by\": \"argocd\"," >> /app/build-info.json && \
-    echo "    \"immutable\": true" >> /app/build-info.json && \
-    echo "  }," >> /app/build-info.json && \
-    echo "  \"build\": {" >> /app/build-info.json && \
-    echo "    \"date\": \"${BUILD_DATE}\"," >> /app/build-info.json && \
-    echo "    \"timestamp\": \"${BUILD_TIMESTAMP}\"," >> /app/build-info.json && \
-    echo "    \"version\": \"${VERSION}\"," >> /app/build-info.json && \
-    echo "    \"immutable_tag\": \"${IMMUTABLE_TAG}\"" >> /app/build-info.json && \
-    echo "  }," >> /app/build-info.json && \
-    echo "  \"git\": {" >> /app/build-info.json && \
-    echo "    \"commit\": \"${GIT_COMMIT}\"," >> /app/build-info.json && \
-    echo "    \"sha\": \"${GIT_SHA}\"," >> /app/build-info.json && \
-    echo "    \"branch\": \"${GIT_BRANCH}\"," >> /app/build-info.json && \
-    echo "    \"repository\": \"https://github.com/JCLEE94/fortinet\"" >> /app/build-info.json && \
-    echo "  }," >> /app/build-info.json && \
-    echo "  \"registry\": {" >> /app/build-info.json && \
-    echo "    \"url\": \"${REGISTRY_URL}\"," >> /app/build-info.json && \
-    echo "    \"namespace\": \"fortinet\"," >> /app/build-info.json && \
-    echo "    \"full_image\": \"${REGISTRY_URL}/fortinet:${IMMUTABLE_TAG}\"" >> /app/build-info.json && \
-    echo "  }" >> /app/build-info.json && \
-    echo "}" >> /app/build-info.json
