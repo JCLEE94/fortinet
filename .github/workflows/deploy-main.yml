@@ -447,7 +447,7 @@ jobs:
             --insecure \
             --grpc-web
           
-          APP_NAME="${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment || 'production' }}"
+          APP_NAME="${{ env.PROJECT_NAME }}"
           
           # Get application status
           echo "## 📊 Application Status Report" > status.md
