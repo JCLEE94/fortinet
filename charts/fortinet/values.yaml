@@ -12,7 +12,7 @@ image:
   pullPolicy: IfNotPresent  # Changed from Always for immutable tags
   # Overrides the image tag whose default is the chart appVersion.
   # This should be set to an immutable tag (e.g., master-7cbf26e) in CI/CD
-  tag: "latest"  # Using latest until proper immutable tags are built
+  tag: "master-adf76d9"  # Immutable tag for GitOps compliance
 
 imagePullSecrets:
   - name: harbor-registry
