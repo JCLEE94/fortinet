@@ -52,27 +52,10 @@ resources:
     memory: 128Mi  # Memory request 최적화
     ephemeral-storage: 512Mi
 
-# HPA (Horizontal Pod Autoscaler) - DISABLED for fixed replica count
+# HPA (Horizontal Pod Autoscaler) - REMOVED
+# Fixed replica count is managed by replicaCount field above
 autoscaling:
   enabled: false
-  minReplicas: 2      # 최소 2개 Pod 보장 (고가용성)
-  maxReplicas: 8      # 최대 스케일링 확장
-  targetCPUUtilizationPercentage: 70    # CPU 임계값 최적화
-  targetMemoryUtilizationPercentage: 75  # Memory 임계값 최적화
-  # 스케일링 성능 향상
-  behavior:
-    scaleUp:
-      stabilizationWindowSeconds: 60
-      policies:
-      - type: Percent
-        value: 100
-        periodSeconds: 15
-    scaleDown:
-      stabilizationWindowSeconds: 300
-      policies:
-      - type: Percent
-        value: 10
-        periodSeconds: 60
 
 # Fortinet 애플리케이션 환경 변수 (보안 강화)
 env:
