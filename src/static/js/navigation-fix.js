@@ -4,7 +4,7 @@
  */
 
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("Navigation fix loaded");
+  // console.log("Navigation fix loaded");
 
   // Fix navbar position first
   fixNavbarPosition();
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!link.parentElement.classList.contains("has-submenu")) {
       link.addEventListener("click", function (e) {
         // Don't prevent default for normal navigation
-        console.log("Navigation clicked:", this.href);
+        // console.log("Navigation clicked:", this.href);
       });
     }
   });
@@ -43,13 +43,13 @@ document.addEventListener("DOMContentLoaded", function () {
   subLinks.forEach((link) => {
     link.style.pointerEvents = "auto";
     link.addEventListener("click", function (e) {
-      console.log("Submenu navigation clicked:", this.href);
+      // console.log("Submenu navigation clicked:", this.href);
     });
   });
 
   // Debug: Log all navigation links
-  console.log("Found navigation links:", navLinks.length);
-  console.log("Found submenu links:", subLinks.length);
+  // console.log("Found navigation links:", navLinks.length);
+  // console.log("Found submenu links:", subLinks.length);
 });
 
 // Also handle dynamic content
@@ -79,7 +79,7 @@ function fixNavbarPosition() {
     document.querySelector(".modern-navbar");
 
   if (navbar) {
-    console.log("Navbar found, applying fixed position");
+    // console.log("Navbar found, applying fixed position");
 
     // Force navbar position
     function forceNavbarPosition() {
@@ -120,9 +120,9 @@ function fixNavbarPosition() {
         `;
     document.head.appendChild(style);
 
-    console.log("Navbar fixed position applied");
+    // console.log("Navbar fixed position applied");
   } else {
-    console.log("Navbar not found");
+    // console.log("Navbar not found");
   }
 }
 

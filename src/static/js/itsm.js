@@ -34,7 +34,7 @@ async function loadTickets() {
     renderTickets();
     updateStats();
   } catch (error) {
-    console.log("API 오류, 더미 데이터 사용:", error);
+    // console.log("API 오류, 더미 데이터 사용:", error);
     tickets = generateDummyTickets();
     filteredTickets = [...tickets];
     renderTickets();

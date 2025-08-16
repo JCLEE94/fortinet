@@ -297,7 +297,7 @@ class AdvancedPacketAnalyzer:
             protocol=packet_data.get("protocol", "TCP"),
             size=packet_data.get("size", 0),
             flags=packet_data.get("flags", []),
-            payload_hash=hashlib.md5(str(packet_data.get("payload", "")).encode()).hexdigest(),
+            payload_hash=hashlib.sha256(str(packet_data.get("payload", "")).encode()).hexdigest(),
         )
 
     def _track_session(self, packet: PacketMetadata) -> Dict[str, Any]:

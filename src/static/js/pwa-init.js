@@ -7,7 +7,7 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker
       .register("/static/sw.js")
       .then((registration) => {
-        console.log(
+        // console.log(
           "Service Worker registered successfully:",
           registration.scope,
         );
@@ -91,7 +91,7 @@ function showInstallPromotion() {
         const { outcome } = await deferredPrompt.userChoice;
 
         if (outcome === "accepted") {
-          console.log("User accepted the install prompt");
+          // console.log("User accepted the install prompt");
           // Track installation
           if (window.gtag) {
             gtag("event", "pwa_install", { method: "prompt" });
@@ -126,7 +126,7 @@ function showInstallPromotion() {
 
 // Handle app installed event
 window.addEventListener("appinstalled", () => {
-  console.log("PWA was installed");
+  // console.log("PWA was installed");
   // Hide any install prompts
   const installBanner = document.querySelector(".pwa-install-banner");
   if (installBanner) {
@@ -280,7 +280,7 @@ function showNotification(message, type = "info") {
     window.UIManager.toast.show(message, type);
   } else {
     // Fallback
-    console.log(`[${type}] ${message}`);
+    // console.log(`[${type}] ${message}`);
   }
 }
 

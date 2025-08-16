@@ -111,7 +111,7 @@ class AIModelEngine:
         """Generate hash for policy comparison"""
         key_fields = ["srcaddr", "dstaddr", "service", "action"]
         policy_str = json.dumps({k: policy.get(k) for k in key_fields}, sort_keys=True)
-        return hashlib.md5(policy_str.encode()).hexdigest()
+        return hashlib.sha256(policy_str.encode()).hexdigest()
 
     def predict_risk_score(self, policy: Dict[str, Any]) -> float:
         """Predict risk score for a policy"""

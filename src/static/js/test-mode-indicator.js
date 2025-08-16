@@ -80,7 +80,7 @@
 
     document.body.appendChild(indicator);
 
-    console.log(`Mode indicator created: ${modeText}`);
+    // console.log(`Mode indicator created: ${modeText}`);
   }
 
   /**
@@ -158,36 +158,36 @@
       error: "color: #F44336; font-size: 12px;",
     };
 
-    console.log("%c🚀 FortiGate Nextrade Application", styles.title);
-    console.log("%cMode Information:", styles.info);
-    console.log(
+    // console.log("%c🚀 FortiGate Nextrade Application", styles.title);
+    // console.log("%cMode Information:", styles.info);
+    // console.log(
       `%c  APP_MODE: ${window.APP_MODE || "production"}`,
       styles.info,
     );
-    console.log(
+    // console.log(
       `%c  OFFLINE_MODE: ${isOfflineMode}`,
       isOfflineMode ? styles.warning : styles.info,
     );
-    console.log(
+    // console.log(
       `%c  Test Data: ${isTestMode ? "Active" : "Inactive"}`,
       isTestMode ? styles.warning : styles.info,
     );
 
     if (isTestMode) {
-      console.log(
+      // console.log(
         "%c⚠️ Application is running in TEST MODE with dummy data",
         styles.warning,
       );
     }
 
     if (isOfflineMode) {
-      console.log(
+      // console.log(
         "%c🔒 Application is running in OFFLINE MODE - external calls blocked",
         styles.warning,
       );
     }
 
-    console.log(
+    // console.log(
       "%cFor production use, ensure APP_MODE=production and OFFLINE_MODE=false",
       styles.info,
     );
@@ -207,7 +207,7 @@
           perfData.loadEventEnd - perfData.loadEventStart,
         );
 
-        console.log(
+        // console.log(
           `%c⏱️ Page Load Time: ${loadTime}ms`,
           "color: #9C27B0; font-size: 12px;",
         );
@@ -231,7 +231,7 @@
           const endTime = performance.now();
           const duration = Math.round(endTime - startTime);
 
-          console.log(
+          // console.log(
             `%c🌐 API Call: ${url} (${duration}ms)`,
             "color: #607D8B; font-size: 11px;",
           );
