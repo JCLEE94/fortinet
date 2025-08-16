@@ -43,6 +43,20 @@ class WebAppConfig:
 
 
 @dataclass
+class SystemConfig:
+    """시스템 전역 설정"""
+
+    offline_mode: bool = (
+        os.getenv("OFFLINE_MODE", "false").lower() == "true"
+        or os.getenv("NO_INTERNET", "false").lower() == "true"
+        or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
+    )
+    disable_socketio: bool = os.getenv("DISABLE_SOCKETIO", "false").lower() == "true"
+    disable_updates: bool = os.getenv("DISABLE_UPDATES", "false").lower() == "true"
+    disable_telemetry: bool = os.getenv("DISABLE_TELEMETRY", "false").lower() == "true"
+
+
+@dataclass
 class ThresholdConfig:
     """임계값 설정"""
 
@@ -62,6 +76,7 @@ class UnifiedSettings:
         # 기본 설정 초기화
         self.app_mode = self._get_app_mode()
         self.webapp = self._init_webapp_config()
+        self.system = SystemConfig()
         self.fortimanager = self._init_api_config("FORTIMANAGER")
         self.fortigate = self._init_api_config("FORTIGATE")
         self.fortianalyzer = self._init_api_config("FORTIANALYZER")

@@ -22,12 +22,12 @@ class BaseApiClient(ABC):
     Base API Client that provides common functionality for all API clients
     """
 
-    # Class attribute for offline mode detection
-    OFFLINE_MODE = (
-        os.getenv("OFFLINE_MODE", "false").lower() == "true"
-        or os.getenv("NO_INTERNET", "false").lower() == "true"
-        or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
-    )
+    # Class attribute for offline mode detection (imported from unified settings)
+    @property
+    def OFFLINE_MODE(self):
+        from config.unified_settings import unified_settings
+
+        return unified_settings.system.offline_mode
 
     def __init__(
         self,
@@ -207,13 +207,8 @@ class BaseApiClient(ABC):
         Returns:
             tuple: (success, response_data, status_code)
         """
-        # 오프라인 모드에서는 외부 연결 차단 (동적 체크)
-        offline_mode = (
-            os.getenv("OFFLINE_MODE", "false").lower() == "true"
-            or os.getenv("NO_INTERNET", "false").lower() == "true"
-            or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
-            or self.OFFLINE_MODE
-        )
+        # 오프라인 모드에서는 외부 연결 차단 (통합 설정 사용)
+        offline_mode = self.OFFLINE_MODE
         if offline_mode:
             self.logger.warning("🔒 외부 API 호출이 오프라인 모드에 의해 차단됨")
             return (

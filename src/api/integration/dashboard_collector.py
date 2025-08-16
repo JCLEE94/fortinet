@@ -281,7 +281,7 @@ class DashboardDataCollector:
     def _get_mock_stats(self) -> DashboardStats:
         """기본 통계 데이터 생성 (실제 장비 연결 불가 시)"""
         import random
-        
+
         # 실제 API 연결이 없을 때 기본값 반환
         stats = DashboardStats(
             total_devices=5,

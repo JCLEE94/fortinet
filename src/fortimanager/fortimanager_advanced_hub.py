@@ -958,4 +958,4 @@ class FortiManagerAdvancedHub:
 
 
 # Export the hub
-__all__ = ['FortiManagerAdvancedHub', 'PolicyOptimizer', 'ComplianceFramework', 'SecurityFabric', 'AnalyticsEngine']
+__all__ = ["FortiManagerAdvancedHub", "PolicyOptimizer", "ComplianceFramework", "SecurityFabric", "AnalyticsEngine"]

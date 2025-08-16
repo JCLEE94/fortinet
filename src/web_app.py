@@ -10,6 +10,8 @@ from datetime import datetime
 
 from flask import Flask, jsonify, render_template, request
 
+# 통합 설정에서 시스템 설정 가져오기
+from config.unified_settings import unified_settings
 from routes.api_routes import api_bp
 from routes.fortimanager_routes import fortimanager_bp
 from routes.itsm_api_routes import itsm_api_bp
@@ -18,21 +20,14 @@ from routes.main_routes import main_bp
 from utils.security import add_security_headers, csrf_protect, generate_csrf_token, rate_limit
 from utils.unified_logger import get_logger
 
-# 오프라인 모드 감지
-OFFLINE_MODE = (
-    os.getenv("OFFLINE_MODE", "false").lower() == "true"
-    or os.getenv("NO_INTERNET", "false").lower() == "true"
-    or os.getenv("DISABLE_EXTERNAL_CALLS", "false").lower() == "true"
-)
+OFFLINE_MODE = unified_settings.system.offline_mode
+DISABLE_SOCKETIO = unified_settings.system.disable_socketio
 
 if OFFLINE_MODE:
     print("🔒 OFFLINE MODE ACTIVATED - 외부 연결 차단됨")
     os.environ["DISABLE_SOCKETIO"] = "true"
     os.environ["DISABLE_UPDATES"] = "true"
     os.environ["DISABLE_TELEMETRY"] = "true"
-
-# Socket.IO 설정
-DISABLE_SOCKETIO = os.getenv("DISABLE_SOCKETIO", "false").lower() == "true"
 
 if not DISABLE_SOCKETIO:
     try:

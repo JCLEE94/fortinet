@@ -68,7 +68,7 @@ def get_monitoring_metrics():
     try:
         import random
         import time
-        
+
         metrics = {
             "cpu_usage": round(random.uniform(20, 60), 1),
             "memory_usage": round(random.uniform(30, 70), 1),
@@ -76,7 +76,7 @@ def get_monitoring_metrics():
             "network_in": round(random.uniform(100, 500), 2),
             "network_out": round(random.uniform(80, 400), 2),
             "active_connections": random.randint(50, 200),
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
         return jsonify({"success": True, "data": metrics})
     except Exception as e:
@@ -91,14 +91,14 @@ def get_monitoring_alerts():
     try:
         import random
         import time
-        
+
         alerts = [
             {
                 "id": i,
                 "level": random.choice(["info", "warning", "error", "critical"]),
                 "message": f"Alert {i}: System event detected",
                 "timestamp": time.time() - random.randint(0, 3600),
-                "source": random.choice(["system", "network", "security", "application"])
+                "source": random.choice(["system", "network", "security", "application"]),
             }
             for i in range(1, random.randint(5, 15))
         ]

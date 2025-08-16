@@ -203,17 +203,17 @@ def itsm_policy_requests():
 def monitoring():
     """모니터링 페이지"""
     from api.integration.api_integration import APIIntegrationManager
-    from config.dashboard_defaults import generate_mock_alerts, get_dashboard_config
+    from config.dashboard_defaults import get_dashboard_config
     from config.unified_settings import unified_settings
 
     # 대시보드 설정 로드
     dashboard_config = get_dashboard_config()
-    
+
     # 실제 API 데이터 사용
     try:
         api_manager = APIIntegrationManager(unified_settings.get_api_config())
         api_manager.initialize_connections()
-        
+
         # 실제 모니터링 데이터 가져오기
         data = {
             "stats": {
@@ -232,11 +232,11 @@ def monitoring():
                 "traffic_out": [],
                 "sessions": [],
                 "threats_blocked": [],
-                "timestamps": []
+                "timestamps": [],
             },
-            "config": dashboard_config
+            "config": dashboard_config,
         }
-        
+
         # Try to get real data from FortiManager
         fm_client = api_manager.get_fortimanager_client()
         if fm_client:
@@ -244,10 +244,13 @@ def monitoring():
                 devices = api_manager.get_all_devices()
                 data["devices"] = devices if devices else []
                 data["stats"]["total_devices"] = len(devices) if devices else 0
-            except:
+            except Exception:
                 pass
-                
+
     except Exception as e:
+        from utils.unified_logger import get_logger
+
+        logger = get_logger(__name__)
         logger.error(f"Monitoring data fetch error: {e}")
         # Return minimal valid data structure
         data = {
@@ -261,7 +264,7 @@ def monitoring():
             "events": [],
             "alerts": [],
             "monitoring": {},
-            "config": dashboard_config
+            "config": dashboard_config,
         }
 
     return render_template("dashboard.html", data=data)
@@ -289,7 +292,7 @@ def dashboard():
     from config.dashboard_defaults import get_dashboard_config
     from config.unified_settings import unified_settings
     from utils.unified_logger import get_logger
-    
+
     logger = get_logger(__name__)
 
     # 대시보드 설정 로드
@@ -313,7 +316,7 @@ def dashboard():
                     "active_alerts": dashboard_config["stats"]["active_alerts"],
                 },
                 "alerts": [],
-                "events": []
+                "events": [],
             }
         else:
             # 연결 실패 시 빈 데이터 반환
@@ -327,7 +330,7 @@ def dashboard():
                 "devices": [],
                 "events": [],
                 "alerts": [],
-                "connection_status": {"fortimanager": "disconnected"}
+                "connection_status": {"fortimanager": "disconnected"},
             }
 
     except Exception as e:
@@ -343,7 +346,7 @@ def dashboard():
             "devices": [],
             "events": [],
             "alerts": [],
-            "error": str(e)
+            "error": str(e),
         }
 
     # 대시보드 설정도 템플릿에 전달

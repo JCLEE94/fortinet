@@ -2,11 +2,13 @@
 ITSM API routes
 """
 
-from flask import Blueprint, jsonify, request
-from utils.unified_logger import get_logger
-from utils.unified_cache_manager import cached
-import time
 import random
+import time
+
+from flask import Blueprint, jsonify
+
+from utils.unified_cache_manager import cached
+from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -20,16 +22,18 @@ def get_itsm_tickets():
     try:
         tickets = []
         for i in range(10):
-            tickets.append({
-                "id": f"TICK-{1000 + i}",
-                "title": f"Issue #{i + 1}",
-                "status": random.choice(["open", "in_progress", "resolved", "closed"]),
-                "priority": random.choice(["low", "medium", "high", "critical"]),
-                "assignee": f"User{random.randint(1, 5)}",
-                "created_at": time.time() - (i * 3600),
-                "updated_at": time.time() - (i * 1800)
-            })
-        
+            tickets.append(
+                {
+                    "id": f"TICK-{1000 + i}",
+                    "title": f"Issue #{i + 1}",
+                    "status": random.choice(["open", "in_progress", "resolved", "closed"]),
+                    "priority": random.choice(["low", "medium", "high", "critical"]),
+                    "assignee": f"User{random.randint(1, 5)}",
+                    "created_at": time.time() - (i * 3600),
+                    "updated_at": time.time() - (i * 1800),
+                }
+            )
+
         return jsonify({"success": True, "data": tickets, "total": len(tickets)})
     except Exception as e:
         logger.error(f"Failed to get ITSM tickets: {e}")
@@ -47,9 +51,9 @@ def get_itsm_stats():
             "resolved_today": random.randint(5, 20),
             "avg_resolution_time": round(random.uniform(2.5, 8.5), 1),
             "satisfaction_rate": round(random.uniform(85, 98), 1),
-            "sla_compliance": round(random.uniform(90, 99), 1)
+            "sla_compliance": round(random.uniform(90, 99), 1),
         }
-        
+
         return jsonify({"success": True, "data": stats})
     except Exception as e:
         logger.error(f"Failed to get ITSM stats: {e}")

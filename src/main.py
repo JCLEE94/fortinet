@@ -6,22 +6,21 @@ Clean, refactored main application using the existing app factory pattern
 """
 
 import argparse
-from pathlib import Path
-
-# 공통 임포트 사용
-from utils.common_imports import json, os, setup_module_logger, sys
-
-# Handle different execution contexts
-if __name__ == "__main__":
-    # Add parent directory to path when executed directly
-    sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from analysis.analyzer import FirewallRuleAnalyzer
-from analysis.visualizer import PathVisualizer
 
 # 프로젝트 특정 임포트 (중복 try-except 제거)
 from api.clients.fortigate_api_client import FortiGateAPIClient
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
+
+# 공통 임포트 사용
+from utils.common_imports import json, os, setup_module_logger, sys
+
+# 분석 도구 임포트 (조건부로 사용)
+try:
+    from analysis.analyzer import FirewallRuleAnalyzer
+    from analysis.visualizer import PathVisualizer
+except ImportError:
+    FirewallRuleAnalyzer = None
+    PathVisualizer = None
 
 logger = setup_module_logger("main")
 
@@ -122,6 +121,9 @@ def parse_args():
 def analyze_packet_path(src_ip, dst_ip, port, protocol, api_client, manager=False):
     """패킷 경로 분석"""
     try:
+        if FirewallRuleAnalyzer is None:
+            logger.warning("FirewallRuleAnalyzer not available")
+            return None
         analyzer = FirewallRuleAnalyzer(
             fortigate_client=None if manager else api_client,
             fortimanager_client=api_client if manager else None,
@@ -153,6 +155,9 @@ def analyze_packet_path(src_ip, dst_ip, port, protocol, api_client, manager=Fals
 def visualize_path(path_data):
     """경로 시각화"""
     try:
+        if PathVisualizer is None:
+            logger.warning("PathVisualizer not available")
+            return None
         visualizer = PathVisualizer()
         visualization_data = visualizer.generate_visualization_data(path_data)
 

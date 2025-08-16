@@ -50,16 +50,16 @@ def get_fortimanager_status():
 def get_fortimanager_policies():
     """Get FortiManager policies"""
     try:
-        data = request.get_json() or {}
-        device_id = data.get("device_id", "default")
-        
+        # data = request.get_json() or {}  # Currently unused
+        # device_id = data.get("device_id", "default")  # Currently unused
+
         # Return sample policies for now
         policies = [
             {"id": 1, "name": "Allow Internal", "action": "accept", "status": "enabled"},
             {"id": 2, "name": "Block External", "action": "deny", "status": "enabled"},
-            {"id": 3, "name": "Guest Network", "action": "accept", "status": "disabled"}
+            {"id": 3, "name": "Guest Network", "action": "accept", "status": "disabled"},
         ]
-        
+
         return jsonify({"success": True, "data": policies})
     except Exception as e:
         logger.error(f"Failed to get policies: {e}")
@@ -76,10 +76,10 @@ def get_fortimanager_compliance():
             "standards": {
                 "pci_dss": {"score": 90, "status": "compliant"},
                 "hipaa": {"score": 88, "status": "compliant"},
-                "gdpr": {"score": 82, "status": "compliant"}
-            }
+                "gdpr": {"score": 82, "status": "compliant"},
+            },
         }
-        
+
         return jsonify({"success": True, "data": compliance})
     except Exception as e:
         logger.error(f"Failed to get compliance: {e}")
@@ -90,8 +90,6 @@ def get_fortimanager_compliance():
 def analyze_packet_path():
     """Analyze packet path through FortiManager - Real implementation"""
     try:
-        from flask import request
-
         from analysis.fixed_path_analyzer import FixedPathAnalyzer
 
         data = request.get_json()
@@ -133,7 +131,6 @@ def analyze_packet_path():
 async def optimize_policies_with_ai():
     """Optimize policies using AI engine"""
     try:
-        from flask import request
 
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
@@ -157,7 +154,6 @@ async def optimize_policies_with_ai():
 async def analyze_threats_with_ai():
     """Analyze security threats using AI"""
     try:
-        from flask import request
 
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
@@ -178,7 +174,6 @@ async def analyze_threats_with_ai():
 async def check_compliance_with_ai():
     """Check compliance using AI-enhanced framework"""
     try:
-        from flask import request
 
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 
@@ -208,7 +203,6 @@ async def check_compliance_with_ai():
 async def generate_analytics_with_ai():
     """Generate advanced analytics report with AI predictions"""
     try:
-        from flask import request
 
         from fortimanager.fortimanager_advanced_hub import FortiManagerAdvancedHub
 

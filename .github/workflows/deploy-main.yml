@@ -1,0 +1,528 @@
+name: 🚀 Main Deploy Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Deployment Action'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - rollback
+          - status
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip Tests'
+        required: false
+        default: false
+        type: boolean
+      version:
+        description: 'Version for rollback'
+        required: false
+        type: string
+
+env:
+  # Registry Configuration
+  REGISTRY: ${{ vars.REGISTRY_DOMAIN || 'registry.jclee.me' }}
+  CHARTMUSEUM: ${{ vars.CHARTMUSEUM_URL || 'https://charts.jclee.me' }}
+  ARGOCD_SERVER: ${{ vars.ARGOCD_DOMAIN || 'argo.jclee.me' }}
+  
+  # Project Configuration
+  PROJECT_NAME: fortinet
+  K8S_NAMESPACE: fortinet
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  
+  # Environment URLs
+  EXTERNAL_URL: https://fortinet.jclee.me
+  INTERNAL_URL: http://192.168.50.110:30777
+
+jobs:
+  # ===========================
+  # WORKFLOW DETERMINATION
+  # ===========================
+  determine-workflow:
+    name: 🎯 Determine Workflow
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.determine.outputs.action }}
+      environment: ${{ steps.determine.outputs.environment }}
+      should_test: ${{ steps.determine.outputs.should_test }}
+      should_deploy: ${{ steps.determine.outputs.should_deploy }}
+    steps:
+      - id: determine
+        run: |
+          # Determine action
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ACTION="${{ github.event.inputs.action }}"
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            SHOULD_TEST="${{ github.event.inputs.skip_tests != 'true' }}"
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            ACTION="test"
+            ENVIRONMENT="development"
+            SHOULD_TEST="true"
+          else
+            ACTION="deploy"
+            ENVIRONMENT="production"
+            SHOULD_TEST="true"
+          fi
+          
+          # Determine deployment
+          if [[ "$ACTION" == "deploy" && "${{ github.ref }}" == "refs/heads/master" ]]; then
+            SHOULD_DEPLOY="true"
+          else
+            SHOULD_DEPLOY="false"
+          fi
+          
+          echo "action=$ACTION" >> $GITHUB_OUTPUT
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "should_test=$SHOULD_TEST" >> $GITHUB_OUTPUT
+          echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+
+  # ===========================
+  # PARALLEL TESTING SUITE
+  # ===========================
+  test-suite:
+    name: 🧪 Test Suite
+    runs-on: ubuntu-latest
+    if: needs.determine-workflow.outputs.should_test == 'true'
+    needs: determine-workflow
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration, security, quality]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.test-type }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.test-type }}-
+            ${{ runner.os }}-pip-
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          # Install test-specific dependencies
+          case "${{ matrix.test-type }}" in
+            unit|integration)
+              pip install pytest pytest-cov pytest-xdist
+              ;;
+            security)
+              pip install safety bandit
+              ;;
+            quality)
+              pip install black isort flake8 pylint
+              ;;
+          esac
+      
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          case "${{ matrix.test-type }}" in
+            unit)
+              pytest tests/unit/ -v --cov=src --cov-report=xml -n auto || true
+              ;;
+            integration)
+              pytest tests/integration/ tests/functional/ -v --cov=src --cov-report=xml -n auto || true
+              ;;
+            security)
+              safety check || true
+              bandit -r src/ -ll || true
+              ;;
+            quality)
+              black --check src/ || true
+              isort --check-only src/ || true
+              flake8 src/ --max-line-length=120 --ignore=E203,W503 || true
+              ;;
+          esac
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.test-type }}
+          path: |
+            coverage.xml
+            .coverage
+            test-results/
+          retention-days: 7
+
+  # ===========================
+  # BUILD AND PUSH
+  # ===========================
+  build:
+    name: 🏗️ Build & Push
+    runs-on: ubuntu-latest
+    if: needs.determine-workflow.outputs.should_deploy == 'true'
+    needs: [determine-workflow, test-suite]
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      chart_version: ${{ steps.version.outputs.chart_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      - name: Generate version info
+        id: version
+        run: |
+          # Generate versions
+          GIT_SHA="${{ github.sha }}"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          VERSION="${{ github.ref_name }}-${GIT_SHA:0:8}"
+          CHART_VERSION="1.0.0-${GIT_SHA:0:8}-${TIMESTAMP}"
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "chart_version=$CHART_VERSION" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+      
+      - name: Generate metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.determine-workflow.outputs.environment }}
+            type=raw,value=${{ github.sha }}
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.PROJECT_NAME }}:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            GIT_COMMIT=${{ github.sha }}
+            GIT_BRANCH=${{ github.ref_name }}
+            VERSION=${{ steps.version.outputs.version }}
+            ENVIRONMENT=${{ needs.determine-workflow.outputs.environment }}
+      
+      - name: Package and upload Helm chart
+        if: hashFiles('charts/fortinet/Chart.yaml') != ''
+        run: |
+          # Update chart version
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.chart_version }}/" charts/fortinet/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${{ steps.version.outputs.version }}\"/" charts/fortinet/Chart.yaml
+          
+          # Package chart
+          helm package charts/fortinet --destination ./
+          
+          # Upload to ChartMuseum
+          CHART_FILE="fortinet-${{ steps.version.outputs.chart_version }}.tgz"
+          curl -u ${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }} \
+            --data-binary "@${CHART_FILE}" \
+            ${{ env.CHARTMUSEUM }}/api/charts
+
+  # ===========================
+  # DEPLOY TO ARGOCD
+  # ===========================
+  deploy:
+    name: 🚀 Deploy via ArgoCD
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.action == 'deploy' &&
+      needs.determine-workflow.outputs.should_deploy == 'true'
+    needs: [determine-workflow, build]
+    environment: ${{ needs.determine-workflow.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install ArgoCD CLI
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd
+          sudo mv argocd /usr/local/bin/
+      
+      - name: Configure ArgoCD
+        run: |
+          # Login to ArgoCD
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure \
+            --grpc-web
+          
+          # Create/Update Application
+          argocd app create ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
+            --repo https://github.com/${{ github.repository }} \
+            --path charts/fortinet \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace ${{ env.K8S_NAMESPACE }} \
+            --sync-policy automated \
+            --auto-prune \
+            --self-heal \
+            --revision ${{ github.ref_name }} \
+            --upsert \
+            --grpc-web
+      
+      - name: Sync Application
+        run: |
+          argocd app sync ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
+            --force \
+            --prune \
+            --grpc-web
+          
+          argocd app wait ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
+            --sync \
+            --health \
+            --timeout 600 \
+            --grpc-web
+      
+      - name: Verify Deployment
+        run: |
+          # Wait for pods to be ready
+          sleep 30
+          
+          # Health check with retries
+          MAX_RETRIES=10
+          RETRY_DELAY=30
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            
+            if curl -f --max-time 10 ${{ env.INTERNAL_URL }}/api/health; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "⏳ Retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+  # ===========================
+  # ROLLBACK
+  # ===========================
+  rollback:
+    name: ⏪ Rollback Deployment
+    runs-on: ubuntu-latest
+    if: needs.determine-workflow.outputs.action == 'rollback'
+    needs: determine-workflow
+    environment: ${{ needs.determine-workflow.outputs.environment }}
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd
+          sudo mv argocd /usr/local/bin/
+      
+      - name: Rollback Application
+        run: |
+          # Login to ArgoCD
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure \
+            --grpc-web
+          
+          APP_NAME="${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }}"
+          
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            # Rollback to specific version
+            argocd app rollback $APP_NAME ${{ github.event.inputs.version }} --grpc-web
+          else
+            # Rollback to previous version
+            PREVIOUS=$(argocd app history $APP_NAME --output json --grpc-web | jq -r '.[1].revision')
+            argocd app rollback $APP_NAME $PREVIOUS --grpc-web
+          fi
+          
+          # Wait for rollback to complete
+          argocd app wait $APP_NAME \
+            --sync \
+            --health \
+            --timeout 300 \
+            --grpc-web
+
+  # ===========================
+  # STATUS CHECK
+  # ===========================
+  status:
+    name: ✅ Deployment Status
+    runs-on: ubuntu-latest
+    if: |
+      needs.determine-workflow.outputs.action == 'status' ||
+      always()
+    needs: [determine-workflow, deploy, rollback]
+    steps:
+      - name: Install tools
+        run: |
+          # Install ArgoCD CLI
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x argocd
+          sudo mv argocd /usr/local/bin/
+      
+      - name: Check Application Status
+        run: |
+          # Login to ArgoCD
+          argocd login ${{ env.ARGOCD_SERVER }} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure \
+            --grpc-web
+          
+          APP_NAME="${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment || 'production' }}"
+          
+          # Get application status
+          echo "## 📊 Application Status Report" > status.md
+          echo "" >> status.md
+          echo "**Application:** $APP_NAME" >> status.md
+          echo "**Environment:** ${{ needs.determine-workflow.outputs.environment || 'production' }}" >> status.md
+          echo "**Timestamp:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> status.md
+          echo "" >> status.md
+          
+          # Get sync status
+          SYNC_STATUS=$(argocd app get $APP_NAME --grpc-web -o json | jq -r '.status.sync.status')
+          HEALTH_STATUS=$(argocd app get $APP_NAME --grpc-web -o json | jq -r '.status.health.status')
+          
+          echo "### Status" >> status.md
+          echo "- **Sync:** $SYNC_STATUS" >> status.md
+          echo "- **Health:** $HEALTH_STATUS" >> status.md
+          echo "" >> status.md
+          
+          # Get resource details
+          echo "### Resources" >> status.md
+          argocd app resources $APP_NAME --grpc-web >> status.md
+          
+          # Service health check
+          echo "" >> status.md
+          echo "### Service Health" >> status.md
+          if curl -f --max-time 10 ${{ env.INTERNAL_URL }}/api/health 2>/dev/null; then
+            echo "✅ Service is healthy" >> status.md
+          else
+            echo "❌ Service health check failed" >> status.md
+          fi
+          
+          # Output status
+          cat status.md
+      
+      - name: Upload Status Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-status-${{ github.run_id }}
+          path: status.md
+          retention-days: 30
+
+  # ===========================
+  # NOTIFICATION
+  # ===========================
+  notify:
+    name: 📢 Send Notifications
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [determine-workflow, test-suite, build, deploy, rollback]
+    steps:
+      - name: Prepare notification
+        id: prepare
+        run: |
+          # Determine overall status
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            STATUS="✅ SUCCESS"
+            COLOR="good"
+          elif [ "${{ needs.deploy.result }}" == "failure" ]; then
+            STATUS="❌ FAILED"
+            COLOR="danger"
+          elif [ "${{ needs.rollback.result }}" == "success" ]; then
+            STATUS="⏪ ROLLED BACK"
+            COLOR="warning"
+          else
+            STATUS="ℹ️ COMPLETED"
+            COLOR="default"
+          fi
+          
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "color=$COLOR" >> $GITHUB_OUTPUT
+      
+      - name: Send Slack notification
+        if: vars.SLACK_WEBHOOK != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ steps.prepare.outputs.color }}",
+                "title": "Deployment ${{ steps.prepare.outputs.status }}",
+                "fields": [
+                  {
+                    "title": "Project",
+                    "value": "${{ env.PROJECT_NAME }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Environment",
+                    "value": "${{ needs.determine-workflow.outputs.environment }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Action",
+                    "value": "${{ needs.determine-workflow.outputs.action }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Triggered by",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Commit",
+                    "value": "${{ github.sha }}",
+                    "short": false
+                  }
+                ],
+                "footer": "GitHub Actions",
+                "footer_icon": "https://github.githubassets.com/favicon.ico",
+                "ts": ${{ github.event.head_commit.timestamp || '0' }}
+              }]
+            }
+          webhook_url: ${{ vars.SLACK_WEBHOOK }}

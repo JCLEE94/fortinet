@@ -10,8 +10,8 @@ from flask import Blueprint
 from utils.unified_logger import get_logger
 
 from .api_modules import settings_bp, system_bp
-from .api_modules.logs_routes import logs_bp
 from .api_modules.itsm_routes import itsm_bp
+from .api_modules.logs_routes import logs_bp
 from .api_modules.performance_routes import performance_bp
 
 logger = get_logger(__name__)

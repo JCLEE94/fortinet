@@ -91,8 +91,8 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         try:
             from config.environment import env_config
 
-            self.ai_enabled = env_config.is_feature_enabled('threat_intel')
-            self.auto_remediation = env_config.is_feature_enabled('auto_remediation')
+            self.ai_enabled = env_config.is_feature_enabled("threat_intel")
+            self.auto_remediation = env_config.is_feature_enabled("auto_remediation")
         except ImportError:
             self.ai_enabled = False
             self.auto_remediation = False
@@ -504,7 +504,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
 
     def _enhance_policies_with_ai(self, policies: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Enhance policies with AI analysis"""
-        if not policies or not hasattr(self, 'ai_policy_analyzer'):
+        if not policies or not hasattr(self, "ai_policy_analyzer"):
             return policies
 
         try:
@@ -512,12 +512,12 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             analysis = self.ai_policy_analyzer.analyze_policy_set(policies)
 
             # Add AI insights to each policy
-            risk_scores = analysis.get('risk_scores', [])
+            risk_scores = analysis.get("risk_scores", [])
             for i, policy in enumerate(policies):
                 if i < len(risk_scores):
-                    policy['ai_risk_score'] = risk_scores[i]
-                    policy['ai_recommendations'] = self._get_policy_recommendations(
-                        policy, analysis.get('patterns', [])
+                    policy["ai_risk_score"] = risk_scores[i]
+                    policy["ai_recommendations"] = self._get_policy_recommendations(
+                        policy, analysis.get("patterns", [])
                     )
 
             return policies
@@ -528,15 +528,15 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
     def _get_policy_recommendations(self, policy: Dict[str, Any], patterns: List[Dict]) -> List[str]:
         """Generate recommendations for a specific policy"""
         recommendations = []
-        policy_id = policy.get('policyid')
+        policy_id = policy.get("policyid")
 
         for pattern in patterns:
-            if pattern.get('details', {}).get('policy_id') == policy_id:
-                if pattern['type'] == 'overly_permissive':
+            if pattern.get("details", {}).get("policy_id") == policy_id:
+                if pattern["type"] == "overly_permissive":
                     recommendations.append("Restrict source/destination addresses")
-                elif pattern['type'] == 'duplicate_policy':
+                elif pattern["type"] == "duplicate_policy":
                     recommendations.append("Consider removing duplicate policy")
-                elif pattern['type'] == 'potentially_unused':
+                elif pattern["type"] == "potentially_unused":
                     recommendations.append("Review for potential removal")
 
         return recommendations
@@ -546,8 +546,8 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         self.logger.info(f"Attempting auto-remediation for {context}")
 
         remediation_actions = {
-            'get_firewall_policies': self._remediate_policy_fetch,
-            'get_system_status': self._remediate_system_status,
+            "get_firewall_policies": self._remediate_policy_fetch,
+            "get_system_status": self._remediate_system_status,
         }
 
         action = remediation_actions.get(context)
@@ -564,7 +564,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
         self._cache.clear()
         self._cache_timestamps.clear()
         # Reset session if needed
-        if hasattr(self, 'session'):
+        if hasattr(self, "session"):
             self.session.close()
             self._init_session()
 
@@ -577,7 +577,7 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
 
     async def analyze_traffic_patterns(self, duration_minutes: int = 5) -> Dict[str, Any]:
         """Analyze traffic patterns using AI"""
-        if not self.ai_enabled or not hasattr(self, 'ai_threat_detector'):
+        if not self.ai_enabled or not hasattr(self, "ai_threat_detector"):
             return {"error": "AI features not enabled"}
 
         try:
@@ -593,9 +593,9 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
             analysis = await self.ai_threat_detector.analyze_traffic(packets)
 
             # Add FortiGate-specific context
-            analysis['device'] = self.host
-            analysis['analysis_duration'] = duration_minutes
-            analysis['session_count'] = len(sessions)
+            analysis["device"] = self.host
+            analysis["analysis_duration"] = duration_minutes
+            analysis["session_count"] = len(sessions)
 
             return analysis
 
@@ -609,15 +609,15 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
 
         for session in sessions:
             packet = {
-                'id': session.get('session_id', 'unknown'),
-                'src_ip': session.get('src'),
-                'dst_ip': session.get('dst'),
-                'src_port': session.get('sport'),
-                'dst_port': session.get('dport'),
-                'protocol': session.get('proto', 'TCP'),
-                'size': session.get('bytes', 0),
-                'flags': self._extract_flags(session),
-                'timestamp': time.time(),
+                "id": session.get("session_id", "unknown"),
+                "src_ip": session.get("src"),
+                "dst_ip": session.get("dst"),
+                "src_port": session.get("sport"),
+                "dst_port": session.get("dport"),
+                "protocol": session.get("proto", "TCP"),
+                "size": session.get("bytes", 0),
+                "flags": self._extract_flags(session),
+                "timestamp": time.time(),
             }
             packets.append(packet)
 
@@ -626,34 +626,34 @@ class FortiGateAPIClient(BaseApiClient, RealtimeMonitoringMixin, ConnectionTestM
     def _extract_flags(self, session: Dict[str, Any]) -> Dict[str, bool]:
         """Extract TCP flags from session data"""
         flags = {}
-        state = session.get('state', '')
+        state = session.get("state", "")
 
-        if 'SYN' in state:
-            flags['SYN'] = True
-        if 'ACK' in state:
-            flags['ACK'] = True
-        if 'FIN' in state:
-            flags['FIN'] = True
-        if 'RST' in state:
-            flags['RST'] = True
+        if "SYN" in state:
+            flags["SYN"] = True
+        if "ACK" in state:
+            flags["ACK"] = True
+        if "FIN" in state:
+            flags["FIN"] = True
+        if "RST" in state:
+            flags["RST"] = True
 
         return flags
 
     def get_performance_stats(self) -> Dict[str, Any]:
         """Get client performance statistics"""
-        total_requests = self._request_stats['total_requests'] or 1
+        total_requests = self._request_stats["total_requests"] or 1
 
         return {
-            'total_requests': total_requests,
-            'successful_requests': self._request_stats['successful_requests'],
-            'cache_hits': self._request_stats['cache_hits'],
-            'cache_misses': self._request_stats['cache_misses'],
-            'cache_hit_rate': self._request_stats['cache_hits']
-            / max(self._request_stats['cache_hits'] + self._request_stats['cache_misses'], 1),
-            'success_rate': self._request_stats['successful_requests'] / total_requests,
-            'error_stats': dict(self._error_stats),
-            'ai_enabled': self.ai_enabled,
-            'auto_remediation': self.auto_remediation,
+            "total_requests": total_requests,
+            "successful_requests": self._request_stats["successful_requests"],
+            "cache_hits": self._request_stats["cache_hits"],
+            "cache_misses": self._request_stats["cache_misses"],
+            "cache_hit_rate": self._request_stats["cache_hits"]
+            / max(self._request_stats["cache_hits"] + self._request_stats["cache_misses"], 1),
+            "success_rate": self._request_stats["successful_requests"] / total_requests,
+            "error_stats": dict(self._error_stats),
+            "ai_enabled": self.ai_enabled,
+            "auto_remediation": self.auto_remediation,
         }
 
     # Packet capture methods
