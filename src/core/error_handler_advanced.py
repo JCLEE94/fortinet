@@ -104,7 +104,6 @@ class ApplicationError(Exception):
         """
         super().__init__(message)
         self.message = message
-        self.code = code or self._generate_error_code()
         self.severity = severity
         self.category = category
         self.context = context or ErrorContext()
@@ -113,6 +112,7 @@ class ApplicationError(Exception):
         self.details = details or {}
         self.stack_trace = traceback.format_exc()
         self.timestamp = datetime.utcnow()
+        self.code = code or self._generate_error_code()
 
     def _generate_error_code(self) -> str:
         """Generate unique error code"""

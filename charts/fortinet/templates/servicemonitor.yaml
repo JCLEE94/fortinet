@@ -1,4 +1,5 @@
-{{- if .Values.monitoring.enabled }}
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1/ServiceMonitor" }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -29,4 +30,7 @@ spec:
   namespaceSelector:
     matchNames:
     - {{ .Release.Namespace }}
+{{- else }}
+# ServiceMonitor CRD not available - skipping creation
+{{- end }}
 {{- end }}

@@ -43,24 +43,17 @@ class TestBaseApiClient(unittest.TestCase):
 
     def test_offline_mode_detection(self):
         """오프라인 모드 감지 테스트"""
-        # 오프라인 모드 비활성화
-        os.environ["OFFLINE_MODE"] = "false"
-        os.environ["NO_INTERNET"] = "false"
-        os.environ["DISABLE_EXTERNAL_CALLS"] = "false"
-
-        # 클래스 다시 로드
-        from importlib import reload
-
-        import api.clients.base_api_client as base_module
-
-        reload(base_module)
-
-        self.assertFalse(base_module.BaseApiClient.OFFLINE_MODE)
-
-        # 오프라인 모드 활성화
-        os.environ["OFFLINE_MODE"] = "true"
-        reload(base_module)
-        self.assertTrue(base_module.BaseApiClient.OFFLINE_MODE)
+        from api.clients.base_api_client import BaseApiClient
+        
+        # 오프라인 모드를 직접 패치하여 테스트
+        with patch('config.unified_settings.unified_settings.system.offline_mode', False):
+            client = BaseApiClient()
+            self.assertFalse(client.OFFLINE_MODE)
+        
+        # 오프라인 모드 활성화 테스트
+        with patch('config.unified_settings.unified_settings.system.offline_mode', True):
+            client = BaseApiClient()
+            self.assertTrue(client.OFFLINE_MODE)
 
     def test_env_config_loading(self):
         """환경 변수 설정 로딩 테스트"""
@@ -69,7 +62,7 @@ class TestBaseApiClient(unittest.TestCase):
         self.assertEqual(client.host, "192.168.1.100")
         self.assertEqual(client.api_token, "test-token")
 
-    @patch("src.api.clients.base_api_client.connection_pool_manager")
+    @patch("api.clients.base_api_client.connection_pool_manager")
     def test_session_initialization(self, mock_pool_manager):
         """세션 초기화 테스트"""
         mock_session = MagicMock()

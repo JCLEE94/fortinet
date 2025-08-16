@@ -185,6 +185,10 @@ class AdvancedFortiGateAPI(BaseApiClient):
             self._update_stats(time.time() - start_time, False)
             logger.error(f"Invalid JSON response: {e}")
             raise
+        except Exception as e:
+            self._update_stats(time.time() - start_time, False)
+            logger.error(f"Unexpected error during API request: {method} {endpoint} - {e}")
+            raise
 
     def _update_stats(self, response_time: float, success: bool):
         """API 통계 업데이트"""
@@ -197,8 +201,13 @@ class AdvancedFortiGateAPI(BaseApiClient):
 
         # 평균 응답 시간 계산
         total_requests = self.api_stats["total_requests"]
-        current_avg = self.api_stats["average_response_time"]
-        self.api_stats["average_response_time"] = (current_avg * (total_requests - 1) + response_time) / total_requests
+        if total_requests > 0:
+            current_avg = self.api_stats["average_response_time"]
+            self.api_stats["average_response_time"] = (
+                current_avg * (total_requests - 1) + response_time
+            ) / total_requests
+        else:
+            self.api_stats["average_response_time"] = response_time
 
     # ===== 방화벽 정책 관리 =====
 

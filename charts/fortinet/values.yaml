@@ -9,9 +9,10 @@ strategy:
 
 image:
   repository: registry.jclee.me/fortinet
-  pullPolicy: Always
+  pullPolicy: IfNotPresent  # Changed from Always for immutable tags
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  # This should be set to an immutable tag (e.g., master-7cbf26e) in CI/CD
+  tag: ""  # Empty - will be overridden by CI/CD with immutable tag
 
 imagePullSecrets:
   - name: harbor-registry
@@ -151,9 +152,9 @@ volumes:
 monitoring:
   enabled: true
   serviceMonitor:
-    enabled: true
+    enabled: false  # Temporarily disabled to fix ArgoCD sync issues
     path: /api/health
-    port: metrics
+    port: http  # Changed from metrics to http (port 7777)
 
 # MSA 로깅 (ELK Stack)  
 logging:

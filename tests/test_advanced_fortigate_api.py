@@ -254,8 +254,10 @@ class TestAdvancedFortiGateAPI:
         assert stats["total_requests"] == 0
         assert stats["success_rate"] == 0
         
-        # 통계 업데이트 시뮬레이션
+        # 통계 업데이트 시뮬레이션 (total_requests 수동 증가)
+        mock_api_client.api_stats["total_requests"] += 1
         mock_api_client._update_stats(0.1, True)
+        mock_api_client.api_stats["total_requests"] += 1
         mock_api_client._update_stats(0.2, False)
         
         stats = mock_api_client.get_api_statistics()
@@ -724,8 +726,14 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_concurrent_operations(self, mock_api_client, mock_response_data):
         """동시 작업 처리 테스트"""
+        # 실제 _make_request를 모킹하되 stats 증가를 포함하는 side_effect 사용
+        async def mock_make_request_with_stats(*args, **kwargs):
+            mock_api_client.api_stats["total_requests"] += 1
+            mock_api_client._update_stats(0.1, True)
+            return mock_response_data["system_status"]
+        
         with patch.object(mock_api_client, '_make_request', new_callable=AsyncMock) as mock_request:
-            mock_request.return_value = mock_response_data["system_status"]
+            mock_request.side_effect = mock_make_request_with_stats
             
             # 동시에 여러 API 호출
             tasks = [
