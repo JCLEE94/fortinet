@@ -59,6 +59,10 @@ spec:
           name: http
           protocol: TCP
         env:
+        - name: IMMUTABLE_TAG
+          value: {{ .Values.image.tag | quote }}
+        - name: REGISTRY_IMAGE
+          value: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         {{- range $key, $value := .Values.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
