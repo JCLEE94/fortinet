@@ -63,12 +63,6 @@ spec:
           value: {{ .Values.image.tag | quote }}
         - name: REGISTRY_IMAGE
           value: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        - name: GIT_SHA
-          value: {{ regexReplaceAll "^[^-]+-" .Values.image.tag "" | quote }}
-        - name: GIT_BRANCH
-          value: {{ regexReplaceAll "-[^-]+$" .Values.image.tag "" | quote }}
-        - name: BUILD_TIMESTAMP
-          value: {{ now | date "2006-01-02T15:04:05Z" | quote }}
         {{- range $key, $value := .Values.env }}
         - name: {{ $key }}
           value: {{ $value | quote }}
