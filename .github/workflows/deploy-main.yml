@@ -311,10 +311,37 @@ jobs:
       
       - name: Sync Application
         run: |
-          argocd app sync ${{ env.PROJECT_NAME }} \
-            --force \
-            --prune \
-            --grpc-web
+          # Retry logic for ArgoCD sync (learned from failure patterns)
+          MAX_SYNC_RETRIES=3
+          SYNC_RETRY_DELAY=10
+          
+          for i in $(seq 1 $MAX_SYNC_RETRIES); do
+            echo "ArgoCD sync attempt $i/$MAX_SYNC_RETRIES..."
+            
+            # Check if another operation is in progress
+            if argocd app get ${{ env.PROJECT_NAME }} --grpc-web -o json | jq -e '.operation != null' > /dev/null; then
+              echo "⏳ Another operation in progress, waiting ${SYNC_RETRY_DELAY}s..."
+              sleep $SYNC_RETRY_DELAY
+              continue
+            fi
+            
+            # Try to sync
+            if argocd app sync ${{ env.PROJECT_NAME }} \
+              --force \
+              --prune \
+              --grpc-web; then
+              echo "✅ Sync command succeeded"
+              break
+            else
+              if [ $i -lt $MAX_SYNC_RETRIES ]; then
+                echo "⏳ Sync failed, retrying in ${SYNC_RETRY_DELAY}s..."
+                sleep $SYNC_RETRY_DELAY
+              else
+                echo "❌ Sync failed after $MAX_SYNC_RETRIES attempts"
+                exit 1
+              fi
+            fi
+          done
           
           argocd app wait ${{ env.PROJECT_NAME }} \
             --sync \
