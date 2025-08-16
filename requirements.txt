@@ -1,18 +1,18 @@
-# Flask 핵심 패키지
-Flask==3.0.0
-Flask-CORS==4.0.1
+# Flask 핵심 패키지 - SECURITY UPDATED
+Flask==3.1.1
+Flask-CORS==4.0.2
 Flask-SocketIO==5.3.6
 Flask-WTF==1.2.1
-Jinja2==3.1.4
-Werkzeug==3.0.1
+Jinja2==3.1.6
+Werkzeug==3.0.6
 itsdangerous==2.1.2
 click==8.1.7
 MarkupSafe==2.1.5
 WTForms==3.2.1
 
 # HTTP 및 네트워크 - SECURITY UPDATED
-requests==2.32.3
-urllib3==2.2.3
+requests==2.32.4
+urllib3==2.5.0
 certifi==2024.8.30
 charset-normalizer==3.4.0
 idna==3.10
@@ -22,18 +22,18 @@ Pillow==11.3.0    # Security update: 10.1.0 -> 11.3.0
 # WebSocket 및 실시간 통신
 python-socketio==5.11.3
 websockets==12.0
-eventlet==0.35.2
+eventlet==0.37.0
 
-# 서버 및 배포
-gunicorn==21.2.0
-gevent==23.9.1
+# 서버 및 배포 - SECURITY UPDATED
+gunicorn==23.0.0
+gevent==25.4.2
 python-dotenv==1.0.1
 
 # 데이터베이스 및 캐시
 redis==5.0.8
 
 # 보안 및 암호화 - SECURITY UPDATED
-cryptography==42.0.8  # Critical security update: 41.0.7 -> 42.0.8
+cryptography==44.0.1  # Critical security update: 42.0.8 -> 44.0.1
 
 # 시스템 및 유틸리티
 psutil>=5.9.8
