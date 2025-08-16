@@ -286,27 +286,37 @@ jobs:
             --insecure \
             --grpc-web
           
-          # Create/Update Application
-          argocd app create ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
-            --repo https://github.com/${{ github.repository }} \
-            --path charts/fortinet \
-            --dest-server https://kubernetes.default.svc \
-            --dest-namespace ${{ env.K8S_NAMESPACE }} \
-            --sync-policy automated \
-            --auto-prune \
-            --self-heal \
-            --revision ${{ github.ref_name }} \
-            --upsert \
-            --grpc-web
+          # Use existing fortinet app (not fortinet-production)
+          # Check if app exists
+          if argocd app get ${{ env.PROJECT_NAME }} --grpc-web >/dev/null 2>&1; then
+            echo "Application ${{ env.PROJECT_NAME }} exists, updating..."
+            argocd app set ${{ env.PROJECT_NAME }} \
+              --repo https://github.com/${{ github.repository }} \
+              --path charts/fortinet \
+              --revision ${{ github.ref_name }} \
+              --grpc-web
+          else
+            echo "Creating application ${{ env.PROJECT_NAME }}..."
+            argocd app create ${{ env.PROJECT_NAME }} \
+              --repo https://github.com/${{ github.repository }} \
+              --path charts/fortinet \
+              --dest-server https://kubernetes.default.svc \
+              --dest-namespace ${{ env.K8S_NAMESPACE }} \
+              --sync-policy automated \
+              --auto-prune \
+              --self-heal \
+              --revision ${{ github.ref_name }} \
+              --grpc-web
+          fi
       
       - name: Sync Application
         run: |
-          argocd app sync ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
+          argocd app sync ${{ env.PROJECT_NAME }} \
             --force \
             --prune \
             --grpc-web
           
-          argocd app wait ${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }} \
+          argocd app wait ${{ env.PROJECT_NAME }} \
             --sync \
             --health \
             --timeout 600 \
@@ -364,7 +374,7 @@ jobs:
             --insecure \
             --grpc-web
           
-          APP_NAME="${{ env.PROJECT_NAME }}-${{ needs.determine-workflow.outputs.environment }}"
+          APP_NAME="${{ env.PROJECT_NAME }}"
           
           if [ -n "${{ github.event.inputs.version }}" ]; then
             # Rollback to specific version
