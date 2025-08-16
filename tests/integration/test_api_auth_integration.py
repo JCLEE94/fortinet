@@ -22,11 +22,12 @@ from urllib3.util.retry import Retry
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.api.clients.base_api_client import BaseApiClient
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.core.connection_pool import ConnectionPoolManager
-from src.utils.integration_test_framework import test_framework
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+from api.clients.base_api_client import BaseApiClient
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from core.connection_pool import ConnectionPoolManager
+from utils.integration_test_framework import test_framework
 
 
 class MockFortiManagerServer:

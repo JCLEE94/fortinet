@@ -7,7 +7,10 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from src.web_app import create_app
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'src'))
+from web_app import create_app
 
 
 class TestWebApp(unittest.TestCase):

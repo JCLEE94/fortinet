@@ -63,7 +63,10 @@ def health_check():
                     "git_sha": os.environ.get("GIT_SHA", os.environ.get("GIT_COMMIT", "unknown")),
                     "git_branch": os.environ.get("GIT_BRANCH", "master"),
                     "build_timestamp": os.environ.get("BUILD_TIMESTAMP", os.environ.get("BUILD_DATE", "unknown")),
-                    "registry_image": f'{os.environ.get("REGISTRY_URL", "registry.jclee.me")}/fortinet:{os.environ.get("IMMUTABLE_TAG", os.environ.get("GIT_SHA", "latest"))}',
+                    "registry_image": (
+                        f'{os.environ.get("REGISTRY_URL", "registry.jclee.me")}/fortinet:'
+                        f'{os.environ.get("IMMUTABLE_TAG", os.environ.get("GIT_SHA", "latest"))}'
+                    ),
                     "gitops_principles": [
                         "declarative",
                         "git-source",

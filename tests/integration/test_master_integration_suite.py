@@ -20,7 +20,8 @@ from typing import Any, Dict, List, Optional
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.utils.integration_test_framework import test_framework
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+from utils.integration_test_framework import test_framework
 
 
 @dataclass

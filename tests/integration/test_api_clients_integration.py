@@ -24,11 +24,12 @@ from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.api.clients.base_api_client import BaseApiClient as BaseAPIClient
-from src.api.clients.faz_client import FAZClient as FortiAnalyzerClient
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.integration_test_framework import test_framework
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+from api.clients.base_api_client import BaseApiClient as BaseAPIClient
+from api.clients.faz_client import FAZClient as FortiAnalyzerClient
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from utils.integration_test_framework import test_framework
 
 # =============================================================================
 # FortiGate API 클라이언트 테스트
@@ -154,7 +155,7 @@ def test_fortimanager_advanced_hub():
     client = FortiManagerAPIClient()
 
     # Advanced Hub import
-    from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
+    from fortimanager.advanced_hub import FortiManagerAdvancedHub
 
     # 1. Hub 초기화
     hub = FortiManagerAdvancedHub(client)

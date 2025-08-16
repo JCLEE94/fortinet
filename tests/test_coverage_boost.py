@@ -15,7 +15,7 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_common(self):
         """API 공통 모듈 임포트 테스트"""
-        from src.utils.api_utils import (
+        from utils.api_utils import (
             CacheMixin,
             ConnectionTestMixin,
             ErrorHandlingMixin,
@@ -39,10 +39,10 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_api_clients(self):
         """API 클라이언트 임포트 테스트"""
-        from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-        from src.api.clients.faz_client import FAZClient
-        from src.api.clients.fortigate_api_client import FortiGateAPIClient
-        from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+        from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+        from api.clients.faz_client import FAZClient
+        from api.clients.fortigate_api_client import FortiGateAPIClient
+        from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         # 오프라인 모드 테스트를 위한 환경 설정
         os.environ["OFFLINE_MODE"] = "true"
@@ -60,10 +60,10 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_monitoring(self):
         """모니터링 모듈 임포트 테스트"""
-        from src.monitoring.base import HealthCheckMixin, MonitoringBase, ThresholdMixin
-        from src.monitoring.collectors.system_metrics import SystemMetricsCollector
-        from src.monitoring.config import MonitoringConfig, get_config
-        from src.monitoring.manager import UnifiedMonitoringManager
+        from monitoring.base import HealthCheckMixin, MonitoringBase, ThresholdMixin
+        from monitoring.collectors.system_metrics import SystemMetricsCollector
+        from monitoring.config import MonitoringConfig, get_config
+        from monitoring.manager import UnifiedMonitoringManager
 
         # 설정 테스트
         config = get_config()
@@ -75,10 +75,10 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_utils(self):
         """유틸리티 모듈 임포트 테스트"""
-        from src.utils.api_optimization import CacheManager
-        from src.utils.batch_operations import BatchProcessor
-        from src.utils.route_helpers import handle_api_exceptions, standard_api_response
-        from src.utils.unified_logger import get_logger
+        from utils.api_optimization import CacheManager
+        from utils.batch_operations import BatchProcessor
+        from utils.route_helpers import handle_api_exceptions, standard_api_response
+        from utils.unified_logger import get_logger
 
         # 로거 테스트
         logger = get_logger("test")
@@ -94,9 +94,9 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_core(self):
         """코어 모듈 임포트 테스트"""
-        from src.core.cache_manager import CacheManager as CoreCacheManager
-        from src.core.config_manager import ConfigManager
-        from src.core.connection_pool import ConnectionPoolManager
+        from core.cache_manager import CacheManager as CoreCacheManager
+        from core.config_manager import ConfigManager
+        from core.connection_pool import ConnectionPoolManager
 
         # 설정 관리자 테스트
         config_manager = ConfigManager()
@@ -108,8 +108,8 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_mock(self):
         """Mock 모듈 임포트 테스트"""
-        from src.mock.data_generator import DummyDataGenerator
-        from src.mock.fortigate import MockFortiGate
+        from mock.data_generator import DummyDataGenerator
+        from mock.fortigate import MockFortiGate
 
         # Mock 데이터 생성기 테스트
         data_generator = DummyDataGenerator()
@@ -125,7 +125,7 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_security(self):
         """보안 모듈 임포트 테스트"""
-        from src.utils.security import add_security_headers, hash_api_key, verify_api_key
+        from utils.security import add_security_headers, hash_api_key, verify_api_key
 
         # API 키 해싱 테스트
         api_key = "test123"
@@ -136,8 +136,8 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_fortimanager_advanced(self):
         """FortiManager 고급 모듈 임포트 테스트"""
-        from src.fortimanager.advanced_hub import FortiManagerAdvancedHub
-        from src.fortimanager.fortimanager_analytics_engine import AdvancedAnalyticsEngine
+        from fortimanager.advanced_hub import FortiManagerAdvancedHub
+        from fortimanager.fortimanager_analytics_engine import AdvancedAnalyticsEngine
 
         # 고급 허브 테스트
         hub = FortiManagerAdvancedHub(None)
@@ -145,8 +145,8 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_import_itsm(self):
         """ITSM 모듈 임포트 테스트"""
-        from src.itsm.automation_service import ITSMAutomationService
-        from src.itsm.external_connector import ExternalITSMConnector
+        from itsm.automation_service import ITSMAutomationService
+        from itsm.external_connector import ExternalITSMConnector
 
         # ITSM 자동화 서비스 테스트
         automation_service = ITSMAutomationService()
@@ -154,7 +154,7 @@ class TestCoverageBoost(unittest.TestCase):
 
     def test_coverage_helper_functions(self):
         """커버리지 향상을 위한 헬퍼 함수들 테스트"""
-        from src.utils.api_utils import create_timeout_context, merge_monitoring_data, validate_config
+        from utils.api_utils import create_timeout_context, merge_monitoring_data, validate_config
 
         # 설정 검증 테스트
         valid, missing = validate_config({"key1": "value1"}, ["key1"])

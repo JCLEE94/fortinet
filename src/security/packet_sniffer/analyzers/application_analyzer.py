@@ -60,16 +60,18 @@ class ApplicationAnalyzer:
                 "dst_port": packet_info.get("dst_port"),
             }
 
-            # 페이로드 추출
-            payload = self._extract_payload(packet_data, packet_info)
-            if not payload:
-                return analysis
-
-            # 포트 기반 프로토콜 식별
+            # 포트 기반 프로토콜 식별 (페이로드 없어도 수행)
             dst_port = packet_info.get("dst_port", 0)
             src_port = packet_info.get("src_port", 0)
 
             protocol = self.APPLICATION_PORTS.get(dst_port) or self.APPLICATION_PORTS.get(src_port)
+
+            # 페이로드 추출
+            payload = self._extract_payload(packet_data, packet_info)
+            if not payload:
+                # 페이로드가 없어도 포트 기반 프로토콜은 설정
+                analysis["detected_protocol"] = protocol or "UNKNOWN"
+                return analysis
 
             if not protocol:
                 # 패턴 기반 프로토콜 탐지

@@ -123,7 +123,8 @@ def test_core_imports():
 def test_config_integration():
     """설정 시스템 통합 테스트"""
 
-    from src.config.unified_settings import UnifiedSettings
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+    from config.unified_settings import UnifiedSettings
 
     # 기본 설정 로딩
     settings = UnifiedSettings()
@@ -157,7 +158,7 @@ def test_config_integration():
 def test_cache_integration():
     """캐시 시스템 통합 테스트"""
 
-    from src.utils.unified_cache_manager import UnifiedCacheManager
+    from utils.unified_cache_manager import UnifiedCacheManager
 
     # 캐시 매니저 생성
     cache_manager = UnifiedCacheManager()
@@ -208,7 +209,7 @@ def test_api_client_integration():
     """API 클라이언트 아키텍처 통합 테스트"""
 
     # 실제 클래스 이름으로 import
-    from src.api.clients.base_api_client import BaseApiClient
+    from api.clients.base_api_client import BaseApiClient
 
     # 기본 클라이언트 생성 (추상 클래스이므로 직접 인스턴스화는 안 될 수 있음)
     client_info = {
@@ -252,7 +253,7 @@ def test_api_client_integration():
 def test_flask_integration():
     """Flask 애플리케이션 통합 테스트"""
 
-    from src.web_app import create_app
+    from web_app import create_app
 
     # Flask 앱 생성 테스트
     try:

@@ -16,10 +16,10 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from src.api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
-from src.api.clients.faz_client import FAZClient
-from src.api.clients.fortigate_api_client import FortiGateAPIClient
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
+from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
+from api.clients.faz_client import FAZClient
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 
 class TestBaseApiClient(unittest.TestCase):

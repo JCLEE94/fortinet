@@ -12,10 +12,10 @@ import traceback
 from datetime import datetime
 
 # Add src directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
 
-from src.api.clients.fortimanager_api_client import FortiManagerAPIClient
-from src.utils.unified_logger import get_logger
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
+from utils.unified_logger import get_logger
 
 
 def test_fortimanager_demo():

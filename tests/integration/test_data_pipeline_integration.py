@@ -28,24 +28,25 @@ from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.analysis.analyzer import FirewallRuleAnalyzer as PacketAnalyzer
-from src.analysis.components.path_tracer import PathTracer
-from src.analysis.components.policy_analyzer import PolicyAnalyzer
-from src.utils.integration_test_framework import test_framework
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+from analysis.analyzer import FirewallRuleAnalyzer as PacketAnalyzer
+from analysis.components.path_tracer import PathTracer
+from analysis.components.policy_analyzer import PolicyAnalyzer
+from utils.integration_test_framework import test_framework
 
 # Import actual classes when they exist
 try:
-    from src.security.packet_sniffer.packet_capturer import PacketCapturer
+    from security.packet_sniffer.packet_capturer import PacketCapturer
 except ImportError:
     PacketCapturer = None
 
 try:
-    from src.security.packet_sniffer.analyzers.protocol_analyzer import ProtocolAnalyzer
+    from security.packet_sniffer.analyzers.protocol_analyzer import ProtocolAnalyzer
 except ImportError:
     ProtocolAnalyzer = None
 
 try:
-    from src.security.packet_sniffer.exporters.json_exporter import JSONExporter
+    from security.packet_sniffer.exporters.json_exporter import JSONExporter
 except ImportError:
     JSONExporter = None
 

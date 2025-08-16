@@ -18,9 +18,12 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import MagicMock, call, patch
 
-from src.core.cache_manager import CacheManager
-from src.core.connection_pool import ConnectionPoolManager
-from src.utils.batch_operations import APIBatchProcessor, BatchItem, BatchOperationType, BatchProcessor
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), 'src'))
+from core.cache_manager import CacheManager
+from core.connection_pool import ConnectionPoolManager
+from utils.batch_operations import APIBatchProcessor, BatchItem, BatchOperationType, BatchProcessor
 
 
 # Mock Paginator class since it doesn't exist in the codebase
@@ -77,7 +80,7 @@ class TestCacheManager(unittest.TestCase):
     def test_cache_lru_eviction(self):
         """LRU 캐시 제거 테스트 - 통합 캐시 매니저 사용"""
         # 작은 캐시 크기로 통합 캐시 매니저 구성
-        from src.utils.unified_cache_manager import UnifiedCacheManager
+        from utils.unified_cache_manager import UnifiedCacheManager
 
         # 작은 크기의 캐시 설정
         small_config = {
@@ -91,7 +94,7 @@ class TestCacheManager(unittest.TestCase):
         small_cache_manager = UnifiedCacheManager(small_config)
 
         # CacheManager 래퍼 생성
-        from src.utils.api_optimization import CacheManager
+        from utils.api_optimization import CacheManager
 
         small_cache = CacheManager(use_redis=False)
         small_cache.cache_manager = small_cache_manager
@@ -436,7 +439,7 @@ class TestIntegrationPerformance(unittest.TestCase):
         """캐시된 API 엔드포인트 성능 테스트"""
         from flask import Flask, jsonify
 
-        from src.utils.api_optimization import cached
+        from utils.api_optimization import cached
 
         app = Flask(__name__)
         call_count = 0

@@ -138,7 +138,7 @@ class TestApplicationAnalyzer:
         result = self.analyzer.analyze(packet_data, packet_info)
         
         assert result is not None
-        assert 'application_protocol' in result
+        assert 'detected_protocol' in result
 
 
 class TestDNSAnalyzer:
