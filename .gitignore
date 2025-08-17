@@ -121,6 +121,12 @@ venv_ppt/
 .serena/cache/
 .serena/memories/
 
+# Claude Code MCP Tool Configurations
+config/agent-config.json
+config/mcp-tools-config.json
+agent-config.json
+mcp-tools-config.json
+
 # Test artifacts and temporary files
 *_test_*.json
 *_2024*.json
