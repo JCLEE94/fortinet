@@ -584,7 +584,7 @@ def test_production_image_from_registry():
     try:
         # 레지스트리 로그인 시도 (인증이 필요한 경우)
         registry_username = os.getenv("REGISTRY_USERNAME", "admin")
-        registry_password = os.getenv("REGISTRY_PASSWORD", "bingogo1")
+        registry_password = os.getenv("REGISTRY_PASSWORD", "test-password")
 
         try:
             docker_manager.client.login(

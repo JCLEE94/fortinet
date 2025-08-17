@@ -9,13 +9,14 @@ Date: 2025-05-30
 
 import hashlib
 import json
-import pickle
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Dict, List, Optional
+
+import orjson
 
 from config.constants import CACHE_SETTINGS, DEFAULT_PORTS
 
@@ -328,7 +329,7 @@ class RedisCacheBackend(BaseCacheBackend):
 
         try:
             prefixed_key = self._prefixed_key(key)
-            data = pickle.dumps(value)
+            data = orjson.dumps(value)
 
             if ttl is not None:
                 self._redis.setex(prefixed_key, ttl, data)

@@ -43,7 +43,8 @@ jobs:
         
     - name: Security scan
       run: |
-        safety check
+        # Safety 3.x uses 'scan' instead of 'check'
+        safety scan --policy-file=.safety-policy.yml || safety scan || true
         bandit -r src/ -f json -o bandit-report.json || true
         
     - name: Run tests

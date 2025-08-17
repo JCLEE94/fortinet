@@ -5,11 +5,12 @@ UnifiedCacheManager의 구체적 구현 클래스들
 """
 
 import os
-import pickle
 import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
+
+import orjson
 
 from .unified_cache_manager import BaseCacheAdapter
 from .unified_logger import get_logger
@@ -157,8 +158,8 @@ class FileCacheAdapter(BaseCacheAdapter):
                 if not file_path.exists():
                     return None
 
-                with open(file_path, "rb") as f:
-                    data = pickle.load(f)
+                with open(file_path, "r") as f:
+                    data = orjson.loads(f.read())
 
                 # TTL 검사
                 if data["ttl"] > 0 and time.time() > data["expires_at"]:
@@ -189,8 +190,8 @@ class FileCacheAdapter(BaseCacheAdapter):
 
                 data = {"value": value, "ttl": ttl, "expires_at": expires_at, "created_at": time.time()}
 
-                with open(file_path, "wb") as f:
-                    pickle.dump(data, f)
+                with open(file_path, "w") as f:
+                    f.write(orjson.dumps(data).decode("utf-8"))
 
                 return True
 
@@ -326,7 +327,7 @@ class RedisCacheAdapter(BaseCacheAdapter):
                 return None
 
             # 데이터 역직렬화
-            return pickle.loads(data)
+            return orjson.loads(data)
 
         except Exception as e:
             logger.error(f"Redis get error for key {key}: {e}")
@@ -343,7 +344,7 @@ class RedisCacheAdapter(BaseCacheAdapter):
             redis_key = self._get_key(key)
 
             # 데이터 직렬화
-            serialized_data = pickle.dumps(value)
+            serialized_data = orjson.dumps(value)
 
             # TTL 설정하여 저장
             if ttl > 0:

@@ -8,12 +8,13 @@ Redis와 메모리 캐시를 통합한 일관된 캐싱 전략
 import hashlib
 import json
 import os
-import pickle
 import threading
 import time
 from collections import OrderedDict
 from functools import wraps
 from typing import Any, Callable, Dict, Optional
+
+import orjson
 
 from utils.unified_logger import get_logger
 
@@ -200,7 +201,7 @@ class RedisCacheBackend(CacheBackend):
             return False
 
         try:
-            data = pickle.dumps(value)
+            data = orjson.dumps(value)
             if ttl > 0:
                 return self.redis_client.setex(key, ttl, data)
             else:

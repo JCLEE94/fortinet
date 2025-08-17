@@ -196,7 +196,10 @@ class DeepInspector:
                         break
 
                 # 디렉토리 트래버설 탐지
-                if "" in url or "..\\" in url:
+                import os
+
+                normalized_url = os.path.normpath(url)
+                if ".." in normalized_url or normalized_url.startswith("/etc/") or "\\" in url:
                     analysis["directory_traversal_attempt"] = True
 
             return analysis

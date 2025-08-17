@@ -331,4 +331,4 @@ def auth_status():
 
 if __name__ == "__main__":
     logger.info(f"Starting {SERVICE_NAME} on port {SERVICE_PORT}")
-    app.run(host="0.0.0.0", port=SERVICE_PORT, debug=False)
+    app.run(host="127.0.0.1", port=SERVICE_PORT, debug=False)

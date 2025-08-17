@@ -43,10 +43,10 @@ class GitOpsPipelineConfig:
     def __init__(self):
         self.registry_url = os.getenv("REGISTRY_URL", "registry.jclee.me")
         self.registry_username = os.getenv("REGISTRY_USERNAME", "admin")
-        self.registry_password = os.getenv("REGISTRY_PASSWORD", "bingogo1")
+        self.registry_password = os.getenv("REGISTRY_PASSWORD", "test-password")
         self.chartmuseum_url = os.getenv("CHARTMUSEUM_URL", "https://charts.jclee.me")
         self.chartmuseum_username = os.getenv("CHARTMUSEUM_USERNAME", "admin")
-        self.chartmuseum_password = os.getenv("CHARTMUSEUM_PASSWORD", "bingogo1")
+        self.chartmuseum_password = os.getenv("CHARTMUSEUM_PASSWORD", "test-password")
         self.app_name = "fortinet"
         self.namespace = "fortinet"
         self.nodeport = "30779"
