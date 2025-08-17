@@ -1,18 +1,17 @@
-# FortiGate Nextrade Enterprise 설정 (v1.2.0)
-# GitOps 파이프라인 최적화 버전
+# FortiGate Nextrade Enterprise 설정 (v1.3.0)
+# GitOps 파이프라인 통합 최적화 버전
 replicaCount: 3
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxUnavailable: 25%
-    maxSurge: 25%
+    maxUnavailable: 1
+    maxSurge: 1
 
 image:
   repository: registry.jclee.me/fortinet
-  pullPolicy: IfNotPresent  # Changed from Always for immutable tags
-  # Overrides the image tag whose default is the chart appVersion.
-  # This should be set to an immutable tag (e.g., master-7cbf26e) in CI/CD
-  tag: "master-adf76d9"  # Immutable tag for GitOps compliance
+  pullPolicy: IfNotPresent  # Immutable tags로 최적화
+  # CI/CD 파이프라인에서 자동 설정됨 (branch-shortsha 형식)
+  tag: "latest"  # Override in CI/CD with immutable tag
 
 imagePullSecrets:
   - name: harbor-registry

@@ -1,0 +1,52 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fortinet
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://charts.jclee.me
+    chart: fortinet
+    targetRevision: '*'  # Latest version
+    helm:
+      releaseName: fortinet
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: image.tag
+          value: "latest"  # Override in CI/CD
+        - name: env.GIT_SHA
+          value: "unknown"  # Override in CI/CD
+        - name: env.GIT_BRANCH
+          value: "unknown"  # Override in CI/CD
+        - name: env.BUILD_TIMESTAMP
+          value: "unknown"  # Override in CI/CD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fortinet
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+  info:
+    - name: 'Description'
+      value: 'FortiGate Nextrade Network Monitoring Platform'
+    - name: 'Owner'
+      value: 'DevOps Team'
+    - name: 'Environment'
+      value: 'Production'

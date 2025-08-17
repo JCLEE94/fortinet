@@ -1,316 +1,415 @@
-name: GitOps Pipeline - FortiGate Nextrade
+name: Unified GitOps Pipeline
 
 on:
   push:
-    branches: [ master, main, develop ]
+    branches: [master, main, develop]
   pull_request:
-    branches: [ master, main ]
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Deployment Action'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+          - deploy
+          - rollback
+          - status
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip Tests'
+        required: false
+        default: false
+        type: boolean
 
 env:
-  REGISTRY_URL: registry.jclee.me
-  IMAGE_NAME: fortinet
-  HELM_CHART_PATH: ./charts/fortinet
+  # Registry Configuration
+  REGISTRY_URL: ${{ secrets.REGISTRY_URL || 'registry.jclee.me' }}
+  CHARTMUSEUM_URL: ${{ secrets.CHARTMUSEUM_URL || 'https://charts.jclee.me' }}
+  ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER || 'https://argo.jclee.me' }}
   
+  # Project Configuration
+  PROJECT_NAME: fortinet
+  K8S_NAMESPACE: fortinet
+  PYTHON_VERSION: '3.11'
+  
+  # URLs
+  DEPLOYMENT_HOST: ${{ secrets.DEPLOYMENT_HOST || '192.168.50.110' }}
+  DEPLOYMENT_PORT: ${{ secrets.DEPLOYMENT_PORT || '30777' }}
+
 jobs:
-  test:
-    name: Test & Quality Check
+  # ===========================
+  # CONFIGURATION
+  # ===========================
+  config:
+    name: 📋 Configuration
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-        cache: 'pip'
-        
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov flake8 black isort safety bandit
-        
-    - name: Code formatting check
-      run: |
-        black --check src/
-        isort --check-only src/
-        
-    - name: Lint check
-      run: |
-        flake8 src/ --max-line-length=120 --ignore=E203,W503
-        
-    - name: Security scan
-      run: |
-        # Safety 3.x uses 'scan' instead of 'check'
-        safety scan --policy-file=.safety-policy.yml || safety scan || true
-        bandit -r src/ -f json -o bandit-report.json || true
-        
-    - name: Run tests
-      run: |
-        cd src && python -m pytest ../tests/ -v --cov=. --cov-report=xml
-        
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
-      with:
-        file: src/coverage.xml
-        fail_ci_if_error: false
-
-  build:
-    name: Build & Push Docker Image
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    
     outputs:
-      immutable-tag: ${{ steps.meta.outputs.immutable-tag }}
-      image-digest: ${{ steps.build.outputs.digest }}
-      short-sha: ${{ steps.meta.outputs.short-sha }}
-      branch: ${{ steps.meta.outputs.branch }}
-      build-timestamp: ${{ steps.meta.outputs.build-timestamp }}
-      version: ${{ steps.meta.outputs.version }}
-      
+      should_test: ${{ steps.config.outputs.should_test }}
+      should_deploy: ${{ steps.config.outputs.should_deploy }}
+      environment: ${{ steps.config.outputs.environment }}
+      action: ${{ steps.config.outputs.action }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Log in to Container Registry
-      run: |
-        echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ env.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
-        
-    - name: Extract metadata and create immutable tag
-      id: meta
-      run: |
-        # Create immutable tag: branch-shortcommit
-        BRANCH_NAME=${GITHUB_REF#refs/heads/}
-        SHORT_SHA=${GITHUB_SHA::7}
-        IMMUTABLE_TAG="${BRANCH_NAME}-${SHORT_SHA}"
-        BUILD_TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
-        
-        echo "immutable-tag=${IMMUTABLE_TAG}" >> $GITHUB_OUTPUT
-        echo "branch=${BRANCH_NAME}" >> $GITHUB_OUTPUT
-        echo "short-sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
-        echo "build-timestamp=${BUILD_TIMESTAMP}" >> $GITHUB_OUTPUT
-        echo "version=${GITHUB_RUN_NUMBER}" >> $GITHUB_OUTPUT
-        
-        # Create full image URL
-        FULL_IMAGE="${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${IMMUTABLE_TAG}"
-        echo "full-image=${FULL_IMAGE}" >> $GITHUB_OUTPUT
-        
-        echo "Created immutable tag: ${IMMUTABLE_TAG}"
-        
-    - name: Build and push Docker image
-      id: build
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: ./Dockerfile.production
-        push: true
-        platforms: linux/amd64
-        tags: |
-          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.immutable-tag }}
-          ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:latest
-        labels: |
-          org.opencontainers.image.title=FortiGate Nextrade
-          org.opencontainers.image.description=Network Monitoring Platform
-          org.opencontainers.image.source=https://github.com/${{ github.repository }}
-          org.opencontainers.image.revision=${{ github.sha }}
-          org.opencontainers.image.created=${{ steps.meta.outputs.build-timestamp }}
-        build-args: |
-          BUILD_DATE=${{ steps.meta.outputs.build-timestamp }}
-          BUILD_TIMESTAMP=${{ steps.meta.outputs.build-timestamp }}
-          GIT_COMMIT=${{ github.sha }}
-          GIT_SHA=${{ steps.meta.outputs.short-sha }}
-          GIT_BRANCH=${{ steps.meta.outputs.branch }}
-          VERSION=v${{ steps.meta.outputs.version }}
-          IMMUTABLE_TAG=${{ steps.meta.outputs.immutable-tag }}
-          REGISTRY_URL=${{ env.REGISTRY_URL }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-    - name: Verify build metadata
-      run: |
-        echo "Built image: ${{ steps.meta.outputs.full-image }}"
-        echo "Image digest: ${{ steps.build.outputs.digest }}"
-        echo "Immutable tag: ${{ steps.meta.outputs.immutable-tag }}"
-
-  helm-package:
-    name: Package & Deploy Helm Chart
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install Helm
-      uses: azure/setup-helm@v3
-      with:
-        version: '3.12.0'
-        
-    - name: Install kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: '1.28.0'
-        
-    - name: Package Helm chart
-      run: |
-        # Update chart version and app version
-        CHART_VERSION="1.2.${{ github.run_number }}"
-        APP_VERSION="${{ needs.build.outputs.immutable-tag }}"
-        
-        # Update Chart.yaml
-        sed -i "s/^version:.*/version: ${CHART_VERSION}/" ${{ env.HELM_CHART_PATH }}/Chart.yaml
-        sed -i "s/^appVersion:.*/appVersion: \"${APP_VERSION}\"/" ${{ env.HELM_CHART_PATH }}/Chart.yaml
-        
-        # Package chart
-        helm package ${{ env.HELM_CHART_PATH }} --destination ./charts/
-        
-        echo "Packaged chart with version: ${CHART_VERSION}, appVersion: ${APP_VERSION}"
-        
-    - name: Upload to ChartMuseum
-      run: |
-        CHART_FILE=$(ls ./charts/fortinet-*.tgz)
-        
-        curl -L --data-binary "@${CHART_FILE}" \
-          -u "${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }}" \
-          "${{ secrets.CHARTMUSEUM_URL }}/api/charts"
-          
-        echo "Uploaded chart: ${CHART_FILE}"
-        
-    - name: Deploy with Helm
-      run: |
-        # Configure kubectl (you'll need to set up kubeconfig secret)
-        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /tmp/kubeconfig
-        export KUBECONFIG=/tmp/kubeconfig
-        
-        # Create namespace if it doesn't exist
-        kubectl create namespace fortinet --dry-run=client -o yaml | kubectl apply -f -
-        
-        # Create image pull secret
-        kubectl create secret docker-registry harbor-registry \
-          --docker-server=${{ env.REGISTRY_URL }} \
-          --docker-username=${{ secrets.REGISTRY_USERNAME }} \
-          --docker-password=${{ secrets.REGISTRY_PASSWORD }} \
-          --namespace=fortinet \
-          --dry-run=client -o yaml | kubectl apply -f -
-          
-        # Deploy with Helm using immutable tag and GitOps metadata
-        helm upgrade --install fortinet ${{ env.HELM_CHART_PATH }} \
-          --namespace fortinet \
-          --set image.tag="${{ needs.build.outputs.immutable-tag }}" \
-          --set image.pullPolicy="IfNotPresent" \
-          --set env.IMMUTABLE_TAG="${{ needs.build.outputs.immutable-tag }}" \
-          --set env.GIT_SHA="${{ needs.build.outputs.short-sha }}" \
-          --set env.GIT_COMMIT="${{ github.sha }}" \
-          --set env.GIT_BRANCH="${{ needs.build.outputs.branch }}" \
-          --set env.BUILD_DATE="${{ needs.build.outputs.build-timestamp }}" \
-          --set env.BUILD_TIMESTAMP="${{ needs.build.outputs.build-timestamp }}" \
-          --set env.VERSION="v${{ needs.build.outputs.version }}" \
-          --set env.REGISTRY_URL="${{ env.REGISTRY_URL }}" \
-          --timeout=10m \
-          --wait
-          
-        echo "Deployed fortinet with immutable tag: ${{ needs.build.outputs.immutable-tag }}"
-
-  argocd-sync:
-    name: Trigger ArgoCD Sync
-    needs: [build, helm-package]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
-    steps:
-    - name: Trigger ArgoCD sync
-      run: |
-        # Update ArgoCD application to use new image
-        curl -X POST "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/fortinet/sync" \
-          -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
-          -H "Content-Type: application/json" \
-          -d '{
-            "prune": false,
-            "dryRun": false,
-            "strategy": {
-              "hook": {
-                "force": true
-              }
-            }
-          }' || echo "ArgoCD sync request sent (may fail if app doesn't exist yet)"
-          
-    - name: Wait for ArgoCD deployment
-      run: |
-        echo "Waiting for ArgoCD to sync and deploy..."
-        sleep 30
-        
-        # Check deployment status
-        curl -s "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/fortinet" \
-          -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" | \
-          jq -r '.status.sync.status, .status.health.status' || echo "Status check failed"
-
-  verify-deployment:
-    name: Verify Deployment
-    needs: [build, helm-package, argocd-sync]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
-    steps:
-    - name: Verify health endpoint
-      run: |
-        echo "Waiting for deployment to be ready..."
-        sleep 60
-        
-        # Test NodePort endpoint
-        HEALTH_URL="http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health"
-        
-        for i in {1..10}; do
-          echo "Health check attempt $i/10..."
-          
-          if curl -s --max-time 10 "${HEALTH_URL}" | jq -e '.status == "healthy"'; then
-            echo "✅ Health check passed!"
-            
-            # Verify GitOps metadata
-            echo "Verifying GitOps metadata..."
-            curl -s "${HEALTH_URL}" | jq '.build_info'
-            
-            # Check if immutable tag matches
-            DEPLOYED_TAG=$(curl -s "${HEALTH_URL}" | jq -r '.build_info.immutable_tag // "unknown"')
-            EXPECTED_TAG="${{ needs.build.outputs.immutable-tag }}"
-            
-            if [ "${DEPLOYED_TAG}" = "${EXPECTED_TAG}" ]; then
-              echo "✅ Immutable tag verification passed: ${DEPLOYED_TAG}"
-              exit 0
-            else
-              echo "❌ Tag mismatch - Expected: ${EXPECTED_TAG}, Got: ${DEPLOYED_TAG}"
-            fi
+      - id: config
+        run: |
+          # Determine action and environment
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ACTION="${{ github.event.inputs.action }}"
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            SHOULD_TEST="${{ github.event.inputs.skip_tests != 'true' }}"
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            ACTION="test"
+            ENVIRONMENT="development"
+            SHOULD_TEST="true"
           else
-            echo "Health check failed, retrying in 30s..."
-            sleep 30
+            ACTION="deploy"
+            ENVIRONMENT="production"
+            SHOULD_TEST="true"
           fi
-        done
-        
-        echo "❌ Deployment verification failed"
-        exit 1
+          
+          # Deployment logic
+          if [[ "$ACTION" == "deploy" && ("${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main") ]]; then
+            SHOULD_DEPLOY="true"
+          else
+            SHOULD_DEPLOY="false"
+          fi
+          
+          echo "action=$ACTION" >> $GITHUB_OUTPUT
+          echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
+          echo "should_test=$SHOULD_TEST" >> $GITHUB_OUTPUT
+          echo "should_deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
 
-  notify:
-    name: Deployment Notification
-    needs: [build, helm-package, argocd-sync, verify-deployment]
+  # ===========================
+  # PARALLEL TESTING
+  # ===========================
+  test:
+    name: 🧪 Tests (${{ matrix.test-type }})
+    needs: config
+    if: needs.config.outputs.should_test == 'true'
     runs-on: ubuntu-latest
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/master'
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration, security, quality]
     steps:
-    - name: Deployment notification
-      run: |
-        if [ "${{ needs.verify-deployment.result }}" = "success" ]; then
-          echo "🎉 GitOps Deployment Successful!"
-          echo "✅ Image: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.immutable-tag }}"
-          echo "✅ Health: http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/api/health"
-          echo "✅ App: http://${{ secrets.DEPLOYMENT_HOST }}:${{ secrets.DEPLOYMENT_PORT }}/"
-        else
-          echo "❌ GitOps Deployment Failed"
-          echo "Check the logs above for details"
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+          case "${{ matrix.test-type }}" in
+            unit|integration)
+              pip install pytest pytest-cov pytest-xdist
+              ;;
+            security)
+              pip install safety bandit
+              ;;
+            quality)
+              pip install black isort flake8
+              ;;
+          esac
+      
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          case "${{ matrix.test-type }}" in
+            unit)
+              cd src && python -m pytest ../tests/unit/ -v --cov=. --cov-report=xml -n auto || true
+              ;;
+            integration)
+              cd src && python -m pytest ../tests/integration/ ../tests/functional/ -v --cov=. --cov-report=xml -n auto || true
+              ;;
+            security)
+              safety scan --policy-file=.safety-policy.yml || safety scan || true
+              bandit -r src/ -f json -o bandit-report.json || true
+              ;;
+            quality)
+              black --check src/
+              isort --check-only src/
+              flake8 src/ --max-line-length=120 --ignore=E203,W503
+              ;;
+          esac
+      
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ matrix.test-type }}-${{ github.run_id }}
+          path: |
+            src/coverage.xml
+            bandit-report.json
+          retention-days: 7
+
+  # ===========================
+  # BUILD & PUSH
+  # ===========================
+  build:
+    name: 🏗️ Build & Push
+    needs: [config, test]
+    if: needs.config.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.image_tag }}
+      chart_version: ${{ steps.meta.outputs.chart_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY_URL }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      
+      - name: Generate metadata
+        id: meta
+        run: |
+          # Generate immutable tag and versions
+          BRANCH=${GITHUB_REF#refs/heads/}
+          SHORT_SHA=${GITHUB_SHA::7}
+          IMAGE_TAG="${BRANCH}-${SHORT_SHA}"
+          CHART_VERSION="1.0.${{ github.run_number }}"
+          BUILD_TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+          
+          echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          echo "chart_version=${CHART_VERSION}" >> $GITHUB_OUTPUT
+          echo "build_timestamp=${BUILD_TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "branch=${BRANCH}" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ steps.meta.outputs.image_tag }}
+            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
+          build-args: |
+            BUILD_DATE=${{ steps.meta.outputs.build_timestamp }}
+            BUILD_TIMESTAMP=${{ steps.meta.outputs.build_timestamp }}
+            GIT_COMMIT=${{ github.sha }}
+            GIT_SHA=${{ steps.meta.outputs.short_sha }}
+            GIT_BRANCH=${{ steps.meta.outputs.branch }}
+            VERSION=${{ github.run_number }}
+            IMMUTABLE_TAG=${{ steps.meta.outputs.image_tag }}
+            REGISTRY_URL=${{ env.REGISTRY_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ===========================
+  # HELM CHART
+  # ===========================
+  helm:
+    name: 📦 Helm Chart
+    needs: [config, build]
+    if: needs.config.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.12.0'
+      
+      - name: Package and upload chart
+        run: |
+          # Update chart versions
+          sed -i "s/^version:.*/version: ${{ needs.build.outputs.chart_version }}/" charts/fortinet/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${{ needs.build.outputs.image_tag }}\"/" charts/fortinet/Chart.yaml
+          
+          # Package chart
+          helm package charts/fortinet --destination ./
+          
+          # Upload to ChartMuseum
+          CHART_FILE="fortinet-${{ needs.build.outputs.chart_version }}.tgz"
+          curl -L --data-binary "@${CHART_FILE}" \
+            -u "${{ secrets.CHARTMUSEUM_USERNAME }}:${{ secrets.CHARTMUSEUM_PASSWORD }}" \
+            "${{ env.CHARTMUSEUM_URL }}/api/charts"
+
+  # ===========================
+  # DEPLOY VIA ARGOCD
+  # ===========================
+  deploy:
+    name: 🚀 Deploy
+    needs: [config, build, helm]
+    if: needs.config.outputs.action == 'deploy' && needs.config.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.config.outputs.environment }}
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+      
+      - name: Deploy via ArgoCD
+        run: |
+          # Login to ArgoCD
+          argocd login ${ARGOCD_SERVER#https://} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure \
+            --grpc-web
+          
+          # Update app with new image
+          argocd app set ${{ env.PROJECT_NAME }} \
+            --helm-set image.tag=${{ needs.build.outputs.image_tag }} \
+            --grpc-web
+          
+          # Sync application
+          argocd app sync ${{ env.PROJECT_NAME }} \
+            --force \
+            --prune \
+            --retry-limit 3 \
+            --grpc-web
+          
+          # Wait for deployment
+          argocd app wait ${{ env.PROJECT_NAME }} \
+            --sync \
+            --health \
+            --timeout 600 \
+            --grpc-web
+
+  # ===========================
+  # VERIFY DEPLOYMENT
+  # ===========================
+  verify:
+    name: ✅ Verify
+    needs: [config, build, deploy]
+    if: always() && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check
+        run: |
+          MAX_RETRIES=10
+          RETRY_DELAY=30
+          HEALTH_URL="http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
+          
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            
+            if curl -s --max-time 10 "${HEALTH_URL}" | jq -e '.status == "healthy"'; then
+              echo "✅ Deployment verified successfully!"
+              
+              # Verify immutable tag
+              DEPLOYED_TAG=$(curl -s "${HEALTH_URL}" | jq -r '.build_info.immutable_tag // "unknown"')
+              EXPECTED_TAG="${{ needs.build.outputs.image_tag }}"
+              
+              if [ "${DEPLOYED_TAG}" = "${EXPECTED_TAG}" ]; then
+                echo "✅ Immutable tag verified: ${DEPLOYED_TAG}"
+                exit 0
+              else
+                echo "⚠️ Tag mismatch - Expected: ${EXPECTED_TAG}, Got: ${DEPLOYED_TAG}"
+              fi
+            fi
+            
+            [ $i -lt $MAX_RETRIES ] && sleep $RETRY_DELAY
+          done
+          
+          echo "❌ Deployment verification failed"
           exit 1
-        fi
+
+  # ===========================
+  # ROLLBACK
+  # ===========================
+  rollback:
+    name: ⏪ Rollback
+    needs: config
+    if: needs.config.outputs.action == 'rollback'
+    runs-on: ubuntu-latest
+    environment: ${{ needs.config.outputs.environment }}
+    steps:
+      - name: Install ArgoCD CLI
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/argoproj/argo-cd/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
+      
+      - name: Perform rollback
+        run: |
+          # Login to ArgoCD
+          argocd login ${ARGOCD_SERVER#https://} \
+            --username admin \
+            --password ${{ secrets.ARGOCD_PASSWORD }} \
+            --insecure \
+            --grpc-web
+          
+          # Get previous revision
+          PREVIOUS=$(argocd app history ${{ env.PROJECT_NAME }} --output json --grpc-web | jq -r '.[1].revision')
+          
+          # Rollback
+          argocd app rollback ${{ env.PROJECT_NAME }} $PREVIOUS --grpc-web
+          
+          # Wait for rollback
+          argocd app wait ${{ env.PROJECT_NAME }} \
+            --sync \
+            --health \
+            --timeout 300 \
+            --grpc-web
+
+  # ===========================
+  # STATUS REPORT
+  # ===========================
+  status:
+    name: 📊 Status
+    needs: [config, deploy, rollback, verify]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate status report
+        run: |
+          cat << EOF > status.md
+          # Deployment Status Report
+          
+          **Project:** ${{ env.PROJECT_NAME }}
+          **Environment:** ${{ needs.config.outputs.environment }}
+          **Action:** ${{ needs.config.outputs.action }}
+          **Timestamp:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          
+          ## Results
+          - Config: ${{ needs.config.result }}
+          - Tests: ${{ needs.test.result }}
+          - Build: ${{ needs.build.result }}
+          - Deploy: ${{ needs.deploy.result }}
+          - Verify: ${{ needs.verify.result }}
+          - Rollback: ${{ needs.rollback.result }}
+          
+          ## Access Points
+          - Health: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health
+          - Application: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/
+          - ArgoCD: ${{ env.ARGOCD_SERVER }}
+          EOF
+          
+          cat status.md
+      
+      - name: Upload status report
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-status-${{ github.run_id }}
+          path: status.md
+          retention-days: 30
