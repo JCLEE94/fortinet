@@ -6,7 +6,7 @@ metadata:
     deployment.kubernetes.io/revision: "1"
     environment: production
 spec:
-  replicas: 3  # 고가용성을 위한 3개 인스턴스
+  replicas: 1  # 리소스 제약으로 일시적으로 1개 인스턴스
   template:
     spec:
       containers:
@@ -26,11 +26,11 @@ spec:
           value: "fortinet-production-secret-key-2025-secure-random-string-jclee-me"
         resources:
           limits:
-            cpu: 1000m
+            cpu: 500m
             memory: 512Mi
             ephemeral-storage: 1Gi
           requests:
-            cpu: 500m
+            cpu: 200m
             memory: 256Mi
             ephemeral-storage: 500Mi
         livenessProbe:
