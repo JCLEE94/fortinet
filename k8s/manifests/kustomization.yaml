@@ -1,31 +1,25 @@
+# Kustomization for Fortinet manifests
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: fortinet
 
 resources:
-  - namespace.yaml
-  - persistent-volumes.yaml
-  - pvc.yaml
-  - redis.yaml
-  - configmap.yaml
-  - registry-noauth-secret.yaml
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
+  - 01-namespace.yaml
+  - 02-serviceaccount.yaml
+  - 03-configmap.yaml
+  - 04-secrets.yaml
+  - 05-deployment.yaml
+  - 06-service.yaml
+  - 07-ingress.yaml
+  - 08-servicemonitor.yaml
+  - 09-alerting-rules.yaml
+  - 10-redis.yaml
+
+commonLabels:
+  app: fortinet
+  managed-by: kustomize
 
 images:
   - name: registry.jclee.me/fortinet
-    newName: registry.jclee.me/fortinet
-    newTag: latest # This will be automatically updated by ArgoCD Image Updater
-
-labels:
-  - includeSelectors: true
-    pairs:
-      app: fortinet
-      managed-by: argocd
-
-commonAnnotations:
-  app.kubernetes.io/version: "79bcc91"
-  deployed-by: "argocd-fix"
-  deployed-at: "2025-07-08T12:13:53Z"
+    newTag: latest

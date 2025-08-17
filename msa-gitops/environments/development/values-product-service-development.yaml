@@ -26,8 +26,7 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-autoscaling:
-  enabled: false
+# HPA removed - using fixed replica count only
 
 database:
   host: product-service-db-dev.jclee.me

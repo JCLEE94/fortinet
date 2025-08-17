@@ -102,12 +102,7 @@ spec:
           requests:
             cpu: ${CPU_REQUEST}
             memory: ${MEMORY_REQUEST}
-        autoscaling:
-          enabled: ${HPA_ENABLED}
-          minReplicas: ${MIN_REPLICAS}
-          maxReplicas: ${MAX_REPLICAS}
-          targetCPUUtilizationPercentage: 70
-          targetMemoryUtilizationPercentage: 80
+        # HPA removed - using fixed replica count only
   destination:
     server: https://kubernetes.default.svc
     namespace: ${NAMESPACE}

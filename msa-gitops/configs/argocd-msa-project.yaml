@@ -87,8 +87,6 @@ spec:
       kind: Ingress
     - group: "networking.k8s.io"
       kind: NetworkPolicy
-    - group: "autoscaling"
-      kind: HorizontalPodAutoscaler
     - group: "policy"
       kind: PodDisruptionBudget
     - group: "monitoring.coreos.com"

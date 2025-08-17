@@ -3,30 +3,45 @@ kind: Application
 metadata:
   name: fortinet
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: fortinet
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/version: v1.0.0
+    app.kubernetes.io/component: backend
+    gitops.toolkit.io/strategy: hybrid
+    project: jclee-infrastructure
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployment-notifications
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: deployment-alerts
+    argocd-image-updater.argoproj.io/image-list: registry.jclee.me/fortinet
+    argocd-image-updater.argoproj.io/registry.jclee.me_fortinet.update-strategy: latest
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/git-branch: master
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
+  
+  # Kustomize configuration
   source:
-    repoURL: https://charts.jclee.me
-    chart: fortinet
-    targetRevision: '*'  # Latest version
-    helm:
-      releaseName: fortinet
-      valueFiles:
-        - values.yaml
-      parameters:
-        - name: image.tag
-          value: "latest"  # Override in CI/CD
-        - name: env.GIT_SHA
-          value: "unknown"  # Override in CI/CD
-        - name: env.GIT_BRANCH
-          value: "unknown"  # Override in CI/CD
-        - name: env.BUILD_TIMESTAMP
-          value: "unknown"  # Override in CI/CD
+    repoURL: https://github.com/JCLEE94/fortinet.git
+    path: k8s/overlays/production
+    targetRevision: master
+    kustomize:
+      images:
+        - registry.jclee.me/fortinet:latest
+      commonAnnotations:
+        gitops.argocd.argoproj.io/managed: "true"
+        deployment.kubernetes.io/managed-by: "argocd"
+      commonLabels:
+        app.kubernetes.io/managed-by: argocd
+        gitops.strategy: pull-based
+
   destination:
     server: https://kubernetes.default.svc
     namespace: fortinet
+
   syncPolicy:
     automated:
       prune: true
@@ -36,17 +51,41 @@ spec:
       - CreateNamespace=true
       - PrunePropagationPolicy=foreground
       - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
-        maxDuration: 3m
+        maxDuration: 5m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /metadata/annotations/deployment.kubernetes.io~1revision
+        - /spec/replicas
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+
   revisionHistoryLimit: 10
+
   info:
     - name: 'Description'
-      value: 'FortiGate Nextrade Network Monitoring Platform'
+      value: 'FortiGate Nextrade Network Monitoring Platform - Unified Configuration'
     - name: 'Owner'
       value: 'DevOps Team'
     - name: 'Environment'
       value: 'Production'
+    - name: "Registry"
+      value: "registry.jclee.me/fortinet"
+    - name: "Health Check"
+      value: "https://fortinet.jclee.me/api/health"
+    - name: "Internal Access"
+      value: "http://192.168.50.110:30777"
+    - name: "Monitoring"
+      value: "ArgoCD + GitOps + Image Updater"

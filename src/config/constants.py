@@ -12,7 +12,7 @@ DEFAULT_PORTS = {
     "SSH": 22,
     "FLASK": int(os.getenv("FLASK_PORT", "5000")),
     "APP": int(os.getenv("APP_PORT", "7777")),
-    "MOCK_SERVER": int(os.getenv("MOCK_SERVER_PORT", "8090")),
+    "MOCK_SERVER": int(os.getenv("MOCK_SERVER_PORT", "6666")),
     "REDIS": int(os.getenv("REDIS_PORT", "6379")),
 }
 
@@ -97,12 +97,12 @@ DEFAULT_PATHS = {
 # Service URLs
 BASE_URL = os.getenv("BASE_URL", "http://localhost")
 SERVICE_URLS = {
-    "HEALTH_CHECK": os.getenv("HEALTH_CHECK_URL", f"{BASE_URL}:{{port}}/health"),
+    "HEALTH_CHECK": os.getenv("HEALTH_CHECK_URL", f"{BASE_URL}:{{port}}/api/health"),
     "MOCK_SERVER": os.getenv(
         "MOCK_SERVER_URL",
         f"{BASE_URL}:{{port}}{{api_version}}/monitor/system/status",
     ),
-    "REDIS": os.getenv("REDIS_URL", f'redis://redis:{DEFAULT_PORTS["REDIS"]}/0'),
+    "REDIS": os.getenv("REDIS_URL", f'redis://localhost:{DEFAULT_PORTS["REDIS"]}/0'),
 }
 
 # Default Values

@@ -52,10 +52,7 @@ resources:
     memory: 128Mi  # Memory request 최적화
     ephemeral-storage: 512Mi
 
-# HPA (Horizontal Pod Autoscaler) - REMOVED
-# Fixed replica count is managed by replicaCount field above
-autoscaling:
-  enabled: false
+# HPA completely removed - using fixed replica count only
 
 # Fortinet 애플리케이션 환경 변수 (보안 강화)
 # GitOps 4원칙 준수: 불변 빌드 메타데이터

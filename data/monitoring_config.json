@@ -4,20 +4,20 @@
     "max_history": 1000,
     "thresholds": {
       "cpu_usage": {
-        "warning": 80.0,
-        "critical": 95.0,
+        "warning": "${CPU_WARNING_THRESHOLD:80.0}",
+        "critical": "${CPU_CRITICAL_THRESHOLD:95.0}",
         "unit": "%",
         "description": "CPU 사용률"
       },
       "memory_usage": {
-        "warning": 85.0,
-        "critical": 95.0,
+        "warning": "${MEMORY_WARNING_THRESHOLD:85.0}",
+        "critical": "${MEMORY_CRITICAL_THRESHOLD:95.0}",
         "unit": "%",
         "description": "메모리 사용률"
       },
       "disk_usage": {
-        "warning": 85.0,
-        "critical": 95.0,
+        "warning": "${DISK_WARNING_THRESHOLD:85.0}",
+        "critical": "${DISK_CRITICAL_THRESHOLD:95.0}",
         "unit": "%",
         "description": "디스크 사용률"
       },
@@ -123,11 +123,11 @@
       }
     ]
   },
-  "global_log_level": "INFO",
-  "data_retention_hours": 24,
-  "export_enabled": true,
-  "export_interval": 3600,
-  "websocket_enabled": true,
+  "global_log_level": "${GLOBAL_LOG_LEVEL:INFO}",
+  "data_retention_hours": "${DATA_RETENTION_HOURS:24}",
+  "export_enabled": "${EXPORT_ENABLED:true}",
+  "export_interval": "${EXPORT_INTERVAL:3600}",
+  "websocket_enabled": "${WEBSOCKET_ENABLED:true}",
   "_metadata": {
     "version": "1.0",
     "last_updated": "2025-06-08T16:51:51.504294",

@@ -15,6 +15,7 @@ class EnvironmentConfig:
     INTERNAL_NETWORK_PREFIX = os.getenv("INTERNAL_NETWORK_PREFIX", "10.0.0")
     MANAGEMENT_NETWORK_PREFIX = os.getenv("MANAGEMENT_NETWORK_PREFIX", "172.16.0")
     DMZ_NETWORK_PREFIX = os.getenv("DMZ_NETWORK_PREFIX", "192.168.1")
+    MOCK_NETWORK_PREFIX = os.getenv("MOCK_NETWORK_PREFIX", "192.168.50")
     DEFAULT_GATEWAY = os.getenv("DEFAULT_GATEWAY", "10.0.0.1")
     DNS_SERVERS = [
         os.getenv("DNS_SERVER_1", "8.8.8.8"),
@@ -58,9 +59,9 @@ class EnvironmentConfig:
         import random
 
         if index is not None:
-            return f"{cls.MOCK_NETWORK_PREFIX}.{index % 254 + 1}.{(index // 254) % 254 + 1}"
+            return f"{cls.MOCK_NETWORK_PREFIX}.{index % 254 + 1}"
         else:
-            return f"{cls.MOCK_NETWORK_PREFIX}.{random.randint(1, 254)}.{random.randint(1, 254)}"
+            return f"{cls.MOCK_NETWORK_PREFIX}.{random.randint(1, 254)}"
 
     @classmethod
     def get_network_config(cls) -> Dict[str, Any]:
