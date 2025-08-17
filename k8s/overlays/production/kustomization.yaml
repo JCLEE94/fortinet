@@ -13,9 +13,9 @@ images:
 - name: registry.jclee.me/fortinet
   newTag: ai-features-v2
 
-# 운영환경 설정 (고가용성을 위한 3개 인스턴스)
+# 운영환경 설정 (리소스 제약으로 일시적으로 1개 인스턴스)
 replicas:
-- count: 3
+- count: 1
   name: fortinet
 
 # 운영환경 리소스 패치
