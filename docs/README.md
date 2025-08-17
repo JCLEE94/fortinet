@@ -9,13 +9,17 @@ Welcome to the comprehensive documentation for FortiGate Nextrade, an AI-powered
 ## 📋 Documentation Index
 
 ### 🚀 Getting Started
-- **[Project Overview](PROJECT_README.md)** - Complete project introduction, features, and quick start
 - **[Developer Guide](development/DEVELOPER_GUIDE.md)** - Comprehensive development documentation
+- **[Project Structure](guides/PROJECT_STRUCTURE.md)** - Code organization and architecture overview
 
 ### 🔧 Technical Documentation
 - **[API Documentation](api/AI_FEATURES_API.md)** - Complete API reference for AI-enhanced features
 - **[Architecture Guide](architecture/AI_ENHANCED_ARCHITECTURE.md)** - Detailed system architecture and AI components
 - **[Deployment Guide](deployment/GITOPS_DEPLOYMENT_GUIDE.md)** - GitOps CI/CD pipeline and deployment strategies
+
+### 📊 Reports & Analysis
+- **[Current Status](INIT_REPORT.md)** - Latest project initialization and status report
+- **[Key Reports](reports/)** - Analysis reports, optimization results, and deployment status
 
 ---
 
