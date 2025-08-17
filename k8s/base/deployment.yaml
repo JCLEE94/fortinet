@@ -111,7 +111,7 @@ spec:
       - name: tmp-volume
         emptyDir: {}
       imagePullSecrets:
-      - name: harbor-registry
+      - name: registry-secret
       serviceAccountName: fortinet-sa
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
