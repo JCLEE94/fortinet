@@ -53,7 +53,7 @@ def health_check():
                 ),
                 "gitops_principles": [
                     "declarative",
-                    "git-source", 
+                    "git-source",
                     "pull-based",
                     "immutable",
                 ],
@@ -62,15 +62,15 @@ def health_check():
                 "version": os.environ.get("VERSION", "unknown"),
                 "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
             }
-            
+
             # 환경변수에 유효한 값이 있는지 확인
             has_valid_env_data = (
-                env_build_info["immutable_tag"] != "unknown" and
-                env_build_info["git_sha"] != "unknown" and
-                env_build_info["git_branch"] != "unknown" and
-                env_build_info["build_timestamp"] != "unknown"
+                env_build_info["immutable_tag"] != "unknown"
+                and env_build_info["git_sha"] != "unknown"
+                and env_build_info["git_branch"] != "unknown"
+                and env_build_info["build_timestamp"] != "unknown"
             )
-            
+
             if has_valid_env_data:
                 # 환경변수 데이터가 유효하면 우선 사용
                 build_info = env_build_info
