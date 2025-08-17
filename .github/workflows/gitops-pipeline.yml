@@ -65,6 +65,10 @@ jobs:
     outputs:
       immutable-tag: ${{ steps.meta.outputs.immutable-tag }}
       image-digest: ${{ steps.build.outputs.digest }}
+      short-sha: ${{ steps.meta.outputs.short-sha }}
+      branch: ${{ steps.meta.outputs.branch }}
+      build-timestamp: ${{ steps.meta.outputs.build-timestamp }}
+      version: ${{ steps.meta.outputs.version }}
       
     steps:
     - name: Checkout code
@@ -195,11 +199,19 @@ jobs:
           --namespace=fortinet \
           --dry-run=client -o yaml | kubectl apply -f -
           
-        # Deploy with Helm using immutable tag
+        # Deploy with Helm using immutable tag and GitOps metadata
         helm upgrade --install fortinet ${{ env.HELM_CHART_PATH }} \
           --namespace fortinet \
           --set image.tag="${{ needs.build.outputs.immutable-tag }}" \
           --set image.pullPolicy="IfNotPresent" \
+          --set env.IMMUTABLE_TAG="${{ needs.build.outputs.immutable-tag }}" \
+          --set env.GIT_SHA="${{ needs.build.outputs.short-sha }}" \
+          --set env.GIT_COMMIT="${{ github.sha }}" \
+          --set env.GIT_BRANCH="${{ needs.build.outputs.branch }}" \
+          --set env.BUILD_DATE="${{ needs.build.outputs.build-timestamp }}" \
+          --set env.BUILD_TIMESTAMP="${{ needs.build.outputs.build-timestamp }}" \
+          --set env.VERSION="v${{ needs.build.outputs.version }}" \
+          --set env.REGISTRY_URL="${{ env.REGISTRY_URL }}" \
           --timeout=10m \
           --wait
           

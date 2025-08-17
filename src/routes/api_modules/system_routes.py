@@ -36,45 +36,67 @@ def health_check():
             "environment": getattr(unified_settings, "APP_MODE", "production"),
         }
 
-        # GitOps 불변 빌드 정보 추가
+        # GitOps 불변 빌드 정보 추가 - 환경변수 우선순위 방식
         build_info = {}
         try:
-            # build-info.json 파일에서 GitOps 메타데이터 읽기
-            build_json_path = "/app/build-info.json"
-            if os.path.exists(build_json_path):
-                import json
-
-                with open(build_json_path, "r") as f:
-                    build_data = json.load(f)
-                    build_info = {
-                        "gitops_managed": build_data.get("gitops", {}).get("immutable", False),
-                        "immutable_tag": build_data.get("build", {}).get("immutable_tag", "unknown"),
-                        "git_sha": build_data.get("git", {}).get("sha", "unknown"),
-                        "git_branch": build_data.get("git", {}).get("branch", "unknown"),
-                        "build_timestamp": build_data.get("build", {}).get("timestamp", "unknown"),
-                        "registry_image": build_data.get("registry", {}).get("full_image", "unknown"),
-                        "gitops_principles": build_data.get("gitops", {}).get("principles", []),
-                    }
+            # 환경변수에서 GitOps 정보 가져오기 (최우선) - 실시간 배포 메타데이터
+            env_build_info = {
+                "gitops_managed": True,  # GitOps로 배포된 시스템
+                "immutable_tag": os.environ.get("IMMUTABLE_TAG", "unknown"),
+                "git_sha": os.environ.get("GIT_SHA", "unknown"),
+                "git_branch": os.environ.get("GIT_BRANCH", "unknown"),
+                "build_timestamp": os.environ.get("BUILD_TIMESTAMP", os.environ.get("BUILD_DATE", "unknown")),
+                "registry_image": os.environ.get(
+                    "REGISTRY_IMAGE",
+                    f'{os.environ.get("REGISTRY_URL", "registry.jclee.me")}/fortinet:'
+                    f'{os.environ.get("IMMUTABLE_TAG", "latest")}',
+                ),
+                "gitops_principles": [
+                    "declarative",
+                    "git-source", 
+                    "pull-based",
+                    "immutable",
+                ],
+                # 추가 GitOps 메타데이터
+                "git_commit": os.environ.get("GIT_COMMIT", "unknown"),
+                "version": os.environ.get("VERSION", "unknown"),
+                "registry_url": os.environ.get("REGISTRY_URL", "registry.jclee.me"),
+            }
+            
+            # 환경변수에 유효한 값이 있는지 확인
+            has_valid_env_data = (
+                env_build_info["immutable_tag"] != "unknown" and
+                env_build_info["git_sha"] != "unknown" and
+                env_build_info["git_branch"] != "unknown" and
+                env_build_info["build_timestamp"] != "unknown"
+            )
+            
+            if has_valid_env_data:
+                # 환경변수 데이터가 유효하면 우선 사용
+                build_info = env_build_info
+                logger.info("Using GitOps metadata from environment variables (runtime deployment)")
             else:
-                # 환경변수에서 GitOps 정보 가져오기 (Docker 환경)
-                build_info = {
-                    "gitops_managed": True,  # GitOps로 배포된 시스템
-                    "immutable_tag": os.environ.get("IMMUTABLE_TAG", os.environ.get("GIT_SHA", "unknown")),
-                    "git_sha": os.environ.get("GIT_SHA", os.environ.get("GIT_COMMIT", "unknown")),
-                    "git_branch": os.environ.get("GIT_BRANCH", "master"),
-                    "build_timestamp": os.environ.get("BUILD_TIMESTAMP", os.environ.get("BUILD_DATE", "unknown")),
-                    "registry_image": os.environ.get(
-                        "REGISTRY_IMAGE",
-                        f'{os.environ.get("REGISTRY_URL", "registry.jclee.me")}/fortinet:'
-                        f'{os.environ.get("IMMUTABLE_TAG", "latest")}',
-                    ),
-                    "gitops_principles": [
-                        "declarative",
-                        "git-source",
-                        "pull-based",
-                        "immutable",
-                    ],
-                }
+                # 환경변수가 불완전하면 build-info.json 파일 시도
+                build_json_path = "/app/build-info.json"
+                if os.path.exists(build_json_path):
+                    import json
+
+                    with open(build_json_path, "r") as f:
+                        build_data = json.load(f)
+                        build_info = {
+                            "gitops_managed": build_data.get("gitops", {}).get("immutable", False),
+                            "immutable_tag": build_data.get("build", {}).get("immutable_tag", "unknown"),
+                            "git_sha": build_data.get("git", {}).get("sha", "unknown"),
+                            "git_branch": build_data.get("git", {}).get("branch", "unknown"),
+                            "build_timestamp": build_data.get("build", {}).get("timestamp", "unknown"),
+                            "registry_image": build_data.get("registry", {}).get("full_image", "unknown"),
+                            "gitops_principles": build_data.get("gitops", {}).get("principles", []),
+                        }
+                        logger.info("Using GitOps metadata from build-info.json (build-time metadata)")
+                else:
+                    # 최후 수단: 환경변수 데이터 사용 (불완전하더라도)
+                    build_info = env_build_info
+                    logger.warning("Using incomplete GitOps metadata from environment variables")
         except Exception as e:
             logger.warning(f"Failed to load build info: {e}")
             build_info = {"error": "build info unavailable"}

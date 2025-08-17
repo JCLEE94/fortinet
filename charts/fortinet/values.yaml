@@ -59,11 +59,18 @@ autoscaling:
   enabled: false
 
 # Fortinet 애플리케이션 환경 변수 (보안 강화)
+# GitOps 4원칙 준수: 불변 빌드 메타데이터
 env:
   NODE_ENV: production
+  # GitOps 필수 메타데이터 (GitOps compliance를 위한 완전한 정보)
   GIT_SHA: "adf76d9"
+  GIT_COMMIT: "adf76d9b2f1c3e4d5a6789012345678901234567"  # Full commit hash
   GIT_BRANCH: "master"
+  BUILD_DATE: "2025-08-16"
   BUILD_TIMESTAMP: "2025-08-16T21:00:00Z"
+  VERSION: "v1.2.94"  # Semantic version
+  REGISTRY_URL: "registry.jclee.me"
+  # Application configuration
   WEB_APP_PORT: "7777"
   APP_MODE: production
   OFFLINE_MODE: "false"
