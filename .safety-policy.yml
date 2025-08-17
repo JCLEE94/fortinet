@@ -5,5 +5,8 @@ project:
 fail:
   cvss-severity:
     - critical
+    - high
+    - medium
 security:
   ignore-vulnerabilities: []
+  continue-on-vulnerability-error: false
