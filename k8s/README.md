@@ -20,14 +20,26 @@ graph LR
     end
 ```
 
-## 📁 Directory Structure (CNCF Standard)
+## 📁 Directory Structure
 
 ```
 k8s/
-├── base/                    # Kustomize base resources
-│   ├── namespace.yaml       # Namespace definition
-│   ├── configmap.yaml       # Base configuration
-│   ├── deployment.yaml      # Application deployment
+├── manifests/              # Core Kubernetes manifests
+│   ├── 01-namespace.yaml   # Namespace definition
+│   ├── 02-serviceaccount.yaml # Service account and RBAC
+│   ├── 03-configmap.yaml   # Application configuration
+│   ├── 04-secrets.yaml     # Secrets (API keys, registry)
+│   ├── 05-deployment.yaml  # Main deployment
+│   ├── 06-service.yaml     # Service definition
+│   ├── 07-ingress.yaml     # Ingress configuration
+│   ├── 08-servicemonitor.yaml # Prometheus monitoring
+│   ├── 09-alerting-rules.yaml # Alert rules
+│   ├── 10-redis.yaml       # Redis cache deployment
+│   └── kustomization.yaml  # Kustomize configuration
+├── argocd/                 # ArgoCD GitOps configurations
+│   ├── fortinet-application.yaml # ArgoCD application
+│   └── image-updater-config.yaml # Image auto-update config
+└── apply.sh               # Manual deployment script
 │   ├── service.yaml         # Service definition
 │   └── kustomization.yaml   # Base kustomization
 ├── overlays/               # Environment-specific overlays

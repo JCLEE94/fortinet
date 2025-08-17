@@ -26,7 +26,7 @@ spec:
   # Kustomize configuration
   source:
     repoURL: https://github.com/JCLEE94/fortinet.git
-    path: k8s/overlays/production
+    path: k8s/manifests
     targetRevision: master
     kustomize:
       images:
