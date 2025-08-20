@@ -6,7 +6,7 @@
 from .advanced_analytics import AdvancedAnalytics
 from .components import DataLoader, PathTracer, PolicyAnalyzer, RuleValidator, SessionManager
 from .fixed_path_analyzer import FixedPathAnalyzer
-from .visualizer import PathVisualizer as Visualizer
+from .visualizer import PathVisualizer
 
 __all__ = [
     "PolicyAnalyzer",
@@ -16,5 +16,5 @@ __all__ = [
     "SessionManager",
     "AdvancedAnalytics",
     "FixedPathAnalyzer",
-    "Visualizer",
+    "PathVisualizer",
 ]

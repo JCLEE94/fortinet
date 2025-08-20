@@ -31,10 +31,21 @@ try:
 except ImportError:
     redis = None
 
-# 프로젝트 공통 유틸리티 임포트
-from utils.security import rate_limit
-from utils.unified_cache_manager import cached
-from utils.unified_logger import setup_logger
+# 프로젝트 공통 유틸리티 임포트 (순환 가져오기 방지)
+try:
+    from utils.security import rate_limit
+except ImportError:
+    rate_limit = None
+
+try:
+    from utils.unified_cache_manager import cached
+except ImportError:
+    cached = None
+
+try:
+    from utils.unified_logger import setup_logger
+except ImportError:
+    setup_logger = None
 
 # 상수 정의
 DEFAULT_TIMEOUT = 30
@@ -256,7 +267,7 @@ __all__ = [
     # 유틸리티
     "setup_logger",
     "cached",
-    "rate_limit",  # 'get_data_source', 'is_test_mode', 'get_api_manager',  # 순환 임포트 방지
+    "rate_limit",
     # 상수
     "DEFAULT_TIMEOUT",
     "DEFAULT_RETRY_COUNT",

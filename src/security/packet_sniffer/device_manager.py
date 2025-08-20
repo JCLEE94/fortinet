@@ -27,17 +27,9 @@ try:
 except ImportError:
     HAS_PSUTIL = False
 
+from utils.unified_logger import get_logger
+
 from .base_sniffer import SnifferConfig
-
-try:
-    from utils.unified_logger import get_logger
-except ImportError:
-    # Docker 환경이나 다른 실행 컨텍스트에서는 fallback 로거 사용
-    import logging
-
-    def get_logger(name, level="INFO"):
-        """Fallback logger function when unified_logger is not available"""
-        return logging.getLogger(name)
 
 
 @dataclass

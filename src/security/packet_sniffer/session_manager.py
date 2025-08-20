@@ -10,17 +10,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
+from utils.unified_logger import get_logger
+
 from .base_sniffer import PacketInfo
-
-try:
-    from utils.unified_logger import get_logger
-except ImportError:
-    # Docker 환경이나 다른 실행 컨텍스트에서는 fallback 로거 사용
-    import logging
-
-    def get_logger(name, level="INFO"):
-        """Fallback logger function when unified_logger is not available"""
-        return logging.getLogger(name)
 
 
 class SessionStatus(Enum):

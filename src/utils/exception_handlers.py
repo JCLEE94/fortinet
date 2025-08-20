@@ -9,32 +9,19 @@ import traceback
 from functools import wraps
 from typing import Callable
 
-from utils.common_imports import format_error_response, get_current_timestamp, jsonify, os, requests
-from utils.unified_logger import setup_logger as setup_module_logger
-
-# Import format_error_response from common_imports to avoid duplication
-
-
-# 예외 클래스들 직접 정의
-class FortiGateAPIException(Exception):
-    """FortiGate API 관련 예외"""
-
-
-class FortiManagerAPIException(Exception):
-    """FortiManager API 관련 예외"""
-
-
-class ValidationException(Exception):
-    """데이터 검증 관련 예외"""
-
-
-class ConfigurationException(Exception):
-    """설정 관련 예외"""
-
-
-class NetworkException(Exception):
-    """네트워크 관련 예외"""
-
+from utils.common_imports import (
+    ConfigurationException,
+    FortiGateAPIException,
+    FortiManagerAPIException,
+    NetworkException,
+    ValidationException,
+    format_error_response,
+    get_current_timestamp,
+    jsonify,
+    os,
+    requests,
+    setup_module_logger,
+)
 
 # 예외 매핑 테이블
 EXCEPTION_MAPPING = {
