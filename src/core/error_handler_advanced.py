@@ -117,7 +117,7 @@ class ApplicationError(Exception):
     def _generate_error_code(self) -> str:
         """Generate unique error code"""
         error_str = f"{self.category.value}_{self.message}_{datetime.utcnow()}"
-        return hashlib.md5(error_str.encode()).hexdigest()[:8].upper()
+        return hashlib.sha256(error_str.encode()).hexdigest()[:8].upper()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert error to dictionary for serialization"""

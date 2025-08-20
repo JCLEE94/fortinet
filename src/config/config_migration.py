@@ -191,5 +191,62 @@ def main():
             return 1
 
 
+def backup_config(config_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Backup configuration data
+
+    Args:
+        config_data: Configuration data to backup
+
+    Returns:
+        dict: Backed up configuration data
+    """
+    try:
+        migration = ConfigMigration()
+        migration.backup_existing_configs()
+        return {"status": "success", "backed_up": True, "data": config_data}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "data": config_data}
+
+
+def migrate_config(old_config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Migrate old configuration to new format
+
+    Args:
+        old_config: Old configuration data
+
+    Returns:
+        dict: Migrated configuration data
+    """
+    try:
+        # Default migration mapping
+        migrated = {
+            "app_mode": old_config.get("mode", "production"),
+            "offline_mode": old_config.get("offline", False),
+            "webapp": {
+                "port": old_config.get("port", 7777),
+                "debug": old_config.get("debug", False),
+                "host": old_config.get("host", "0.0.0.0"),
+            },
+            "fortimanager": {
+                "enabled": old_config.get("fortimanager_enabled", True),
+                "host": old_config.get("fortimanager_host", ""),
+                "port": old_config.get("fortimanager_port", 443),
+            },
+            "fortigate": {
+                "enabled": old_config.get("fortigate_enabled", True),
+                "host": old_config.get("fortigate_host", ""),
+                "port": old_config.get("fortigate_port", 443),
+            },
+        }
+
+        return migrated
+
+    except Exception as e:
+        # Return a basic migrated structure on error
+        return {"status": "migrated_with_errors", "error": str(e), "migrated_data": old_config}
+
+
 if __name__ == "__main__":
     sys.exit(main())

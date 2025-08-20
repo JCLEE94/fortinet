@@ -303,3 +303,65 @@ class PathVisualizer:
             dict: 모든 시각화 관련 데이터
         """
         return self.generate_visualization_data(path_data)
+
+
+def create_topology_visualization(network_data):
+    """
+    Create network topology visualization data
+
+    Args:
+        network_data (dict): Network topology data
+
+    Returns:
+        dict: Visualization data for topology
+    """
+    try:
+        visualizer = PathVisualizer()
+
+        # If network_data follows the path format, use it directly
+        if "path" in network_data:
+            return visualizer.generate_visualization_data(network_data)
+
+        # Otherwise, create a simple topology visualization
+        topology_data = {
+            "graph": {"nodes": [], "edges": [], "allowed": True},
+            "summary": {"total_nodes": 0, "total_connections": 0},
+        }
+
+        # Process nodes if available
+        nodes = network_data.get("nodes", [])
+        for i, node in enumerate(nodes):
+            topology_data["graph"]["nodes"].append(
+                {
+                    "id": f"node_{i}",
+                    "label": node.get("name", f"Node {i}"),
+                    "type": node.get("type", "unknown"),
+                    "ip": node.get("ip", "unknown"),
+                }
+            )
+
+        # Process connections if available
+        connections = network_data.get("connections", [])
+        for i, conn in enumerate(connections):
+            topology_data["graph"]["edges"].append(
+                {
+                    "id": f"edge_{i}",
+                    "source": conn.get("source", "node_0"),
+                    "target": conn.get("target", "node_1"),
+                    "type": conn.get("type", "connection"),
+                    "allowed": True,
+                }
+            )
+
+        topology_data["summary"]["total_nodes"] = len(nodes)
+        topology_data["summary"]["total_connections"] = len(connections)
+
+        return topology_data
+
+    except Exception as e:
+        logger.error(f"Topology visualization creation failed: {str(e)}")
+        return {
+            "error": str(e),
+            "graph": {"nodes": [], "edges": [], "allowed": False},
+            "summary": {"total_nodes": 0, "total_connections": 0},
+        }
