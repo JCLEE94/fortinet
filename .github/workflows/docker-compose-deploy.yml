@@ -84,7 +84,7 @@ jobs:
       
       - name: Build main application image
         run: |
-          docker build -f deployment/dockerfiles/Dockerfile.production \
+          docker build -f Dockerfile \
             -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ steps.meta.outputs.image_tag }} \
             -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest \
             --build-arg BUILD_DATE="$(date -u +'%Y-%m-%d %H:%M:%S')" \

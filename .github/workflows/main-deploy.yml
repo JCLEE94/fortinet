@@ -202,12 +202,12 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.production
+          file: ./Dockerfile
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ steps.meta.outputs.image_tag }}
-            ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest
+            ${{ env.REGISTRY_URL }}/fortinet:${{ steps.meta.outputs.image_tag }}
+            ${{ env.REGISTRY_URL }}/fortinet:latest
           build-args: |
             BUILD_DATE=${{ steps.meta.outputs.build_timestamp }}
             BUILD_TIMESTAMP=${{ steps.meta.outputs.build_timestamp }}
