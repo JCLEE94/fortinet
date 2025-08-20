@@ -1,232 +1,156 @@
 #!/bin/bash
-# Continuous Health Monitoring for GitOps Deployment
-# 지속적인 헬스 모니터링 및 자동 복구
 
-set -euo pipefail
+# FortiGate Nextrade Health Monitoring Script
+# Continuously monitors the health of the deployed application
+
+set -e
 
 # Configuration
-HEALTH_URL="http://192.168.50.110:30777/api/health"
-EXTERNAL_URL="https://fortinet.jclee.me/api/health"
-CHECK_INTERVAL=30
-FAILURE_THRESHOLD=3
-SUCCESS_THRESHOLD=2
-LOG_FILE="/tmp/health-monitor.log"
+APP_URL="http://localhost:7777"
+ALERT_WEBHOOK="${ALERT_WEBHOOK:-}"
+CHECK_INTERVAL=60  # seconds
+ERROR_THRESHOLD=3
+CONTAINER_NAME="fortinet-prod"
 
-# State tracking
-consecutive_failures=0
-consecutive_successes=0
-last_status="unknown"
-
-# Colors
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
-log() {
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local message="[$timestamp] $1"
-    echo -e "${BLUE}$message${NC}"
-    echo "$message" >> "$LOG_FILE"
-}
+# Counters
+ERROR_COUNT=0
+CHECK_COUNT=0
 
-success() {
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local message="[$timestamp] ✅ $1"
-    echo -e "${GREEN}$message${NC}"
-    echo "$message" >> "$LOG_FILE"
-}
-
-warning() {
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local message="[$timestamp] ⚠️  $1"
-    echo -e "${YELLOW}$message${NC}"
-    echo "$message" >> "$LOG_FILE"
-}
-
-error() {
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    local message="[$timestamp] ❌ $1"
-    echo -e "${RED}$message${NC}"
-    echo "$message" >> "$LOG_FILE"
-}
-
-# Health check function
-check_health() {
-    local url=$1
-    local name=$2
+# Function to send alert
+send_alert() {
+    local message="$1"
+    local severity="$2"
     
-    local response
-    local status_code
-    local health_status
+    echo -e "${RED}[ALERT] ${message}${NC}"
     
-    # Try to get response with timeout
-    if response=$(curl -s -f -m 10 "$url" 2>/dev/null); then
-        status_code=200
-        health_status=$(echo "$response" | jq -r '.status // "unknown"' 2>/dev/null || echo "unknown")
-    else
-        status_code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$url" 2>/dev/null || echo "000")
-        health_status="unreachable"
+    # Send to webhook if configured
+    if [ ! -z "$ALERT_WEBHOOK" ]; then
+        curl -X POST "$ALERT_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\":\"FortiNet Alert: ${message}\", \"severity\":\"${severity}\"}" \
+            2>/dev/null || true
     fi
     
-    echo "$status_code:$health_status:$response"
+    # Log to file
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - ${severity}: ${message}" >> /var/log/fortinet-monitor.log
 }
 
-# Get deployment info
-get_deployment_info() {
-    kubectl get deployment fortinet -n fortinet -o json 2>/dev/null | jq -r '{
-        replicas: .spec.replicas,
-        readyReplicas: .status.readyReplicas // 0,
-        availableReplicas: .status.availableReplicas // 0,
-        image: .spec.template.spec.containers[0].image,
-        conditions: [.status.conditions[]? | select(.type=="Available" or .type=="Progressing")]
-    }' 2>/dev/null || echo '{"replicas":0,"readyReplicas":0,"availableReplicas":0}'
+# Function to check health endpoint
+check_health() {
+    local response=$(curl -s -w "\n%{http_code}" "$APP_URL/api/health" 2>/dev/null || echo "000")
+    local http_code=$(echo "$response" | tail -n1)
+    local body=$(echo "$response" | head -n-1)
+    
+    if [ "$http_code" = "200" ]; then
+        local status=$(echo "$body" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+        if [ "$status" = "healthy" ]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
 }
 
-# Auto-recovery function
-trigger_recovery() {
-    local failure_type=$1
-    
-    error "Triggering auto-recovery for: $failure_type"
-    
-    case $failure_type in
-        "health_failure")
-            log "Attempting to restart pods..."
-            kubectl rollout restart deployment/fortinet -n fortinet
-            kubectl rollout status deployment/fortinet -n fortinet --timeout=300s
-            ;;
-        "deployment_issue")
-            log "Triggering ArgoCD sync..."
-            argocd app sync fortinet --grpc-web --prune --force
-            kubectl rollout status deployment/fortinet -n fortinet --timeout=300s
-            ;;
-        *)
-            warning "Unknown failure type: $failure_type"
-            ;;
-    esac
-    
-    log "Recovery action completed, waiting for stabilization..."
-    sleep 60
+# Function to check container status
+check_container() {
+    if docker ps --format "{{.Names}}" | grep -q "^${CONTAINER_NAME}$"; then
+        return 0
+    else
+        return 1
+    fi
 }
 
-# Generate status report
-generate_status_report() {
-    local health_result=$1
-    local deployment_info=$2
+# Function to check resource usage
+check_resources() {
+    local stats=$(docker stats --no-stream --format "{{.CPUPerc}} {{.MemPerc}}" "$CONTAINER_NAME" 2>/dev/null || echo "0% 0%")
+    local cpu=$(echo "$stats" | awk '{print $1}' | sed 's/%//')
+    local mem=$(echo "$stats" | awk '{print $2}' | sed 's/%//')
     
-    local timestamp=$(date -Iseconds)
-    local status_code=$(echo "$health_result" | cut -d':' -f1)
-    local health_status=$(echo "$health_result" | cut -d':' -f2)
-    local health_response=$(echo "$health_result" | cut -d':' -f3-)
+    if (( $(echo "$cpu > 80" | bc -l) )); then
+        send_alert "High CPU usage: ${cpu}%" "warning"
+    fi
     
-    cat << EOF
-{
-    "timestamp": "$timestamp",
-    "health": {
-        "status_code": $status_code,
-        "health_status": "$health_status",
-        "response": $health_response
-    },
-    "deployment": $deployment_info,
-    "monitoring": {
-        "consecutive_failures": $consecutive_failures,
-        "consecutive_successes": $consecutive_successes,
-        "last_status": "$last_status",
-        "failure_threshold": $FAILURE_THRESHOLD,
-        "success_threshold": $SUCCESS_THRESHOLD
-    }
+    if (( $(echo "$mem > 90" | bc -l) )); then
+        send_alert "High memory usage: ${mem}%" "warning"
+    fi
 }
-EOF
+
+# Function to perform comprehensive health check
+perform_health_check() {
+    CHECK_COUNT=$((CHECK_COUNT + 1))
+    echo -e "\n${GREEN}[CHECK #${CHECK_COUNT}]${NC} $(date '+%Y-%m-%d %H:%M:%S')"
+    
+    # Check container
+    if ! check_container; then
+        ERROR_COUNT=$((ERROR_COUNT + 1))
+        send_alert "Container $CONTAINER_NAME is not running" "critical"
+        
+        if [ $ERROR_COUNT -ge $ERROR_THRESHOLD ]; then
+            echo -e "${RED}[CRITICAL]${NC} Attempting to restart container..."
+            docker start "$CONTAINER_NAME" 2>/dev/null || docker run -d --name "$CONTAINER_NAME" -p 7777:7777 registry.jclee.me/fortinet:latest
+            ERROR_COUNT=0
+        fi
+        return 1
+    fi
+    
+    # Check health endpoint
+    if ! check_health; then
+        ERROR_COUNT=$((ERROR_COUNT + 1))
+        send_alert "Health check failed" "warning"
+        
+        if [ $ERROR_COUNT -ge $ERROR_THRESHOLD ]; then
+            send_alert "Health check failed $ERROR_THRESHOLD times consecutively" "critical"
+        fi
+    else
+        if [ $ERROR_COUNT -gt 0 ]; then
+            echo -e "${GREEN}[RECOVERED]${NC} Service is healthy again"
+            ERROR_COUNT=0
+        fi
+        echo -e "${GREEN}✓${NC} Health check passed"
+    fi
+    
+    # Check resources
+    check_resources
+    
+    # Check specific endpoints
+    for endpoint in "/api/settings" "/dashboard" "/devices"; do
+        http_code=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL$endpoint" 2>/dev/null || echo "000")
+        if [ "$http_code" = "200" ]; then
+            echo -e "${GREEN}✓${NC} Endpoint $endpoint is responsive"
+        else
+            echo -e "${YELLOW}⚠${NC} Endpoint $endpoint returned $http_code"
+        fi
+    done
+    
+    # Display summary
+    echo -e "${GREEN}Summary:${NC}"
+    docker stats --no-stream "$CONTAINER_NAME" 2>/dev/null || echo "Container stats unavailable"
 }
 
 # Main monitoring loop
-monitor_health() {
-    log "Starting continuous health monitoring..."
-    log "Health URL: $HEALTH_URL"
-    log "Check interval: ${CHECK_INTERVAL}s"
-    log "Failure threshold: $FAILURE_THRESHOLD"
-    log "Log file: $LOG_FILE"
-    
-    while true; do
-        # Check internal health
-        local internal_health
-        internal_health=$(check_health "$HEALTH_URL" "internal")
-        
-        local status_code=$(echo "$internal_health" | cut -d':' -f1)
-        local health_status=$(echo "$internal_health" | cut -d':' -f2)
-        
-        # Get deployment info
-        local deployment_info
-        deployment_info=$(get_deployment_info)
-        
-        # Analyze health status
-        if [ "$status_code" = "200" ] && [ "$health_status" = "healthy" ]; then
-            # Health check passed
-            consecutive_failures=0
-            consecutive_successes=$((consecutive_successes + 1))
-            
-            if [ "$last_status" != "healthy" ]; then
-                success "Application health restored"
-            elif [ $((consecutive_successes % 10)) -eq 0 ]; then
-                success "Health check passed ($consecutive_successes consecutive)"
-            fi
-            
-            last_status="healthy"
-            
-        else
-            # Health check failed
-            consecutive_successes=0
-            consecutive_failures=$((consecutive_failures + 1))
-            
-            error "Health check failed (attempt $consecutive_failures/$FAILURE_THRESHOLD)"
-            error "Status: $status_code, Health: $health_status"
-            
-            # Check deployment status
-            local ready_replicas=$(echo "$deployment_info" | jq -r '.readyReplicas')
-            local total_replicas=$(echo "$deployment_info" | jq -r '.replicas')
-            
-            log "Deployment status: $ready_replicas/$total_replicas ready"
-            
-            # Trigger recovery if threshold reached
-            if [ $consecutive_failures -ge $FAILURE_THRESHOLD ]; then
-                if [ "$ready_replicas" != "$total_replicas" ]; then
-                    trigger_recovery "deployment_issue"
-                else
-                    trigger_recovery "health_failure"
-                fi
-                
-                # Reset failure counter after recovery attempt
-                consecutive_failures=0
-            fi
-            
-            last_status="unhealthy"
-        fi
-        
-        # Generate and save status report
-        local report
-        report=$(generate_status_report "$internal_health" "$deployment_info")
-        echo "$report" > "/tmp/health-status-latest.json"
-        
-        # Wait before next check
-        sleep $CHECK_INTERVAL
-    done
-}
+echo -e "${GREEN}Starting FortiGate Nextrade Health Monitor${NC}"
+echo "Monitoring URL: $APP_URL"
+echo "Container: $CONTAINER_NAME"
+echo "Check interval: ${CHECK_INTERVAL}s"
+echo "Error threshold: $ERROR_THRESHOLD"
+echo "----------------------------------------"
 
-# Signal handlers for graceful shutdown
-cleanup() {
-    log "Received termination signal, stopping health monitor..."
-    success "Health monitor stopped gracefully"
-    exit 0
-}
+# Create log file if it doesn't exist
+touch /var/log/fortinet-monitor.log 2>/dev/null || true
 
-trap cleanup SIGTERM SIGINT
+# Trap to handle script termination
+trap 'echo -e "\n${YELLOW}Monitoring stopped${NC}"; exit 0' INT TERM
 
-# Main execution
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    # Create log directory if needed
-    mkdir -p "$(dirname "$LOG_FILE")"
-    
-    # Start monitoring
-    monitor_health
-fi
+# Main loop
+while true; do
+    perform_health_check
+    sleep "$CHECK_INTERVAL"
+done
