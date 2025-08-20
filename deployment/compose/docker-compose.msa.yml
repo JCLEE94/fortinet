@@ -1,3 +1,8 @@
+# =============================================================================
+# FortiGate Nextrade - MSA (Microservices Architecture) Docker Compose
+# Kong Gateway + Consul + RabbitMQ + Microservices
+# =============================================================================
+
 version: '3.8'
 
 services:

@@ -76,6 +76,7 @@ backups/
 # Config files with sensitive data
 *.env
 .env.*
+!.env.example
 *secret*
 !helm/fortinet/templates/secrets*.yaml
 *password*

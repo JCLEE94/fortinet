@@ -1,11 +1,11 @@
 # =============================================================================
-# FortiGate Nextrade - Production Dockerfile
-# Single container deployment with performance optimization
+# FortiGate Nextrade - 표준 Dockerfile
+# Production-ready single container deployment
 # =============================================================================
 
 FROM python:3.11-slim as base
 
-# GitOps 4원칙 준수: 불변 인프라 빌드 메타데이터
+# Build arguments for GitOps metadata
 ARG BUILD_DATE
 ARG BUILD_TIMESTAMP
 ARG GIT_COMMIT
@@ -15,7 +15,7 @@ ARG VERSION
 ARG IMMUTABLE_TAG
 ARG REGISTRY_URL="registry.jclee.me"
 
-# Environment setup with immutable metadata
+# Environment setup
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -24,7 +24,7 @@ ENV PYTHONUNBUFFERED=1 \
     APP_MODE=${APP_MODE:-production} \
     WEB_APP_HOST=${WEB_APP_HOST:-0.0.0.0} \
     WEB_APP_PORT=${WEB_APP_PORT:-7777} \
-    # GitOps 불변 메타데이터
+    # GitOps metadata
     GIT_COMMIT=${GIT_COMMIT} \
     GIT_SHA=${GIT_SHA} \
     GIT_BRANCH=${GIT_BRANCH} \
@@ -34,39 +34,34 @@ ENV PYTHONUNBUFFERED=1 \
     IMMUTABLE_TAG=${IMMUTABLE_TAG} \
     REGISTRY_URL=${REGISTRY_URL}
 
-# GitOps 4원칙 준수: 완전한 불변 메타데이터 라벨
+# Labels for metadata
 LABEL maintainer="FortiGate Nextrade Team" \
       version="${VERSION}" \
       description="FortiGate Nextrade - Network Monitoring Platform" \
-      # GitOps 불변성 메타데이터
       gitops.principle.immutable="true" \
       gitops.principle.declarative="dockerfile-as-code" \
       gitops.principle.git-source="https://github.com/JCLEE94/fortinet" \
       gitops.principle.pull-based="argocd-managed" \
-      # 빌드 추적성
       build-date="${BUILD_DATE}" \
       build-timestamp="${BUILD_TIMESTAMP}" \
       git-commit="${GIT_COMMIT}" \
       git-sha="${GIT_SHA}" \
       git-branch="${GIT_BRANCH}" \
       immutable-tag="${IMMUTABLE_TAG}" \
-      # 레지스트리 정보
       registry="${REGISTRY_URL}" \
       registry.namespace="fortinet" \
-      # 보안 및 스캔 정보
       security.scanned="true" \
       security.non-root-user="fortinet" \
-      # 성능 메타데이터
       performance.python-optimized="true" \
       performance.gunicorn-ready="true" \
       performance.multi-stage-build="true"
 
 # =============================================================================
-# System Dependencies Stage
+# System Dependencies
 # =============================================================================
 FROM base as system-deps
 
-# Install system dependencies with robust error handling for CI environments
+# Install system dependencies
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends --fix-missing \
     build-essential \
@@ -87,7 +82,7 @@ RUN apt-get update -qq && \
     && rm -rf /var/cache/apt/archives/*
 
 # =============================================================================
-# Python Dependencies Stage
+# Python Dependencies
 # =============================================================================
 FROM system-deps as python-deps
 
@@ -105,10 +100,9 @@ RUN mkdir -p /app/src \
 COPY requirements.txt /app/
 WORKDIR /app
 
-# Install Python dependencies with optimization
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    # Additional production packages (psutil already in requirements.txt)
     pip install --no-cache-dir \
     gunicorn \
     gevent \
@@ -122,8 +116,7 @@ FROM python-deps as app
 # Copy application code
 COPY --chown=fortinet:fortinet . /app/
 
-# Compile Python bytecode for performance optimization
-# Using -qq for quieter output and continuing on errors
+# Compile Python bytecode for performance
 RUN python -m compileall /app/src/ -b -qq || true
 
 # Set proper permissions
@@ -135,13 +128,12 @@ RUN chmod +x /app/src/main.py && \
 # Production Configuration
 # =============================================================================
 
-# GitOps 4원칙 준수: 강화된 Health Check (불변 배포 검증)
+# Health check with GitOps validation
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD python3 -c "\
 import urllib.request, json, os; \
 response = urllib.request.urlopen('http://localhost:${WEB_APP_PORT}/api/health', timeout=10); \
 data = json.loads(response.read().decode()); \
-# 불변성 검증: 빌드 메타데이터 확인
 build_info = data.get('build_info', {}); \
 expected_tag = os.environ.get('IMMUTABLE_TAG', 'unknown'); \
 actual_tag = build_info.get('immutable_tag', 'unknown'); \
@@ -151,12 +143,9 @@ print(f'Health check passed - Immutable tag: {actual_tag}');" || exit 1
 # Performance and resource settings
 ENV PYTHONOPTIMIZE=2 \
     MALLOC_ARENA_MAX=2 \
-    # Memory optimization
     PYTHONMALLOC=malloc \
-    # Performance settings
     FLASK_ENV=production \
     FLASK_DEBUG=false \
-    # Worker configuration
     WEB_CONCURRENCY=4 \
     WORKERS=4 \
     WORKER_CLASS=gevent \
@@ -170,9 +159,7 @@ ENV PYTHONOPTIMIZE=2 \
 COPY --chown=fortinet:fortinet start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
-# =============================================================================
-# GitOps 4원칙 준수: 불변 빌드 정보 기록 (as root before switching user)
-# =============================================================================
+# Record GitOps build information
 RUN echo "=== GitOps Immutable Build Information ===" > /app/build-info.txt && \
     echo "Build Date: ${BUILD_DATE:-unknown}" >> /app/build-info.txt && \
     echo "Build Timestamp: ${BUILD_TIMESTAMP:-unknown}" >> /app/build-info.txt && \
@@ -185,7 +172,6 @@ RUN echo "=== GitOps Immutable Build Information ===" > /app/build-info.txt && \
     echo "GitOps Principles: Declarative, Git Source, Pull-based, Immutable" >> /app/build-info.txt && \
     echo "Security: Non-root user (fortinet:fortinet)" >> /app/build-info.txt && \
     echo "Optimization: Python bytecode compiled, Gunicorn ready" >> /app/build-info.txt && \
-    # JSON 형태로도 저장하여 API에서 활용 가능
     printf '{\n' > /app/build-info.json && \
     printf '  "gitops": {\n' >> /app/build-info.json && \
     printf '    "principles": ["declarative", "git-source", "pull-based", "immutable"],\n' >> /app/build-info.json && \
@@ -221,7 +207,7 @@ USER fortinet
 # Working directory
 WORKDIR /app
 
-# Expose port (dynamically from environment)
+# Expose port
 EXPOSE ${WEB_APP_PORT}
 
 # Volume mounts for data persistence

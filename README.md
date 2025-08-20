@@ -14,6 +14,33 @@
 FortiGate 방화벽, FortiManager, ITSM 시스템을 통합한 차세대 네트워크 보안 모니터링 및 분석 플랫폼입니다. 
 모던 MSA(Microservice Architecture) 설계로 확장성과 가용성을 극대화하고, AI 기반 자동화로 운영 효율성을 혁신했습니다.
 
+## 🐳 빠른 시작 (Docker)
+
+### 1. 환경 설정
+```bash
+# .env 파일 생성
+cp .env.example .env
+# 필요한 환경변수 설정 (FortiGate, FortiManager 정보)
+vim .env
+```
+
+### 2. 애플리케이션 실행
+```bash
+# 표준 배포 (애플리케이션 + Redis)
+docker-compose up -d
+
+# MSA 배포 (마이크로서비스)
+docker-compose -f deployment/compose/docker-compose.msa.yml up -d
+
+# 개발 모드
+docker-compose -f deployment/compose/docker-compose.dev.yml up -d
+```
+
+### 3. 접속
+- **웹 인터페이스**: http://localhost:7777
+- **API 건강 상태**: http://localhost:7777/api/health
+- **모니터링**: http://localhost:9090 (메트릭)
+
 ## 🚀 최신 배포 상태
 
 ### 현재 배포 정보
