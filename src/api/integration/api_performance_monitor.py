@@ -9,10 +9,9 @@ import statistics
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 
-from utils.common_imports import Dict, List, Optional, json, logging, time
-
 from monitoring.base import MonitoringBase
 from monitoring.config import get_config
+from utils.common_imports import Dict, List, Optional, json, logging, time
 
 logger = logging.getLogger(__name__)
 

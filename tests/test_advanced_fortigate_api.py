@@ -152,16 +152,26 @@ def mock_response_data():
 
 
 @pytest.fixture
-async def mock_api_client(mock_fortigate_config):
+def mock_api_client(mock_fortigate_config):
     """테스트용 모킹된 API 클라이언트"""
-    with patch('requests.Session') as mock_session:
+    with patch('requests.Session') as mock_session, \
+         patch('api.clients.base_api_client.connection_pool_manager') as mock_pool:
         # 세션 모킹
         mock_session_instance = Mock()
         mock_session.return_value = mock_session_instance
         mock_session_instance.headers = {}
         mock_session_instance.verify = False
+        mock_session_instance.get = Mock()
+        mock_session_instance.post = Mock()
+        mock_session_instance.put = Mock()
+        mock_session_instance.delete = Mock()
+        mock_session_instance.request = Mock()
+        
+        # 연결 풀 매니저 모킹
+        mock_pool.get_session.return_value = mock_session_instance
         
         client = AdvancedFortiGateAPI(**mock_fortigate_config)
+        client.session = mock_session_instance  # Ensure session is properly set
         yield client
 
 
@@ -206,41 +216,50 @@ class TestAdvancedFortiGateAPI:
             with pytest.raises(ValueError, match="API key or username/password must be provided"):
                 AdvancedFortiGateAPI(**config)
     
-    @pytest.mark.asyncio
-    async def test_make_request_success(self, mock_api_client, mock_response_data):
+    def test_make_request_success(self, mock_api_client, mock_response_data):
         """성공적인 API 요청 테스트"""
-        with patch.object(mock_api_client.session, 'request') as mock_request:
-            mock_response = Mock()
-            mock_response.raise_for_status.return_value = None
-            mock_response.json.return_value = mock_response_data["system_status"]
-            mock_request.return_value = mock_response
-            
+        # Mock the session request method
+        mock_response = Mock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = mock_response_data["system_status"]
+        mock_response.status_code = 200
+        mock_api_client.session.request.return_value = mock_response
+        
+        # Since _make_request is async, we need to run it in an event loop
+        async def run_test():
             result = await mock_api_client._make_request("GET", "monitor/system/status")
-            
-            assert result == mock_response_data["system_status"]
-            mock_request.assert_called_once()
-            assert mock_api_client.api_stats["total_requests"] == 1
-            assert mock_api_client.api_stats["successful_requests"] == 1
+            return result
+        
+        result = asyncio.run(run_test())
+        
+        assert result == mock_response_data["system_status"]
+        mock_api_client.session.request.assert_called_once()
+        assert mock_api_client.api_stats["total_requests"] == 1
+        assert mock_api_client.api_stats["successful_requests"] == 1
     
-    @pytest.mark.asyncio
-    async def test_make_request_failure(self, mock_api_client):
+    def test_make_request_failure(self, mock_api_client):
         """실패하는 API 요청 테스트"""
-        with patch.object(mock_api_client.session, 'request') as mock_request:
-            mock_request.side_effect = Exception("Connection failed")
-            
+        mock_api_client.session.request.side_effect = Exception("Connection failed")
+        
+        async def run_test():
             with pytest.raises(Exception, match="Connection failed"):
                 await mock_api_client._make_request("GET", "monitor/system/status")
-            
-            assert mock_api_client.api_stats["total_requests"] == 1
-            assert mock_api_client.api_stats["failed_requests"] == 1
+        
+        asyncio.run(run_test())
+        
+        assert mock_api_client.api_stats["total_requests"] == 1
+        assert mock_api_client.api_stats["failed_requests"] == 1
     
-    @pytest.mark.asyncio
-    async def test_connection_test(self, mock_api_client, mock_response_data):
+    def test_connection_test(self, mock_api_client, mock_response_data):
         """연결 테스트 기능 테스트"""
         with patch.object(mock_api_client, '_make_request', new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response_data["system_status"]
             
-            result = await mock_api_client.test_connection()
+            async def run_test():
+                result = await mock_api_client.test_connection()
+                return result
+            
+            result = asyncio.run(run_test())
             
             assert result["status"] == "connected"
             assert "response_time" in result
