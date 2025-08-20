@@ -178,7 +178,7 @@ jobs:
       - name: Log in to Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY_URL }}
+          registry: registry.jclee.me
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       
@@ -206,8 +206,8 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.REGISTRY_URL }}/fortinet:${{ steps.meta.outputs.image_tag }}
-            ${{ env.REGISTRY_URL }}/fortinet:latest
+            registry.jclee.me/fortinet:${{ steps.meta.outputs.image_tag }}
+            registry.jclee.me/fortinet:latest
           build-args: |
             BUILD_DATE=${{ steps.meta.outputs.build_timestamp }}
             BUILD_TIMESTAMP=${{ steps.meta.outputs.build_timestamp }}

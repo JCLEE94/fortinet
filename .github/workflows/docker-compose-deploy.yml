@@ -66,27 +66,27 @@ jobs:
       
       - name: Login to Registry
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD || 'admin123' }}" | docker login ${{ env.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USERNAME || 'admin' }} --password-stdin || true
+          echo "${{ secrets.REGISTRY_PASSWORD || 'admin123' }}" | docker login registry.jclee.me -u ${{ secrets.REGISTRY_USERNAME || 'admin' }} --password-stdin || true
       
       - name: Build Redis image
         run: |
           cd docker/redis
-          docker build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-redis:${{ steps.meta.outputs.image_tag }} .
-          docker tag ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-redis:${{ steps.meta.outputs.image_tag }} ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-redis:latest
+          docker build -t registry.jclee.me/fortinet-redis:${{ steps.meta.outputs.image_tag }} .
+          docker tag registry.jclee.me/fortinet-redis:${{ steps.meta.outputs.image_tag }} registry.jclee.me/fortinet-redis:latest
           echo "Redis image built successfully"
       
       - name: Build PostgreSQL image
         run: |
           cd docker/postgresql
-          docker build -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-postgresql:${{ steps.meta.outputs.image_tag }} .
-          docker tag ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-postgresql:${{ steps.meta.outputs.image_tag }} ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-postgresql:latest
+          docker build -t registry.jclee.me/fortinet-postgresql:${{ steps.meta.outputs.image_tag }} .
+          docker tag registry.jclee.me/fortinet-postgresql:${{ steps.meta.outputs.image_tag }} registry.jclee.me/fortinet-postgresql:latest
           echo "PostgreSQL image built successfully"
       
       - name: Build main application image
         run: |
           docker build -f Dockerfile \
-            -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ steps.meta.outputs.image_tag }} \
-            -t ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest \
+            -t registry.jclee.me/fortinet:${{ steps.meta.outputs.image_tag }} \
+            -t registry.jclee.me/fortinet:latest \
             --build-arg BUILD_DATE="$(date -u +'%Y-%m-%d %H:%M:%S')" \
             --build-arg GIT_COMMIT="${GITHUB_SHA}" \
             --build-arg GIT_BRANCH="${{ steps.meta.outputs.branch }}" \
@@ -98,16 +98,16 @@ jobs:
         continue-on-error: true
         run: |
           # Push Redis
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-redis:${{ steps.meta.outputs.image_tag }} || true
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-redis:latest || true
+          docker push registry.jclee.me/fortinet-redis:${{ steps.meta.outputs.image_tag }} || true
+          docker push registry.jclee.me/fortinet-redis:latest || true
           
           # Push PostgreSQL
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-postgresql:${{ steps.meta.outputs.image_tag }} || true
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}-postgresql:latest || true
+          docker push registry.jclee.me/fortinet-postgresql:${{ steps.meta.outputs.image_tag }} || true
+          docker push registry.jclee.me/fortinet-postgresql:latest || true
           
           # Push main app
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:${{ steps.meta.outputs.image_tag }} || true
-          docker push ${{ env.REGISTRY_URL }}/${{ env.PROJECT_NAME }}:latest || true
+          docker push registry.jclee.me/fortinet:${{ steps.meta.outputs.image_tag }} || true
+          docker push registry.jclee.me/fortinet:latest || true
           
           echo "Image push attempted (may fail if registry is not accessible)"
 
