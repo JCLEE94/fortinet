@@ -145,22 +145,22 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           # Stop existing containers
-          docker-compose -f docker-compose.production.yml down --remove-orphans || true
+          docker-compose down --remove-orphans || true
           
           # Update image tags in docker-compose.yml
-          sed -i "s|:latest|:${{ needs.build.outputs.image_tag }}|g" docker-compose.production.yml
+          sed -i "s|:latest|:${{ needs.build.outputs.image_tag }}|g" docker-compose.yml
           
           # Pull latest images (if pushed to registry)
-          docker-compose -f docker-compose.production.yml pull || true
+          docker-compose pull || true
           
           # Start services
-          docker-compose -f docker-compose.production.yml up -d
+          docker-compose up -d
           
           # Wait for services to start
           sleep 15
           
           # Check status
-          docker-compose -f docker-compose.production.yml ps
+          docker-compose ps
           
           echo "Deployment completed"
       
