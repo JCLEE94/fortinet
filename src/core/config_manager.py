@@ -270,7 +270,7 @@ class ConfigManager:
             value = os.getenv(env_var)
             if value is not None:
                 try:
-                    if converter == bool:
+                    if converter is bool:
                         config[config_key] = value.lower() in (
                             "true",
                             "1",

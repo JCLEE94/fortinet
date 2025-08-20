@@ -12,13 +12,13 @@ from typing import Any, Dict, Optional
 
 import orjson
 
-from .unified_cache_manager import BaseCacheAdapter
+from .unified_cache_manager import CacheBackend
 from .unified_logger import get_logger
 
 logger = get_logger(__name__)
 
 
-class MemoryCacheAdapter(BaseCacheAdapter):
+class MemoryCacheAdapter(CacheBackend):
     """메모리 기반 캐시 어댑터"""
 
     def __init__(self, max_size: int = 1000, default_ttl: int = 300):
@@ -127,7 +127,7 @@ class MemoryCacheAdapter(BaseCacheAdapter):
             }
 
 
-class FileCacheAdapter(BaseCacheAdapter):
+class FileCacheAdapter(CacheBackend):
     """파일 기반 캐시 어댑터"""
 
     def __init__(self, cache_dir: str = None, max_files: int = 10000):
@@ -262,7 +262,7 @@ class FileCacheAdapter(BaseCacheAdapter):
             return {"type": "file", "error": str(e)}
 
 
-class RedisCacheAdapter(BaseCacheAdapter):
+class RedisCacheAdapter(CacheBackend):
     """Redis 기반 캐시 어댑터"""
 
     def __init__(
@@ -438,7 +438,7 @@ class RedisCacheAdapter(BaseCacheAdapter):
             return {"type": "redis", "error": str(e)}
 
 
-class HybridCacheAdapter(BaseCacheAdapter):
+class HybridCacheAdapter(CacheBackend):
     """하이브리드 캐시 어댑터 (메모리 + Redis)"""
 
     def __init__(self, memory_max_size: int = 100, redis_config: Dict = None):
@@ -513,7 +513,7 @@ class CacheAdapterFactory:
     """캐시 어댑터 팩토리"""
 
     @staticmethod
-    def create_adapter(adapter_type: str, **kwargs) -> BaseCacheAdapter:
+    def create_adapter(adapter_type: str, **kwargs) -> CacheBackend:
         """어댑터 타입으로 캐시 어댑터 생성"""
         adapters = {
             "memory": MemoryCacheAdapter,
@@ -529,7 +529,7 @@ class CacheAdapterFactory:
         return adapter_class(**kwargs)
 
     @staticmethod
-    def create_default_adapter() -> BaseCacheAdapter:
+    def create_default_adapter() -> CacheBackend:
         """환경에 따른 기본 어댑터 생성"""
         # Redis 설정이 있으면 Redis 사용, 없으면 메모리 캐시 사용
         redis_enabled = os.environ.get("REDIS_ENABLED", "false").lower() == "true"

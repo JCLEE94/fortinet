@@ -11,8 +11,8 @@ import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
-from .fortigate_api_client import FortiGateAPIClient
-from .fortimanager_api_client import FortiManagerAPIClient
+from api.clients.fortigate_api_client import FortiGateAPIClient
+from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
 # 절대 임포트로 변경
 try:

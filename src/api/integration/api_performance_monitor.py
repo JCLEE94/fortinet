@@ -11,13 +11,13 @@ from datetime import datetime, timedelta
 
 from utils.common_imports import Dict, List, Optional, json, logging, time
 
-from .monitoring_base import MonitoringBase, ThresholdMixin
-from .monitoring_config import get_config
+from monitoring.base import MonitoringBase
+from monitoring.config import get_config
 
 logger = logging.getLogger(__name__)
 
 
-class APIPerformanceMonitor(MonitoringBase, ThresholdMixin):
+class APIPerformanceMonitor(MonitoringBase):
     """API 성능 실시간 모니터링"""
 
     def __init__(self, collection_interval=None):
