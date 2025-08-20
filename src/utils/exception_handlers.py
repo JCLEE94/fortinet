@@ -9,23 +9,10 @@ import traceback
 from functools import wraps
 from typing import Callable
 
-from utils.common_imports import get_current_timestamp, jsonify, os, requests
+from utils.common_imports import format_error_response, get_current_timestamp, jsonify, os, requests
 from utils.unified_logger import setup_logger as setup_module_logger
 
-
-# 유틸리티 함수 직접 정의
-def format_error_response(error_message: str, status_code: int = 500):
-    """표준화된 오류 응답 생성"""
-    return (
-        jsonify(
-            {
-                "error": error_message,
-                "timestamp": get_current_timestamp(),
-                "status_code": status_code,
-            }
-        ),
-        status_code,
-    )
+# Import format_error_response from common_imports to avoid duplication
 
 
 # 예외 클래스들 직접 정의

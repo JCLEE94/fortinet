@@ -6,9 +6,23 @@ FortiManager 장치 관리 라우트
 
 from flask import Blueprint, jsonify
 
-from utils.api_utils import get_api_manager, get_dummy_generator, is_test_mode
+from utils.api_utils import get_api_manager
 from utils.unified_cache_manager import cached
 from utils.unified_logger import setup_logger
+
+# Note: Test mode functionality removed for production stability
+
+
+# Temporary compatibility functions for removed test mode
+def is_test_mode():
+    """Test mode removed for production stability"""
+    return False
+
+
+def get_dummy_generator():
+    """Dummy generator removed for production stability"""
+    return None
+
 
 logger = setup_logger("device_routes")
 device_bp = Blueprint("devices", __name__, url_prefix="/devices")

@@ -7,13 +7,26 @@ FortiManager 컴플라이언스 라우트
 from flask import Blueprint, jsonify, request
 
 from fortimanager.advanced_hub import FortiManagerAdvancedHub
-from utils.api_utils import get_api_manager, get_dummy_generator, is_test_mode
+from utils.api_utils import get_api_manager
+
+# Note: Test mode functionality removed for production stability
 from utils.security import rate_limit
 from utils.unified_cache_manager import cached
 from utils.unified_logger import setup_logger
 
 logger = setup_logger("compliance_routes")
 compliance_bp = Blueprint("compliance", __name__, url_prefix="/compliance")
+
+
+# Temporary compatibility functions for removed test mode
+def is_test_mode():
+    """Test mode removed for production stability"""
+    return False
+
+
+def get_dummy_generator():
+    """Dummy generator removed for production stability"""
+    return None
 
 
 @compliance_bp.route("/check", methods=["POST"])

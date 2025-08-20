@@ -403,14 +403,7 @@ def format_api_response(
 # ========== Missing Functions (for backward compatibility) ==========
 
 
-def is_test_mode() -> bool:
-    """DEPRECATED: Always return False - test mode removed"""
-    return False
-
-
-def get_dummy_generator():
-    """Dummy generator not used in production"""
-    return None
+# Removed deprecated is_test_mode and get_dummy_generator functions
 
 
 # ========== Export All ==========
@@ -428,6 +421,4 @@ __all__ = [
     "handle_api_error",
     "validate_api_response",
     "format_api_response",
-    "is_test_mode",
-    "get_dummy_generator",
 ]
