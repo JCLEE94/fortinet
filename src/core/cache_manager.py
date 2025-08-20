@@ -701,3 +701,6 @@ class CacheManager:
 
 # Global cache manager instance
 cache_manager = CacheManager()
+
+# Alias for compatibility
+UnifiedCacheManager = CacheManager

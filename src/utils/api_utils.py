@@ -403,7 +403,10 @@ def format_api_response(
 # ========== Missing Functions (for backward compatibility) ==========
 
 
-# Removed deprecated is_test_mode and get_dummy_generator functions
+# Test mode detection function
+def is_test_mode() -> bool:
+    """Check if the application is running in test mode"""
+    return unified_settings.is_test_mode()
 
 
 # ========== Export All ==========

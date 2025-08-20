@@ -7,6 +7,8 @@ the 500-line limit per file. Each functional area is split into separate modules
 
 from flask import Blueprint, jsonify, request
 
+from config.unified_settings import unified_settings
+
 # Removed test mode dependencies - using production APIs only
 from utils.unified_logger import get_logger
 
@@ -23,11 +25,13 @@ def get_fortimanager_status():
         from api.clients.fortimanager_api_client import FortiManagerAPIClient
 
         client = FortiManagerAPIClient()
+        mode = "test" if unified_settings.is_test_mode() else "production"
+
         if client.test_connection():
             return jsonify(
                 {
                     "status": "connected",
-                    "mode": "production",
+                    "mode": mode,
                     "message": "FortiManager connected successfully",
                     "version": client.get_version(),
                     "hostname": client.get_hostname(),
@@ -37,13 +41,14 @@ def get_fortimanager_status():
             return jsonify(
                 {
                     "status": "disconnected",
-                    "mode": "production",
+                    "mode": mode,
                     "message": "FortiManager connection failed - check configuration",
                 }
             )
     except Exception as e:
         logger.error(f"FortiManager status check failed: {e}")
-        return jsonify({"status": "error", "mode": "production", "message": f"FortiManager API error: {str(e)}"})
+        mode = "test" if unified_settings.is_test_mode() else "production"
+        return jsonify({"status": "error", "mode": mode, "message": f"FortiManager API error: {str(e)}"})
 
 
 @fortimanager_bp.route("/policies", methods=["POST"])

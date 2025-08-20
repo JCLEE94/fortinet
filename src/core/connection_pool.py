@@ -33,12 +33,12 @@ class ConnectionPoolManager:
                     cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self):
+    def __init__(self, max_pool_size=None):
         if not hasattr(self, "_initialized"):
             self._initialized = True
             self._sessions = {}
-            self._default_pool_size = BATCH_SETTINGS["CONNECTION_POOL_SIZE"]
-            self._default_pool_maxsize = BATCH_SETTINGS["CONNECTION_POOL_SIZE"]
+            self._default_pool_size = max_pool_size or BATCH_SETTINGS["CONNECTION_POOL_SIZE"]
+            self._default_pool_maxsize = max_pool_size or BATCH_SETTINGS["CONNECTION_POOL_SIZE"]
             self._default_max_retries = BATCH_SETTINGS["MAX_RETRIES"]
             self._default_backoff_factor = 0.3
             self._default_status_forcelist = [500, 502, 503, 504]
@@ -146,6 +146,17 @@ class ConnectionPoolManager:
                     self._sessions[identifier].close()
                     del self._sessions[identifier]
                     logger.info(f"Closed session for {identifier}")
+
+    def return_session(self, identifier: str, session: requests.Session):
+        """
+        세션을 풀에 반환 (호환성을 위한 메서드)
+
+        Args:
+            identifier: 세션 식별자
+            session: 반환할 세션
+        """
+        # 현재 구현에서는 세션이 이미 풀에서 관리되므로 별도 작업 불필요
+        logger.debug(f"Session returned for {identifier}")
 
     def close_all_sessions(self):
         """

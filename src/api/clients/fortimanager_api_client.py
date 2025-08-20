@@ -158,3 +158,34 @@ class FortiManagerAPIClient(
         except Exception as e:
             self.logger.error(f"Error getting ADOM list: {e}")
             return []
+
+    def get_version(self) -> Optional[Dict[str, Any]]:
+        """Get FortiManager version information"""
+        try:
+            if self.OFFLINE_MODE:
+                return {"version": "7.0.0", "build": "mock-build", "mode": "test", "platform": "mock-platform"}
+
+            success, data = self._make_api_request(method="get", url="/sys/status", timeout=10)
+            if success and isinstance(data, dict):
+                return data
+            return {"version": "unknown", "mode": "production"}
+        except Exception as e:
+            self.logger.error(f"Error getting version info: {e}")
+            return {"version": "unknown", "mode": "production"}
+
+    def get_hostname(self) -> str:
+        """Get FortiManager hostname"""
+        try:
+            if self.OFFLINE_MODE:
+                return "mock-fortimanager.local"
+
+            if self.host:
+                return self.host
+
+            success, data = self._make_api_request(method="get", url="/sys/status", timeout=10)
+            if success and isinstance(data, dict):
+                return data.get("hostname", self.host or "unknown")
+            return self.host or "unknown"
+        except Exception as e:
+            self.logger.error(f"Error getting hostname: {e}")
+            return self.host or "unknown"

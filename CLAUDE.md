@@ -111,6 +111,43 @@ kubectl get pods -n fortinet
 kubectl logs -l app=fortinet -n fortinet -f
 ```
 
+## Commands Workflow
+
+The project supports Claude Code's intelligent automation commands for streamlined development:
+
+### Available Commands
+- `/main` - Execute full automated workflow (test → clean → deploy chain)
+- `/test` - Run comprehensive test suite with automatic fixes
+- `/clean` - Clean codebase, fix linting issues, optimize imports
+- `/deploy` - Deploy via GitOps CI/CD pipeline
+- `/init` - Initialize or update project documentation
+
+### Workflow Examples
+```bash
+# Full automation chain
+/main
+# Runs: pytest → black/isort/flake8 → git commit → docker build → deploy
+
+# Test-driven development
+/test
+# Automatically fixes failing tests and achieves coverage targets
+
+# Code quality improvement
+/clean  
+# Removes duplicates, fixes linting, optimizes imports
+
+# GitOps deployment
+/deploy
+# Commits changes, pushes to GitHub, triggers CI/CD
+```
+
+### Integration with Existing Commands
+These commands work seamlessly with the existing development workflow:
+- Uses `python -m pytest` for testing (since pytest is installed as module)
+- Leverages pyproject.toml configuration for black/isort/flake8
+- Integrates with GitHub Actions CI/CD pipeline
+- Supports both monolithic and MSA deployment modes
+
 ## Critical Architecture Patterns
 
 ### 1. API Client Session Management

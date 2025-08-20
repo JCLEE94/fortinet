@@ -259,12 +259,12 @@ class UnifiedSettings:
         return getattr(self, service).enabled
 
     def is_test_mode(self) -> bool:
-        """테스트 모드 여부 - 항상 False"""
-        return False
+        """테스트 모드 여부 확인"""
+        return self.app_mode.lower() == "test"
 
     def is_production_mode(self) -> bool:
-        """운영 모드 여부 - 항상 True"""
-        return True
+        """운영 모드 여부 확인"""
+        return self.app_mode.lower() == "production"
 
     def get_api_config(self) -> Dict[str, Dict[str, Any]]:
         """API 설정 딕셔너리 반환 (API 통합 매니저용)"""
