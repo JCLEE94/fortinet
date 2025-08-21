@@ -27,7 +27,7 @@ class DeviceManager:
         # faz_client은 옵션 - None이면 모의 데이터 사용
         self.faz_client = faz_client
         # 장치 정보 캐시 (장치 이름: 장치 정보)
-        self._device_cache = {}
+        self._device_cache: Dict[str, Dict[str, Any]] = {}
         # 캐시 만료 시간 (초)
         self._cache_ttl = 300  # 5분
         # 마지막 캐시 업데이트 시간
