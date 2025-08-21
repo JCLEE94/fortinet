@@ -12,13 +12,13 @@ Automated code cleanup and optimization tools
 """
 
 import ast
-import os
-import re
-from pathlib import Path
-from typing import Dict, List, Set, Tuple, Any
 
 # Use basic logging since we might not have unified_logger available
 import logging
+import os
+import re
+from pathlib import Path
+from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class UnusedImportDetector(ast.NodeVisitor):
 
     def visit_Import(self, node: ast.Import) -> None:
         for alias in node.names:
-            name = alias.asname if alias.asname else alias.name.split('.')[0]
+            name = alias.asname if alias.asname else alias.name.split(".")[0]
             self.imports[name] = node.lineno
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
@@ -53,7 +53,7 @@ class UnusedImportDetector(ast.NodeVisitor):
     def analyze_file(self, file_path: str) -> List[Tuple[str, int]]:
         """파일 분석하여 사용되지 않는 임포트 반환"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
                 self.string_content = content
 
@@ -68,7 +68,7 @@ class UnusedImportDetector(ast.NodeVisitor):
             # Find unused imports
             unused = []
             for name, line_no in self.imports.items():
-                if name not in self.used_names and not name.startswith('_'):
+                if name not in self.used_names and not name.startswith("_"):
                     unused.append((name, line_no))
 
             return unused
@@ -90,7 +90,7 @@ class DeadCodeDetector(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         # Skip special methods and test functions
-        if not (node.name.startswith('_') or node.name.startswith('test_')):
+        if not (node.name.startswith("_") or node.name.startswith("test_")):
             self.defined_functions.add(node.name)
         self.generic_visit(node)
 
@@ -114,7 +114,7 @@ class DeadCodeDetector(ast.NodeVisitor):
     def analyze_file(self, file_path: str) -> Dict[str, List[str]]:
         """파일의 죽은 코드 분석"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             tree = ast.parse(content)
@@ -124,14 +124,14 @@ class DeadCodeDetector(ast.NodeVisitor):
             unused_classes = self.defined_classes - self.used_classes
 
             return {
-                'unused_functions': list(unused_functions),
-                'unused_classes': list(unused_classes),
-                'unreachable_code': self.unreachable_code
+                "unused_functions": list(unused_functions),
+                "unused_classes": list(unused_classes),
+                "unreachable_code": self.unreachable_code,
             }
 
         except Exception as e:
             logger.warning(f"Failed to analyze {file_path}: {e}")
-            return {'unused_functions': [], 'unused_classes': [], 'unreachable_code': []}
+            return {"unused_functions": [], "unused_classes": [], "unreachable_code": []}
 
 
 class DuplicateCodeDetector:
@@ -144,23 +144,23 @@ class DuplicateCodeDetector:
     def _normalize_code(self, code: str) -> str:
         """코드 정규화 (공백, 주석 제거)"""
         # Remove comments
-        code = re.sub(r'#.*$', '', code, flags=re.MULTILINE)
+        code = re.sub(r"#.*$", "", code, flags=re.MULTILINE)
         # Normalize whitespace
-        code = re.sub(r'\s+', ' ', code)
+        code = re.sub(r"\s+", " ", code)
         return code.strip()
 
     def analyze_directory(self, directory: str) -> Dict[str, List[Dict]]:
         """디렉토리의 중복 코드 분석"""
         duplicates = []
 
-        for py_file in Path(directory).rglob('*.py'):
+        for py_file in Path(directory).rglob("*.py"):
             try:
-                with open(py_file, 'r', encoding='utf-8') as f:
+                with open(py_file, "r", encoding="utf-8") as f:
                     lines = f.readlines()
 
                 # Check for duplicate blocks
                 for i in range(len(lines) - self.min_lines):
-                    block = ''.join(lines[i:i + self.min_lines])
+                    block = "".join(lines[i : i + self.min_lines])
                     normalized = self._normalize_code(block)
 
                     if len(normalized) > 50:  # Skip very short blocks
@@ -175,13 +175,9 @@ class DuplicateCodeDetector:
         # Find duplicates
         for block, locations in self.code_blocks.items():
             if len(locations) > 1:
-                duplicates.append({
-                    'block_hash': hash(block),
-                    'locations': locations,
-                    'lines': self.min_lines
-                })
+                duplicates.append({"block_hash": hash(block), "locations": locations, "lines": self.min_lines})
 
-        return {'duplicates': duplicates}
+        return {"duplicates": duplicates}
 
 
 class CodeMetricsCollector:
@@ -189,19 +185,19 @@ class CodeMetricsCollector:
 
     def __init__(self):
         self.metrics = {
-            'total_files': 0,
-            'total_lines': 0,
-            'total_functions': 0,
-            'total_classes': 0,
-            'files_over_500_lines': [],
-            'functions_over_50_lines': [],
-            'missing_docstrings': [],
-            'type_annotation_coverage': 0.0
+            "total_files": 0,
+            "total_lines": 0,
+            "total_functions": 0,
+            "total_classes": 0,
+            "files_over_500_lines": [],
+            "functions_over_50_lines": [],
+            "missing_docstrings": [],
+            "type_annotation_coverage": 0.0,
         }
 
     def analyze_directory(self, directory: str) -> Dict[str, Any]:
         """디렉토리의 코드 메트릭 수집"""
-        for py_file in Path(directory).rglob('*.py'):
+        for py_file in Path(directory).rglob("*.py"):
             self._analyze_file(str(py_file))
 
         return self.metrics
@@ -209,27 +205,24 @@ class CodeMetricsCollector:
     def _analyze_file(self, file_path: str) -> None:
         """개별 파일 메트릭 수집"""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
                 lines = content.splitlines()
 
-            self.metrics['total_files'] += 1
-            self.metrics['total_lines'] += len(lines)
+            self.metrics["total_files"] += 1
+            self.metrics["total_lines"] += len(lines)
 
             if len(lines) > 500:
-                self.metrics['files_over_500_lines'].append({
-                    'file': file_path,
-                    'lines': len(lines)
-                })
+                self.metrics["files_over_500_lines"].append({"file": file_path, "lines": len(lines)})
 
             tree = ast.parse(content)
             visitor = self._MetricsVisitor(file_path)
             visitor.visit(tree)
 
-            self.metrics['total_functions'] += visitor.function_count
-            self.metrics['total_classes'] += visitor.class_count
-            self.metrics['functions_over_50_lines'].extend(visitor.long_functions)
-            self.metrics['missing_docstrings'].extend(visitor.missing_docstrings)
+            self.metrics["total_functions"] += visitor.function_count
+            self.metrics["total_classes"] += visitor.class_count
+            self.metrics["functions_over_50_lines"].extend(visitor.long_functions)
+            self.metrics["missing_docstrings"].extend(visitor.missing_docstrings)
 
         except Exception as e:
             logger.warning(f"Failed to collect metrics for {file_path}: {e}")
@@ -248,24 +241,18 @@ class CodeMetricsCollector:
             self.function_count += 1
 
             # Check function length
-            if hasattr(node, 'end_lineno') and node.end_lineno:
+            if hasattr(node, "end_lineno") and node.end_lineno:
                 length = node.end_lineno - node.lineno
                 if length > 50:
-                    self.long_functions.append({
-                        'file': self.file_path,
-                        'function': node.name,
-                        'lines': length,
-                        'start_line': node.lineno
-                    })
+                    self.long_functions.append(
+                        {"file": self.file_path, "function": node.name, "lines": length, "start_line": node.lineno}
+                    )
 
             # Check for docstring
             if not ast.get_docstring(node):
-                self.missing_docstrings.append({
-                    'file': self.file_path,
-                    'type': 'function',
-                    'name': node.name,
-                    'line': node.lineno
-                })
+                self.missing_docstrings.append(
+                    {"file": self.file_path, "type": "function", "name": node.name, "line": node.lineno}
+                )
 
             self.generic_visit(node)
 
@@ -274,12 +261,9 @@ class CodeMetricsCollector:
 
             # Check for docstring
             if not ast.get_docstring(node):
-                self.missing_docstrings.append({
-                    'file': self.file_path,
-                    'type': 'class',
-                    'name': node.name,
-                    'line': node.lineno
-                })
+                self.missing_docstrings.append(
+                    {"file": self.file_path, "type": "class", "name": node.name, "line": node.lineno}
+                )
 
             self.generic_visit(node)
 
@@ -298,16 +282,10 @@ class CodeCleanupOrchestrator:
         """전체 코드 정리 분석 실행"""
         logger.info(f"Starting comprehensive code cleanup analysis for {self.source_dir}")
 
-        results = {
-            'unused_imports': {},
-            'dead_code': {},
-            'duplicates': {},
-            'metrics': {},
-            'recommendations': []
-        }
+        results = {"unused_imports": {}, "dead_code": {}, "duplicates": {}, "metrics": {}, "recommendations": []}
 
         # Analyze each Python file for unused imports and dead code
-        for py_file in Path(self.source_dir).rglob('*.py'):
+        for py_file in Path(self.source_dir).rglob("*.py"):
             file_path = str(py_file)
 
             # Reset detectors for each file
@@ -318,19 +296,19 @@ class CodeCleanupOrchestrator:
             dead_code = dead_detector.analyze_file(file_path)
 
             if unused_imports:
-                results['unused_imports'][file_path] = unused_imports
+                results["unused_imports"][file_path] = unused_imports
 
             if any(dead_code.values()):
-                results['dead_code'][file_path] = dead_code
+                results["dead_code"][file_path] = dead_code
 
         # Analyze duplicates across all files
-        results['duplicates'] = self.duplicate_detector.analyze_directory(self.source_dir)
+        results["duplicates"] = self.duplicate_detector.analyze_directory(self.source_dir)
 
         # Collect metrics
-        results['metrics'] = self.metrics_collector.analyze_directory(self.source_dir)
+        results["metrics"] = self.metrics_collector.analyze_directory(self.source_dir)
 
         # Generate recommendations
-        results['recommendations'] = self._generate_recommendations(results)
+        results["recommendations"] = self._generate_recommendations(results)
 
         logger.info("Code cleanup analysis completed")
         return results
@@ -340,32 +318,28 @@ class CodeCleanupOrchestrator:
         recommendations = []
 
         # File size recommendations
-        large_files = results['metrics'].get('files_over_500_lines', [])
+        large_files = results["metrics"].get("files_over_500_lines", [])
         if large_files:
             recommendations.append(
                 f"Consider splitting {len(large_files)} files that exceed 500 lines into smaller modules"
             )
 
         # Dead code recommendations
-        dead_code_files = len(results.get('dead_code', {}))
+        dead_code_files = len(results.get("dead_code", {}))
         if dead_code_files > 0:
-            recommendations.append(
-                f"Review {dead_code_files} files with potentially unused functions/classes"
-            )
+            recommendations.append(f"Review {dead_code_files} files with potentially unused functions/classes")
 
         # Duplicate code recommendations
-        duplicates_count = len(results.get('duplicates', {}).get('duplicates', []))
+        duplicates_count = len(results.get("duplicates", {}).get("duplicates", []))
         if duplicates_count > 0:
             recommendations.append(
                 f"Consider refactoring {duplicates_count} duplicate code blocks into reusable functions"
             )
 
         # Unused imports recommendations
-        unused_imports_files = len(results.get('unused_imports', {}))
+        unused_imports_files = len(results.get("unused_imports", {}))
         if unused_imports_files > 0:
-            recommendations.append(
-                f"Remove unused imports from {unused_imports_files} files to improve load time"
-            )
+            recommendations.append(f"Remove unused imports from {unused_imports_files} files to improve load time")
 
         return recommendations
 
@@ -381,45 +355,53 @@ def generate_cleanup_report(results: Dict[str, Any]) -> str:
         "-" * 20,
     ]
 
-    metrics = results.get('metrics', {})
-    report_lines.extend([
-        f"📁 Total files analyzed: {metrics.get('total_files', 0)}",
-        f"📄 Total lines of code: {metrics.get('total_lines', 0):,}",
-        f"🔧 Functions: {metrics.get('total_functions', 0)}",
-        f"🏗️  Classes: {metrics.get('total_classes', 0)}",
-        ""
-    ])
+    metrics = results.get("metrics", {})
+    report_lines.extend(
+        [
+            f"📁 Total files analyzed: {metrics.get('total_files', 0)}",
+            f"📄 Total lines of code: {metrics.get('total_lines', 0):,}",
+            f"🔧 Functions: {metrics.get('total_functions', 0)}",
+            f"🏗️  Classes: {metrics.get('total_classes', 0)}",
+            "",
+        ]
+    )
 
     # Issues found
-    report_lines.extend([
-        "🚨 ISSUES IDENTIFIED:",
-        "-" * 20,
-        f"📦 Files with unused imports: {len(results.get('unused_imports', {}))}",
-        f"💀 Files with dead code: {len(results.get('dead_code', {}))}",
-        f"👥 Duplicate code blocks: {len(results.get('duplicates', {}).get('duplicates', []))}",
-        f"📏 Files over 500 lines: {len(metrics.get('files_over_500_lines', []))}",
-        ""
-    ])
+    report_lines.extend(
+        [
+            "🚨 ISSUES IDENTIFIED:",
+            "-" * 20,
+            f"📦 Files with unused imports: {len(results.get('unused_imports', {}))}",
+            f"💀 Files with dead code: {len(results.get('dead_code', {}))}",
+            f"👥 Duplicate code blocks: {len(results.get('duplicates', {}).get('duplicates', []))}",
+            f"📏 Files over 500 lines: {len(metrics.get('files_over_500_lines', []))}",
+            "",
+        ]
+    )
 
     # Recommendations
-    recommendations = results.get('recommendations', [])
+    recommendations = results.get("recommendations", [])
     if recommendations:
-        report_lines.extend([
-            "💡 RECOMMENDATIONS:",
-            "-" * 20,
-        ])
+        report_lines.extend(
+            [
+                "💡 RECOMMENDATIONS:",
+                "-" * 20,
+            ]
+        )
         for i, rec in enumerate(recommendations, 1):
             report_lines.append(f"{i}. {rec}")
         report_lines.append("")
 
     # Large files details
-    large_files = metrics.get('files_over_500_lines', [])
+    large_files = metrics.get("files_over_500_lines", [])
     if large_files:
-        report_lines.extend([
-            "📏 FILES EXCEEDING 500 LINES:",
-            "-" * 30,
-        ])
-        for file_info in sorted(large_files, key=lambda x: x['lines'], reverse=True)[:10]:
+        report_lines.extend(
+            [
+                "📏 FILES EXCEEDING 500 LINES:",
+                "-" * 30,
+            ]
+        )
+        for file_info in sorted(large_files, key=lambda x: x["lines"], reverse=True)[:10]:
             report_lines.append(f"  • {file_info['file']}: {file_info['lines']} lines")
         report_lines.append("")
 
@@ -440,7 +422,7 @@ if __name__ == "__main__":
     total_tests += 1
     try:
         orchestrator = CodeCleanupOrchestrator("src")
-        if not hasattr(orchestrator, 'source_dir'):
+        if not hasattr(orchestrator, "source_dir"):
             all_validation_failures.append("Basic initialization: orchestrator missing source_dir attribute")
     except Exception as e:
         all_validation_failures.append(f"Basic initialization: Exception raised: {e}")
@@ -449,7 +431,7 @@ if __name__ == "__main__":
     total_tests += 1
     try:
         detector = UnusedImportDetector()
-        expected_attrs = ['imports', 'used_names', 'string_content']
+        expected_attrs = ["imports", "used_names", "string_content"]
         missing = [attr for attr in expected_attrs if not hasattr(detector, attr)]
         if missing:
             all_validation_failures.append(f"UnusedImportDetector: Missing attributes {missing}")
@@ -460,7 +442,7 @@ if __name__ == "__main__":
     total_tests += 1
     try:
         detector = DeadCodeDetector()
-        expected_attrs = ['defined_functions', 'called_functions', 'defined_classes', 'used_classes']
+        expected_attrs = ["defined_functions", "called_functions", "defined_classes", "used_classes"]
         missing = [attr for attr in expected_attrs if not hasattr(detector, attr)]
         if missing:
             all_validation_failures.append(f"DeadCodeDetector: Missing attributes {missing}")

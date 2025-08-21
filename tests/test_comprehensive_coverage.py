@@ -40,7 +40,7 @@ class TestConfigurationCoverage(unittest.TestCase):
 
     def test_settings_import(self):
         """설정 모듈 임포트 테스트"""
-        from src.config.unified_settings import unified_settings, UnifiedSettings
+        from src.config.unified_settings import UnifiedSettings, unified_settings
 
         # 기본 설정 확인
         self.assertIsNotNone(unified_settings)
@@ -132,7 +132,7 @@ class TestUtilitiesCoverage(unittest.TestCase):
 
     def test_batch_operations(self):
         """배치 작업 테스트"""
-        from src.utils.batch_operations import BatchProcessor, BatchItem
+        from src.utils.batch_operations import BatchItem, BatchProcessor
 
         processor = BatchProcessor()
         self.assertIsNotNone(processor)
@@ -144,9 +144,9 @@ class TestUtilitiesCoverage(unittest.TestCase):
         batch_items = [
             BatchItem(id="1", data={"id": 1}, operation=simple_operation),
             BatchItem(id="2", data={"id": 2}, operation=simple_operation),
-            BatchItem(id="3", data={"id": 3}, operation=simple_operation)
+            BatchItem(id="3", data={"id": 3}, operation=simple_operation),
         ]
-        
+
         result = processor.process_batch(batch_items)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, list)

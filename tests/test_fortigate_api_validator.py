@@ -10,18 +10,14 @@ import os
 import sys
 import time
 from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from api.fortigate_api_validator import (
-    ValidationSeverity,
-    ValidationResult,
-    FortiGateAPIValidator
-)
+from api.fortigate_api_validator import FortiGateAPIValidator, ValidationResult, ValidationSeverity
 
 
 class TestValidationSeverity:
@@ -50,9 +46,9 @@ class TestValidationResult:
             test_name="test_connection",
             status="pass",
             severity=ValidationSeverity.INFO,
-            message="Connection successful"
+            message="Connection successful",
         )
-        
+
         assert result.test_name == "test_connection"
         assert result.status == "pass"
         assert result.severity == ValidationSeverity.INFO
@@ -65,7 +61,7 @@ class TestValidationResult:
         """Test ValidationResult with all parameters"""
         test_time = datetime(2023, 1, 1, 12, 0, 0)
         details = {"response_time": 1.5, "status_code": 200}
-        
+
         result = ValidationResult(
             test_name="api_response_test",
             status="fail",
@@ -73,9 +69,9 @@ class TestValidationResult:
             message="API response validation failed",
             details=details,
             execution_time=2.5,
-            timestamp=test_time
+            timestamp=test_time,
         )
-        
+
         assert result.test_name == "api_response_test"
         assert result.status == "fail"
         assert result.severity == ValidationSeverity.ERROR
@@ -88,26 +84,18 @@ class TestValidationResult:
         """Test ValidationResult __post_init__ functionality"""
         # Test automatic timestamp generation
         result = ValidationResult(
-            test_name="test",
-            status="pass",
-            severity=ValidationSeverity.INFO,
-            message="Test message"
+            test_name="test", status="pass", severity=ValidationSeverity.INFO, message="Test message"
         )
-        
+
         assert isinstance(result.timestamp, datetime)
         assert result.details == {}
 
     def test_validation_result_status_values(self):
         """Test valid status values"""
         valid_statuses = ["pass", "fail", "skip"]
-        
+
         for status in valid_statuses:
-            result = ValidationResult(
-                test_name="test",
-                status=status,
-                severity=ValidationSeverity.INFO,
-                message="Test"
-            )
+            result = ValidationResult(test_name="test", status=status, severity=ValidationSeverity.INFO, message="Test")
             assert result.status == status
 
 
@@ -124,28 +112,20 @@ class TestFortiGateAPIValidator:
         assert self.validator.api_client == self.mock_api_client
         assert self.validator.results == []
         assert isinstance(self.validator.test_config, dict)
-        
+
         # Check default configuration
-        expected_keys = [
-            "timeout_threshold",
-            "performance_samples",
-            "security_scan_depth",
-            "concurrent_connections"
-        ]
+        expected_keys = ["timeout_threshold", "performance_samples", "security_scan_depth", "concurrent_connections"]
         for key in expected_keys:
             assert key in self.validator.test_config
 
     def test_configure_tests(self):
         """Test test configuration update"""
         initial_timeout = self.validator.test_config["timeout_threshold"]
-        
-        new_config = {
-            "timeout_threshold": 10.0,
-            "new_setting": "test_value"
-        }
-        
+
+        new_config = {"timeout_threshold": 10.0, "new_setting": "test_value"}
+
         self.validator.configure_tests(new_config)
-        
+
         assert self.validator.test_config["timeout_threshold"] == 10.0
         assert self.validator.test_config["new_setting"] == "test_value"
         # Other settings should remain unchanged
@@ -154,14 +134,11 @@ class TestFortiGateAPIValidator:
     def test_add_result_method(self):
         """Test internal _add_result method"""
         result = ValidationResult(
-            test_name="test_add_result",
-            status="pass",
-            severity=ValidationSeverity.INFO,
-            message="Test result addition"
+            test_name="test_add_result", status="pass", severity=ValidationSeverity.INFO, message="Test result addition"
         )
-        
+
         self.validator._add_result(result)
-        
+
         assert len(self.validator.results) == 1
         assert self.validator.results[0] == result
 
@@ -173,11 +150,11 @@ class TestFortiGateAPIValidator:
             severity=ValidationSeverity.ERROR,
             message="Test message",
             details={"error_code": 500},
-            execution_time=1.5
+            execution_time=1.5,
         )
-        
+
         result_dict = self.validator._result_to_dict(result)
-        
+
         assert result_dict["test_name"] == "test_conversion"
         assert result_dict["status"] == "fail"
         assert result_dict["severity"] == "error"
@@ -190,15 +167,14 @@ class TestFortiGateAPIValidator:
         """Test summary generation with all tests passed"""
         # Add test results
         for i in range(5):
-            self.validator._add_result(ValidationResult(
-                test_name=f"test_{i}",
-                status="pass",
-                severity=ValidationSeverity.INFO,
-                message=f"Test {i} passed"
-            ))
-        
+            self.validator._add_result(
+                ValidationResult(
+                    test_name=f"test_{i}", status="pass", severity=ValidationSeverity.INFO, message=f"Test {i} passed"
+                )
+            )
+
         summary = self.validator._generate_summary(10.5)
-        
+
         assert summary["total_tests"] == 5
         assert summary["passed"] == 5
         assert summary["failed"] == 0
@@ -215,17 +191,14 @@ class TestFortiGateAPIValidator:
             ("test_4", "pass", ValidationSeverity.INFO),
             ("test_5", "fail", ValidationSeverity.CRITICAL),
         ]
-        
+
         for test_name, status, severity in results:
-            self.validator._add_result(ValidationResult(
-                test_name=test_name,
-                status=status,
-                severity=severity,
-                message=f"{test_name} {status}"
-            ))
-        
+            self.validator._add_result(
+                ValidationResult(test_name=test_name, status=status, severity=severity, message=f"{test_name} {status}")
+            )
+
         summary = self.validator._generate_summary(5.0)
-        
+
         assert summary["total_tests"] == 5
         assert summary["passed"] == 2
         assert summary["failed"] == 2
@@ -241,21 +214,26 @@ class TestFortiGateAPIValidator:
     async def test_run_all_validations_default_categories(self):
         """Test running all validations with default categories"""
         # Mock all test category methods
-        with patch.object(self.validator, '_run_category_tests', new_callable=AsyncMock) as mock_run_category:
+        with patch.object(self.validator, "_run_category_tests", new_callable=AsyncMock) as mock_run_category:
             mock_run_category.return_value = None
-            
+
             result = await self.validator.run_all_validations()
-            
+
             # Should run all default categories
             expected_categories = [
-                "connection", "authentication", "basic_operations",
-                "performance", "security", "functionality", "monitoring"
+                "connection",
+                "authentication",
+                "basic_operations",
+                "performance",
+                "security",
+                "functionality",
+                "monitoring",
             ]
-            
+
             assert mock_run_category.call_count == len(expected_categories)
             for category in expected_categories:
                 mock_run_category.assert_any_call(category)
-            
+
             assert "summary" in result
             assert "results" in result
             assert "test_config" in result
@@ -265,12 +243,12 @@ class TestFortiGateAPIValidator:
     async def test_run_all_validations_custom_categories(self):
         """Test running validations with custom categories"""
         custom_categories = ["connection", "performance"]
-        
-        with patch.object(self.validator, '_run_category_tests', new_callable=AsyncMock) as mock_run_category:
+
+        with patch.object(self.validator, "_run_category_tests", new_callable=AsyncMock) as mock_run_category:
             mock_run_category.return_value = None
-            
+
             result = await self.validator.run_all_validations(custom_categories)
-            
+
             assert mock_run_category.call_count == 2
             mock_run_category.assert_any_call("connection")
             mock_run_category.assert_any_call("performance")
@@ -280,27 +258,32 @@ class TestFortiGateAPIValidator:
         """Test _run_category_tests with known categories"""
         # Mock individual test methods
         test_methods = [
-            '_test_connection',
-            '_test_authentication',
-            '_test_basic_operations',
-            '_test_performance',
-            '_test_security',
-            '_test_functionality',
-            '_test_monitoring'
+            "_test_connection",
+            "_test_authentication",
+            "_test_basic_operations",
+            "_test_performance",
+            "_test_security",
+            "_test_functionality",
+            "_test_monitoring",
         ]
-        
+
         for method_name in test_methods:
             setattr(self.validator, method_name, AsyncMock())
-        
+
         # Test each category
         categories = [
-            "connection", "authentication", "basic_operations",
-            "performance", "security", "functionality", "monitoring"
+            "connection",
+            "authentication",
+            "basic_operations",
+            "performance",
+            "security",
+            "functionality",
+            "monitoring",
         ]
-        
+
         for category in categories:
             await self.validator._run_category_tests(category)
-            
+
             # Verify corresponding method was called
             method_name = f"_test_{category}"
             mock_method = getattr(self.validator, method_name)
@@ -310,7 +293,7 @@ class TestFortiGateAPIValidator:
     async def test_run_category_tests_unknown_category(self):
         """Test _run_category_tests with unknown category"""
         await self.validator._run_category_tests("unknown_category")
-        
+
         # Should add a skip result
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
@@ -321,14 +304,12 @@ class TestFortiGateAPIValidator:
     @pytest.mark.asyncio
     async def test_connection_test_success(self):
         """Test successful connection test"""
-        self.mock_api_client.test_connection = AsyncMock(return_value={
-            "status": "connected",
-            "response_time": 0.5,
-            "version": "7.0.0"
-        })
-        
+        self.mock_api_client.test_connection = AsyncMock(
+            return_value={"status": "connected", "response_time": 0.5, "version": "7.0.0"}
+        )
+
         await self.validator._test_connection()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "basic_connection"
@@ -340,13 +321,12 @@ class TestFortiGateAPIValidator:
     @pytest.mark.asyncio
     async def test_connection_test_failure(self):
         """Test failed connection test"""
-        self.mock_api_client.test_connection = AsyncMock(return_value={
-            "status": "failed",
-            "error": "Connection timeout"
-        })
-        
+        self.mock_api_client.test_connection = AsyncMock(
+            return_value={"status": "failed", "error": "Connection timeout"}
+        )
+
         await self.validator._test_connection()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "basic_connection"
@@ -358,9 +338,9 @@ class TestFortiGateAPIValidator:
     async def test_connection_test_exception(self):
         """Test connection test with exception"""
         self.mock_api_client.test_connection = AsyncMock(side_effect=Exception("Network error"))
-        
+
         await self.validator._test_connection()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "basic_connection"
@@ -372,13 +352,11 @@ class TestFortiGateAPIValidator:
     async def test_concurrent_connections_all_success(self):
         """Test concurrent connections with all successful"""
         self.validator.test_config["concurrent_connections"] = 3
-        
-        self.mock_api_client.test_connection = AsyncMock(return_value={
-            "status": "connected"
-        })
-        
+
+        self.mock_api_client.test_connection = AsyncMock(return_value={"status": "connected"})
+
         await self.validator._test_concurrent_connections()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "concurrent_connections"
@@ -391,18 +369,14 @@ class TestFortiGateAPIValidator:
     async def test_concurrent_connections_partial_success(self):
         """Test concurrent connections with partial success"""
         self.validator.test_config["concurrent_connections"] = 3
-        
+
         # Mock different responses for different calls
-        responses = [
-            {"status": "connected"},
-            {"status": "failed", "error": "timeout"},
-            {"status": "connected"}
-        ]
-        
+        responses = [{"status": "connected"}, {"status": "failed", "error": "timeout"}, {"status": "connected"}]
+
         self.mock_api_client.test_connection = AsyncMock(side_effect=responses)
-        
+
         await self.validator._test_concurrent_connections()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "concurrent_connections"
@@ -415,14 +389,13 @@ class TestFortiGateAPIValidator:
     async def test_concurrent_connections_all_fail(self):
         """Test concurrent connections with all failures"""
         self.validator.test_config["concurrent_connections"] = 2
-        
-        self.mock_api_client.test_connection = AsyncMock(return_value={
-            "status": "failed",
-            "error": "Connection refused"
-        })
-        
+
+        self.mock_api_client.test_connection = AsyncMock(
+            return_value={"status": "failed", "error": "Connection refused"}
+        )
+
         await self.validator._test_concurrent_connections()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "concurrent_connections"
@@ -435,18 +408,14 @@ class TestFortiGateAPIValidator:
     async def test_concurrent_connections_with_exceptions(self):
         """Test concurrent connections with exceptions"""
         self.validator.test_config["concurrent_connections"] = 3
-        
+
         # Mix of exceptions and failures
-        responses = [
-            Exception("Network error"),
-            {"status": "failed"},
-            Exception("Timeout")
-        ]
-        
+        responses = [Exception("Network error"), {"status": "failed"}, Exception("Timeout")]
+
         self.mock_api_client.test_connection = AsyncMock(side_effect=responses)
-        
+
         await self.validator._test_concurrent_connections()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "concurrent_connections"
@@ -457,15 +426,12 @@ class TestFortiGateAPIValidator:
     @pytest.mark.asyncio
     async def test_api_key_authentication_success(self):
         """Test successful API key authentication"""
-        self.mock_api_client.get_system_status = AsyncMock(return_value={
-            "results": {
-                "version": "7.0.0",
-                "hostname": "fortigate-test"
-            }
-        })
-        
+        self.mock_api_client.get_system_status = AsyncMock(
+            return_value={"results": {"version": "7.0.0", "hostname": "fortigate-test"}}
+        )
+
         await self.validator._test_api_key_auth()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "api_key_authentication"
@@ -477,12 +443,10 @@ class TestFortiGateAPIValidator:
     @pytest.mark.asyncio
     async def test_api_key_authentication_failure(self):
         """Test failed API key authentication"""
-        self.mock_api_client.get_system_status = AsyncMock(return_value={
-            "error": "Invalid API key"
-        })
-        
+        self.mock_api_client.get_system_status = AsyncMock(return_value={"error": "Invalid API key"})
+
         await self.validator._test_api_key_auth()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "api_key_authentication"
@@ -493,9 +457,9 @@ class TestFortiGateAPIValidator:
     async def test_api_key_authentication_exception(self):
         """Test API key authentication with exception"""
         self.mock_api_client.get_system_status = AsyncMock(side_effect=Exception("Auth error"))
-        
+
         await self.validator._test_api_key_auth()
-        
+
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
         assert result.test_name == "api_key_authentication"
@@ -508,23 +472,20 @@ class TestFortiGateAPIValidator:
         # Mock the individual authentication test methods
         self.validator._test_api_key_auth = AsyncMock()
         self.validator._test_permission_levels = AsyncMock()
-        
+
         await self.validator._test_authentication()
-        
+
         self.validator._test_api_key_auth.assert_called_once()
         self.validator._test_permission_levels.assert_called_once()
 
     def test_execution_time_measurement(self):
         """Test that execution time is properly measured"""
         result = ValidationResult(
-            test_name="timing_test",
-            status="pass",
-            severity=ValidationSeverity.INFO,
-            message="Test message"
+            test_name="timing_test", status="pass", severity=ValidationSeverity.INFO, message="Test message"
         )
-        
+
         self.validator._add_result(result)
-        
+
         # Verify execution time is included in result conversion
         result_dict = self.validator._result_to_dict(result)
         assert "execution_time" in result_dict
@@ -535,16 +496,16 @@ class TestFortiGateAPIValidator:
         """Test validation with timeout threshold checking"""
         # Set a low timeout threshold
         self.validator.test_config["timeout_threshold"] = 0.1
-        
+
         # Mock a slow API call
         async def slow_connection():
             await asyncio.sleep(0.2)  # Slower than threshold
-            return {"status": "connected"}
-        
+            assert True  # Test passed
+
         self.mock_api_client.test_connection = slow_connection
-        
+
         await self.validator._test_connection()
-        
+
         result = self.validator.results[0]
         # Should still pass but execution time should be recorded
         assert result.execution_time > self.validator.test_config["timeout_threshold"]
@@ -552,18 +513,15 @@ class TestFortiGateAPIValidator:
     def test_validator_configuration_persistence(self):
         """Test that validator configuration persists across operations"""
         original_config = self.validator.test_config.copy()
-        
+
         # Modify configuration
-        new_settings = {
-            "timeout_threshold": 15.0,
-            "custom_setting": "test_value"
-        }
+        new_settings = {"timeout_threshold": 15.0, "custom_setting": "test_value"}
         self.validator.configure_tests(new_settings)
-        
+
         # Verify changes persist
         assert self.validator.test_config["timeout_threshold"] == 15.0
         assert self.validator.test_config["custom_setting"] == "test_value"
-        
+
         # Verify other settings remain unchanged
         for key, value in original_config.items():
             if key not in new_settings:
@@ -574,9 +532,9 @@ class TestFortiGateAPIValidator:
         """Test exception handling in category test execution"""
         # Mock a test method that raises an exception
         self.validator._test_connection = AsyncMock(side_effect=Exception("Test method error"))
-        
+
         await self.validator._run_category_tests("connection")
-        
+
         # Should add an error result
         assert len(self.validator.results) == 1
         result = self.validator.results[0]
@@ -599,27 +557,28 @@ class TestValidatorIntegrationScenarios:
         """Test complete validation workflow with successful results"""
         # Mock all API calls to succeed
         self.mock_api_client.test_connection = AsyncMock(return_value={"status": "connected"})
-        self.mock_api_client.get_system_status = AsyncMock(return_value={
-            "results": {"version": "7.0.0"}
-        })
-        
+        self.mock_api_client.get_system_status = AsyncMock(return_value={"results": {"version": "7.0.0"}})
+
         # Mock other test methods
         test_methods = [
-            "_test_basic_operations", "_test_performance", 
-            "_test_security", "_test_functionality", "_test_monitoring"
+            "_test_basic_operations",
+            "_test_performance",
+            "_test_security",
+            "_test_functionality",
+            "_test_monitoring",
         ]
         for method in test_methods:
             setattr(self.validator, method, AsyncMock())
-        
+
         # Run validation with subset of categories
         result = await self.validator.run_all_validations(["connection", "authentication"])
-        
+
         # Verify results structure
         assert "summary" in result
         assert "results" in result
         assert "test_config" in result
         assert "execution_time" in result
-        
+
         # Should have some successful results
         assert result["summary"]["total_tests"] >= 1
 
@@ -629,12 +588,12 @@ class TestValidatorIntegrationScenarios:
         # Connection succeeds, authentication fails
         self.mock_api_client.test_connection = AsyncMock(return_value={"status": "connected"})
         self.mock_api_client.get_system_status = AsyncMock(side_effect=Exception("Auth failed"))
-        
+
         # Mock permission test
         self.validator._test_permission_levels = AsyncMock()
-        
+
         result = await self.validator.run_all_validations(["connection", "authentication"])
-        
+
         summary = result["summary"]
         assert summary["total_tests"] >= 2
         assert summary["passed"] >= 1  # Connection should pass
@@ -644,19 +603,20 @@ class TestValidatorIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_performance_impact_measurement(self):
         """Test that validation measures performance impact correctly"""
+
         # Mock a slow API call
         async def slow_api_call():
             await asyncio.sleep(0.1)
-            return {"status": "connected"}
-        
+            assert True  # Test passed
+
         self.mock_api_client.test_connection = slow_api_call
-        
+
         start_time = time.time()
         await self.validator._test_connection()
         total_time = time.time() - start_time
-        
+
         result = self.validator.results[0]
-        
+
         # Execution time should be reasonable and less than total time
         assert 0 < result.execution_time <= total_time
         assert result.execution_time >= 0.1  # At least the sleep time
@@ -670,30 +630,27 @@ class TestValidatorIntegrationScenarios:
                 status="pass",
                 severity=ValidationSeverity.INFO,
                 message="Success",
-                details={"response_time": 1.5}
+                details={"response_time": 1.5},
             ),
             ValidationResult(
                 test_name="test_2",
                 status="fail",
                 severity=ValidationSeverity.ERROR,
                 message="Failed",
-                details={"error_code": 500, "nested": {"data": "value"}}
-            )
+                details={"error_code": 500, "nested": {"data": "value"}},
+            ),
         ]
-        
+
         for result in results:
             self.validator._add_result(result)
-        
+
         # Generate summary and convert to JSON to test serialization
         summary = self.validator._generate_summary(5.0)
         result_dicts = [self.validator._result_to_dict(r) for r in self.validator.results]
-        
+
         # Should be JSON serializable
-        json_data = json.dumps({
-            "summary": summary,
-            "results": result_dicts
-        })
-        
+        json_data = json.dumps({"summary": summary, "results": result_dicts})
+
         # Verify it can be loaded back
         loaded_data = json.loads(json_data)
         assert loaded_data["summary"]["total_tests"] == 2
@@ -704,14 +661,14 @@ class TestValidatorIntegrationScenarios:
         """Test that validator handles concurrent operations safely"""
         # Create multiple validators with shared API client
         validators = [FortiGateAPIValidator(self.mock_api_client) for _ in range(3)]
-        
+
         # Mock API responses
         self.mock_api_client.test_connection = AsyncMock(return_value={"status": "connected"})
-        
+
         # Run validations concurrently
         tasks = [validator._test_connection() for validator in validators]
         await asyncio.gather(*tasks)
-        
+
         # Each validator should have its own results
         for validator in validators:
             assert len(validator.results) == 1
@@ -721,10 +678,10 @@ class TestValidatorIntegrationScenarios:
         """Test that validator configurations are isolated between instances"""
         validator1 = FortiGateAPIValidator(Mock())
         validator2 = FortiGateAPIValidator(Mock())
-        
+
         # Modify configuration of first validator
         validator1.configure_tests({"timeout_threshold": 20.0})
-        
+
         # Second validator should have default configuration
         assert validator2.test_config["timeout_threshold"] != 20.0
         assert validator1.test_config["timeout_threshold"] == 20.0

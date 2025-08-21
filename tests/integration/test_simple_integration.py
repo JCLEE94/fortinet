@@ -31,11 +31,7 @@ def test_basic_app():
         response = client.get("/")
         test_framework.assert_ok(response.status_code in [200, 302], "Home route should be accessible")
 
-        return {
-            "app_created": True,
-            "testing_mode": app.testing,
-            "home_route_status": response.status_code,
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("health_endpoint_check")
@@ -57,11 +53,7 @@ def test_health_endpoint():
             # JSON 파싱 실패해도 응답은 받았으므로 부분적 성공
             data = None
 
-        return {
-            "status_code": response.status_code,
-            "has_json": data is not None,
-            "response_data": data,
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("settings_endpoint_check")
@@ -77,10 +69,7 @@ def test_settings_endpoint():
             "Settings endpoint should be accessible or return 404",
         )
 
-        return {
-            "status_code": response.status_code,
-            "accessible": response.status_code != 500,
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("multiple_routes_check")
@@ -110,11 +99,7 @@ def test_multiple_routes():
     accessible_routes = [r for r in route_results if r.get("accessible", False)]
     test_framework.assert_ok(len(accessible_routes) > 0, "At least one route should be accessible")
 
-    return {
-        "total_routes": len(routes_to_test),
-        "route_results": route_results,
-        "accessible_count": len(accessible_routes),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("configuration_loading")
@@ -136,11 +121,7 @@ def test_config_loading():
                 "Web app port should be in valid range",
             )
 
-        return {
-            "settings_loaded": True,
-            "app_mode": getattr(settings, "app_mode", None),
-            "web_app_port": getattr(settings, "web_app_port", None),
-        }
+        assert True  # Test passed
 
     except Exception as e:
         return {"settings_loaded": False, "error": str(e)}

@@ -105,9 +105,11 @@ class TestFortiManagerAPIRefactored(unittest.TestCase):
 
     def test_packet_path_analysis_integration(self):
         """Test packet path analysis with real FortiManager APIs"""
-        with patch.object(self.client, "get_routes") as mock_routes, patch.object(
-            self.client, "get_interfaces"
-        ) as mock_interfaces, patch.object(self.client, "get_firewall_policies") as mock_policies:
+        with (
+            patch.object(self.client, "get_routes") as mock_routes,
+            patch.object(self.client, "get_interfaces") as mock_interfaces,
+            patch.object(self.client, "get_firewall_policies") as mock_policies,
+        ):
             # Mock API responses
             mock_interfaces.return_value = [{"name": "port1", "ip": "192.168.1.1", "netmask": "255.255.255.0"}]
             mock_routes.return_value = [{"dst": "10.0.0.0", "netmask": "255.0.0.0", "device": "port2"}]

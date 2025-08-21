@@ -231,7 +231,7 @@ class TestOptimization(unittest.TestCase):
 
     def test_cache_manager_functionality(self):
         """Test cache manager functionality"""
-        from src.core.cache_manager import CacheManager, CacheBackend
+        from src.core.cache_manager import CacheBackend, CacheManager
 
         # Initialize with memory backend only for testing
         cache = CacheManager(backends=[CacheBackend.MEMORY])

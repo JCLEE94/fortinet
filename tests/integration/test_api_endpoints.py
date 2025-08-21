@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test API endpoints"""
 
-import json
 import os
 import sys
 from datetime import datetime

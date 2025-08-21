@@ -5,13 +5,12 @@ Unified Logger Unit Tests
 
 import json
 import os
+import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "src"))
 from utils.unified_logger import UnifiedLogger, get_advanced_logger, get_logger
 
 

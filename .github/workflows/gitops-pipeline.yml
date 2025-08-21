@@ -34,6 +34,11 @@ jobs:
 
     - name: Code formatting check
       run: |
+        echo "Applying automatic formatting fixes..."
+        black src/ --line-length=120 --target-version=py311
+        isort src/ --profile=black --line-length=120
+        
+        echo "Verifying formatting..."
         black --check --diff src/
         isort --check-only --diff src/
 

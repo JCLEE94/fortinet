@@ -34,31 +34,30 @@ logger = setup_module_logger(__name__)
 # Extended exception classes
 class APITimeoutException(Exception):
     """API 타임아웃 예외"""
+
     pass
 
 
 class AuthenticationException(Exception):
     """인증 실패 예외"""
+
     pass
 
 
 class ResourceNotFoundException(Exception):
     """리소스 없음 예외"""
+
     pass
 
 
 class RateLimitException(Exception):
     """레이트 리미트 초과 예외"""
+
     pass
 
 
 # Error handling decorators
-def handle_api_errors(
-    default_return=None,
-    log_errors=True,
-    reraise_on_critical=True,
-    timeout_seconds=DEFAULT_TIMEOUT
-):
+def handle_api_errors(default_return=None, log_errors=True, reraise_on_critical=True, timeout_seconds=DEFAULT_TIMEOUT):
     """
     API 오류를 처리하는 데코레이터
 
@@ -68,6 +67,7 @@ def handle_api_errors(
         reraise_on_critical: 치명적 오류 시 다시 발생시킬지 여부
         timeout_seconds: 타임아웃 시간 (초)
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -80,9 +80,7 @@ def handle_api_errors(
                 execution_time = time.time() - start_time
                 if execution_time > timeout_seconds:
                     if log_errors:
-                        logger.warning(
-                            f"{func.__name__} took {execution_time:.2f}s (timeout: {timeout_seconds}s)"
-                        )
+                        logger.warning(f"{func.__name__} took {execution_time:.2f}s (timeout: {timeout_seconds}s)")
 
                 return result
 
@@ -114,14 +112,13 @@ def handle_api_errors(
             except Exception as e:
                 execution_time = time.time() - start_time
                 if log_errors:
-                    logger.error(
-                        f"Unexpected error in {func.__name__} after {execution_time:.2f}s: {str(e)}"
-                    )
+                    logger.error(f"Unexpected error in {func.__name__} after {execution_time:.2f}s: {str(e)}")
                 if reraise_on_critical:
                     raise
                 return default_return
 
         return wrapper
+
     return decorator
 
 
@@ -129,7 +126,7 @@ def retry_on_failure(
     max_retries: int = DEFAULT_RETRY_COUNT,
     delay_seconds: float = 1.0,
     backoff_multiplier: float = 2.0,
-    exceptions: tuple = (NetworkException, APITimeoutException)
+    exceptions: tuple = (NetworkException, APITimeoutException),
 ):
     """
     실패 시 재시도하는 데코레이터
@@ -140,6 +137,7 @@ def retry_on_failure(
         backoff_multiplier: 지연 시간 증가 배수
         exceptions: 재시도할 예외 타입들
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -159,9 +157,7 @@ def retry_on_failure(
                         time.sleep(delay)
                         delay *= backoff_multiplier
                     else:
-                        logger.error(
-                            f"{func.__name__} failed after {max_retries + 1} attempts: {str(e)}"
-                        )
+                        logger.error(f"{func.__name__} failed after {max_retries + 1} attempts: {str(e)}")
                         raise
                 except Exception as e:
                     # Don't retry on unexpected exceptions
@@ -173,15 +169,12 @@ def retry_on_failure(
                 raise last_exception
 
         return wrapper
+
     return decorator
 
 
 # Flask error handlers
-def create_error_response(
-    error: Exception,
-    status_code: int = 500,
-    include_details: bool = False
-) -> tuple:
+def create_error_response(error: Exception, status_code: int = 500, include_details: bool = False) -> tuple:
     """
     표준화된 Flask 오류 응답 생성
 
@@ -201,13 +194,13 @@ def create_error_response(
         "error_type": error_type,
         "message": error_message,
         "timestamp": get_current_timestamp(),
-        "status_code": status_code
+        "status_code": status_code,
     }
 
     if include_details:
         response_data["details"] = {
-            "function": getattr(error, 'function_name', 'unknown'),
-            "module": getattr(error, 'module_name', 'unknown')
+            "function": getattr(error, "function_name", "unknown"),
+            "module": getattr(error, "module_name", "unknown"),
         }
 
     logger.error(f"API Error Response: {error_type} - {error_message}")
@@ -249,13 +242,7 @@ class ErrorContext:
     오류 처리 컨텍스트 매니저
     """
 
-    def __init__(
-        self,
-        operation_name: str,
-        default_return=None,
-        log_errors=True,
-        reraise=False
-    ):
+    def __init__(self, operation_name: str, default_return=None, log_errors=True, reraise=False):
         self.operation_name = operation_name
         self.default_return = default_return
         self.log_errors = log_errors
@@ -276,14 +263,13 @@ class ErrorContext:
 
         if self.log_errors:
             logger.error(
-                f"Error in {self.operation_name} after {execution_time:.2f}s: "
-                f"{exc_type.__name__}: {str(exc_val)}"
+                f"Error in {self.operation_name} after {execution_time:.2f}s: " f"{exc_type.__name__}: {str(exc_val)}"
             )
 
         if self.reraise:
             return False  # Re-raise the exception
         else:
-            return True   # Suppress the exception
+            return True  # Suppress the exception
 
 
 # Utility functions for common error scenarios
@@ -333,8 +319,8 @@ def parse_api_error(response_data: Dict[str, Any]) -> Exception:
     Returns:
         적절한 예외 인스턴스
     """
-    error_code = response_data.get('error_code', 0)
-    error_message = response_data.get('error_message', 'Unknown API error')
+    error_code = response_data.get("error_code", 0)
+    error_message = response_data.get("error_message", "Unknown API error")
 
     # FortiGate/FortiManager specific error codes
     if error_code == -3:

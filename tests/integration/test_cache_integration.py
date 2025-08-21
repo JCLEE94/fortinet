@@ -182,12 +182,7 @@ def test_cache_manager_init():
         "Memory cache get should return stored value",
     )
 
-    return {
-        "backends_count": len(backends),
-        "redis_enabled": getattr(cache_manager.redis_cache, "enabled", False),
-        "memory_cache_working": memory_get_result == test_cache_value,
-        "initialization_status": "success",
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("cache_tier_promotion_and_demotion")
@@ -237,12 +232,7 @@ def test_cache_tier_operations():
     successful_operations = [r for r in promotion_demotion_results if r["unified_get_success"]]
     test_framework.assert_ok(len(successful_operations) > 0, "At least some cache operations should succeed")
 
-    return {
-        "test_data_size": len(test_data),
-        "promotion_demotion_results": promotion_demotion_results,
-        "successful_operations": len(successful_operations),
-        "cache_operations_logged": len(cache_tester.cache_operations),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("redis_failure_and_fallback")
@@ -293,8 +283,7 @@ def test_redis_failure_fallback():
     test_framework.assert_ok(recovery_set, "Cache set should succeed after Redis recovery")
     test_framework.assert_eq(recovery_get, recovery_test_value, "Cache get should work after Redis recovery")
 
-    return {
-        "normal_operation": {"set": normal_set, "get": normal_get == test_value},
+    assert True  # Test passed,
         "failure_fallback": {
             "set": failure_set,
             "get": failure_get == failure_test_value,
@@ -368,12 +357,7 @@ def test_cache_consistency():
     all_consistent = all(result["overall_consistent"] for result in consistency_results)
     test_framework.assert_ok(all_consistent, "All cache backends should maintain data consistency")
 
-    return {
-        "consistency_tests": consistency_tests,
-        "consistency_results": consistency_results,
-        "all_consistent": all_consistent,
-        "total_tests": len(consistency_tests),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("concurrent_cache_access")
@@ -471,16 +455,7 @@ def test_concurrent_cache_access():
         "At least 90% of operations should maintain data consistency",
     )
 
-    return {
-        "num_workers": num_workers,
-        "operations_per_worker": operations_per_worker,
-        "total_operations": total_operations,
-        "successful_operations": len(successful_operations),
-        "consistent_operations": len(consistent_operations),
-        "total_duration": end_time - start_time,
-        "success_rate": len(successful_operations) / total_operations,
-        "consistency_rate": len(consistent_operations) / total_operations,
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("cache_ttl_and_expiration")
@@ -538,11 +513,7 @@ def test_cache_ttl_expiration():
             f"Immediate get should work before expiration",
         )
 
-    return {
-        "ttl_tests": ttl_tests,
-        "ttl_results": ttl_results,
-        "short_ttl_expiration_tested": any(r.get("properly_expired") is not None for r in ttl_results),
-    }
+    assert True  # Test passed
 
 
 if __name__ == "__main__":

@@ -4,12 +4,11 @@ Base API Client Unit Tests
 """
 
 import os
+import sys
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "src"))
 from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
 

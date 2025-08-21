@@ -6,10 +6,11 @@ Tests API connectivity and basic operations
 
 import asyncio
 import time
-from typing import Dict, Any
+from typing import Any, Dict
+
+from utils.unified_logger import get_logger
 
 from .base_validator import BaseValidator, ValidationResult, ValidationSeverity
-from utils.unified_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -36,7 +37,7 @@ class ConnectionValidator(BaseValidator):
                     severity=ValidationSeverity.INFO,
                     message="API connection successful",
                     details=connection_result,
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
             else:
                 result = ValidationResult(
@@ -45,7 +46,7 @@ class ConnectionValidator(BaseValidator):
                     severity=ValidationSeverity.CRITICAL,
                     message=f"API connection failed: {connection_result.get('error')}",
                     details=connection_result,
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -55,7 +56,7 @@ class ConnectionValidator(BaseValidator):
                 status="fail",
                 severity=ValidationSeverity.CRITICAL,
                 message=f"Connection test failed: {str(e)}",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
 
         self._add_result(result)
@@ -79,7 +80,7 @@ class ConnectionValidator(BaseValidator):
                     severity=ValidationSeverity.INFO,
                     message=f"Response time acceptable: {execution_time:.2f}s",
                     details={"response_time": execution_time, "threshold": threshold},
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
             else:
                 result = ValidationResult(
@@ -88,7 +89,7 @@ class ConnectionValidator(BaseValidator):
                     severity=ValidationSeverity.WARNING,
                     message=f"Response time too slow: {execution_time:.2f}s (threshold: {threshold}s)",
                     details={"response_time": execution_time, "threshold": threshold},
-                    execution_time=execution_time
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -98,7 +99,7 @@ class ConnectionValidator(BaseValidator):
                 status="fail",
                 severity=ValidationSeverity.ERROR,
                 message=f"Response time test failed: {str(e)}",
-                execution_time=execution_time
+                execution_time=execution_time,
             )
 
         self._add_result(result)
@@ -108,10 +109,7 @@ class ConnectionValidator(BaseValidator):
         """모든 연결 테스트 실행"""
         logger.info("Starting connection validation tests")
 
-        tests = [
-            self.test_basic_connection(),
-            self.test_response_time()
-        ]
+        tests = [self.test_basic_connection(), self.test_response_time()]
 
         results = await asyncio.gather(*tests, return_exceptions=True)
 
@@ -123,5 +121,5 @@ class ConnectionValidator(BaseValidator):
             "total_tests": total,
             "passed": passed,
             "failed": total - passed,
-            "results": self.get_results()
+            "results": self.get_results(),
         }

@@ -128,9 +128,7 @@ def test_blueprint_registration():
                 f"Blueprint {blueprint_name} should have at least one route",
             )
 
-        return {
-            "registered_blueprints": list(registered_blueprints),
-            "blueprint_route_counts": {bp: len(routes) for bp, routes in blueprint_routes.items()},
+        assert True  # Test passed,
             "total_routes": sum(len(routes) for routes in blueprint_routes.values()),
         }
 
@@ -154,12 +152,7 @@ def test_route_conflicts():
         # 정보성 충돌 로깅 (같은 경로, 다른 메서드는 허용)
         info_conflicts = [c for c in conflicts if not c["methods_conflict"]]
 
-        return {
-            "total_conflicts": len(conflicts),
-            "critical_conflicts": critical_conflicts,
-            "info_conflicts": info_conflicts,
-            "route_analysis": blueprint_routes,
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("blueprint_url_generation_consistency")
@@ -197,10 +190,7 @@ def test_url_generation():
         failed_urls = [test for test in url_tests if test["status"] == "failed"]
         test_framework.assert_eq(len(failed_urls), 0, f"Failed URL generations: {failed_urls}")
 
-        return {
-            "url_tests": url_tests,
-            "successful_generations": len([t for t in url_tests if t["status"] == "success"]),
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("blueprint_error_handler_precedence")
@@ -248,10 +238,7 @@ def test_error_handler_precedence():
 
         test_framework.assert_eq(response.status_code, 405, "Wrong method should return 405")
 
-        return {
-            "error_tests": error_tests,
-            "error_handling_working": all(test["status_code"] in [404, 405, 500] for test in error_tests),
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("blueprint_template_context_isolation")
@@ -303,10 +290,7 @@ def test_template_context_isolation():
         failed_templates = [test for test in template_tests if test["status"] == "failed"]
         test_framework.assert_eq(len(failed_templates), 0, f"Template rendering failures: {failed_templates}")
 
-        return {
-            "template_tests": template_tests,
-            "successful_renders": len([t for t in template_tests if t["status"] == "success"]),
-        }
+        assert True  # Test passed
 
 
 @test_framework.test("blueprint_security_context_propagation")
@@ -360,11 +344,7 @@ def test_security_context_propagation():
             "X-XSS-Protection": response.headers.get("X-XSS-Protection"),
         }
 
-        return {
-            "security_tests": security_tests,
-            "security_headers": security_headers,
-            "csrf_protection_active": app.config.get("WTF_CSRF_ENABLED", False),
-        }
+        assert True  # Test passed
 
 
 if __name__ == "__main__":

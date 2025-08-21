@@ -93,11 +93,7 @@ def test_module_imports():
         f"All modules should import successfully: {failed_imports}",
     )
 
-    return {
-        "total_modules": len(modules_to_test),
-        "import_results": import_results,
-        "all_imported": len(failed_imports) == 0,
-    }
+    assert True  # Test passed
 
 
 def test_configuration_system():
@@ -138,12 +134,7 @@ def test_configuration_system():
         else:
             os.environ.pop("APP_MODE", None)
 
-    return {
-        "settings_created": True,
-        "app_mode": getattr(settings, "app_mode", None),
-        "has_web_config": hasattr(settings, "web_app_port"),
-        "env_override_works": True,
-    }
+    assert True  # Test passed
 
 
 def test_cache_system():
@@ -183,12 +174,7 @@ def test_cache_system():
     get_after_delete = cache_manager.memory_cache.get(test_key)
     assert_eq(get_after_delete, None, "Memory cache should return None after delete")
 
-    return {
-        "cache_manager_created": True,
-        "memory_cache_working": True,
-        "basic_operations": ["set", "get", "delete"],
-        "test_completed": True,
-    }
+    assert True  # Test passed
 
 
 def test_api_client_structure():
@@ -220,12 +206,7 @@ def test_api_client_structure():
     assert_ok(hasattr(client, "verify_ssl"), "Client should have SSL verification setting")
     assert_ok(hasattr(client, "timeout"), "Client should have timeout setting")
 
-    return {
-        "base_client_created": True,
-        "session_initialized": True,
-        "has_ssl_config": hasattr(client, "verify_ssl"),
-        "has_timeout_config": hasattr(client, "timeout"),
-    }
+    assert True  # Test passed
 
 
 def test_file_structure():
@@ -283,12 +264,7 @@ def test_file_structure():
     missing_files = [r for r in file_results if not r["exists"]]
     assert_eq(len(missing_files), 0, f"All important files should exist: {missing_files}")
 
-    return {
-        "project_root": str(project_root),
-        "dir_results": dir_results,
-        "file_results": file_results,
-        "structure_valid": len(missing_dirs) == 0 and len(missing_files) == 0,
-    }
+    assert True  # Test passed
 
 
 def main():

@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 
 class ValidationSeverity(Enum):
     """검증 결과 심각도"""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -25,6 +26,7 @@ class ValidationSeverity(Enum):
 @dataclass
 class ValidationResult:
     """검증 결과 데이터 클래스"""
+
     test_name: str
     status: str  # "pass", "fail", "skip"
     severity: ValidationSeverity
@@ -55,7 +57,7 @@ class BaseValidator:
             "message": result.message,
             "details": result.details,
             "execution_time": result.execution_time,
-            "timestamp": result.timestamp.isoformat()
+            "timestamp": result.timestamp.isoformat(),
         }
 
     def get_results(self) -> List[Dict[str, Any]]:

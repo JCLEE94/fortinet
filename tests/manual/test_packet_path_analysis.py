@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 # Mock fortigate is now integrated into device_manager
 try:
     from device_manager import DeviceManager
+
     # Create a mock instance for testing
     mock_fortigate = DeviceManager()
 except ImportError:
@@ -21,8 +22,8 @@ except ImportError:
     class MockFortiGate:
         def analyze_packet_path(self, src_ip, dst_ip, port, protocol):
             return {
-                "status": "success", 
-                "path": [{"rule": f"Allow {protocol.upper()}", "action": "permit"}], 
+                "status": "success",
+                "path": [{"rule": f"Allow {protocol.upper()}", "action": "permit"}],
                 "verdict": "ALLOW",
                 "analysis": {
                     "traffic_flow": f"{src_ip} -> {dst_ip}:{port}",
@@ -32,11 +33,12 @@ except ImportError:
                     "path": [
                         {"step": "Interface Check", "action": "Accept", "status": "success"},
                         {"step": "Policy Evaluation", "action": f"Allow {protocol.upper()}", "status": "success"},
-                        {"step": "Route Decision", "action": "Forward", "status": "success"}
+                        {"step": "Route Decision", "action": "Forward", "status": "success"},
                     ],
-                    "matching_rules": [f"Rule: Allow {protocol.upper()} traffic"]
-                }
+                    "matching_rules": [f"Rule: Allow {protocol.upper()} traffic"],
+                },
             }
+
     mock_fortigate = MockFortiGate()
 
 

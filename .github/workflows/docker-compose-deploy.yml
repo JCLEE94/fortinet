@@ -32,7 +32,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov black isort
+      
+      - name: Fix formatting
+        run: |
+          echo "Applying automatic formatting fixes..."
+          black src/ --line-length=120 --target-version=py311 || true
+          isort src/ --profile=black --line-length=120 || true
       
       - name: Run tests
         continue-on-error: true

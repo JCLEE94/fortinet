@@ -7,7 +7,7 @@ import json
 import sys
 import time
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import requests
 
@@ -94,7 +94,7 @@ class EndpointTester:
                     try:
                         result["response_data"] = response.json()
                         result["response_type"] = "json"
-                    except:
+                    except Exception:
                         result["response_type"] = "invalid_json"
                         result["error"] = "Invalid JSON response"
                 elif "text/html" in content_type:
@@ -108,7 +108,7 @@ class EndpointTester:
                 result["error"] = f"HTTP {response.status_code}"
                 try:
                     result["error_detail"] = response.json()
-                except:
+                except Exception:
                     result["error_detail"] = response.text[:500]
 
         except requests.exceptions.Timeout:

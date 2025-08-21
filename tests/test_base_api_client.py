@@ -96,12 +96,10 @@ class TestBaseAPIClient(unittest.TestCase):
         """Test that client properly inherits from mixins"""
         # BaseApiClient has test_connection method but doesn't inherit from ConnectionTestMixin
         # Test that it has the necessary method instead
-        self.assertTrue(hasattr(self.client, 'test_connection'), 
-                       "BaseApiClient should have test_connection method")
-        
+        self.assertTrue(hasattr(self.client, "test_connection"), "BaseApiClient should have test_connection method")
+
         # Test that it's callable
-        self.assertTrue(callable(getattr(self.client, 'test_connection')), 
-                       "test_connection should be callable")
+        self.assertTrue(callable(getattr(self.client, "test_connection")), "test_connection should be callable")
 
 
 if __name__ == "__main__":

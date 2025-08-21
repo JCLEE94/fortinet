@@ -13,19 +13,17 @@ FortiGate, FortiManager, FortiAnalyzer API 클라이언트의 통합을 검증�
 - 동시성 처리
 """
 
-import json
 import os
 import sys
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src"))
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
-from api.clients.base_api_client import BaseApiClient as BaseAPIClient
 from api.clients.faz_client import FAZClient as FortiAnalyzerClient
 from api.clients.fortigate_api_client import FortiGateAPIClient
 from api.clients.fortimanager_api_client import FortiManagerAPIClient

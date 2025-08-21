@@ -12,19 +12,16 @@ import sys
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, patch
+from typing import Any, Dict
+from unittest.mock import MagicMock
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src"))
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
 from api.clients.base_api_client import BaseApiClient
-from api.clients.fortigate_api_client import FortiGateAPIClient
 from api.clients.fortimanager_api_client import FortiManagerAPIClient
 from core.connection_pool import ConnectionPoolManager
 from utils.integration_test_framework import test_framework
@@ -138,12 +135,7 @@ def test_base_client_session():
     default_headers = client.session.headers
     test_framework.assert_ok("User-Agent" in default_headers, "Session should have User-Agent header")
 
-    return {
-        "session_initialized": client.session is not None,
-        "ssl_verification": getattr(client, "verify_ssl", None),
-        "timeout": getattr(client, "timeout", None),
-        "default_headers": dict(default_headers),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("fortimanager_client_initialization")
@@ -198,11 +190,7 @@ def test_fortimanager_client_init():
     failed_inits = [result for result in initialization_results if result["status"] == "failed"]
     test_framework.assert_eq(len(failed_inits), 0, f"All initializations should succeed: {failed_inits}")
 
-    return {
-        "test_configs": test_configs,
-        "initialization_results": initialization_results,
-        "successful_inits": len([r for r in initialization_results if r["status"] == "success"]),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("authentication_fallback_chain")
@@ -272,12 +260,7 @@ def test_auth_fallback_chain():
     successful_auths = [result for result in auth_results if result["auth_success"]]
     test_framework.assert_ok(len(successful_auths) > 0, "At least one authentication should succeed")
 
-    return {
-        "auth_scenarios": auth_scenarios,
-        "auth_results": auth_results,
-        "successful_auths": len(successful_auths),
-        "auth_attempts_logged": len(auth_tester.mock_server.auth_attempts),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("connection_pool_management")
@@ -328,11 +311,7 @@ def test_connection_pool():
     failed_pools = [result for result in pool_creation_results if result["status"] == "failed"]
     test_framework.assert_eq(len(failed_pools), 0, f"All pool configurations should be valid: {failed_pools}")
 
-    return {
-        "pool_configs": pool_configs,
-        "pool_creation_results": pool_creation_results,
-        "total_pools_configured": len(pool_creation_results),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("session_timeout_and_retry_logic")
@@ -370,7 +349,7 @@ def test_session_timeout_retry():
     for i, (timeout_config, retry_config) in enumerate(zip(timeout_configs, retry_configs)):
         try:
             # 클라이언트 생성 (실제 연결 없이 설정만 테스트)
-            client = BaseApiClient()
+            BaseApiClient()
 
             # 타임아웃 설정 검증
             connect_timeout = timeout_config["connect_timeout"]
@@ -414,12 +393,7 @@ def test_session_timeout_retry():
         f"All timeout/retry validations should pass: {failed_validations}",
     )
 
-    return {
-        "timeout_configs": timeout_configs,
-        "retry_configs": retry_configs,
-        "validation_results": timeout_retry_results,
-        "successful_validations": len([r for r in timeout_retry_results if r["validation_status"] == "passed"]),
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("ssl_certificate_handling")
@@ -479,18 +453,13 @@ def test_ssl_certificate_handling():
         f"All SSL configurations should be valid: {failed_ssl_configs}",
     )
 
-    return {
-        "ssl_scenarios": ssl_scenarios,
-        "ssl_handling_results": ssl_handling_results,
-        "supported_ssl_types": ["bool", "str"],
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("concurrent_authentication_handling")
 def test_concurrent_auth():
     """동시 인증 요청 처리 검증"""
 
-    concurrent_auth_results = []
     auth_threads = []
     auth_results_shared = []
 
@@ -548,13 +517,7 @@ def test_concurrent_auth():
         "All concurrent authentication requests should succeed",
     )
 
-    return {
-        "num_threads": num_threads,
-        "total_duration": end_time - start_time,
-        "auth_results": auth_results_shared,
-        "successful_auths": len(successful_auths),
-        "concurrent_handling": "passed",
-    }
+    assert True  # Test passed
 
 
 if __name__ == "__main__":

@@ -95,9 +95,10 @@ def test_api_key():
 
 def test_packet_path_analysis():
     """패킷 경로 분석 기능 테스트"""
-    
+
     # Skip in test mode since this requires external API access
     import os
+
     if os.getenv("APP_MODE", "").lower() == "test":
         print("⏭️  Test mode detected - skipping external API test")
         return

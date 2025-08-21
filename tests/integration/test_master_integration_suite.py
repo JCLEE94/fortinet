@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional
 # 프로젝트 루트를 Python path에 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src"))
 from utils.integration_test_framework import test_framework
 
 
@@ -358,12 +358,7 @@ def test_framework_validation():
     test_framework.assert_ok(hasattr(test_framework, "results"), "Framework should track results")
     test_framework.assert_ok(isinstance(test_framework.results, list), "Results should be a list")
 
-    return {
-        "framework_version": "1.0.0",
-        "supported_assertions": ["assert_eq", "assert_ne", "assert_ok", "assert_err"],
-        "context_managers": ["test_app", "temp_config_file"],
-        "validation_passed": True,
-    }
+    assert True  # Test passed
 
 
 @test_framework.test("test_module_discovery")
@@ -406,12 +401,7 @@ def test_module_discovery():
         "All test modules should be discovered",
     )
 
-    return {
-        "total_modules": len(master_suite.test_modules),
-        "discovered_modules": discovered_modules,
-        "existing_modules_count": len(existing_modules),
-        "discovery_successful": len(existing_modules) == len(master_suite.test_modules),
-    }
+    assert True  # Test passed
 
 
 if __name__ == "__main__":

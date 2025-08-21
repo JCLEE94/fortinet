@@ -28,7 +28,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "src"))
 from analysis.analyzer import FirewallRuleAnalyzer as PacketAnalyzer
 from analysis.components.path_tracer import PathTracer
 from analysis.components.policy_analyzer import PolicyAnalyzer

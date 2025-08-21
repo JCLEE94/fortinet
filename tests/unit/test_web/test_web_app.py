@@ -4,12 +4,11 @@ Web Application Unit Tests
 """
 
 import os
+import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "src"))
 from web_app import create_app
 
 

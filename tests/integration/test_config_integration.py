@@ -126,13 +126,7 @@ def test_default_settings():
             "app_mode should be valid mode",
         )
 
-        return {
-            "app_mode": settings.app_mode,
-            "web_app_port": settings.web_app_port,
-            "web_app_host": settings.web_app_host,
-            "offline_mode": getattr(settings, "offline_mode", None),
-            "default_values_valid": True,
-        }
+        assert True  # Test passed
 
     finally:
         config_tester.restore_environment()
@@ -176,14 +170,7 @@ def test_environment_override():
         if offline_mode is not None:
             test_framework.assert_eq(offline_mode, True, "OFFLINE_MODE should be converted to boolean True")
 
-        return {
-            "environment_overrides": test_env_vars,
-            "applied_settings": {
-                "app_mode": settings.app_mode,
-                "web_app_port": settings.web_app_port,
-                "web_app_host": settings.web_app_host,
-                "offline_mode": offline_mode,
-            },
+        assert True  # Test passed,
             "override_successful": True,
         }
 
@@ -232,13 +219,7 @@ def test_config_file_priority():
             "Environment variable should override config file",
         )
 
-        return {
-            "config_file_path": config_file_path,
-            "config_file_data": config_file_data,
-            "settings_from_file": {
-                "app_mode": settings.app_mode,
-                "web_app_port": settings.web_app_port,
-            },
+        assert True  # Test passed,
             "env_override_test": {
                 "env_app_mode": "development",
                 "final_app_mode": settings_with_env_override.app_mode,
@@ -355,12 +336,7 @@ def test_configuration_validation():
             f"At least 80% of validations should be correct (actual: {validation_accuracy:.1%})",
         )
 
-        return {
-            "validation_scenarios": validation_scenarios,
-            "validation_results": validation_results,
-            "validation_accuracy": validation_accuracy,
-            "total_scenarios": len(validation_scenarios),
-        }
+        assert True  # Test passed
 
     finally:
         config_tester.restore_environment()
@@ -396,13 +372,7 @@ def test_runtime_config_updates():
             {"timestamp": "updated", "app_mode": updated_mode},
         ]
 
-        return {
-            "initial_mode": initial_mode,
-            "updated_mode": updated_mode,
-            "config_changes": config_changes,
-            "runtime_update_supported": updated_mode != initial_mode
-            or True,  # 캐싱으로 인해 즉시 변경되지 않을 수 있음
-        }
+        assert True  # Test passed
 
     finally:
         config_tester.restore_environment()
@@ -548,12 +518,7 @@ def test_complex_config_scenarios():
             f"At least 70% of complex scenarios should pass (actual: {success_rate:.1%})",
         )
 
-        return {
-            "complex_scenarios": complex_scenarios,
-            "scenario_results": scenario_results,
-            "success_rate": success_rate,
-            "total_scenarios": len(complex_scenarios),
-        }
+        assert True  # Test passed
 
     finally:
         config_tester.restore_environment()

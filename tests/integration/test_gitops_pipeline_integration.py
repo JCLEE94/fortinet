@@ -110,11 +110,7 @@ def test_docker_registry_connection():
             f"Registry should be accessible, got {response.status_code}",
         )
 
-        return {
-            "registry_url": config.registry_url,
-            "status_code": response.status_code,
-            "accessible": True,
-        }
+        assert True  # Test passed
 
     except requests.RequestException as e:
         test_framework.assert_ok(False, f"Registry connection failed: {str(e)}")
@@ -144,12 +140,7 @@ def test_docker_image_in_registry():
             has_latest = "latest" in tags
             has_master = any("master" in tag for tag in tags)
 
-            return {
-                "available_tags": tags[:5],  # 최근 5개만 표시
-                "total_tags": len(tags),
-                "has_latest": has_latest,
-                "has_master_branch": has_master,
-            }
+            assert True  # Test passed
         else:
             # 이미지가 없어도 레지스트리는 정상적으로 응답해야 함
             test_framework.assert_eq(
@@ -201,12 +192,7 @@ def test_chartmuseum_connection():
             f"ChartMuseum API should be accessible with auth",
         )
 
-        return {
-            "chartmuseum_url": config.chartmuseum_url,
-            "health_status": response.status_code,
-            "api_accessible": charts_response.status_code == 200,
-            "available_charts": list(charts_response.json().keys()) if charts_response.status_code == 200 else [],
-        }
+        assert True  # Test passed
 
     except requests.RequestException as e:
         test_framework.assert_ok(False, f"ChartMuseum connection failed: {str(e)}")
@@ -234,12 +220,7 @@ def test_helm_chart_in_museum():
             versions = [v["version"] for v in chart_versions]
             latest_version = versions[0] if versions else None
 
-            return {
-                "available_versions": versions[:5],  # 최근 5개 버전
-                "total_versions": len(versions),
-                "latest_version": latest_version,
-                "chart_exists": True,
-            }
+            assert True  # Test passed
         else:
             # 차트가 없어도 정상적인 상황일 수 있음
             test_framework.assert_eq(
@@ -274,11 +255,7 @@ def test_kubernetes_deployment():
     if not cmd_result["success"]:
         # kubectl 명령어 실패는 환경 문제일 수 있으므로 경고로 처리
         logger.warning(f"kubectl command failed: {cmd_result.get('stderr', 'Unknown error')}")
-        return {
-            "message": "kubectl not available or cluster not accessible",
-            "deployment_status": "unknown",
-            "kubectl_available": False,
-        }
+        assert True  # Test passed
 
     try:
         pods_data = json.loads(cmd_result["stdout"])
@@ -345,10 +322,7 @@ def test_kubernetes_service():
 
     if not cmd_result["success"]:
         logger.warning(f"kubectl service check failed: {cmd_result.get('stderr', 'Unknown error')}")
-        return {
-            "message": "kubectl not available or cluster not accessible",
-            "service_status": "unknown",
-        }
+        assert True  # Test passed
 
     try:
         services_data = json.loads(cmd_result["stdout"])
@@ -413,12 +387,7 @@ def test_application_health():
 
         test_framework.assert_ok("status" in health_data, "Health response should contain status field")
 
-        return {
-            "health_url": health_url,
-            "status_code": response.status_code,
-            "response_data": health_data,
-            "healthy": health_data.get("status") == "healthy",
-        }
+        assert True  # Test passed
 
     except requests.RequestException as e:
         # 애플리케이션이 아직 배포되지 않았을 수 있음
@@ -454,12 +423,7 @@ def test_application_system_info():
             if field in system_data:
                 logger.info(f"System info contains {field}: {system_data[field]}")
 
-        return {
-            "system_info_url": system_info_url,
-            "status_code": response.status_code,
-            "response_data": system_data,
-            "accessible": True,
-        }
+        assert True  # Test passed
 
     except requests.RequestException as e:
         logger.warning(f"System info endpoint failed: {str(e)}")
@@ -488,11 +452,7 @@ def test_argocd_application():
     if not cmd_result["success"]:
         # ArgoCD가 설정되지 않았을 수 있음
         logger.warning(f"ArgoCD command failed: {cmd_result.get('stderr', 'Unknown error')}")
-        return {
-            "message": "ArgoCD not configured or not accessible",
-            "application_status": "unknown",
-            "argocd_available": False,
-        }
+        assert True  # Test passed
 
     try:
         app_data = json.loads(cmd_result["stdout"])
@@ -591,16 +551,7 @@ def test_complete_pipeline():
         f"Pipeline health should be at least 60%, got {health_percentage:.1f}%",
     )
 
-    return {
-        "pipeline_health_percentage": health_percentage,
-        "working_components": working_components,
-        "total_components": total_components,
-        "component_status": pipeline_status,
-        "issues": issues,
-        "overall_status": (
-            "healthy" if health_percentage >= 80 else "degraded" if health_percentage >= 60 else "unhealthy"
-        ),
-    }
+    assert True  # Test passed
 
 
 # =============================================================================

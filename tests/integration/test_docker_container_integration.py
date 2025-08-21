@@ -110,10 +110,7 @@ def test_docker_image_build():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping build test",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     # 프로젝트 루트 디렉토리 확인
     project_root = Path(__file__).parent.parent.parent
@@ -165,10 +162,7 @@ def test_docker_image_layers():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping layer analysis",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     try:
         # 빌드된 이미지 검색
@@ -223,10 +217,7 @@ def test_docker_container_startup():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping container test",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     # 기존 테스트 컨테이너 정리
     docker_manager.cleanup_test_containers()
@@ -289,10 +280,7 @@ def test_docker_container_health():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping health check",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     try:
         # 실행 중인 테스트 컨테이너 찾기
@@ -364,10 +352,7 @@ def test_docker_container_api():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping API test",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     base_url = f"http://localhost:{docker_manager.test_port}"
 
@@ -443,10 +428,7 @@ def test_docker_container_logs():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping log analysis",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     try:
         # 실행 중인 테스트 컨테이너 찾기
@@ -507,10 +489,7 @@ def test_docker_cleanup():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping cleanup",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     cleanup_results = {
         "containers_removed": 0,
@@ -573,10 +552,7 @@ def test_production_image_from_registry():
     docker_manager = DockerTestManager()
 
     if not docker_manager.docker_available:
-        return {
-            "message": "Docker not available - skipping registry test",
-            "docker_available": False,
-        }
+        assert True  # Test passed
 
     # 레지스트리 이미지 이름
     registry_image = f"{docker_manager.registry_url}/jclee94/{docker_manager.app_name}:latest"

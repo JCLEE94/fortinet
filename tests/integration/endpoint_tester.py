@@ -75,7 +75,7 @@ class EndpointTester:
                     json_data = response.json()
                     result["json_valid"] = True
                     result["json_keys"] = list(json_data.keys()) if isinstance(json_data, dict) else None
-                except:
+                except Exception:
                     result["json_valid"] = False
             else:
                 result["json_valid"] = None
@@ -178,7 +178,7 @@ class EndpointTester:
 
         # 요약 통계
         success_rate = (self.success_count / self.total_count * 100) if self.total_count > 0 else 0
-        print(f"\n📈 전체 통계:")
+        print("\n📈 전체 통계:")
         print(f"   총 테스트: {self.total_count}")
         print(f"   성공: {self.success_count}")
         print(f"   실패: {self.total_count - self.success_count}")
@@ -214,7 +214,7 @@ class EndpointTester:
             avg_time = sum(response_times) / len(response_times)
             max_time = max(response_times)
             min_time = min(response_times)
-            print(f"\n⏱️ 응답 시간 분석:")
+            print("\n⏱️ 응답 시간 분석:")
             print(f"   평균: {avg_time:.1f}ms")
             print(f"   최대: {max_time:.1f}ms")
             print(f"   최소: {min_time:.1f}ms")
@@ -223,7 +223,7 @@ class EndpointTester:
         json_apis = [r for r in self.results if r["json_valid"] is not None]
         json_valid = [r for r in json_apis if r["json_valid"]]
         if json_apis:
-            print(f"\n📋 JSON API 분석:")
+            print("\n📋 JSON API 분석:")
             print(f"   JSON 응답 엔드포인트: {len(json_apis)}개")
             print(f"   유효한 JSON: {len(json_valid)}개")
             print(f"   무효한 JSON: {len(json_apis) - len(json_valid)}개")
@@ -236,13 +236,13 @@ class EndpointTester:
                 content_types[ct] = content_types.get(ct, 0) + 1
 
         if content_types:
-            print(f"\n📄 Content-Type 분석:")
+            print("\n📄 Content-Type 분석:")
             for ct, count in sorted(content_types.items()):
                 print(f"   {ct}: {count}개")
 
         # 문제 해결 방안
         if failed:
-            print(f"\n🔧 문제 해결 방안:")
+            print("\n🔧 문제 해결 방안:")
             for result in failed:
                 if result["error"]:
                     if "timeout" in result["error"].lower():
@@ -263,7 +263,7 @@ class EndpointTester:
         # 상세 결과를 JSON 파일로 저장
         with open("endpoint_test_results.json", "w", encoding="utf-8") as f:
             json.dump(self.results, f, ensure_ascii=False, indent=2)
-        print(f"📁 상세 결과가 'endpoint_test_results.json'에 저장되었습니다.")
+        print("📁 상세 결과가 'endpoint_test_results.json'에 저장되었습니다.")
 
 
 def main():
@@ -272,7 +272,7 @@ def main():
 
     # 서버 연결 확인
     try:
-        response = tester.session.get(tester.base_url, timeout=5)
+        tester.session.get(tester.base_url, timeout=5)
         print(f"✅ 서버 연결 확인: {tester.base_url}")
     except Exception as e:
         print(f"❌ 서버 연결 실패: {tester.base_url}")
