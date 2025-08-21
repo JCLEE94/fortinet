@@ -159,7 +159,7 @@ class DuplicateCodeDetector:
                     lines = f.readlines()
 
                 # Check for duplicate blocks
-                for i in range(len(lines) - self.min_lines):
+                for i in range(len(lines) - self.min_lines + 1):
                     block = "".join(lines[i : i + self.min_lines])
                     normalized = self._normalize_code(block)
 

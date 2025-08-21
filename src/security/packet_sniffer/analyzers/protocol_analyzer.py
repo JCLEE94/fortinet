@@ -41,6 +41,13 @@ class BaseProtocolAnalyzer:
     def __init__(self, name: str):
         self.name = name
         self.logger = get_logger(f"analyzer_{name}", "advanced")
+        # 통계 추적
+        self.stats = {
+            "total_analyzed": 0,
+            "successful_analysis": 0,
+            "failed_analysis": 0,
+            "protocols_detected": {},
+        }
 
     def can_analyze(self, packet: PacketInfo) -> bool:
         """
@@ -90,6 +97,9 @@ class BaseProtocolAnalyzer:
             분석 결과 또는 None
         """
         try:
+            # 통계 업데이트
+            self.stats["total_analyzed"] += 1
+
             # 기본 정보 추출
             basic_info = {
                 "packet_size": len(packet.payload) if packet.payload else 0,
@@ -116,10 +126,21 @@ class BaseProtocolAnalyzer:
                 anomalies=[],
             )
 
+            # 성공 통계 업데이트
+            self.stats["successful_analysis"] += 1
+
+            # 프로토콜별 통계 업데이트
+            if protocol not in self.stats["protocols_detected"]:
+                self.stats["protocols_detected"][protocol] = 0
+            self.stats["protocols_detected"][protocol] += 1
+
             return result
 
         except Exception as e:
             self.logger.error(f"패킷 분석 실패: {e}")
+
+            # 실패 통계 업데이트
+            self.stats["failed_analysis"] += 1
 
             # 오류 발생시에도 기본 정보라도 반환
             return ProtocolAnalysisResult(
@@ -160,7 +181,41 @@ class BaseProtocolAnalyzer:
 
     def get_confidence_score(self, packet: PacketInfo) -> float:
         """신뢰도 점수 계산"""
-        return 0.0
+        confidence = 0.0
+
+        try:
+            # 포트 기반 신뢰도 계산
+            if hasattr(packet, "dst_port") and packet.dst_port:
+                known_ports = {21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995}
+                if packet.dst_port in known_ports:
+                    confidence += 0.3
+
+            # 프로토콜 기반 신뢰도 계산
+            if hasattr(packet, "protocol") and packet.protocol:
+                if packet.protocol.lower() in ["tcp", "udp"]:
+                    confidence += 0.2
+
+            # 페이로드 기반 신뢰도 계산
+            if packet.payload:
+                if len(packet.payload) >= 4:  # 최소 크기
+                    confidence += 0.1
+
+                # HTTP 패턴 감지
+                try:
+                    payload_str = packet.payload[:100].decode("utf-8", errors="ignore")
+                    if any(method in payload_str for method in ["GET ", "POST ", "HTTP/"]):
+                        confidence += 0.4
+                except (UnicodeDecodeError, AttributeError):
+                    pass
+
+            return min(confidence, 1.0)
+
+        except Exception:
+            return 0.0
+
+    def get_analysis_statistics(self) -> Dict[str, Any]:
+        """분석 통계 반환"""
+        return self.stats.copy()
 
 
 class ProtocolAnalyzer:
