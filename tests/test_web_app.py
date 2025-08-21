@@ -103,11 +103,8 @@ class TestWebApp(unittest.TestCase):
         self.assertEqual(os.environ.get("APP_MODE"), "test")
         self.assertEqual(os.environ.get("TESTING"), "true")
 
-    @patch("web_app.Blueprint")
-    def test_blueprint_creation(self, mock_blueprint):
+    def test_blueprint_creation(self):
         """Test that blueprints can be created"""
-        mock_blueprint.return_value = Mock()
-
         try:
             # Test blueprint creation pattern
             from flask import Blueprint
