@@ -6,13 +6,13 @@ Tests all major features and reports their status
 
 import os
 import sys
-from typing import Dict, List
+from typing import List
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 
 
-def create_test_result(name: str, success: bool, details: str = "") -> Dict:
+def create_test_result(name: str, success: bool, details: str = "") -> dict:
     """Create standardized test result"""
     return {
         "name": name,
@@ -22,34 +22,31 @@ def create_test_result(name: str, success: bool, details: str = "") -> Dict:
     }
 
 
-def test_basic_imports() -> Dict:
+def test_basic_imports():
     """Test basic imports and dependencies"""
     try:
         pass
-
-        return create_test_result("Basic Imports", True, "All core modules imported successfully")
+        # If we reach here without exception, all imports are successful
+        assert True, "Basic Imports: All core modules imported successfully"
     except Exception as e:
-        return create_test_result("Basic Imports", False, f"Import error: {str(e)}")
+        assert False, f"Basic Imports Import error: {str(e)}"
 
 
-def test_flask_app_creation() -> Dict:
+def test_flask_app_creation():
     """Test Flask application creation"""
     try:
         from web_app import create_app
 
         app = create_app()
         if app:
-            return create_test_result(
-                "Flask App Creation",
-                True,
-                f"App created with {len(app.blueprints)} blueprints",
-            )
-        return create_test_result("Flask App Creation", False, "App creation returned None")
+            assert True, f"Flask App Creation: App created with {len(app.blueprints)} blueprints"
+        else:
+            assert False, "Flask App Creation: App creation returned None"
     except Exception as e:
-        return create_test_result("Flask App Creation", False, f"Error: {str(e)}")
+        assert False, f"Flask App Creation Error: {str(e)}"
 
 
-def test_api_clients() -> Dict:
+def test_api_clients():
     """Test API client initialization"""
     try:
         from api.clients.faz_client import FAZClient
@@ -61,16 +58,12 @@ def test_api_clients() -> Dict:
         FortiManagerAPIClient(host="127.0.0.1", username="test", password="test")
         FAZClient(host="127.0.0.1", username="test", password="test")
 
-        return create_test_result(
-            "API Clients",
-            True,
-            "FortiGate, FortiManager, and FortiAnalyzer clients initialized",
-        )
+        assert True, "API Clients: FortiGate, FortiManager, and FortiAnalyzer clients initialized"
     except Exception as e:
-        return create_test_result("API Clients", False, f"Error: {str(e)}")
+        assert False, f"API Clients Error: {str(e)}"
 
 
-def test_fortimanager_advanced_hub() -> Dict:
+def test_fortimanager_advanced_hub():
     """Test FortiManager Advanced Hub"""
     try:
         from fortimanager.advanced_hub import FortiManagerAdvancedHub
@@ -86,19 +79,15 @@ def test_fortimanager_advanced_hub() -> Dict:
         ]
         for module in modules:
             if not hasattr(hub, module):
-                return create_test_result("FortiManager Advanced Hub", False, f"Missing module: {module}")
+                assert False, f"FortiManager Advanced Hub: Missing module: {module}"
 
         capabilities = hub.get_module_capabilities()
-        return create_test_result(
-            "FortiManager Advanced Hub",
-            True,
-            f"Hub initialized with {len(capabilities)} modules",
-        )
+        assert True, f"FortiManager Advanced Hub: Hub initialized with {len(capabilities)} modules"
     except Exception as e:
-        return create_test_result("FortiManager Advanced Hub", False, f"Error: {str(e)}")
+        assert False, f"FortiManager Advanced Hub Error: {str(e)}"
 
 
-def test_itsm_automation() -> Dict:
+def test_itsm_automation():
     """Test ITSM automation engine"""
     try:
         from itsm.automation_service import get_automation_service
@@ -111,16 +100,12 @@ def test_itsm_automation() -> Dict:
         zones = len(engine.network_zones)
         devices = len(engine.firewall_devices)
 
-        return create_test_result(
-            "ITSM Automation",
-            True,
-            f"Engine initialized with {zones} zones and {devices} devices",
-        )
+        assert True, f"ITSM Automation: Engine initialized with {zones} zones and {devices} devices"
     except Exception as e:
-        return create_test_result("ITSM Automation", False, f"Error: {str(e)}")
+        assert False, f"ITSM Automation Error: {str(e)}"
 
 
-def test_monitoring_system() -> Dict:
+def test_monitoring_system():
     """Test monitoring and alerting system"""
     try:
         from monitoring.manager import get_unified_manager
@@ -131,16 +116,12 @@ def test_monitoring_system() -> Dict:
         get_monitor()
         RealtimeAlertSystem()
 
-        return create_test_result(
-            "Monitoring System",
-            True,
-            "Unified manager, real-time monitor, and alert system initialized",
-        )
+        assert True, "Monitoring System: Unified manager, real-time monitor, and alert system initialized"
     except Exception as e:
-        return create_test_result("Monitoring System", False, f"Error: {str(e)}")
+        assert False, f"Monitoring System Error: {str(e)}"
 
 
-def test_security_features() -> Dict:
+def test_security_features():
     """Test security and packet analysis features"""
     try:
         from security.packet_sniffer_api import get_packet_sniffer_api
@@ -149,16 +130,12 @@ def test_security_features() -> Dict:
         get_security_scanner()
         get_packet_sniffer_api()
 
-        return create_test_result(
-            "Security Features",
-            True,
-            "Security scanner and packet sniffer API initialized",
-        )
+        assert True, "Security Features: Security scanner and packet sniffer API initialized"
     except Exception as e:
-        return create_test_result("Security Features", False, f"Error: {str(e)}")
+        assert False, f"Security Features Error: {str(e)}"
 
 
-def test_data_pipeline() -> Dict:
+def test_data_pipeline():
     """Test data processing and transformation pipeline"""
     try:
         from analysis.analyzer import FirewallRuleAnalyzer
@@ -169,16 +146,12 @@ def test_data_pipeline() -> Dict:
         FirewallRuleAnalyzer()
         PathVisualizer()
 
-        return create_test_result(
-            "Data Pipeline",
-            True,
-            "Data transformer, analyzer, and visualizer initialized",
-        )
+        assert True, "Data Pipeline: Data transformer, analyzer, and visualizer initialized"
     except Exception as e:
-        return create_test_result("Data Pipeline", False, f"Error: {str(e)}")
+        assert False, f"Data Pipeline Error: {str(e)}"
 
 
-def test_caching_system() -> Dict:
+def test_caching_system():
     """Test caching and performance systems"""
     try:
         from utils.unified_cache_manager import get_cache_manager
@@ -186,16 +159,12 @@ def test_caching_system() -> Dict:
         cache_manager = get_cache_manager()
 
         cache_stats = cache_manager.get_stats()
-        return create_test_result(
-            "Caching System",
-            True,
-            f"Cache manager with {cache_stats['backends']} backends",
-        )
+        assert True, f"Caching System: Cache manager with {cache_stats['backends']} backends"
     except Exception as e:
-        return create_test_result("Caching System", False, f"Error: {str(e)}")
+        assert False, f"Caching System Error: {str(e)}"
 
 
-def test_api_endpoints() -> Dict:
+def test_api_endpoints():
     """Test core API endpoints with test client"""
     try:
         from web_app import create_app
@@ -205,27 +174,19 @@ def test_api_endpoints() -> Dict:
             # Test health endpoint
             health_response = client.get("/api/health")
             if health_response.status_code != 200:
-                return create_test_result(
-                    "API Endpoints",
-                    False,
-                    f"Health endpoint returned {health_response.status_code}",
-                )
+                assert False, f"API Endpoints: Health endpoint returned {health_response.status_code}"
 
             # Test settings endpoint
             settings_response = client.get("/api/settings")
             if settings_response.status_code != 200:
-                return create_test_result(
-                    "API Endpoints",
-                    False,
-                    f"Settings endpoint returned {settings_response.status_code}",
-                )
+                assert False, f"API Endpoints: Settings endpoint returned {settings_response.status_code}"
 
-            return create_test_result("API Endpoints", True, "Core API endpoints responding correctly")
+            assert True, "API Endpoints: Core API endpoints responding correctly"
     except Exception as e:
-        return create_test_result("API Endpoints", False, f"Error: {str(e)}")
+        assert False, f"API Endpoints Error: {str(e)}"
 
 
-def run_comprehensive_feature_test() -> List[Dict]:
+def run_comprehensive_feature_test() -> List[dict]:
     """Run all feature tests"""
     print("🚀 FortiGate Nextrade Feature Test Suite")
     print("=" * 60)
