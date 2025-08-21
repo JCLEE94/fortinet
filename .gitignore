@@ -148,6 +148,10 @@ reports/
 helm-packages/
 htmlcov/
 
+# Pipeline and deployment artifacts
+fortinet-*.tgz
+pipeline_fix_report.json
+
 # Temporary Python scripts
 init-*.py
 start-dev.py

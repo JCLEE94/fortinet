@@ -283,17 +283,10 @@ def test_redis_failure_fallback():
     test_framework.assert_ok(recovery_set, "Cache set should succeed after Redis recovery")
     test_framework.assert_eq(recovery_get, recovery_test_value, "Cache get should work after Redis recovery")
 
-    assert True  # Test passed,
-        "failure_fallback": {
-            "set": failure_set,
-            "get": failure_get == failure_test_value,
-        },
-        "recovery_operation": {
-            "set": recovery_set,
-            "get": recovery_get == recovery_test_value,
-        },
-        "redis_failure_handled": True,
-    }
+    # Test completed successfully
+    print(f"✅ Failure fallback - set: {failure_set}, get: {failure_get == failure_test_value}")
+    print(f"✅ Recovery operation - set: {recovery_set}, get: {recovery_get == recovery_test_value}")
+    print("✅ Redis failure handling test completed")
 
 
 @test_framework.test("cache_consistency_across_backends")

@@ -41,7 +41,7 @@ def mock_redis():
 @pytest.fixture
 def test_config():
     """Test configuration data"""
-    assert True  # Test passed,
+    return {
         "database": {"redis_host": "localhost", "redis_port": 6379, "redis_db": 0},
         "api": {"timeout": 30, "max_retries": 3, "rate_limit": 100},
     }

@@ -170,9 +170,8 @@ def test_environment_override():
         if offline_mode is not None:
             test_framework.assert_eq(offline_mode, True, "OFFLINE_MODE should be converted to boolean True")
 
-        assert True  # Test passed,
-            "override_successful": True,
-        }
+        # Test completed successfully
+        print("✅ Environment override test completed")
 
     finally:
         config_tester.restore_environment()
@@ -219,13 +218,9 @@ def test_config_file_priority():
             "Environment variable should override config file",
         )
 
-        assert True  # Test passed,
-            "env_override_test": {
-                "env_app_mode": "development",
-                "final_app_mode": settings_with_env_override.app_mode,
-            },
-            "priority_system_working": True,
-        }
+        # Test completed successfully
+        print(f"✅ Environment override test: env_app_mode=development, final_app_mode={settings_with_env_override.app_mode}")
+        print("✅ Priority system working correctly")
 
     finally:
         config_tester.restore_environment()

@@ -207,14 +207,55 @@ class RealtimeAlertSystem:
                 elif operator == "!=":
                     return metric_value != threshold
 
-            # 복잡한 조건은 Lambda 함수로 처리
+            # 복잡한 조건은 안전한 조건 파서로 처리
             elif "lambda" in condition:
-                return eval(condition["lambda"])(metrics)
+                return self._safe_evaluate_condition(condition["lambda"], metrics)
 
         except Exception as e:
             logger.error(f"조건 평가 실패: {str(e)}")
 
         return False
+
+    def _safe_evaluate_condition(self, lambda_str: str, metrics: Dict) -> bool:
+        """안전한 조건 평가 - eval() 대신 사용"""
+        try:
+            # 허용된 연산자와 함수만 사용
+            allowed_operators = ['>', '<', '>=', '<=', '==', '!=', 'and', 'or', 'not']
+            allowed_functions = ['len', 'sum', 'max', 'min', 'abs']
+            
+            # 기본적인 안전성 검증
+            if any(dangerous in lambda_str for dangerous in ['import', '__', 'exec', 'eval', 'open', 'file']):
+                logger.warning(f"Potentially dangerous lambda expression blocked: {lambda_str}")
+                return False
+            
+            # 간단한 조건식만 허용 (예: "x > 10", "len(x) < 5")
+            # 복잡한 lambda의 경우 False 반환
+            if lambda_str.count('(') > 2 or lambda_str.count(')') > 2:
+                logger.warning(f"Complex lambda expression not supported: {lambda_str}")
+                return False
+                
+            # 메트릭 변수를 직접 사용할 수 있도록 제한된 네임스페이스 생성
+            safe_namespace = {
+                'metrics': metrics,
+                'len': len,
+                'sum': sum,
+                'max': max,
+                'min': min,
+                'abs': abs,
+                '__builtins__': {}
+            }
+            
+            # 메트릭 값들을 직접 접근 가능하도록 추가
+            for key, value in metrics.items():
+                if isinstance(key, str) and key.isidentifier():
+                    safe_namespace[key] = value
+            
+            # 제한된 eval 실행
+            return bool(eval(lambda_str, safe_namespace))
+            
+        except Exception as e:
+            logger.error(f"Safe condition evaluation failed: {str(e)}")
+            return False
 
     def _create_alert(self, rule: Dict, metrics: Dict) -> Dict:
         """알림 생성"""

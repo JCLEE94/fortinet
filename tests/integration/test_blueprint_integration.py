@@ -128,9 +128,9 @@ def test_blueprint_registration():
                 f"Blueprint {blueprint_name} should have at least one route",
             )
 
-        assert True  # Test passed,
-            "total_routes": sum(len(routes) for routes in blueprint_routes.values()),
-        }
+        # Test completed successfully
+        total_routes = sum(len(routes) for routes in blueprint_routes.values())
+        print(f"✅ Total routes found: {total_routes}")
 
 
 @test_framework.test("blueprint_route_conflict_detection")
