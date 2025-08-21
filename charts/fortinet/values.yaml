@@ -11,7 +11,7 @@ image:
   repository: registry.jclee.me/fortinet
   pullPolicy: IfNotPresent  # Immutable tags로 최적화
   # CI/CD 파이프라인에서 자동 설정됨 (branch-shortsha 형식)
-  tag: "v1.2.0-b94c798"  # GitOps immutable deployment tag
+  tag: "v1.0.6-c46f681"  # GitOps immutable deployment tag
 
 imagePullSecrets:
   - name: harbor-registry
