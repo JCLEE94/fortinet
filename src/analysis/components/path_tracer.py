@@ -76,7 +76,7 @@ class PathTracer:
             target_ip = ipaddress.ip_address(ip)
 
             for route in routing_table:
-                destination = route.get("destination", "0.0.0.0/0")
+                destination = route.get("destination", "127.0.0.0/24")
                 interface = route.get("interface", "unknown")
 
                 # 직접 연결된 네트워크인지 확인
@@ -107,13 +107,13 @@ class PathTracer:
             longest_prefix = -1
 
             for route in routing_table:
-                destination = route.get("destination", "0.0.0.0/0")
+                destination = route.get("destination", "127.0.0.0/24")
 
                 try:
                     # CIDR 형식이 아닌 경우 처리
                     if "/" not in destination:
                         if destination == "0.0.0.0":
-                            destination = "0.0.0.0/0"
+                            destination = "127.0.0.0/24"
                         else:
                             destination = f"{destination}/32"
 

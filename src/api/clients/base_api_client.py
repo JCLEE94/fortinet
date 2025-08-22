@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Optional
 
 from requests.exceptions import RequestException
 
+from config.env_defaults import EnvironmentDefaults
 from core.connection_pool import connection_pool_manager
 from utils.unified_logger import get_logger
 
@@ -89,7 +90,8 @@ class BaseApiClient(ABC):
         self.api_token = api_token
         self.username = username
         self.password = password
-        self.port = port
+        # Convert port to integer if it's a string
+        self.port = int(port) if port and str(port).isdigit() else port
         self.session_id = None
 
         # Set auth method based on provided credentials
@@ -106,7 +108,11 @@ class BaseApiClient(ABC):
                 # 프로덕션/테스트 환경에서는 기본적으로 SSL 검증 활성화
                 self.verify_ssl = os.environ.get("VERIFY_SSL", "true").lower() == "true"
         else:
-            self.verify_ssl = verify_ssl
+            # Handle string boolean conversion for verify_ssl parameter
+            if isinstance(verify_ssl, str):
+                self.verify_ssl = verify_ssl.lower() in ("true", "1", "yes", "on")
+            else:
+                self.verify_ssl = verify_ssl
 
         # SSL 검증 비활성화 시 경고 로그
         if not self.verify_ssl:
@@ -178,8 +184,8 @@ class BaseApiClient(ABC):
             "api_token": os.environ.get(f"{prefix}_API_TOKEN"),
             "username": os.environ.get(f"{prefix}_USERNAME"),
             "password": os.environ.get(f"{prefix}_PASSWORD"),
-            "port": os.environ.get(f"{prefix}_PORT"),
-            "verify_ssl": os.environ.get(f"{prefix}_VERIFY_SSL", "false").lower() == "true",
+            "port": EnvironmentDefaults.get_int_env_value(f"{prefix}_PORT", 0),
+            "verify_ssl": EnvironmentDefaults.get_bool_env_value(f"{prefix}_VERIFY_SSL", False),
         }
 
     def _setup_headers(self):

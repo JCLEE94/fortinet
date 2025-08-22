@@ -290,8 +290,8 @@ class AdvancedPacketAnalyzer:
         """Parse raw packet data into metadata"""
         return PacketMetadata(
             timestamp=datetime.fromisoformat(packet_data.get("timestamp", datetime.now().isoformat())),
-            src_ip=packet_data.get("src_ip", "0.0.0.0"),
-            dst_ip=packet_data.get("dst_ip", "0.0.0.0"),
+            src_ip=packet_data.get("src_ip", "127.0.0.1"),
+            dst_ip=packet_data.get("dst_ip", "127.0.0.1"),
             src_port=packet_data.get("src_port", 0),
             dst_port=packet_data.get("dst_port", 0),
             protocol=packet_data.get("protocol", "TCP"),

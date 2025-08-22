@@ -24,8 +24,8 @@ class EnvironmentDefaults:
 
     # 서비스 호스트
     SERVICE_HOSTS = {
-        "WEB_APP_HOST": "0.0.0.0",
-        "FLASK_HOST": "0.0.0.0",
+        "WEB_APP_HOST": os.getenv("WEB_APP_HOST", "127.0.0.1"),
+        "FLASK_HOST": os.getenv("FLASK_HOST", "127.0.0.1"),
         "MOCK_SERVER_HOST": "localhost",
         "REDIS_HOST": "localhost",
         "DATABASE_HOST": "localhost",

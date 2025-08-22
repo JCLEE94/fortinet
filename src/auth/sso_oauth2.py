@@ -66,7 +66,7 @@ class OAuth2Provider:
             "client_secret": self.client_secret,
         }
 
-        response = requests.post(self.token_url, data=data)
+        response = requests.post(self.token_url, data=data, timeout=30)
         response.raise_for_status()
 
         return response.json()
@@ -75,7 +75,7 @@ class OAuth2Provider:
         """Get user information using access token"""
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        response = requests.get(self.userinfo_url, headers=headers)
+        response = requests.get(self.userinfo_url, headers=headers, timeout=30)
         response.raise_for_status()
 
         return response.json()

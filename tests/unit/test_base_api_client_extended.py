@@ -17,15 +17,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
 from api.clients.base_api_client import BaseApiClient, RealtimeMonitoringMixin
 
 
-class ConcreteApiClient(BaseApiClient):
+class ConcreteApiClient(BaseApiClient, RealtimeMonitoringMixin):
     """Concrete implementation of BaseApiClient for testing"""
     
     def __init__(self):
-        super().__init__(
-            env_prefix='FORTIGATE',
-            host='test.example.com',
-            api_token='test-token'
+        # Initialize BaseApiClient first - let env_prefix load values from environment
+        BaseApiClient.__init__(
+            self,
+            env_prefix='FORTIGATE'
         )
+        # Initialize RealtimeMonitoringMixin
+        RealtimeMonitoringMixin.__init__(self)
     
     def _get_monitoring_data(self):
         """Implementation required by RealtimeMonitoringMixin"""
@@ -89,17 +91,25 @@ class TestBaseApiClientExtended(unittest.TestCase):
         self.assertEqual(env_config.get('port'), 8443)
         self.assertFalse(env_config.get('verify_ssl'))
 
-    @patch('config.unified_settings.unified_settings.system.offline_mode', True)
-    def test_offline_mode_detection(self, mock_offline):
+    def test_offline_mode_detection(self):
         """Test offline mode detection from unified settings"""
-        client = BaseApiClient()
-        self.assertTrue(client.OFFLINE_MODE)
+        with patch('api.clients.base_api_client.connection_pool_manager') as mock_pool_manager, \
+             patch('config.unified_settings.unified_settings.system.offline_mode', True):
+            mock_session = MagicMock()
+            mock_pool_manager.get_session.return_value = mock_session
+            
+            client = BaseApiClient()
+            self.assertTrue(client.OFFLINE_MODE)
 
-    @patch('config.unified_settings.unified_settings.system.offline_mode', False)
-    def test_online_mode_detection(self, mock_offline):
+    def test_online_mode_detection(self):
         """Test online mode detection from unified settings"""
-        client = BaseApiClient()
-        self.assertFalse(client.OFFLINE_MODE)
+        with patch('api.clients.base_api_client.connection_pool_manager') as mock_pool_manager, \
+             patch('config.unified_settings.unified_settings.system.offline_mode', False):
+            mock_session = MagicMock()
+            mock_pool_manager.get_session.return_value = mock_session
+            
+            client = BaseApiClient()
+            self.assertFalse(client.OFFLINE_MODE)
 
     @patch('config.unified_settings.unified_settings.system.offline_mode', False)
     @patch('api.clients.base_api_client.connection_pool_manager')
@@ -225,7 +235,7 @@ class TestBaseApiClientExtended(unittest.TestCase):
         client = BaseApiClient()
         
         # Check default values
-        self.assertTrue(client.use_https)  # Default should be True
+        self.assertEqual(client.protocol, "https")  # Default should be https
         self.assertEqual(client.headers['Content-Type'], 'application/json')
         self.assertIsNotNone(client.logger)
 
@@ -267,7 +277,21 @@ class TestRealtimeMonitoringMixinExtended(unittest.TestCase):
 
     def setUp(self):
         """Set up test environment"""
+        # Backup environment variables
+        self.env_backup = os.environ.copy()
+        
+        # Set test environment variables for ConcreteApiClient
+        os.environ['FORTIGATE_HOST'] = 'test.example.com'
+        os.environ['FORTIGATE_API_TOKEN'] = 'test-token-123'
+        os.environ['VERIFY_SSL'] = 'false'
+        
         self.test_client = ConcreteApiClient()
+    
+    def tearDown(self):
+        """Clean up test environment"""
+        # Restore environment variables
+        os.environ.clear()
+        os.environ.update(self.env_backup)
 
     @patch('config.unified_settings.unified_settings.system.offline_mode', False)
     def test_start_realtime_monitoring(self):
