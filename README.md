@@ -1,5 +1,6 @@
-# Fortinet MSA Platform
+# FortiGate Nextrade - Cloud Native Network Security Platform
 
+[![CNCF Compliance](https://img.shields.io/badge/CNCF-Cloud%20Native-blue.svg)](https://cncf.io)
 [![CI/CD Pipeline](https://github.com/JCLEE94/fortinet/actions/workflows/gitops-pipeline.yml/badge.svg)](https://github.com/JCLEE94/fortinet/actions/workflows/gitops-pipeline.yml)
 [![Registry](https://img.shields.io/badge/registry.jclee.me-ready-green.svg)](https://registry.jclee.me)
 [![ArgoCD](https://img.shields.io/badge/argo.jclee.me-GitOps-blue.svg)](https://argo.jclee.me)
@@ -9,12 +10,75 @@
 [![Security](https://img.shields.io/badge/security-78%20issues-orange.svg)](./security_scan_report.json)
 [![License](https://img.shields.io/badge/license-proprietary-red.svg)](LICENSE)
 
-**jclee.me 인프라 기반 Fortinet 네트워크 보안 플랫폼의 마이크로서비스 아키텍처**
+**CNCF 표준을 따르는 클라우드 네이티브 네트워크 보안 플랫폼**
 
 FortiGate 방화벽, FortiManager, ITSM 시스템을 통합한 차세대 네트워크 보안 모니터링 및 분석 플랫폼입니다. 
-모던 MSA(Microservice Architecture) 설계로 확장성과 가용성을 극대화하고, AI 기반 자동화로 운영 효율성을 혁신했습니다.
+CNCF(Cloud Native Computing Foundation) 표준을 준수하는 클라우드 네이티브 아키텍처로 설계되어 확장성, 가용성, 
+관찰가능성을 극대화하고 AI 기반 자동화로 운영 효율성을 혁신했습니다.
 
-## 🐳 빠른 시작 (Docker)
+## 🌟 CNCF Cloud Native Features
+
+- **12-Factor App Compliance**: 환경별 설정 분리, 무상태 프로세스, 포트 바인딩
+- **Container-First**: Multi-stage Docker 빌드, 보안 강화, 최소 권한 실행
+- **Kubernetes Native**: Health checks, Readiness probes, Graceful shutdown
+- **Observability**: Structured logging, Metrics, Distributed tracing
+- **GitOps**: ArgoCD 기반 자동 배포, Infrastructure as Code
+- **Service Mesh Ready**: Istio 호환, mTLS, Circuit breaker 패턴
+
+## 🚀 Quick Start (Cloud Native)
+
+### 1. Prerequisites
+```bash
+# Required tools
+make --version     # Build automation
+docker --version   # Container runtime  
+kubectl version    # Kubernetes CLI
+helm version       # Package manager
+```
+
+### 2. Development Setup
+```bash
+# Clone and setup
+git clone https://github.com/fortinet/nextrade.git
+cd fortinet
+make dev-setup     # Setup Python environment
+make dev-run       # Start development server
+```
+
+### 3. Container Build & Run
+```bash
+# Build cloud native container
+make build
+
+# Run locally with health checks
+make run-container
+
+# Verify health
+curl http://localhost:7777/health
+```
+
+### 4. Kubernetes Deployment  
+```bash
+# Deploy using Helm (recommended)
+make deploy
+
+# Or deploy using kubectl
+kubectl apply -f deployments/k8s/manifests/
+
+# Check status
+make k8s-status
+```
+
+### 5. Verify Deployment
+```bash
+# Check all endpoints
+curl http://fortinet.jclee.me/health    # Health check
+curl http://fortinet.jclee.me/ready     # Readiness check  
+curl http://fortinet.jclee.me/metrics   # Metrics endpoint
+curl http://fortinet.jclee.me/version   # Version info
+```
+
+## 🐳 빠른 시작 (Docker Legacy)
 
 ### 1. 환경 설정
 ```bash
