@@ -39,7 +39,7 @@ services:
       - REDIS_MAXMEMORY_POLICY=allkeys-lru
       - REDIS_APPENDONLY=yes
     ports:
-      - "6380:6379"
+      - "30778:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -70,7 +70,7 @@ services:
       - PGDATA=/var/lib/postgresql/data
       - POSTGRES_INITDB_ARGS=--encoding=UTF8 --locale=en_US.utf8
     ports:
-      - "5433:5432"
+      - "30779:5432"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "fortinet", "-d", "fortinet_db"]
       interval: 30s
@@ -129,7 +129,7 @@ services:
       - LOG_LEVEL=INFO
       - STRUCTURED_LOGGING=true
     ports:
-      - "7777:7777"
+      - "30777:7777"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7777/api/health"]
       interval: 30s
@@ -146,30 +146,3 @@ services:
       - "traefik.http.routers.fortinet.tls.certresolver=letsencrypt"
       - "traefik.http.services.fortinet.loadbalancer.server.port=7777"
       
-  # Watchtower for automatic updates
-  watchtower:
-    image: containrrr/watchtower:latest
-    container_name: fortinet-watchtower
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ~/.docker/config.json:/config.json:ro
-    environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_RESTARTING=true
-      - WATCHTOWER_LABEL_ENABLE=true
-      - WATCHTOWER_POLL_INTERVAL=300  # 5 minutes
-      - WATCHTOWER_ROLLING_RESTART=true
-      - WATCHTOWER_TIMEOUT=60s
-      - WATCHTOWER_NOTIFICATIONS=webhook
-      - WATCHTOWER_NOTIFICATION_WEBHOOK_URL=${WEBHOOK_URL:-}
-      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER_TOKEN:-fortinet-watchtower-2024}
-      - WATCHTOWER_HTTP_API_UPDATE=true
-    ports:
-      - "8080:8080"
-    networks:
-      - fortinet-network
-    labels:
-      - "com.centurylinklabs.watchtower.enable=false"
-      - "traefik.enable=false"
-    command: --label-enable --cleanup --interval 300 --rolling-restart
