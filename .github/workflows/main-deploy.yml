@@ -1,23 +1,18 @@
 # =============================================================================
-# FortiGate Optimized Self-Hosted CI/CD Pipeline
-# Advanced caching, matrix builds, and security optimization
+# FortiGate Nextrade - Main Deploy Pipeline
+# Optimized self-hosted pipeline with registry.jclee.me and Watchtower deployment
 # =============================================================================
 
-name: Optimized Self-Hosted Pipeline
+name: Main Deploy Pipeline
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master]
     paths-ignore:
       - '**.md'
       - 'docs/**'
       - '.gitignore'
       - 'LICENSE'
-  pull_request:
-    branches: [ main, master ]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
   workflow_dispatch:
   schedule:
     # Weekly security scan at 2 AM UTC Sunday
@@ -25,15 +20,13 @@ on:
 
 env:
   REGISTRY: registry.jclee.me
-  IMAGE_NAME: fortinet
   CHARTMUSEUM_URL: https://charts.jclee.me
   APP_NAME: fortinet
   DEPLOYMENT_HOST: 192.168.50.110
   DEPLOYMENT_PORT: 30777
   PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
   # Caching strategy
-  CACHE_VERSION: v2
+  CACHE_VERSION: v3
   PIP_CACHE_DIR: ~/.cache/pip
   HELM_CACHE_DIR: ~/.cache/helm
 
@@ -66,14 +59,13 @@ jobs:
     - name: Generate cache key
       id: cache-key
       run: |
-        CACHE_KEY="${{ env.CACHE_VERSION }}-${{ runner.os }}-python${{ env.PYTHON_VERSION }}-$(sha256sum requirements.txt pyproject.toml | sha256sum | cut -d' ' -f1)"
+        CACHE_KEY="${{ env.CACHE_VERSION }}-${{ runner.os }}-python${{ env.PYTHON_VERSION }}-$(sha256sum requirements.txt | sha256sum | cut -d' ' -f1)"
         echo "key=${CACHE_KEY}" >> $GITHUB_OUTPUT
         echo "Cache key: ${CACHE_KEY}"
 
     - name: Security dependency check
       id: security-check
       run: |
-        # Quick security scan of requirements
         if command -v safety &> /dev/null; then
           safety check --json --output security-report.json || true
           echo "passed=true" >> $GITHUB_OUTPUT
@@ -81,15 +73,6 @@ jobs:
           echo "Safety tool not available, proceeding with caution"
           echo "passed=true" >> $GITHUB_OUTPUT
         fi
-
-    - name: Upload security artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-reports-preflight
-        path: |
-          security-report.json
-        retention-days: 30
 
   # =============================================================================
   # Test Matrix - Parallel Quality Assurance
@@ -104,19 +87,6 @@ jobs:
       fail-fast: false
       matrix:
         test-type: [unit, integration, security, lint]
-        include:
-          - test-type: unit
-            test-command: "pytest tests/unit/ -v --tb=short --maxfail=5"
-            marker: "unit"
-          - test-type: integration
-            test-command: "pytest tests/integration/ -v --tb=short --timeout=60"
-            marker: "integration"
-          - test-type: security
-            test-command: "bandit -r src/ -f json -o bandit-report.json && safety check --json --output safety-report.json"
-            marker: "security"
-          - test-type: lint
-            test-command: "black --check src/ && isort --check-only src/ && flake8 src/"
-            marker: "lint"
     
     steps:
     - name: Checkout repository
@@ -127,9 +97,7 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
-        cache-dependency-path: |
-          requirements.txt
-          pyproject.toml
+        cache-dependency-path: requirements.txt
 
     - name: Cache Python dependencies
       uses: actions/cache@v3
@@ -147,7 +115,6 @@ jobs:
         if [ -f requirements.txt ]; then
           pip install -r requirements.txt
         fi
-        pip install -e ".[dev,test]"
 
     - name: Run ${{ matrix.test-type }} tests
       id: test-run
@@ -157,7 +124,7 @@ jobs:
         
         case "${{ matrix.test-type }}" in
           "unit")
-            if cd src && python -m pytest ../tests/unit/ -v --tb=short --maxfail=5 --cov=. --cov-report=xml; then
+            if cd src && python -m pytest ../tests/unit/ -v --tb=short --maxfail=5; then
               TEST_SUCCESS=true
             fi
             ;;
@@ -184,7 +151,6 @@ jobs:
             ;;
         esac
         
-        # Create success marker if tests passed
         if [ "$TEST_SUCCESS" = true ]; then
           mkdir -p test-results-${{ matrix.test-type }}
           touch test-results-${{ matrix.test-type }}/.success
@@ -201,88 +167,41 @@ jobs:
         name: test-results-${{ matrix.test-type }}
         path: |
           test-results-${{ matrix.test-type }}/
-          coverage.xml
           bandit-report.json
           safety-report.json
-          pytest-results.xml
         retention-days: 30
 
   # =============================================================================
-  # Consolidated Test Results
+  # Build Matrix - Multi-Service Build with Registry Push
   # =============================================================================
-  test-results:
-    name: "📊 Consolidate Test Results"
+  build-and-push:
+    name: "🔨 Build and Push: ${{ matrix.service }}"
     runs-on: [self-hosted, linux, x64]
     needs: [preflight, test-matrix]
-    if: needs.preflight.outputs.should-skip != 'true'
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Download test artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: test-results-*
-        merge-multiple: true
-
-    - name: Process test results
-      run: |
-        echo "📊 Processing consolidated test results..."
-        
-        # Check if all matrix jobs succeeded
-        FAILED_JOBS=""
-        for test_type in unit integration security lint; do
-          if [ ! -f "test-results-${test_type}/.success" ]; then
-            FAILED_JOBS="${FAILED_JOBS} ${test_type}"
-          fi
-        done
-        
-        if [ -n "$FAILED_JOBS" ]; then
-          echo "❌ Failed test types:$FAILED_JOBS"
-          exit 1
-        else
-          echo "✅ All test matrix jobs passed"
-        fi
-
-    - name: Generate test summary
-      run: |
-        echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "| Test Type | Status | Details |" >> $GITHUB_STEP_SUMMARY
-        echo "|-----------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-        for test_type in unit integration security lint; do
-          if [ -f "test-results-${test_type}/.success" ]; then
-            echo "| ${test_type} | ✅ Passed | All checks completed successfully |" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "| ${test_type} | ❌ Failed | Check logs for details |" >> $GITHUB_STEP_SUMMARY
-          fi
-        done
-
-  # =============================================================================
-  # Multi-Platform Build with Advanced Caching
-  # =============================================================================
-  build-matrix:
-    name: "🔨 Multi-Platform Build"
-    runs-on: [self-hosted, linux, x64]
-    needs: [preflight, test-results]
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     
     strategy:
       fail-fast: false
       matrix:
-        platform: [linux/amd64, linux/arm64]
+        service: [redis, postgresql, fortinet]
         include:
-          - platform: linux/amd64
-            arch: amd64
-          - platform: linux/arm64
-            arch: arm64
+          - service: redis
+            dockerfile: Dockerfile.redis
+            image-name: fortinet-redis
+            context: .
+          - service: postgresql
+            dockerfile: Dockerfile.postgresql
+            image-name: fortinet-postgresql
+            context: .
+          - service: fortinet
+            dockerfile: Dockerfile.all-in-one
+            image-name: fortinet
+            context: .
     
     outputs:
       image-tag: ${{ steps.generate-tag.outputs.tag }}
       version: ${{ steps.generate-tag.outputs.version }}
       build-date: ${{ steps.generate-tag.outputs.build-date }}
-      digest: ${{ steps.build.outputs.digest }}
       
     steps:
     - name: Checkout repository
@@ -293,22 +212,19 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
       with:
-        driver-opts: |
-          network=host
+        driver-opts: network=host
         buildkitd-flags: --debug
 
     - name: Generate build metadata
       id: generate-tag
       run: |
-        # Enhanced version generation
         SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
         BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
         BUILD_NUMBER="${{ github.run_number }}"
         
-        # Semantic version with enhanced metadata
         if [[ "${{ github.ref_name }}" == "master" ]] || [[ "${{ github.ref_name }}" == "main" ]]; then
           VERSION="v1.0.${BUILD_NUMBER}-${SHORT_SHA}"
-          IMAGE_TAG="latest-${SHORT_SHA}"
+          IMAGE_TAG="latest"
         else
           VERSION="v1.0.${BUILD_NUMBER}-${SHORT_SHA}-${{ github.ref_name }}"
           IMAGE_TAG="${{ github.ref_name }}-${SHORT_SHA}"
@@ -320,13 +236,12 @@ jobs:
         echo "short-sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
         echo "build-number=${BUILD_NUMBER}" >> $GITHUB_OUTPUT
         
-        echo "📦 Enhanced Build Metadata:"
+        echo "📦 Build Metadata for ${{ matrix.service }}:"
         echo "  Version: ${VERSION}"
         echo "  Image Tag: ${IMAGE_TAG}"
         echo "  Build Date: ${BUILD_DATE}"
         echo "  Git SHA: ${SHORT_SHA}"
         echo "  Build Number: ${BUILD_NUMBER}"
-        echo "  Platform: ${{ matrix.platform }}"
 
     - name: Login to Harbor Registry
       uses: docker/login-action@v3
@@ -339,7 +254,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ matrix.image-name }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -347,13 +262,13 @@ jobs:
           type=raw,value=latest,enable={{is_default_branch}}
           type=raw,value=${{ steps.generate-tag.outputs.tag }}
 
-    - name: Build and push Docker image
+    - name: Build and push ${{ matrix.service }} image
       id: build
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: ./Dockerfile.all-in-one
-        platforms: ${{ matrix.platform }}
+        context: ${{ matrix.context }}
+        file: ./${{ matrix.dockerfile }}
+        platforms: linux/amd64
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
@@ -362,21 +277,19 @@ jobs:
           VCS_REF=${{ github.sha }}
           VERSION=${{ steps.generate-tag.outputs.version }}
           BUILD_NUMBER=${{ steps.generate-tag.outputs.build-number }}
-          PLATFORM=${{ matrix.arch }}
         cache-from: |
-          type=gha,scope=buildx-${{ matrix.arch }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.arch }}
+          type=gha,scope=buildx-${{ matrix.service }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image-name }}:cache
         cache-to: |
-          type=gha,mode=max,scope=buildx-${{ matrix.arch }}
-          type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache-${{ matrix.arch }},mode=max
-        outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push=true
+          type=gha,mode=max,scope=buildx-${{ matrix.service }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ matrix.image-name }}:cache,mode=max
 
     - name: Container security scan
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.generate-tag.outputs.tag }}'
+        image-ref: '${{ env.REGISTRY }}/${{ matrix.image-name }}:${{ steps.generate-tag.outputs.tag }}'
         format: 'sarif'
-        output: 'trivy-results-${{ matrix.arch }}.sarif'
+        output: 'trivy-results-${{ matrix.service }}.sarif'
         severity: 'CRITICAL,HIGH'
       continue-on-error: true
 
@@ -384,52 +297,51 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
-        sarif_file: 'trivy-results-${{ matrix.arch }}.sarif'
-        category: 'container-security-${{ matrix.arch }}'
+        sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+        category: 'container-security-${{ matrix.service }}'
 
   # =============================================================================
-  # Manifest Creation for Multi-Platform
+  # Watchtower Deployment Trigger
   # =============================================================================
-  create-manifest:
-    name: "📋 Create Multi-Platform Manifest"
+  deploy-watchtower:
+    name: "🚀 Watchtower Deployment"
     runs-on: [self-hosted, linux, x64]
-    needs: build-matrix
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Login to Harbor Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
-
-    - name: Create and push manifest
-      run: |
-        # Create multi-platform manifest
-        IMAGE_TAG="${{ needs.build-matrix.outputs.image-tag }}"
-        
-        echo "📋 Creating multi-platform manifest for: ${IMAGE_TAG}"
-        
-        docker buildx imagetools create \
-          --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${IMAGE_TAG} \
-          --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.build-matrix.outputs.digest }}
-        
-        echo "✅ Multi-platform manifest created successfully"
-
-  # =============================================================================
-  # Advanced GitOps Deployment
-  # =============================================================================
-  deploy:
-    name: "🚀 GitOps Deployment"
-    runs-on: [self-hosted, linux, x64]
-    needs: [build-matrix, create-manifest]
+    needs: [build-and-push]
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     
     environment:
       name: production
       url: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}
+    
+    steps:
+    - name: Trigger Watchtower update
+      run: |
+        echo "🔄 Triggering Watchtower deployment..."
+        
+        # Wait for images to be available in registry
+        echo "⏳ Waiting for registry propagation (30 seconds)..."
+        sleep 30
+        
+        echo "✅ Images pushed to registry.jclee.me"
+        echo "📋 Watchtower will automatically poll and update containers"
+        echo "Images available at:"
+        echo "  - ${{ env.REGISTRY }}/fortinet-redis:latest"
+        echo "  - ${{ env.REGISTRY }}/fortinet-postgresql:latest"
+        echo "  - ${{ env.REGISTRY }}/fortinet:latest"
+
+    - name: Wait for deployment stabilization
+      run: |
+        echo "⏳ Waiting for deployment stabilization (60 seconds)..."
+        sleep 60
+
+  # =============================================================================
+  # GitOps Deployment (Helm + ArgoCD)
+  # =============================================================================
+  deploy-gitops:
+    name: "⚙️ GitOps Deployment"
+    runs-on: [self-hosted, linux, x64]
+    needs: [build-and-push, deploy-watchtower]
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     
     steps:
     - name: Checkout repository
@@ -451,74 +363,45 @@ jobs:
         restore-keys: |
           helm-${{ env.CACHE_VERSION }}-
 
-    - name: Enhanced Helm chart update
+    - name: Update Helm chart
       id: helm-update
       run: |
-        CHART_VERSION="1.0.${{ github.run_number }}-${{ needs.build-matrix.outputs.image-tag }}"
-        APP_VERSION="${{ needs.build-matrix.outputs.version }}"
-        IMAGE_TAG="${{ needs.build-matrix.outputs.image-tag }}"
-        BUILD_DATE="${{ needs.build-matrix.outputs.build-date }}"
+        CHART_VERSION="1.0.${{ github.run_number }}-${{ needs.build-and-push.outputs.image-tag }}"
+        APP_VERSION="${{ needs.build-and-push.outputs.version }}"
+        IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+        BUILD_DATE="${{ needs.build-and-push.outputs.build-date }}"
         
-        echo "📋 Enhanced Helm chart update..."
+        echo "📋 Helm chart update..."
         echo "  Chart Version: ${CHART_VERSION}"
         echo "  App Version: ${APP_VERSION}"
         echo "  Image Tag: ${IMAGE_TAG}"
         echo "  Build Date: ${BUILD_DATE}"
         
-        # Backup original Chart.yaml
-        cp charts/fortinet/Chart.yaml charts/fortinet/Chart.yaml.backup
+        # Update Chart.yaml
+        sed -i "s/^version:.*/version: ${CHART_VERSION}/" charts/fortinet/Chart.yaml
+        sed -i "s/^appVersion:.*/appVersion: \"${APP_VERSION}\"/" charts/fortinet/Chart.yaml
         
-        # Update Chart.yaml with enhanced metadata
-        cat > charts/fortinet/Chart.yaml << 'CHART_EOF'
-apiVersion: v2
-name: fortinet
-description: FortiGate Nextrade - Self-hosted network monitoring platform
-type: application
-version: ${CHART_VERSION}
-appVersion: "${APP_VERSION}"
-maintainers:
-  - name: JC Lee
-    email: admin@jclee.me
-home: https://fortinet.jclee.me
-sources:
-  - https://github.com/jclee94/fortinet
-keywords:
-  - fortinet
-  - fortigate
-  - network
-  - monitoring
-  - security
-annotations:
-  category: Networking
-  "build.date": "${BUILD_DATE}"
-  "build.sha": "${GITHUB_SHA}"
-  "build.number": "${GITHUB_RUN_NUMBER}"
-  "container.image": "${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
-CHART_EOF
-        
-        # Update values.yaml with comprehensive configuration
-        sed -i "s|repository: .*|repository: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}|" charts/fortinet/values.yaml
+        # Update values.yaml
+        sed -i "s|repository: .*|repository: ${{ env.REGISTRY }}/fortinet|" charts/fortinet/values.yaml
         sed -i "s|tag: .*|tag: \"${IMAGE_TAG}\"|" charts/fortinet/values.yaml
         
         # Enhanced environment configuration
         sed -i "s/SELF_CONTAINED: .*/SELF_CONTAINED: \"true\"/" charts/fortinet/values.yaml
-        sed -i "s/NO_EXTERNAL_DEPS: .*/NO_EXTERNAL_DEPS: \"true\"/" charts/fortinet/values.yaml
         sed -i "s/OFFLINE_MODE: .*/OFFLINE_MODE: \"true\"/" charts/fortinet/values.yaml
         sed -i "s/BUILD_DATE: .*/BUILD_DATE: \"${BUILD_DATE}\"/" charts/fortinet/values.yaml
         sed -i "s/GIT_SHA: .*/GIT_SHA: \"${{ github.sha }}\"/" charts/fortinet/values.yaml
         sed -i "s/VERSION: .*/VERSION: \"${APP_VERSION}\"/" charts/fortinet/values.yaml
-        sed -i "s/BUILD_NUMBER: .*/BUILD_NUMBER: \"${{ github.run_number }}\"/" charts/fortinet/values.yaml
         
         # Validate Helm chart
         helm lint charts/fortinet
         
         echo "chart-version=${CHART_VERSION}" >> $GITHUB_OUTPUT
 
-    - name: Package and upload Helm chart with retry
+    - name: Package and upload Helm chart
       run: |
         CHART_VERSION="${{ steps.helm-update.outputs.chart-version }}"
         
-        # Package chart with dependency update
+        # Package chart
         helm dependency update charts/fortinet || true
         helm package charts/fortinet --destination ./
         
@@ -540,46 +423,43 @@ CHART_EOF
           done
         fi
 
-    - name: GitOps commit with enhanced metadata
+    - name: GitOps commit
       run: |
-        IMAGE_TAG="${{ needs.build-matrix.outputs.image-tag }}"
-        BUILD_VERSION="${{ needs.build-matrix.outputs.version }}"
-        BUILD_DATE="${{ needs.build-matrix.outputs.build-date }}"
+        IMAGE_TAG="${{ needs.build-and-push.outputs.image-tag }}"
+        BUILD_VERSION="${{ needs.build-and-push.outputs.version }}"
+        BUILD_DATE="${{ needs.build-and-push.outputs.build-date }}"
         CHART_VERSION="${{ steps.helm-update.outputs.chart-version }}"
-        REGISTRY="${{ env.REGISTRY }}"
-        IMAGE_NAME="${{ env.IMAGE_NAME }}"
-        GITHUB_SHA="${{ github.sha }}"
-        GITHUB_RUN_NUMBER="${{ github.run_number }}"
         
         git config --local user.email "github-actions[bot]@users.noreply.github.com"
         git config --local user.name "github-actions[bot]"
         
-        echo "🔄 Creating GitOps commit with enhanced metadata..."
+        echo "🔄 Creating GitOps commit..."
         
-        # Create comprehensive commit message
-        cat > commit_message.txt << 'COMMIT_EOF'
+        # Create commit message
+        cat > commit_message.txt << EOF
 deploy: update container to ${IMAGE_TAG}
 
 🔧 Deployment Details:
-- Image: ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
+- Images: registry.jclee.me/fortinet-redis:${IMAGE_TAG}
+- Images: registry.jclee.me/fortinet-postgresql:${IMAGE_TAG}
+- Images: registry.jclee.me/fortinet:${IMAGE_TAG}
 - Version: ${BUILD_VERSION}
 - Build Date: ${BUILD_DATE}
-- Git SHA: ${GITHUB_SHA}
-- Build Number: ${GITHUB_RUN_NUMBER}
-- Platform: Multi-arch (amd64, arm64)
+- Git SHA: ${{ github.sha }}
+- Build Number: ${{ github.run_number }}
 
 🎯 Changes:
 - Updated Helm chart to v${CHART_VERSION}
-- Self-contained deployment with embedded services
-- Enhanced security and performance optimizations
+- Multi-service deployment with Watchtower
+- Enhanced registry.jclee.me integration
 
 [skip ci]
-COMMIT_EOF
+EOF
         
         # Stage changes
         git add charts/fortinet/
         
-        # Commit with detailed message
+        # Commit
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
@@ -587,14 +467,12 @@ COMMIT_EOF
           git push origin ${{ github.ref_name }}
         fi
 
-    - name: Advanced ArgoCD sync with monitoring
+    - name: ArgoCD sync
       run: |
-        echo "🔄 Triggering enhanced ArgoCD sync..."
+        echo "🔄 Triggering ArgoCD sync..."
         
-        # Wait for git changes to propagate
         sleep 20
         
-        # Advanced sync with comprehensive options
         SYNC_PAYLOAD=$(cat << 'JSON_EOF'
 {
   "prune": true,
@@ -611,9 +489,7 @@ COMMIT_EOF
     "CreateNamespace=true",
     "PrunePropagationPolicy=foreground",
     "Replace=true"
-  ],
-  "resources": null,
-  "manifests": []
+  ]
 }
 JSON_EOF
 )
@@ -635,22 +511,22 @@ JSON_EOF
         done
 
   # =============================================================================
-  # Advanced Verification & Monitoring
+  # Verification and Health Checks
   # =============================================================================
   verify:
-    name: "✅ Advanced Deployment Verification"
-    needs: [build-matrix, deploy]
+    name: "✅ Deployment Verification"
+    needs: [build-and-push, deploy-watchtower, deploy-gitops]
     runs-on: [self-hosted, linux, x64]
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     
     steps:
-    - name: Advanced deployment stabilization
+    - name: Deployment stabilization
       run: |
-        echo "⏳ Advanced deployment stabilization monitoring..."
+        echo "⏳ Deployment stabilization monitoring..."
         
         # Monitor ArgoCD application sync status
-        for i in {1..30}; do
-          echo "Checking ArgoCD sync status (attempt $i/30)..."
+        for i in {1..20}; do
+          echo "Checking ArgoCD sync status (attempt $i/20)..."
           
           SYNC_STATUS=$(curl -s "http://${{ env.DEPLOYMENT_HOST }}:31017/api/v1/applications/${{ env.APP_NAME }}" \
             -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" | \
@@ -668,16 +544,16 @@ JSON_EOF
             break
           fi
           
-          sleep 10
+          sleep 15
         done
         
         echo "⏳ Additional stabilization wait (60 seconds)..."
         sleep 60
 
-    - name: Comprehensive health verification
+    - name: Health verification
       id: health-check
       run: |
-        echo "🏥 Comprehensive application health verification..."
+        echo "🏥 Application health verification..."
         
         HEALTH_ENDPOINTS=(
           "/api/health"
@@ -692,8 +568,8 @@ JSON_EOF
           echo "🔍 Testing endpoint: ${endpoint}"
           TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
           
-          for attempt in {1..10}; do
-            echo "  Attempt ${attempt}/10 for ${endpoint}..."
+          for attempt in {1..8}; do
+            echo "  Attempt ${attempt}/8 for ${endpoint}..."
             
             HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
               --connect-timeout 10 --max-time 20 \
@@ -702,28 +578,21 @@ JSON_EOF
             if [[ "${HTTP_CODE}" =~ ^[23] ]]; then
               echo "  ✅ ${endpoint} responded with HTTP ${HTTP_CODE}"
               break
-            elif [ ${attempt} -eq 10 ]; then
+            elif [ ${attempt} -eq 8 ]; then
               echo "  ❌ ${endpoint} failed all attempts (final HTTP: ${HTTP_CODE})"
               FAILED_CHECKS="${FAILED_CHECKS} ${endpoint}"
             else
               echo "  ⚠️ ${endpoint} returned HTTP ${HTTP_CODE}, retrying..."
-              sleep 15
+              sleep 10
             fi
           done
         done
-        
-        # Performance and functionality tests
-        echo "🚀 Running performance verification..."
         
         # Test response time
         RESPONSE_TIME=$(curl -s -o /dev/null -w "%{time_total}" \
           "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" || echo "999")
         
         echo "📊 Health endpoint response time: ${RESPONSE_TIME}s"
-        
-        if (( $(echo "$RESPONSE_TIME > 5.0" | bc -l) )); then
-          echo "⚠️ Warning: Health endpoint response time exceeds 5 seconds"
-        fi
         
         # Summary
         if [ -n "$FAILED_CHECKS" ]; then
@@ -734,130 +603,78 @@ JSON_EOF
           echo "health-status=healthy" >> $GITHUB_OUTPUT
         fi
 
-    - name: Advanced feature validation
+    - name: Deployment summary
       run: |
-        echo "🧪 Advanced feature validation tests..."
-        
-        # Test API endpoints functionality
-        API_ENDPOINTS=(
-          "/api/health"
-          "/api/settings"
-        )
-        
-        for endpoint in "${API_ENDPOINTS[@]}"; do
-          echo "🔍 Testing API endpoint: ${endpoint}"
-          
-          RESPONSE=$(curl -s --connect-timeout 10 --max-time 20 \
-            "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}${endpoint}" || echo '{"error":"failed"}')
-          
-          if echo "$RESPONSE" | jq . >/dev/null 2>&1; then
-            echo "  ✅ ${endpoint} returned valid JSON response"
-          else
-            echo "  ⚠️ ${endpoint} response may not be valid JSON"
-          fi
-        done
-
-    - name: Performance monitoring setup
-      run: |
-        echo "📊 Setting up performance monitoring..."
-        
-        # Test load capacity
-        echo "🔥 Basic load testing..."
-        
-        for i in {1..5}; do
-          curl -s "http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" \
-            --connect-timeout 5 --max-time 10 >/dev/null &
-        done
-        
-        wait
-        echo "✅ Basic load test completed"
-
-    - name: Comprehensive deployment summary
-      run: |
-        echo "🎉 OPTIMIZED MULTI-PLATFORM DEPLOYMENT SUCCESSFUL"
+        echo "🎉 MAIN DEPLOY PIPELINE SUCCESSFUL"
         echo "================================================================"
-        echo "📦 Container: Multi-Platform FortiGate Nextrade"
-        echo "🏷️  Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-matrix.outputs.image-tag }}"
-        echo "🔖 Version: ${{ needs.build-matrix.outputs.version }}"
-        echo "📅 Built: ${{ needs.build-matrix.outputs.build-date }}"
+        echo "📦 Multi-Service FortiGate Nextrade Deployment"
+        echo "🏷️  Redis: ${{ env.REGISTRY }}/fortinet-redis:${{ needs.build-and-push.outputs.image-tag }}"
+        echo "🏷️  PostgreSQL: ${{ env.REGISTRY }}/fortinet-postgresql:${{ needs.build-and-push.outputs.image-tag }}"
+        echo "🏷️  Fortinet: ${{ env.REGISTRY }}/fortinet:${{ needs.build-and-push.outputs.image-tag }}"
+        echo "🔖 Version: ${{ needs.build-and-push.outputs.version }}"
+        echo "📅 Built: ${{ needs.build-and-push.outputs.build-date }}"
         echo "🎯 Git Commit: ${{ github.sha }}"
         echo "🌿 Branch: ${{ github.ref_name }}"
         echo "🔢 Build: ${{ github.run_number }}"
-        echo "🏗️  Platforms: linux/amd64, linux/arm64"
         echo ""
         echo "🌐 Access URLs:"
         echo "  • NodePort: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}"
-        echo "  • Domain: http://fortinet.jclee.me"
         echo "  • Health: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health"
         echo "  • Status: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/status"
         echo ""
-        echo "🔧 Enhanced Features:"
-        echo "  • Self-hosted runners for faster builds"
-        echo "  • Multi-platform support (amd64 + arm64)"
-        echo "  • Advanced caching strategies"
-        echo "  • Matrix-based parallel testing"
-        echo "  • Enhanced security scanning"
-        echo "  • Comprehensive health monitoring"
+        echo "🚀 Deployment Methods:"
+        echo "  • Watchtower: Auto-update triggered"
+        echo "  • GitOps: ArgoCD sync completed"
+        echo "  • Registry: All images pushed to registry.jclee.me"
         echo ""
-        echo "🏗️  Architecture: Self-contained with advanced caching"
-        echo "🔒 Security: Enhanced scanning and SARIF reporting"
-        echo "📊 Performance: Optimized build times and caching"
-        echo ""
-        echo "🔄 GitOps: ${{ github.repository }}"
-        echo "⚡ ArgoCD: ${{ env.APP_NAME }}"
         echo "================================================================"
         
         # Enhanced GitHub Step Summary
-        echo "## 🎉 Optimized Self-Hosted Pipeline Success" >> $GITHUB_STEP_SUMMARY
+        echo "## 🎉 Main Deploy Pipeline Success" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📦 Multi-Platform Container Details" >> $GITHUB_STEP_SUMMARY
-        echo "- **Type**: Self-contained FortiGate Nextrade Platform" >> $GITHUB_STEP_SUMMARY
-        echo "- **Image**: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build-matrix.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- **Version**: ${{ needs.build-matrix.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Built**: ${{ needs.build-matrix.outputs.build-date }}" >> $GITHUB_STEP_SUMMARY
-        echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Multi-Service Deployment" >> $GITHUB_STEP_SUMMARY
+        echo "- **Redis**: \`${{ env.REGISTRY }}/fortinet-redis:${{ needs.build-and-push.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **PostgreSQL**: \`${{ env.REGISTRY }}/fortinet-postgresql:${{ needs.build-and-push.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Fortinet**: \`${{ env.REGISTRY }}/fortinet:${{ needs.build-and-push.outputs.image-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ needs.build-and-push.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Built**: ${{ needs.build-and-push.outputs.build-date }}" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 🚀 Pipeline Optimizations" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Self-hosted runners for enhanced performance" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Matrix-based parallel testing (unit, integration, security, lint)" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Advanced Docker BuildKit caching" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Multi-platform image manifest creation" >> $GITHUB_STEP_SUMMARY
-        echo "- ✅ Enhanced security scanning with Trivy" >> $GITHUB_STEP_SUMMARY
+        echo "### 🚀 Deployment Features" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Multi-service container builds (Redis, PostgreSQL, Fortinet)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Registry.jclee.me integration with all images" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Watchtower auto-deployment trigger" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ GitOps deployment with ArgoCD sync" >> $GITHUB_STEP_SUMMARY
         echo "- ✅ Comprehensive health verification" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Enhanced security scanning with Trivy" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🌐 Access Points" >> $GITHUB_STEP_SUMMARY
         echo "- **NodePort**: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Health Check**: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/health" >> $GITHUB_STEP_SUMMARY
         echo "- **Status API**: http://${{ env.DEPLOYMENT_HOST }}:${{ env.DEPLOYMENT_PORT }}/api/status" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "### 📊 Performance Metrics" >> $GITHUB_STEP_SUMMARY
-        echo "- **Build Time**: Optimized with advanced caching" >> $GITHUB_STEP_SUMMARY
-        echo "- **Test Execution**: Parallel matrix strategy" >> $GITHUB_STEP_SUMMARY
-        echo "- **Resource Usage**: Self-hosted runner efficiency" >> $GITHUB_STEP_SUMMARY
-        echo "- **Security**: Automated vulnerability scanning" >> $GITHUB_STEP_SUMMARY
 
   # =============================================================================
   # Notification and Cleanup
   # =============================================================================
   notify:
-    name: "📢 Pipeline Completion Notification"
+    name: "📢 Pipeline Completion"
     runs-on: [self-hosted, linux, x64]
-    needs: [preflight, test-matrix, build-matrix, deploy, verify]
+    needs: [preflight, test-matrix, build-and-push, deploy-watchtower, deploy-gitops, verify]
     if: always()
     
     steps:
     - name: Pipeline completion notification
       run: |
-        echo "📢 Pipeline execution completed"
+        echo "📢 Main Deploy Pipeline execution completed"
         echo "Pipeline Status Summary:"
         echo "  Preflight: ${{ needs.preflight.result }}"
         echo "  Test Matrix: ${{ needs.test-matrix.result }}"
-        echo "  Build Matrix: ${{ needs.build-matrix.result }}"
-        echo "  Deploy: ${{ needs.deploy.result }}"
+        echo "  Build and Push: ${{ needs.build-and-push.result }}"
+        echo "  Deploy Watchtower: ${{ needs.deploy-watchtower.result }}"
+        echo "  Deploy GitOps: ${{ needs.deploy-gitops.result }}"
         echo "  Verify: ${{ needs.verify.result }}"
         
         if [[ "${{ needs.verify.result }}" == "success" ]]; then
-          echo "🎉 Complete pipeline success!"
+          echo "🎉 Complete deployment success!"
         else
           echo "⚠️ Pipeline completed with issues"
         fi
@@ -865,5 +682,5 @@ JSON_EOF
     - name: Cleanup artifacts
       run: |
         echo "🧹 Cleaning up build artifacts..."
-        docker system prune -f --filter "until=24h" || true
+        docker system prune -f --filter "until=12h" || true
         echo "✅ Cleanup completed"

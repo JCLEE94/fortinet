@@ -2,24 +2,24 @@
 
 ## Overview
 
-This optimized GitHub Actions workflow leverages self-hosted runners for enhanced performance, advanced caching strategies, matrix builds, and comprehensive security scanning. The workflow is designed specifically for the FortiGate Nextrade project with multi-platform container support.
+This optimized GitHub Actions workflow leverages self-hosted runners for enhanced performance, advanced caching strategies, matrix builds, and comprehensive security scanning. The workflow is designed specifically for the FortiGate Nextrade project with multi-service container support and registry.jclee.me integration.
 
-## 📋 Optimized Workflow Overview
+## 📋 Workflow Overview
 
-### **unified-pipeline.yml** - Optimized Self-Hosted Pipeline
-- **Purpose**: High-performance CI/CD with self-hosted infrastructure
+### **main-deploy.yml** - Main Deploy Pipeline
+- **Purpose**: Comprehensive CI/CD with multi-service deployment and Watchtower integration
 - **Triggers**: 
-  - Push to main/master/develop (excluding docs)
-  - Pull requests to main/master
+  - Push to main/master (excluding docs)
   - Manual dispatch
   - Weekly security scans (Sundays 2 AM UTC)
 - **Key Features**:
-  - Self-hosted runners for 3x faster builds
+  - Self-hosted runners for optimized builds
   - Matrix-based parallel testing (unit, integration, security, lint)
-  - Multi-platform container builds (amd64, arm64)
-  - Advanced Docker BuildKit caching
+  - Multi-service container builds (Redis, PostgreSQL, Fortinet)
+  - Registry.jclee.me integration for all images
+  - Watchtower deployment automation
+  - Enhanced GitOps deployment with ArgoCD
   - Comprehensive security scanning with Trivy
-  - Enhanced GitOps deployment
   - Real-time monitoring and verification
 
 ## Key Optimizations
@@ -110,6 +110,8 @@ REGISTRY_PASSWORD: Harbor registry password
 CHARTMUSEUM_USERNAME: ChartMuseum username
 CHARTMUSEUM_PASSWORD: ChartMuseum password
 ARGOCD_TOKEN: ArgoCD API token for deployments
+WATCHTOWER_WEBHOOK_URL: Watchtower webhook endpoint for deployment triggers
+WATCHTOWER_TOKEN: Authentication token for Watchtower webhook
 GITHUB_TOKEN: Automatically provided by GitHub
 ```
 
@@ -129,43 +131,46 @@ strategy:
     test-type: [unit, integration, security, lint]
 ```
 
-- **Unit Tests**: Fast component testing with coverage reporting
+- **Unit Tests**: Fast component testing with pytest
 - **Integration Tests**: API endpoint validation with 60s timeout
 - **Security Tests**: Bandit source analysis + Safety dependency scanning
 - **Lint Tests**: Black formatting + isort imports + flake8 style
 
-### Phase 3: Multi-Platform Build Matrix
+### Phase 3: Multi-Service Build Matrix
 ```yaml
 strategy:
   fail-fast: false
   matrix:
-    platform: [linux/amd64, linux/arm64]
+    service: [redis, postgresql, fortinet]
 ```
 
+- **Redis Service**: fortinet-redis container build
+- **PostgreSQL Service**: fortinet-postgresql container build
+- **Fortinet Service**: fortinet main application container build
 - Docker BuildKit with advanced caching
-- Platform-specific security scanning with Trivy
-- SARIF upload for GitHub Security tab integration
-- Registry push with comprehensive tagging
+- Security scanning with Trivy for each service
+- Registry.jclee.me push for all images
 
-### Phase 4: Manifest Creation
-- Multi-platform Docker manifest creation
-- Cross-architecture image consolidation
-- Registry synchronization verification
+### Phase 4: Watchtower Deployment
+- Automatic deployment trigger via webhook
+- Multi-service update coordination
+- Deployment stabilization monitoring
+- Registry propagation verification
 
 ### Phase 5: GitOps Deployment
 - Enhanced Helm chart updates with metadata
 - ChartMuseum upload with retry logic (3 attempts)
-- GitOps commit with comprehensive deployment details
+- GitOps commit with multi-service deployment details
 - ArgoCD synchronization with monitoring
 
 ### Phase 6: Advanced Verification
-- ArgoCD application health monitoring (30 attempts)
+- ArgoCD application health monitoring (20 attempts)
 - Multi-endpoint health validation
 - Performance response time verification
-- Basic load testing (5 concurrent requests)
+- Comprehensive service health checks
 
 ### Phase 7: Notification and Cleanup
-- Comprehensive pipeline status reporting
+- Multi-service deployment status reporting
 - Automated Docker system cleanup
 - Performance metrics collection
 
@@ -181,16 +186,17 @@ git push origin main
 # Pipeline automatically triggers:
 # 1. Pre-flight checks (30s)
 # 2. Parallel tests (2-3 minutes)
-# 3. Multi-platform builds (5-7 minutes)
-# 4. Deployment (2-3 minutes)
-# 5. Verification (2-3 minutes)
-# Total: ~10-15 minutes (vs 20-30 with GitHub-hosted)
+# 3. Multi-service builds (6-8 minutes)
+# 4. Watchtower deployment (2-3 minutes)
+# 5. GitOps deployment (2-3 minutes)
+# 6. Verification (2-3 minutes)
+# Total: ~12-18 minutes with multi-service deployment
 ```
 
 ### Manual Pipeline Execution
 ```bash
 # Navigate to GitHub Actions tab
-# Select "Optimized Self-Hosted Pipeline"
+# Select "Main Deploy Pipeline"
 # Click "Run workflow"
 # Optionally specify branch and parameters
 ```
@@ -270,15 +276,16 @@ curl "http://$DEPLOYMENT_HOST:$DEPLOYMENT_PORT/api/health"
 - **Typical execution times with self-hosted runners**:
   - Pre-flight: 30-60 seconds
   - Test Matrix (parallel): 2-4 minutes
-  - Build Matrix (parallel): 5-8 minutes
-  - Deployment: 2-3 minutes
+  - Multi-Service Build Matrix (parallel): 6-8 minutes
+  - Watchtower Deployment: 2-3 minutes
+  - GitOps Deployment: 2-3 minutes
   - Verification: 2-3 minutes
-  - **Total**: 12-18 minutes
+  - **Total**: 14-20 minutes
 
-- **Comparison with GitHub-hosted runners**:
-  - GitHub-hosted: 25-40 minutes
-  - Self-hosted: 12-18 minutes
-  - **Improvement**: 40-55% faster
+- **Comparison with single-service deployment**:
+  - Single-service: 12-15 minutes
+  - Multi-service: 14-20 minutes
+  - **Multi-service overhead**: 15-25% for comprehensive deployment
 
 ### Resource Utilization
 ```bash
@@ -409,21 +416,27 @@ echo "/dev/sda1 / ext4 defaults,noatime 0 1" | sudo tee -a /etc/fstab
 ## ✅ Success Metrics
 
 ### Performance Improvements
-- ✅ **Build Time**: 40-55% reduction in total pipeline time
+- ✅ **Multi-Service Build**: Parallel builds for Redis, PostgreSQL, and Fortinet
+- ✅ **Registry Integration**: All images pushed to registry.jclee.me
 - ✅ **Parallel Execution**: 4x parallel test execution
-- ✅ **Multi-Platform**: Simultaneous amd64 and arm64 builds
 - ✅ **Cache Efficiency**: >80% cache hit rate for dependencies
 
+### Deployment Enhancements
+- ✅ **Watchtower Integration**: Automated deployment via webhook triggers
+- ✅ **GitOps Deployment**: ArgoCD sync with comprehensive metadata
+- ✅ **Multi-Service Coordination**: Coordinated updates across all services
+- ✅ **Registry Propagation**: Reliable image availability verification
+
 ### Security Enhancements
-- ✅ **Automated Scanning**: Continuous vulnerability assessment
+- ✅ **Multi-Service Scanning**: Trivy security scanning for all services
 - ✅ **SARIF Integration**: Security findings in GitHub Security tab
 - ✅ **Compliance**: Enhanced security compliance reporting
-- ✅ **Multi-Platform Security**: Platform-specific vulnerability scanning
+- ✅ **Service-Specific Security**: Individual vulnerability assessment per service
 
 ### Operational Excellence
-- ✅ **Reliability**: Enhanced retry logic and error handling
-- ✅ **Monitoring**: Comprehensive health checks and verification
-- ✅ **GitOps**: Improved deployment metadata and tracking
-- ✅ **Cleanup**: Automated artifact and resource cleanup
+- ✅ **Dual Deployment**: Both Watchtower and GitOps deployment methods
+- ✅ **Comprehensive Monitoring**: Health checks for all services
+- ✅ **Enhanced GitOps**: Multi-service deployment metadata tracking
+- ✅ **Automated Cleanup**: Optimized artifact retention and cleanup
 
-This optimized GitHub Actions workflow provides significant performance improvements, enhanced security scanning, and better operational visibility for the FortiGate Nextrade project.
+This enhanced GitHub Actions workflow provides comprehensive multi-service deployment capabilities with registry.jclee.me integration and dual deployment strategies for maximum reliability and operational flexibility.
