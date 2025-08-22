@@ -4,7 +4,12 @@ Nextrade Fortigate - 모듈화된 웹 애플리케이션
 Flask + Socket.IO 기반 웹 애플리케이션 (모듈화 버전)
     """
 
+# Gevent monkey patching이 필요한 경우 가장 먼저 실행
 import os
+if os.environ.get('WORKER_CLASS') == 'gevent':
+    from gevent import monkey
+    monkey.patch_all(ssl=False)  # SSL 패치를 비활성화하여 경고 방지
+
 import time
 from datetime import datetime
 
