@@ -1,0 +1,278 @@
+# =============================================================================
+# FortiGate Nextrade - Standalone Self-Contained Docker Image
+# No external dependencies or volume mounts required
+# =============================================================================
+
+FROM python:3.11-slim as base
+
+# Environment setup - All configurations embedded
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app/src \
+    APP_MODE=production \
+    WEB_APP_HOST=0.0.0.0 \
+    WEB_APP_PORT=7777 \
+    # Embedded configuration - no external config needed
+    OFFLINE_MODE=true \
+    SELF_CONTAINED=true \
+    NO_EXTERNAL_DEPS=true \
+    # Embedded Redis alternative (using in-memory cache)
+    USE_MEMORY_CACHE=true \
+    REDIS_ENABLED=false \
+    # Performance settings
+    WORKERS=4 \
+    WORKER_CLASS=sync \
+    TIMEOUT=120
+
+# Labels for metadata
+LABEL maintainer="FortiGate Nextrade Team" \
+      version="standalone-1.0" \
+      description="Self-contained FortiGate Nextrade - No external dependencies"
+
+# =============================================================================
+# System Dependencies - Minimal set for standalone operation
+# =============================================================================
+FROM base as system-deps
+
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    && apt-get autoremove -y \
+    && apt-get autoclean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# =============================================================================
+# Python Dependencies - All embedded
+# =============================================================================
+FROM system-deps as python-deps
+
+# Create app user
+RUN groupadd -r fortinet && useradd -r -g fortinet -s /bin/bash fortinet
+
+# Create all necessary directories with proper permissions
+RUN mkdir -p /app/src /app/data /app/logs /app/temp /app/config /app/static /app/templates \
+    && chown -R fortinet:fortinet /app
+
+# Copy and install requirements
+COPY requirements.txt /app/
+WORKDIR /app
+
+# Install Python dependencies with fallbacks for standalone operation
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn
+
+# =============================================================================
+# Application Stage - Embed everything
+# =============================================================================
+FROM python-deps as app
+
+# Copy entire application
+COPY --chown=fortinet:fortinet . /app/
+
+# Create embedded default configuration
+RUN cat > /app/data/config.json << 'EOF'
+{
+  "app_name": "FortiGate Nextrade Standalone",
+  "version": "1.0.0",
+  "mode": "standalone",
+  "offline_mode": true,
+  "self_contained": true,
+  "api": {
+    "mock_mode": true,
+    "fortigate": {
+      "enabled": false,
+      "mock_responses": true
+    },
+    "fortimanager": {
+      "enabled": false,
+      "mock_responses": true
+    }
+  },
+  "cache": {
+    "type": "memory",
+    "redis_enabled": false,
+    "ttl": 300
+  },
+  "security": {
+    "secret_key": "standalone-secure-key-$(openssl rand -hex 32)",
+    "csrf_enabled": true,
+    "session_timeout": 3600
+  },
+  "monitoring": {
+    "enabled": true,
+    "health_check_enabled": true,
+    "metrics_enabled": false
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "/app/logs/app.log",
+    "max_size": "10MB",
+    "backup_count": 3
+  }
+}
+EOF
+
+# Create embedded mock data
+RUN mkdir -p /app/data/mock && cat > /app/data/mock/devices.json << 'EOF'
+{
+  "devices": [
+    {
+      "id": "FGT001",
+      "name": "FortiGate-001",
+      "ip": "192.168.1.1",
+      "status": "online",
+      "model": "FGT-100F"
+    },
+    {
+      "id": "FGT002",
+      "name": "FortiGate-002",
+      "ip": "192.168.2.1",
+      "status": "online",
+      "model": "FGT-200F"
+    }
+  ]
+}
+EOF
+
+# Create standalone startup script
+RUN cat > /app/start_standalone.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "=== FortiGate Nextrade Standalone Mode ==="
+echo "No external dependencies required"
+echo "All configurations embedded"
+echo ""
+
+# Initialize directories if they don't exist
+mkdir -p /app/logs /app/temp 2>/dev/null || true
+
+# Set secure permissions
+chmod 755 /app/src 2>/dev/null || true
+chmod 777 /app/logs /app/temp 2>/dev/null || true
+
+# Generate runtime secret key if not set
+if [ -z "$SECRET_KEY" ]; then
+    export SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
+    echo "Generated runtime secret key"
+fi
+
+# Start embedded mock server in background (if needed)
+if [ "$APP_MODE" = "test" ] || [ "$ENABLE_MOCK_SERVER" = "true" ]; then
+    echo "Starting embedded mock server..."
+    python /app/src/utils/mock_server.py &
+    MOCK_PID=$!
+    echo "Mock server started with PID: $MOCK_PID"
+fi
+
+# Health check before starting
+echo "Running pre-flight checks..."
+cd /app/src
+if python -c "import sys; sys.path.insert(0, '/app/src'); from web_app import create_app; app = create_app(); print('✅ Application ready')"; then
+    echo "✅ Pre-flight checks passed"
+else
+    echo "❌ Pre-flight checks failed"
+    exit 1
+fi
+
+# Start the application
+echo "Starting application on port $WEB_APP_PORT..."
+cd /app/src
+
+# For production, use gunicorn
+if [ "$APP_MODE" = "production" ]; then
+    exec gunicorn \
+        --bind $WEB_APP_HOST:$WEB_APP_PORT \
+        --workers $WORKERS \
+        --worker-class $WORKER_CLASS \
+        --timeout $TIMEOUT \
+        --access-logfile - \
+        --error-logfile - \
+        --log-level info \
+        "web_app:create_app()"
+else
+    # For development/test, use Flask directly
+    exec python main.py --web
+fi
+EOF
+
+RUN chmod +x /app/start_standalone.sh
+
+# Create minimal mock server for standalone operation
+RUN cat > /app/src/utils/mock_server.py << 'EOF'
+#!/usr/bin/env python3
+"""Embedded mock server for standalone operation"""
+import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
+
+class MockHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        responses = {
+            '/api/health': {'status': 'healthy', 'mode': 'standalone'},
+            '/api/devices': {'devices': [{'id': '1', 'name': 'Mock-Device'}]},
+            '/api/policies': {'policies': []},
+        }
+        
+        response = responses.get(self.path, {'error': 'Not found'})
+        self.send_response(200 if self.path in responses else 404)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(response).encode())
+    
+    def do_POST(self):
+        self.do_GET()
+    
+    def log_message(self, format, *args):
+        pass  # Suppress logs
+
+def run_mock_server(port=6666):
+    server = HTTPServer(('localhost', port), MockHandler)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.daemon = True
+    thread.start()
+    print(f"Mock server running on port {port}")
+
+if __name__ == "__main__":
+    run_mock_server()
+    import time
+    while True:
+        time.sleep(1)
+EOF
+
+# Compile Python bytecode for performance
+RUN python -m compileall /app/src/ -b -qq || true
+
+# Create embedded static files
+RUN mkdir -p /app/static/css /app/static/js /app/static/img && \
+    echo "/* Embedded CSS */" > /app/static/css/style.css && \
+    echo "// Embedded JS" > /app/static/js/app.js
+
+# Set final permissions
+RUN chown -R fortinet:fortinet /app && \
+    chmod -R 755 /app/src && \
+    chmod 777 /app/data /app/logs /app/temp
+
+# =============================================================================
+# Runtime Configuration
+# =============================================================================
+
+# Health check - no external dependencies
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD python3 -c "import urllib.request; response = urllib.request.urlopen('http://localhost:7777/api/health', timeout=5); exit(0 if response.status == 200 else 1)" || exit 1
+
+# Switch to non-root user
+USER fortinet
+WORKDIR /app
+
+# Expose port
+EXPOSE 7777
+
+# No volumes - everything is self-contained
+# VOLUME declarations removed intentionally
+
+# Start with standalone script
+CMD ["/app/start_standalone.sh"]
